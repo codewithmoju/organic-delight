@@ -1,42 +1,68 @@
-import { supabase } from './supabase';
+import { 
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  where
+} from 'firebase/firestore';
+import { db } from './firebase';
 
 export async function getInventorySummary() {
-  const { data, error } = await supabase
-    .from('items')
-    .select(`
-      id,
-      name,
-      quantity,
-      unit_price,
-      categories(name)
-    `)
-    .order('quantity');
+  const itemsRef = collection(db, 'items');
+  const q = query(itemsRef, orderBy('quantity'));
+  const snapshot = await getDocs(q);
   
-  if (error) throw error;
-  return data;
+  const items = [];
+  for (const doc of snapshot.docs) {
+    const item = { id: doc.id, ...doc.data() };
+    
+    // Get category if categoryId exists
+    if (item.categoryId) {
+      const categoriesRef = collection(db, 'categories');
+      const categoryQuery = query(categoriesRef, where('__name__', '==', item.categoryId));
+      const categorySnapshot = await getDocs(categoryQuery);
+      if (!categorySnapshot.empty) {
+        item.categories = { name: categorySnapshot.docs[0].data().name };
+      }
+    }
+    
+    items.push(item);
+  }
+  
+  return items;
 }
 
 export async function getLowStockItems() {
-  const { data, error } = await supabase
-    .rpc('get_low_stock_items');
+  const itemsRef = collection(db, 'items');
+  const snapshot = await getDocs(itemsRef);
   
-  if (error) throw error;
-  return data;
+  return snapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() }))
+    .filter(item => item.quantity <= item.reorderPoint);
 }
 
 export async function getRecentTransactions() {
-  const { data, error } = await supabase
-    .from('transactions')
-    .select(`
-      id,
-      quantity_changed,
-      type,
-      created_at,
-      items(name)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(5);
+  const transactionsRef = collection(db, 'transactions');
+  const q = query(transactionsRef, orderBy('createdAt', 'desc'), limit(5));
+  const snapshot = await getDocs(q);
   
-  if (error) throw error;
-  return data;
+  const transactions = [];
+  for (const doc of snapshot.docs) {
+    const transaction = { id: doc.id, ...doc.data() };
+    
+    // Get item name if itemId exists
+    if (transaction.itemId) {
+      const itemsRef = collection(db, 'items');
+      const itemQuery = query(itemsRef, where('__name__', '==', transaction.itemId));
+      const itemSnapshot = await getDocs(itemQuery);
+      if (!itemSnapshot.empty) {
+        transaction.items = { name: itemSnapshot.docs[0].data().name };
+      }
+    }
+    
+    transactions.push(transaction);
+  }
+  
+  return transactions;
 }

@@ -1,44 +1,53 @@
-import { supabase } from '../supabase';
+import { 
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+import { db } from '../firebase';
 import { Category } from '../types';
 
 export async function getCategories() {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name');
+  const categoriesRef = collection(db, 'categories');
+  const q = query(categoriesRef, orderBy('name'));
+  const snapshot = await getDocs(q);
   
-  if (error) throw error;
-  return data;
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Category[];
 }
 
 export async function createCategory(category: Omit<Category, 'id'>) {
-  const { data, error } = await supabase
-    .from('categories')
-    .insert(category)
-    .select()
-    .single();
+  const docRef = await addDoc(collection(db, 'categories'), {
+    ...category,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
   
-  if (error) throw error;
-  return data;
+  return {
+    id: docRef.id,
+    ...category
+  } as Category;
 }
 
 export async function updateCategory(id: string, category: Partial<Category>) {
-  const { data, error } = await supabase
-    .from('categories')
-    .update(category)
-    .eq('id', id)
-    .select()
-    .single();
+  const docRef = doc(db, 'categories', id);
+  await updateDoc(docRef, {
+    ...category,
+    updatedAt: new Date()
+  });
   
-  if (error) throw error;
-  return data;
+  return {
+    id,
+    ...category
+  } as Category;
 }
 
 export async function deleteCategory(id: string) {
-  const { error } = await supabase
-    .from('categories')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
+  await deleteDoc(doc(db, 'categories', id));
 }
