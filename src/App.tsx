@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { useEffect } from 'react';
-import { supabase } from './lib/supabase';
+import { auth } from './lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getProfile } from './lib/api/auth';
 import { useAuthStore } from './lib/store';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -17,43 +19,23 @@ function App() {
   const { setUser, setProfile } = useAuthStore();
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-    });
-
-    // Listen for changes on auth state
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+    // Listen for authentication state changes
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setUser(user);
+      if (user) {
+        try {
+          const profile = await getProfile(user);
+          setProfile(profile);
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
       } else {
         setProfile(null);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, [setUser, setProfile]);
-
-  async function fetchProfile(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
-  }
 
   return (
     <Router>

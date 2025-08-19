@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '../lib/store';
-import { supabase } from '../lib/supabase';
+import { updateUserProfile } from '../lib/api/auth';
+import { updatePassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export default function Settings() {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,15 +17,10 @@ export default function Settings() {
     try {
       const formData = new FormData(e.currentTarget);
       const updates = {
-        full_name: formData.get('fullName') as string,
+        fullName: formData.get('fullName') as string,
       };
 
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profile?.id);
-
-      if (error) throw error;
+      await updateUserProfile(profile?.id, updates);
 
       setProfile({ ...profile, ...updates });
       toast.success('Profile updated successfully');
@@ -41,7 +38,6 @@ export default function Settings() {
 
     try {
       const formData = new FormData(e.currentTarget);
-      const currentPassword = formData.get('currentPassword') as string;
       const newPassword = formData.get('newPassword') as string;
       const confirmPassword = formData.get('confirmPassword') as string;
 
@@ -49,11 +45,11 @@ export default function Settings() {
         throw new Error('New passwords do not match');
       }
 
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      if (!auth.currentUser) {
+        throw new Error('No authenticated user');
+      }
 
-      if (error) throw error;
+      await updatePassword(auth.currentUser, newPassword);
 
       toast.success('Password updated successfully');
       (e.target as HTMLFormElement).reset();
