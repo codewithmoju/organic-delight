@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { supabase } from '../../lib/supabase';
+import { getTransactions } from '../../lib/api/transactions';
 import { Transaction } from '../../lib/types';
 
 export default function Transactions() {
@@ -14,18 +14,7 @@ export default function Transactions() {
 
   async function loadTransactions() {
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select(`
-          *,
-          items (
-            name,
-            unit_price
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await getTransactions();
       setTransactions(data);
     } catch (error) {
       toast.error('Failed to load transactions');
@@ -80,10 +69,10 @@ export default function Transactions() {
                 {transactions.map((transaction) => (
                   <tr key={transaction.id}>
                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900">
-                      {format(new Date(transaction.created_at), 'MMM d, yyyy HH:mm')}
+                      {format(new Date(transaction.createdAt.toDate()), 'MMM d, yyyy HH:mm')}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                      {transaction.items?.name}
+                      {transaction.item?.name}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm">
                       <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
@@ -98,7 +87,7 @@ export default function Transactions() {
                       {Math.abs(transaction.quantity_changed)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                      ${(Math.abs(transaction.quantity_changed) * (transaction.items?.unit_price || 0)).toFixed(2)}
+                      ${(Math.abs(transaction.quantityChanged) * (transaction.item?.unitPrice || 0)).toFixed(2)}
                     </td>
                     <td className="px-3 py-4 text-sm text-gray-500">
                       {transaction.notes}

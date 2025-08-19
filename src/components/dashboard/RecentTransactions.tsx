@@ -2,10 +2,10 @@ import { format } from 'date-fns';
 
 interface Transaction {
   id: string;
-  quantity_changed: number;
+  quantityChanged: number;
   type: 'in' | 'out';
-  created_at: string;
-  items: {
+  createdAt: any;
+  item: {
     name: string;
   };
 }
@@ -45,7 +45,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                   {transactions.map((transaction) => (
                     <tr key={transaction.id}>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                        {transaction.items.name}
+                        {transaction.item.name}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm">
                         <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
@@ -57,10 +57,10 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {Math.abs(transaction.quantity_changed)}
+                        {Math.abs(transaction.quantityChanged)}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {format(new Date(transaction.created_at), 'MMM d, yyyy')}
+                        {format(new Date(transaction.createdAt.toDate ? transaction.createdAt.toDate() : transaction.createdAt), 'MMM d, yyyy')}
                       </td>
                     </tr>
                   ))}

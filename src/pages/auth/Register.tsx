@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Package } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '../../lib/supabase';
+import { signUp } from '../../lib/api/auth';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -18,23 +18,7 @@ export default function Register() {
     const fullName = formData.get('fullName') as string;
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-
-      if (signUpError) throw signUpError;
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{ id: (await supabase.auth.getUser()).data.user?.id, full_name: fullName }]);
-
-      if (profileError) throw profileError;
+      await signUp(email, password, fullName);
 
       toast.success('Registration successful! Please sign in.');
       navigate('/login');

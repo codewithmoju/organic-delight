@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Item } from '../../lib/types';
-import { supabase } from '../../lib/supabase';
+import { getItem, updateItem } from '../../lib/api/items';
+import { createTransaction } from '../../lib/api/transactions';
 
 interface TransactionFormProps {
   items: Item[];
@@ -24,14 +25,8 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
       const itemId = formData.get('item_id') as string;
       const notes = formData.get('notes') as string;
 
-      // Start a transaction
-      const { data: item } = await supabase
-        .from('items')
-        .select('quantity, unit_price')
-        .eq('id', itemId)
-        .single();
-
-      if (!item) throw new Error('Item not found');
+      // Get current item data
+      const item = await getItem(itemId);
 
       const newQuantity = type === 'in' 
         ? item.quantity + quantity
@@ -41,23 +36,17 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
         throw new Error('Insufficient stock');
       }
 
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          item_id: itemId,
-          quantity_changed: type === 'in' ? quantity : -quantity,
-          type,
-          notes
-        });
+      // Create transaction record
+      await createTransaction({
+        itemId,
+        quantityChanged: type === 'in' ? quantity : -quantity,
+        type,
+        notes,
+        createdBy: 'current-user' // You might want to get this from auth context
+      });
 
-      if (transactionError) throw transactionError;
-
-      const { error: updateError } = await supabase
-        .from('items')
-        .update({ quantity: newQuantity })
-        .eq('id', itemId);
-
-      if (updateError) throw updateError;
+      // Update item quantity
+      await updateItem(itemId, { quantity: newQuantity });
 
       toast.success('Transaction completed successfully');
       onComplete();

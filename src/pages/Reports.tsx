@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { getTransactions } from '../lib/api/transactions';
 
 export default function Reports() {
   const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
@@ -15,34 +14,12 @@ export default function Reports() {
 
   async function loadReportData() {
     try {
-      // Get transactions with items data
-      const transactionsRef = collection(db, 'transactions');
-      const transactionsQuery = query(transactionsRef, orderBy('createdAt', 'desc'));
-      const transactionsSnapshot = await getDocs(transactionsQuery);
-      
-      const transactions = [];
-      for (const doc of transactionsSnapshot.docs) {
-        const transactionData = { id: doc.id, ...doc.data() };
-        
-        // Get item data if itemId exists
-        if (transactionData.itemId) {
-          const itemsRef = collection(db, 'items');
-          const itemsSnapshot = await getDocs(itemsRef);
-          const itemDoc = itemsSnapshot.docs.find(itemDoc => itemDoc.id === transactionData.itemId);
-          if (itemDoc) {
-            transactionData.items = { 
-              name: itemDoc.data().name,
-              unit_price: itemDoc.data().unitPrice 
-            };
-          }
-        }
-        
-        transactions.push(transactionData);
-      }
+      // Get transactions data
+      const transactions = await getTransactions();
 
       // Process monthly transactions
       const monthlyData = transactions.reduce((acc: any, curr: any) => {
-        const month = new Date(curr.createdAt.toDate()).toLocaleString('default', { month: 'short' });
+        const month = new Date(curr.createdAt.toDate ? curr.createdAt.toDate() : curr.createdAt).toLocaleString('default', { month: 'short' });
         const value = curr.type === 'out' ? Math.abs(curr.quantityChanged) : 0;
         
         if (!acc[month]) {
@@ -54,8 +31,8 @@ export default function Reports() {
 
       // Process top items
       const itemsData = transactions.reduce((acc: any, curr: any) => {
-        if (curr.type === 'out' && curr.items) {
-          const { name } = curr.items;
+        if (curr.type === 'out' && curr.item) {
+          const { name } = curr.item;
           if (!acc[name]) {
             acc[name] = { name, quantity: 0 };
           }

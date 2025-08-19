@@ -3,10 +3,10 @@ import {
   getDocs,
   query,
   orderBy,
-  limit,
   where
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { getRecentTransactions } from './api/transactions';
 
 export async function getInventorySummary() {
   const itemsRef = collection(db, 'items');
@@ -43,26 +43,5 @@ export async function getLowStockItems() {
 }
 
 export async function getRecentTransactions() {
-  const transactionsRef = collection(db, 'transactions');
-  const q = query(transactionsRef, orderBy('createdAt', 'desc'), limit(5));
-  const snapshot = await getDocs(q);
-  
-  const transactions = [];
-  for (const doc of snapshot.docs) {
-    const transaction = { id: doc.id, ...doc.data() };
-    
-    // Get item name if itemId exists
-    if (transaction.itemId) {
-      const itemsRef = collection(db, 'items');
-      const itemQuery = query(itemsRef, where('__name__', '==', transaction.itemId));
-      const itemSnapshot = await getDocs(itemQuery);
-      if (!itemSnapshot.empty) {
-        transaction.items = { name: itemSnapshot.docs[0].data().name };
-      }
-    }
-    
-    transactions.push(transaction);
-  }
-  
-  return transactions;
+  return await getRecentTransactions(5);
 }

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Package } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '../../lib/supabase';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../../lib/firebase';
 
 export default function ForgotPassword() {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,8 +17,7 @@ export default function ForgotPassword() {
     const email = formData.get('email') as string;
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) throw error;
+      await sendPasswordResetEmail(auth, email);
       
       setIsEmailSent(true);
       toast.success('Password reset instructions sent to your email');
