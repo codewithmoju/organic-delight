@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
-import { supabase } from '../lib/supabase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function Reports() {
   const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
@@ -14,25 +15,35 @@ export default function Reports() {
 
   async function loadReportData() {
     try {
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('transactions')
-        .select(`
-          quantity_changed,
-          type,
-          created_at,
-          items (
-            name,
-            unit_price
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (transactionsError) throw transactionsError;
+      // Get transactions with items data
+      const transactionsRef = collection(db, 'transactions');
+      const transactionsQuery = query(transactionsRef, orderBy('createdAt', 'desc'));
+      const transactionsSnapshot = await getDocs(transactionsQuery);
+      
+      const transactions = [];
+      for (const doc of transactionsSnapshot.docs) {
+        const transactionData = { id: doc.id, ...doc.data() };
+        
+        // Get item data if itemId exists
+        if (transactionData.itemId) {
+          const itemsRef = collection(db, 'items');
+          const itemsSnapshot = await getDocs(itemsRef);
+          const itemDoc = itemsSnapshot.docs.find(itemDoc => itemDoc.id === transactionData.itemId);
+          if (itemDoc) {
+            transactionData.items = { 
+              name: itemDoc.data().name,
+              unit_price: itemDoc.data().unitPrice 
+            };
+          }
+        }
+        
+        transactions.push(transactionData);
+      }
 
       // Process monthly transactions
       const monthlyData = transactions.reduce((acc: any, curr: any) => {
-        const month = new Date(curr.created_at).toLocaleString('default', { month: 'short' });
-        const value = curr.type === 'out' ? Math.abs(curr.quantity_changed) : 0;
+        const month = new Date(curr.createdAt.toDate()).toLocaleString('default', { month: 'short' });
+        const value = curr.type === 'out' ? Math.abs(curr.quantityChanged) : 0;
         
         if (!acc[month]) {
           acc[month] = { name: month, value: 0 };
@@ -48,7 +59,7 @@ export default function Reports() {
           if (!acc[name]) {
             acc[name] = { name, quantity: 0 };
           }
-          acc[name].quantity += Math.abs(curr.quantity_changed);
+          acc[name].quantity += Math.abs(curr.quantityChanged);
         }
         return acc;
       }, {});
