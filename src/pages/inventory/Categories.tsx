@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Pencil, Trash2, FolderOpen, Package } from 'lucide-react';
 import { toast } from 'sonner';
-import { getCategories, createCategory, updateCategory, deleteCategory } from '../../lib/api/categories';
+import { getCategories, createCategory, updateCategory, deleteCategory, getCategoryItemCount } from '../../lib/api/categories';
 import { Category } from '../../lib/types';
 import CategoryForm from '../../components/inventory/CategoryForm';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import AnimatedCard from '../../components/ui/AnimatedCard';
+
+interface CategoryWithCount extends Category {
+  itemCount?: number;
+}
 
 export default function Categories() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +25,20 @@ export default function Categories() {
   async function loadData() {
     try {
       const data = await getCategories();
-      setCategories(data);
+      
+      // Get item count for each category
+      const categoriesWithCount = await Promise.all(
+        data.map(async (category) => {
+          try {
+            const itemCount = await getCategoryItemCount(category.id);
+            return { ...category, itemCount };
+          } catch (error) {
+            return { ...category, itemCount: 0 };
+          }
+        })
+      );
+      
+      setCategories(categoriesWithCount);
     } catch (error) {
       toast.error('Failed to load categories');
       console.error(error);
@@ -56,100 +76,173 @@ export default function Categories() {
   }
 
   if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (isFormOpen) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">
-          {selectedCategory ? 'Edit Category' : 'New Category'}
-        </h1>
-        <CategoryForm
-          initialData={selectedCategory || undefined}
-          onSubmit={handleSubmit}
-          onCancel={() => {
-            setIsFormOpen(false);
-            setSelectedCategory(null);
-          }}
-        />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" text="Loading categories..." />
       </div>
     );
   }
 
-  return (
-    <div>
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Categories</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Manage your inventory categories
+  if (isFormOpen) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto"
+      >
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gradient">
+            {selectedCategory ? 'Edit Category' : 'Add New Category'}
+          </h1>
+          <p className="text-gray-400 mt-2">
+            {selectedCategory ? 'Update category information' : 'Create a new inventory category'}
           </p>
         </div>
-        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <button
-            type="button"
-            onClick={() => setIsFormOpen(true)}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Category
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead>
-                <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
-                    Name
-                  </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Description
-                  </th>
-                  <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {categories.map((category) => (
-                  <tr key={category.id}>
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                      {category.name}
-                    </td>
-                    <td className="px-3 py-4 text-sm text-gray-500">
-                      {category.description}
-                    </td>
-                    <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                      <button
-                        onClick={() => {
-                          setSelectedCategory(category);
-                          setIsFormOpen(true);
-                        }}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(category.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        
+        <AnimatedCard>
+          <div className="p-6">
+            <CategoryForm
+              initialData={selectedCategory || undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setIsFormOpen(false);
+                setSelectedCategory(null);
+              }}
+            />
           </div>
+        </AnimatedCard>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-gradient">Categories</h1>
+          <p className="text-gray-400 mt-1">
+            Organize your inventory with custom categories
+          </p>
         </div>
-      </div>
+        
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          type="button"
+          onClick={() => setIsFormOpen(true)}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add Category
+        </motion.button>
+      </motion.div>
+
+      {/* Categories Grid */}
+      <motion.div 
+        layout
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
+        <AnimatePresence>
+          {categories.map((category, index) => (
+            <motion.div
+              key={category.id}
+              layout
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ y: -8, scale: 1.03 }}
+              className="card-dark p-6 group cursor-pointer relative overflow-hidden"
+            >
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 group-hover:from-primary-500/30 group-hover:to-accent-500/30 transition-all duration-300">
+                      <FolderOpen className="w-6 h-6 text-primary-400" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setIsFormOpen(true);
+                      }}
+                      className="p-2 rounded-lg bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 transition-colors duration-200"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDelete(category.id)}
+                      className="p-2 rounded-lg bg-error-500/20 text-error-400 hover:bg-error-500/30 transition-colors duration-200"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </motion.button>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-white group-hover:text-primary-300 transition-colors duration-200 mb-2">
+                    {category.name}
+                  </h3>
+                  
+                  {category.description && (
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                      {category.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-gray-400 text-sm">
+                      <Package className="w-4 h-4 mr-1" />
+                      {category.itemCount || 0} items
+                    </div>
+                    
+                    <div className="w-2 h-2 bg-primary-500 rounded-full group-hover:scale-150 transition-transform duration-300" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Empty state */}
+      {categories.length === 0 && !isLoading && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center py-16"
+        >
+          <FolderOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-400 mb-2">No categories yet</h3>
+          <p className="text-gray-500 mb-6">
+            Create your first category to organize your inventory
+          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsFormOpen(true)}
+            className="btn-primary"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create First Category
+          </motion.button>
+        </motion.div>
+      )}
     </div>
   );
 }

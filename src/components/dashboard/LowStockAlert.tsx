@@ -1,4 +1,5 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Package } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface LowStockAlertProps {
   items: Array<{
@@ -12,26 +13,49 @@ export default function LowStockAlert({ items }: LowStockAlertProps) {
   if (items.length === 0) return null;
 
   return (
-    <div className="rounded-md bg-yellow-50 p-4">
-      <div className="flex">
-        <div className="flex-shrink-0">
-          <AlertTriangle className="h-5 w-5 text-yellow-400" />
-        </div>
-        <div className="ml-3">
-          <h3 className="text-sm font-medium text-yellow-800">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="rounded-xl bg-gradient-to-r from-warning-500/10 to-error-500/10 border border-warning-500/20 p-6"
+    >
+      <div className="flex items-start">
+        <motion.div 
+          className="flex-shrink-0"
+          animate={{ rotate: [0, -10, 10, -10, 0] }}
+          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+        >
+          <AlertTriangle className="h-6 w-6 text-warning-400" />
+        </motion.div>
+        <div className="ml-4 flex-1">
+          <h3 className="text-lg font-semibold text-warning-300 mb-3">
             Low Stock Alert
           </h3>
-          <div className="mt-2 text-sm text-yellow-700">
-            <ul className="list-disc space-y-1 pl-5">
-              {items.map((item) => (
-                <li key={item.name}>
-                  {item.name} - Only {item.quantity} units remaining
-                </li>
-              ))}
-            </ul>
+          <div className="space-y-3">
+            {items.map((item, index) => (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="flex items-center justify-between p-3 rounded-lg bg-dark-800/50 border border-dark-700/50"
+              >
+                <div className="flex items-center">
+                  <Package className="w-4 h-4 text-gray-400 mr-3" />
+                  <span className="text-gray-200 font-medium">{item.name}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-warning-400 font-semibold">
+                    {item.quantity} units
+                  </span>
+                  <p className="text-xs text-gray-500">
+                    Reorder at {item.reorder_point}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

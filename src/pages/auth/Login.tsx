@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -29,7 +30,6 @@ export default function Login() {
       const email = formData.get('email') as string;
       const password = formData.get('password') as string;
 
-      // Validate inputs
       if (!email) {
         setErrors(prev => ({ ...prev, email: 'Email is required' }));
         return;
@@ -71,70 +71,87 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10 border border-gray-100">
-          <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="flex justify-center mb-6">
-              <Logo size="lg" />
-            </div>
-            <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="glass-effect p-8 rounded-2xl border border-dark-700/50 shadow-dark-lg">
+          <div className="text-center mb-8">
+            <Logo size="lg" animated />
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-6 text-3xl font-bold text-white"
+            >
               Welcome back
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-2 text-gray-400"
+            >
               Sign in to your StockSuite account
-            </p>
+            </motion.p>
           </div>
 
-          <form className="space-y-6 mt-8" onSubmit={handleSubmit}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email address
               </label>
-              <div className="mt-2">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className={`block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-all duration-200 ${
-                    errors.email 
-                      ? 'ring-red-300 focus:ring-red-500' 
-                      : 'ring-gray-300 focus:ring-blue-600'
-                  }`}
-                />
-                {errors.email && (
-                  <div className="mt-1 flex items-center text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {errors.email}
-                  </div>
-                )}
-              </div>
-            </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className={`w-full input-dark ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
+                placeholder="Enter your email"
+              />
+              {errors.email && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-1 flex items-center text-sm text-error-400"
+                >
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {errors.email}
+                </motion.div>
+              )}
+            </motion.div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
-              <div className="mt-2 relative">
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className={`block w-full rounded-md border-0 py-2.5 pr-10 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-all duration-200 ${
-                    errors.password 
-                      ? 'ring-red-300 focus:ring-red-500' 
-                      : 'ring-gray-300 focus:ring-blue-600'
-                  }`}
+                  className={`w-full input-dark pr-10 ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
+                  placeholder="Enter your password"
                 />
                 <button
                   type="button"
@@ -142,69 +159,89 @@ export default function Login() {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-200" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-200" />
                   )}
                 </button>
-                {errors.password && (
-                  <div className="mt-1 flex items-center text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {errors.password}
-                  </div>
-                )}
               </div>
-            </div>
+              {errors.password && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-1 flex items-center text-sm text-error-400"
+                >
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {errors.password}
+                </motion.div>
+              )}
+            </motion.div>
 
-            <div className="flex items-center justify-between">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex items-center justify-between"
+            >
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                  className="h-4 w-4 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
                   Remember me
                 </label>
               </div>
               <Link
                 to="/forgot-password"
-                className="text-sm font-semibold text-blue-600 hover:text-blue-500 transition-colors duration-200"
+                className="text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200"
               >
                 Forgot password?
               </Link>
-            </div>
+            </motion.div>
 
-            <div>
-              <button
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="btn-primary w-full flex items-center justify-center gap-2 py-3"
               >
                 {isLoading ? (
-                  <div className="flex items-center">
+                  <>
                     <LoadingSpinner size="sm" color="white" />
-                    <span className="ml-2">Signing in...</span>
-                  </div>
+                    Signing in...
+                  </>
                 ) : (
                   'Sign in'
                 )}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="mt-8 text-center text-sm text-gray-400"
+          >
             Don't have an account?{' '}
             <Link
               to="/register"
-              className="font-semibold leading-6 text-blue-600 hover:text-blue-500 transition-colors duration-200"
+              className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200"
             >
               Sign up
             </Link>
-          </p>
+          </motion.p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

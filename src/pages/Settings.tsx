@@ -1,23 +1,30 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuthStore } from '../lib/store';
 import { updateUserProfile } from '../lib/api/auth';
 import { updatePassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import AnimatedCard from '../components/ui/AnimatedCard';
+import { User, Lock, Bell, Palette } from 'lucide-react';
 
 export default function Settings() {
   const [isLoading, setIsLoading] = useState(false);
   const profile = useAuthStore((state) => state.profile);
   const setProfile = useAuthStore((state) => state.setProfile);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleProfileSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const formData = new FormData(e.currentTarget);
       const updates = {
-        fullName: formData.get('fullName') as string,
+        full_name: formData.get('fullName') as string,
+        company: formData.get('company') as string,
+        phone: formData.get('phone') as string,
+        preferred_currency: formData.get('currency') as string,
       };
 
       await updateUserProfile(profile?.id, updates);
@@ -62,16 +69,36 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-            Profile Settings
-          </h3>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h1 className="text-3xl font-bold text-gradient mb-2">Settings</h1>
+        <p className="text-gray-400">
+          Manage your account preferences and security settings
+        </p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Profile Settings */}
+        <AnimatedCard delay={0.1}>
+          <div className="p-6">
+            <div className="flex items-center mb-6">
+              <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400 mr-3">
+                <User className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-semibold text-white">Profile Settings</h3>
+            </div>
+            
+            <form onSubmit={handleProfileSubmit} className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
                   Full Name
                 </label>
                 <input
@@ -80,11 +107,16 @@ export default function Settings() {
                   id="fullName"
                   defaultValue={profile?.full_name}
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="w-full input-dark"
                 />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                   Email
                 </label>
                 <input
@@ -93,32 +125,112 @@ export default function Settings() {
                   id="email"
                   value={profile?.email}
                   disabled
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm sm:text-sm"
+                  className="w-full input-dark opacity-50 cursor-not-allowed"
                 />
-              </div>
-              <div>
-                <button
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
+                  Company
+                </label>
+                <input
+                  type="text"
+                  name="company"
+                  id="company"
+                  defaultValue={profile?.company || ''}
+                  className="w-full input-dark"
+                  placeholder="Enter company name"
+                />
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  id="phone"
+                  defaultValue={profile?.phone || ''}
+                  className="w-full input-dark"
+                  placeholder="Enter phone number"
+                />
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <label htmlFor="currency" className="block text-sm font-medium text-gray-300 mb-2">
+                  Preferred Currency
+                </label>
+                <select
+                  name="currency"
+                  id="currency"
+                  defaultValue={profile?.preferred_currency || 'USD'}
+                  className="w-full input-dark"
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="PKR">PKR (₨)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="JPY">JPY (¥)</option>
+                </select>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="pt-4"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   type="submit"
                   disabled={isLoading}
-                  className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                  className="btn-primary w-full flex items-center justify-center gap-2"
                 >
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
+                  {isLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" color="white" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </motion.button>
+              </motion.div>
+            </form>
+          </div>
+        </AnimatedCard>
 
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-            Change Password
-          </h3>
-          <form onSubmit={handlePasswordChange}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+        {/* Password Settings */}
+        <AnimatedCard delay={0.2}>
+          <div className="p-6">
+            <div className="flex items-center mb-6">
+              <div className="p-2 rounded-lg bg-accent-500/20 text-accent-400 mr-3">
+                <Lock className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-semibold text-white">Change Password</h3>
+            </div>
+            
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-2">
                   Current Password
                 </label>
                 <input
@@ -126,11 +238,16 @@ export default function Settings() {
                   name="currentPassword"
                   id="currentPassword"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="w-full input-dark"
                 />
-              </div>
-              <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
                   New Password
                 </label>
                 <input
@@ -138,11 +255,16 @@ export default function Settings() {
                   name="newPassword"
                   id="newPassword"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="w-full input-dark"
                 />
-              </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
                   Confirm New Password
                 </label>
                 <input
@@ -150,21 +272,36 @@ export default function Settings() {
                   name="confirmPassword"
                   id="confirmPassword"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="w-full input-dark"
                 />
-              </div>
-              <div>
-                <button
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="pt-4"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   type="submit"
                   disabled={isLoading}
-                  className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                  className="btn-primary w-full flex items-center justify-center gap-2"
                 >
-                  {isLoading ? 'Updating...' : 'Update Password'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
+                  {isLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" color="white" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Password'
+                  )}
+                </motion.button>
+              </motion.div>
+            </form>
+          </div>
+        </AnimatedCard>
       </div>
     </div>
   );

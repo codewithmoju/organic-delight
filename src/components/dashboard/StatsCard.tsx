@@ -1,3 +1,6 @@
+import { motion } from 'framer-motion';
+import { TrendingUp, TrendingDown } from 'lucide-react';
+
 interface StatsCardProps {
   title: string;
   value: string | number;
@@ -6,34 +9,56 @@ interface StatsCardProps {
     value: number;
     label: string;
   };
+  delay?: number;
 }
 
-export default function StatsCard({ title, value, icon, trend }: StatsCardProps) {
+export default function StatsCard({ title, value, icon, trend, delay = 0 }: StatsCardProps) {
   return (
-    <div className="overflow-hidden rounded-lg bg-white p-4 sm:p-6 shadow">
-      <div className="flex items-center">
-        <div className="flex-shrink-0">
-          <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-md bg-indigo-100 text-indigo-600">
-            {icon}
-          </div>
-        </div>
-        <div className="ml-3 sm:ml-5 w-0 flex-1">
-          <dl>
-            <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">{title}</dt>
-            <dd className="flex items-baseline">
-              <div className="text-lg sm:text-2xl font-semibold text-gray-900">{value}</div>
-              {trend && (
-                <div className={`ml-2 flex items-baseline text-xs sm:text-sm font-semibold ${
-                  trend.value >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}%
-                  <span className="ml-1 text-gray-500 hidden sm:inline">{trend.label}</span>
-                </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, delay }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="card-dark p-6 group cursor-pointer"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-400 mb-1">{title}</p>
+          <motion.p 
+            className="text-2xl sm:text-3xl font-bold text-white"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: delay + 0.2, type: "spring", stiffness: 200 }}
+          >
+            {value}
+          </motion.p>
+          {trend && (
+            <motion.div 
+              className={`flex items-center mt-2 text-sm font-medium ${
+                trend.value >= 0 ? 'text-success-400' : 'text-error-400'
+              }`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: delay + 0.4 }}
+            >
+              {trend.value >= 0 ? (
+                <TrendingUp className="w-4 h-4 mr-1" />
+              ) : (
+                <TrendingDown className="w-4 h-4 mr-1" />
               )}
-            </dd>
-          </dl>
+              {Math.abs(trend.value)}% {trend.label}
+            </motion.div>
+          )}
         </div>
+        
+        <motion.div 
+          className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 text-primary-400 group-hover:from-primary-500/30 group-hover:to-accent-500/30 transition-all duration-300"
+          whileHover={{ rotate: 360 }}
+          transition={{ duration: 0.6 }}
+        >
+          {icon}
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

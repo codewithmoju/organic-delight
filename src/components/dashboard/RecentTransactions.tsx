@@ -1,10 +1,12 @@
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
+import { ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
 
 interface Transaction {
   id: string;
-  quantityChanged: number;
+  quantity_changed: number;
   type: 'in' | 'out';
-  createdAt: any;
+  created_at: any;
   item: {
     name: string;
   };
@@ -16,59 +18,73 @@ interface RecentTransactionsProps {
 
 export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="p-6">
-        <h3 className="text-lg font-medium leading-6 text-gray-900">
-          Recent Transactions
-        </h3>
-        <div className="mt-4 flow-root -mx-6">
-          <div className="overflow-x-auto">
-            <div className="inline-block min-w-full py-2 align-middle px-6">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead>
-                  <tr>
-                    <th className="py-3.5 pl-0 pr-3 text-left text-sm font-semibold text-gray-900">
-                      Item
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Type
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Quantity
-                    </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden sm:table-cell">
-                      Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id}>
-                      <td className="py-4 pl-0 pr-3 text-sm font-medium text-gray-900">
-                        {transaction.item.name}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          transaction.type === 'in'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {transaction.type === 'in' ? 'Stock In' : 'Stock Out'}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {Math.abs(transaction.quantityChanged)}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden sm:table-cell">
-                        {format(new Date(transaction.createdAt.toDate ? transaction.createdAt.toDate() : transaction.createdAt), 'MMM d, yyyy')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+    <div className="p-6">
+      <motion.h3 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-xl font-semibold text-white mb-6 flex items-center"
+      >
+        <Clock className="w-5 h-5 mr-3 text-primary-400" />
+        Recent Transactions
+      </motion.h3>
+      
+      <div className="space-y-3">
+        {transactions.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-8 text-gray-400"
+          >
+            No recent transactions
+          </motion.div>
+        ) : (
+          transactions.map((transaction, index) => (
+            <motion.div
+              key={transaction.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, x: 4 }}
+              className="flex items-center justify-between p-4 rounded-lg bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-200"
+            >
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${
+                  transaction.type === 'in' 
+                    ? 'bg-success-500/20 text-success-400' 
+                    : 'bg-error-500/20 text-error-400'
+                }`}>
+                  {transaction.type === 'in' ? (
+                    <ArrowUpRight className="w-4 h-4" />
+                  ) : (
+                    <ArrowDownLeft className="w-4 h-4" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-gray-200 font-medium">
+                    {transaction.item?.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {format(
+                      new Date(transaction.created_at.toDate ? transaction.created_at.toDate() : transaction.created_at), 
+                      'MMM d, HH:mm'
+                    )}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <span className={`font-semibold ${
+                  transaction.type === 'in' ? 'text-success-400' : 'text-error-400'
+                }`}>
+                  {transaction.type === 'in' ? '+' : '-'}{Math.abs(transaction.quantity_changed)}
+                </span>
+                <p className="text-xs text-gray-500">
+                  {transaction.type === 'in' ? 'Stock In' : 'Stock Out'}
+                </p>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );

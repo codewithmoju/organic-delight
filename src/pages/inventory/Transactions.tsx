@@ -1,21 +1,42 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { Plus, ArrowUpRight, ArrowDownLeft, Calendar, Filter, Package, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { getTransactions } from '../../lib/api/transactions';
-import { Transaction } from '../../lib/types';
+import { getItems } from '../../lib/api/items';
+import { Transaction, Item } from '../../lib/types';
+import TransactionForm from '../../components/inventory/TransactionForm';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import AnimatedCard from '../../components/ui/AnimatedCard';
+import { formatCurrency } from '../../lib/utils/notifications';
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
 
   useEffect(() => {
-    loadTransactions();
+    loadData();
   }, []);
 
-  async function loadTransactions() {
+  useEffect(() => {
+    filterTransactions();
+  }, [transactions, filterType, dateFilter]);
+
+  async function loadData() {
     try {
-      const result = await getTransactions();
-      setTransactions(result.transactions || result);
+      const [transactionsResult, itemsResult] = await Promise.all([
+        getTransactions(),
+        getItems()
+      ]);
+      
+      setTransactions(transactionsResult.transactions || transactionsResult);
+      setItems(itemsResult.items || itemsResult);
     } catch (error) {
       toast.error('Failed to load transactions');
       console.error(error);
@@ -24,81 +45,236 @@ export default function Transactions() {
     }
   }
 
+  function filterTransactions() {
+    let filtered = transactions;
+
+    // Filter by type
+    if (filterType !== 'all') {
+      filtered = filtered.filter(t => t.type === filterType);
+    }
+
+    // Filter by date
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const startDate = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+      }
+      
+      filtered = filtered.filter(t => {
+        const transactionDate = new Date(t.created_at.toDate ? t.created_at.toDate() : t.created_at);
+        return transactionDate >= startDate;
+      });
+    }
+
+    setFilteredTransactions(filtered);
+  }
+
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" text="Loading transactions..." />
+      </div>
+    );
+  }
+
+  if (isFormOpen) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto"
+      >
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gradient">New Transaction</h1>
+          <p className="text-gray-400 mt-2">Record a new inventory transaction</p>
+        </div>
+        
+        <AnimatedCard>
+          <div className="p-6">
+            <TransactionForm
+              items={items}
+              onComplete={() => {
+                setIsFormOpen(false);
+                loadData();
+              }}
+              onCancel={() => setIsFormOpen(false)}
+            />
+          </div>
+        </AnimatedCard>
+      </motion.div>
+    );
   }
 
   return (
-    <div>
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Transactions</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            A list of all inventory transactions
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-gradient">Transactions</h1>
+          <p className="text-gray-400 mt-1">
+            Track all inventory movements and changes
           </p>
         </div>
-      </div>
+        
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          type="button"
+          onClick={() => setIsFormOpen(true)}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          New Transaction
+        </motion.button>
+      </motion.div>
 
-      <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead>
-                <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
-                    Date
-                  </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Item
-                  </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Type
-                  </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Quantity
-                  </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Value
-                  </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Notes
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {transactions.map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900">
-                      {format(new Date(transaction.createdAt.toDate()), 'MMM d, yyyy HH:mm')}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                      {transaction.item?.name}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm">
-                      <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                        transaction.type === 'in'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {transaction.type === 'in' ? 'Stock In' : 'Stock Out'}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                      {Math.abs(transaction.quantity_changed)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                      ${(Math.abs(transaction.quantityChanged) * (transaction.item?.unitPrice || 0)).toFixed(2)}
-                    </td>
-                    <td className="px-3 py-4 text-sm text-gray-500">
-                      {transaction.notes}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Filters */}
+      <AnimatedCard delay={0.1}>
+        <div className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Transaction Type
+              </label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as any)}
+                className="w-full input-dark"
+              >
+                <option value="all">All Transactions</option>
+                <option value="in">Stock In</option>
+                <option value="out">Stock Out</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Date Range
+              </label>
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value as any)}
+                className="w-full input-dark"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">Last 7 Days</option>
+                <option value="month">Last 30 Days</option>
+              </select>
+            </div>
           </div>
         </div>
-      </div>
+      </AnimatedCard>
+
+      {/* Transactions List */}
+      <AnimatedCard delay={0.2}>
+        <div className="p-6">
+          <div className="space-y-4">
+            <AnimatePresence>
+              {filteredTransactions.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-16"
+                >
+                  <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-400 mb-2">No transactions found</h3>
+                  <p className="text-gray-500 mb-6">
+                    {filterType !== 'all' || dateFilter !== 'all' 
+                      ? 'Try adjusting your filter criteria'
+                      : 'Start by recording your first transaction'
+                    }
+                  </p>
+                  {filterType === 'all' && dateFilter === 'all' && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsFormOpen(true)}
+                      className="btn-primary"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Record First Transaction
+                    </motion.button>
+                  )}
+                </motion.div>
+              ) : (
+                filteredTransactions.map((transaction, index) => (
+                  <motion.div
+                    key={transaction.id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02, x: 4 }}
+                    className="flex items-center justify-between p-4 rounded-xl bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-200"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={`p-3 rounded-xl ${
+                        transaction.type === 'in' 
+                          ? 'bg-success-500/20 text-success-400' 
+                          : 'bg-error-500/20 text-error-400'
+                      }`}>
+                        {transaction.type === 'in' ? (
+                          <ArrowUpRight className="w-5 h-5" />
+                        ) : (
+                          <ArrowDownLeft className="w-5 h-5" />
+                        )}
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-white font-semibold">
+                          {transaction.item?.name || 'Unknown Item'}
+                        </h4>
+                        <div className="flex items-center text-sm text-gray-400 mt-1">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          {format(
+                            new Date(transaction.created_at.toDate ? transaction.created_at.toDate() : transaction.created_at), 
+                            'MMM d, yyyy HH:mm'
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className={`text-lg font-bold ${
+                        transaction.type === 'in' ? 'text-success-400' : 'text-error-400'
+                      }`}>
+                        {transaction.type === 'in' ? '+' : '-'}{Math.abs(transaction.quantity_changed)}
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {transaction.item?.unit || 'units'}
+                      </div>
+                      {transaction.cost_per_unit && (
+                        <div className="text-sm text-primary-400 mt-1">
+                          {formatCurrency(
+                            Math.abs(transaction.quantity_changed) * transaction.cost_per_unit,
+                            transaction.item?.currency || 'USD'
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </AnimatedCard>
     </div>
   );
 }

@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Item } from '../../lib/types';
 import { getItem, updateItem } from '../../lib/api/items';
 import { createTransaction } from '../../lib/api/transactions';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 interface TransactionFormProps {
   items: Item[];
@@ -24,6 +26,8 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
       const quantity = parseInt(formData.get('quantity') as string, 10);
       const itemId = formData.get('item_id') as string;
       const notes = formData.get('notes') as string;
+      const costPerUnit = parseFloat(formData.get('cost_per_unit') as string) || 0;
+      const reference = formData.get('reference') as string;
 
       // Get current item data
       const item = await getItem(itemId);
@@ -38,11 +42,13 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
 
       // Create transaction record
       await createTransaction({
-        itemId,
-        quantityChanged: type === 'in' ? quantity : -quantity,
+        item_id: itemId,
+        quantity_changed: type === 'in' ? quantity : -quantity,
         type,
         notes,
-        createdBy: 'current-user' // You might want to get this from auth context
+        cost_per_unit: costPerUnit,
+        reference,
+        created_by: 'current-user'
       });
 
       // Update item quantity
@@ -60,31 +66,39 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="type" className="block text-sm font-medium text-[#4B2600]">
-          Transaction Type
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-2">
+          Transaction Type *
         </label>
         <select
           name="type"
           id="type"
           required
-          className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+          className="w-full input-dark"
         >
           <option value="in">Stock In</option>
           <option value="out">Stock Out</option>
         </select>
-      </div>
+      </motion.div>
 
-      <div>
-        <label htmlFor="item_id" className="block text-sm font-medium text-[#4B2600]">
-          Item
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <label htmlFor="item_id" className="block text-sm font-medium text-gray-300 mb-2">
+          Item *
         </label>
         <select
           name="item_id"
           id="item_id"
           required
           onChange={(e) => setSelectedItem(items.find(item => item.id === e.target.value) || null)}
-          className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+          className="w-full input-dark"
         >
           <option value="">Select an item</option>
           {items.map((item) => (
@@ -93,50 +107,114 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
             </option>
           ))}
         </select>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <label htmlFor="quantity" className="block text-sm font-medium text-gray-300 mb-2">
+            Quantity ({selectedItem?.unit || 'units'}) *
+          </label>
+          <input
+            type="number"
+            name="quantity"
+            id="quantity"
+            min="1"
+            required
+            className="w-full input-dark"
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <label htmlFor="cost_per_unit" className="block text-sm font-medium text-gray-300 mb-2">
+            Cost per Unit
+          </label>
+          <input
+            type="number"
+            name="cost_per_unit"
+            id="cost_per_unit"
+            min="0"
+            step="0.01"
+            className="w-full input-dark"
+            placeholder="0.00"
+          />
+        </motion.div>
       </div>
 
-      <div>
-        <label htmlFor="quantity" className="block text-sm font-medium text-[#4B2600]">
-          Quantity ({selectedItem?.unit || 'units'})
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <label htmlFor="reference" className="block text-sm font-medium text-gray-300 mb-2">
+          Reference Number
         </label>
         <input
-          type="number"
-          name="quantity"
-          id="quantity"
-          min="1"
-          required
-          className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+          type="text"
+          name="reference"
+          id="reference"
+          className="w-full input-dark"
+          placeholder="Enter reference number"
         />
-      </div>
+      </motion.div>
 
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-[#4B2600]">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">
           Notes
         </label>
         <textarea
           name="notes"
           id="notes"
           rows={3}
-          className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+          className="w-full input-dark"
+          placeholder="Enter transaction notes"
         />
-      </div>
+      </motion.div>
 
-      <div className="flex justify-end gap-3">
-        <button
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="flex justify-end gap-3 pt-6 border-t border-dark-700/50"
+      >
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-[#964B00] bg-white px-4 py-2 text-sm font-medium text-[#4B2600] hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2"
+          className="btn-secondary"
         >
           Cancel
-        </button>
-        <button
+        </motion.button>
+        
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex justify-center rounded-md border border-transparent bg-[#964B00] px-4 py-2 text-sm font-medium text-white hover:bg-[#4B2600] focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 disabled:opacity-50"
+          className="btn-primary flex items-center gap-2 min-w-[160px]"
         >
-          {isSubmitting ? 'Processing...' : 'Submit Transaction'}
-        </button>
-      </div>
+          {isSubmitting ? (
+            <>
+              <LoadingSpinner size="sm" color="white" />
+              Processing...
+            </>
+          ) : (
+            'Submit Transaction'
+          )}
+        </motion.button>
+      </motion.div>
     </form>
   );
 }

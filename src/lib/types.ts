@@ -81,6 +81,7 @@ export interface ExportOptions {
 
 export const SUPPORTED_CURRENCIES = [
   { code: 'USD', symbol: '$' },
+  { code: 'PKR', symbol: '₨' },
   { code: 'EUR', symbol: '€' },
   { code: 'GBP', symbol: '£' },
   { code: 'JPY', symbol: '¥' },

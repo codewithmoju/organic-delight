@@ -1,13 +1,16 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
   Package, 
   ArrowUpDown, 
   BarChart3, 
   Settings,
-  FolderOpen
+  FolderOpen,
+  X
 } from 'lucide-react';
+import Logo from './ui/Logo';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,10 +19,10 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/inventory/items', icon: Package, label: 'Items' },
     { to: '/inventory/categories', icon: FolderOpen, label: 'Categories' },
-    { to: '/inventory/transactions', icon: ArrowUpDown, label: 'Transactions' },
+    { to: '/transactions', icon: ArrowUpDown, label: 'Transactions' },
     { to: '/reports', icon: BarChart3, label: 'Reports' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
@@ -27,49 +30,75 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Mobile overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+            onClick={onClose}
+          />
+        )}
+      </AnimatePresence>
       
       {/* Sidebar */}
-      <aside className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:z-auto
-      `}>
+      <motion.aside 
+        initial={{ x: -300 }}
+        animate={{ x: isOpen ? 0 : -300 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`
+          fixed top-0 left-0 z-50 h-full w-72 glass-effect border-r border-dark-700/50
+          lg:translate-x-0 lg:static lg:z-auto
+        `}
+      >
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-800">Inventory Pro</h2>
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-dark-700/50">
+            <Logo size="md" animated />
+            <button
+              onClick={onClose}
+              className="lg:hidden p-2 rounded-lg hover:bg-dark-700/50 transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
           </div>
           
-          <nav className="flex-1 p-4">
-            <ul className="space-y-2">
-              {navItems.map((item) => (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`
-                    }
-                    onClick={() => onClose()}
-                  >
-                    <item.icon className="w-5 h-5 mr-3" />
-                    {item.label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-2">
+            {navItems.map((item, index) => (
+              <motion.div
+                key={item.to}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `group flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-primary-600/20 to-accent-600/20 text-primary-400 border-l-4 border-primary-500'
+                        : 'text-gray-300 hover:bg-dark-700/50 hover:text-white'
+                    }`
+                  }
+                  onClick={() => onClose()}
+                >
+                  <item.icon className="w-5 h-5 mr-3 transition-transform duration-200 group-hover:scale-110" />
+                  <span className="font-medium">{item.label}</span>
+                </NavLink>
+              </motion.div>
+            ))}
           </nav>
+          
+          {/* Footer */}
+          <div className="p-4 border-t border-dark-700/50">
+            <div className="text-xs text-gray-500 text-center">
+              StockSuite v2.0
+            </div>
+          </div>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 };

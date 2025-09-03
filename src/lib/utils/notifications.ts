@@ -17,6 +17,27 @@ export function checkLowStockNotifications(items: Item[]): string[] {
 }
 
 export function formatCurrency(amount: number, currency: string = 'USD'): string {
+  const currencySymbols: { [key: string]: string } = {
+    'USD': '$',
+    'PKR': '₨',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'CAD': 'C$',
+    'AUD': 'A$',
+    'CHF': 'CHF',
+    'CNY': '¥',
+    'INR': '₹',
+  };
+
+  // For PKR, use custom formatting
+  if (currency === 'PKR') {
+    return `₨${new Intl.NumberFormat('en-PK', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)}`;
+  }
+
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency,

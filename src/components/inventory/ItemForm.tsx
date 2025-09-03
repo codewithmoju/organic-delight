@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Item, Category, SUPPORTED_CURRENCIES, SUPPORTED_UNITS } from '../../lib/types';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 interface ItemFormProps {
   initialData?: Partial<Item>;
@@ -27,6 +29,9 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
         currency: formData.get('currency') as string,
         unit_price: parseFloat(formData.get('unit_price') as string),
         reorder_point: parseInt(formData.get('reorder_point') as string, 10),
+        sku: formData.get('sku') as string,
+        supplier: formData.get('supplier') as string,
+        location: formData.get('location') as string,
       };
 
       await onSubmit(data);
@@ -42,9 +47,13 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-[#4B2600]">
-            Name
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+            Item Name *
           </label>
           <input
             type="text"
@@ -52,19 +61,24 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
             id="name"
             defaultValue={initialData?.name}
             required
-            className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+            className="w-full input-dark"
+            placeholder="Enter item name"
           />
-        </div>
+        </motion.div>
 
-        <div>
-          <label htmlFor="category_id" className="block text-sm font-medium text-[#4B2600]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <label htmlFor="category_id" className="block text-sm font-medium text-gray-300 mb-2">
             Category
           </label>
           <select
             name="category_id"
             id="category_id"
             defaultValue={initialData?.category_id || ''}
-            className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+            className="w-full input-dark"
           >
             <option value="">Select a category</option>
             {categories.map((category) => (
@@ -73,10 +87,15 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
               </option>
             ))}
           </select>
-        </div>
+        </motion.div>
 
-        <div className="sm:col-span-2">
-          <label htmlFor="description" className="block text-sm font-medium text-[#4B2600]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="sm:col-span-2"
+        >
+          <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
             Description
           </label>
           <textarea
@@ -84,13 +103,72 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
             id="description"
             rows={3}
             defaultValue={initialData?.description || ''}
-            className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+            className="w-full input-dark"
+            placeholder="Enter item description"
           />
-        </div>
+        </motion.div>
 
-        <div>
-          <label htmlFor="quantity" className="block text-sm font-medium text-[#4B2600]">
-            Quantity
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <label htmlFor="sku" className="block text-sm font-medium text-gray-300 mb-2">
+            SKU
+          </label>
+          <input
+            type="text"
+            name="sku"
+            id="sku"
+            defaultValue={initialData?.sku || ''}
+            className="w-full input-dark"
+            placeholder="Enter SKU"
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <label htmlFor="supplier" className="block text-sm font-medium text-gray-300 mb-2">
+            Supplier
+          </label>
+          <input
+            type="text"
+            name="supplier"
+            id="supplier"
+            defaultValue={initialData?.supplier || ''}
+            className="w-full input-dark"
+            placeholder="Enter supplier name"
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <label htmlFor="location" className="block text-sm font-medium text-gray-300 mb-2">
+            Location
+          </label>
+          <input
+            type="text"
+            name="location"
+            id="location"
+            defaultValue={initialData?.location || ''}
+            className="w-full input-dark"
+            placeholder="Enter storage location"
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <label htmlFor="quantity" className="block text-sm font-medium text-gray-300 mb-2">
+            Quantity *
           </label>
           <input
             type="number"
@@ -99,20 +177,24 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
             min="0"
             defaultValue={initialData?.quantity || 0}
             required
-            className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+            className="w-full input-dark"
           />
-        </div>
+        </motion.div>
 
-        <div>
-          <label htmlFor="unit" className="block text-sm font-medium text-[#4B2600]">
-            Unit
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <label htmlFor="unit" className="block text-sm font-medium text-gray-300 mb-2">
+            Unit *
           </label>
           <select
             name="unit"
             id="unit"
             defaultValue={initialData?.unit || 'units'}
             required
-            className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+            className="w-full input-dark"
           >
             {SUPPORTED_UNITS.map((unit) => (
               <option key={unit.value} value={unit.value}>
@@ -120,18 +202,22 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
               </option>
             ))}
           </select>
-        </div>
+        </motion.div>
 
-        <div>
-          <label htmlFor="currency" className="block text-sm font-medium text-[#4B2600]">
-            Currency
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+        >
+          <label htmlFor="currency" className="block text-sm font-medium text-gray-300 mb-2">
+            Currency *
           </label>
           <select
             name="currency"
             id="currency"
             defaultValue={initialData?.currency || 'USD'}
             required
-            className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+            className="w-full input-dark"
           >
             {SUPPORTED_CURRENCIES.map((currency) => (
               <option key={currency.code} value={currency.code}>
@@ -139,11 +225,15 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
               </option>
             ))}
           </select>
-        </div>
+        </motion.div>
 
-        <div>
-          <label htmlFor="unit_price" className="block text-sm font-medium text-[#4B2600]">
-            Unit Price
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+        >
+          <label htmlFor="unit_price" className="block text-sm font-medium text-gray-300 mb-2">
+            Unit Price *
           </label>
           <input
             type="number"
@@ -153,13 +243,17 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
             step="0.01"
             defaultValue={initialData?.unit_price || 0}
             required
-            className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+            className="w-full input-dark"
           />
-        </div>
+        </motion.div>
 
-        <div>
-          <label htmlFor="reorder_point" className="block text-sm font-medium text-[#4B2600]">
-            Reorder Point
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1 }}
+        >
+          <label htmlFor="reorder_point" className="block text-sm font-medium text-gray-300 mb-2">
+            Reorder Point *
           </label>
           <input
             type="number"
@@ -168,27 +262,44 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
             min="0"
             defaultValue={initialData?.reorder_point || 10}
             required
-            className="mt-1 block w-full rounded-md border-[#964B00] shadow-sm focus:border-[#F59E0B] focus:ring-[#F59E0B] sm:text-sm"
+            className="w-full input-dark"
           />
-        </div>
+        </motion.div>
       </div>
 
-      <div className="flex justify-end gap-3">
-        <button
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.2 }}
+        className="flex justify-end gap-3 pt-6 border-t border-dark-700/50"
+      >
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-[#964B00] bg-white px-4 py-2 text-sm font-medium text-[#4B2600] hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2"
+          className="btn-secondary"
         >
           Cancel
-        </button>
-        <button
+        </motion.button>
+        
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex justify-center rounded-md border border-transparent bg-[#964B00] px-4 py-2 text-sm font-medium text-white hover:bg-[#4B2600] focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:ring-offset-2 disabled:opacity-50"
+          className="btn-primary flex items-center gap-2 min-w-[120px]"
         >
-          {isSubmitting ? 'Saving...' : 'Save'}
-        </button>
-      </div>
+          {isSubmitting ? (
+            <>
+              <LoadingSpinner size="sm" color="white" />
+              Saving...
+            </>
+          ) : (
+            'Save Item'
+          )}
+        </motion.button>
+      </motion.div>
     </form>
   );
 }
