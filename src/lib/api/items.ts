@@ -31,8 +31,8 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
   const snapshot = await getDocs(q);
   
   const items = [];
-  for (const doc of snapshot.docs) {
-    const item = { id: doc.id, ...doc.data() } as Item;
+  for (const docSnapshot of snapshot.docs) {
+    const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
     if (item.category_id) {
       const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
       if (categoryDoc.exists()) {
@@ -56,8 +56,8 @@ export async function searchItems(searchQuery: string, categoryId?: string) {
   const snapshot = await getDocs(q);
   
   const items = [];
-  for (const doc of snapshot.docs) {
-    const item = { id: doc.id, ...doc.data() } as Item;
+  for (const docSnapshot of snapshot.docs) {
+    const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
     
     // Client-side filtering for search
     if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -102,8 +102,8 @@ export async function getLowStockItems() {
   const snapshot = await getDocs(itemsRef);
   
   const items = [];
-  for (const doc of snapshot.docs) {
-    const item = { id: doc.id, ...doc.data() } as Item;
+  for (const docSnapshot of snapshot.docs) {
+    const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
     if (item.quantity <= item.reorder_point) {
       if (item.category_id) {
         const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
