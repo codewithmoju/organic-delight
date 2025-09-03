@@ -6,7 +6,7 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { getRecentTransactions } from './api/transactions';
+import { getRecentTransactions as getRecentTransactionsFromTransactions } from './api/transactions';
 
 export async function getInventorySummary() {
   const itemsRef = collection(db, 'items');
@@ -43,5 +43,5 @@ export async function getLowStockItems() {
 }
 
 export async function getRecentTransactions() {
-  return await getRecentTransactions(5);
+  return await getRecentTransactionsFromTransactions(5);
 }
