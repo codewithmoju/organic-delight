@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Package, DollarSign, ShoppingCart, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Package, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { getItems } from '../lib/api/items';
 import { getRecentTransactions } from '../lib/api/transactions';
