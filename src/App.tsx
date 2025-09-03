@@ -8,6 +8,8 @@ import { useAuthStore } from './lib/store';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Items from './pages/inventory/Items';
 import Categories from './pages/inventory/Categories';
@@ -39,9 +41,23 @@ function App() {
 
   return (
     <Router>
-      <Toaster position="top-right" />
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'white',
+            color: '#374151',
+            border: '1px solid #e5e7eb',
+            borderRadius: '0.75rem',
+            fontSize: '0.875rem',
+          },
+        }}
+      />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="/" element={<Dashboard />} />
