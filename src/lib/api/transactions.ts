@@ -30,8 +30,8 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
   const snapshot = await getDocs(q);
   
   const transactions = [];
-  for (const doc of snapshot.docs) {
-    const transaction = { id: doc.id, ...doc.data() } as Transaction;
+  for (const docSnapshot of snapshot.docs) {
+    const transaction = { id: docSnapshot.id, ...docSnapshot.data() } as Transaction;
     
     // Get item data if item_id exists
     if (transaction.item_id) {
@@ -53,8 +53,8 @@ export async function getRecentTransactions(limitCount: number = 5) {
   const snapshot = await getDocs(q);
   
   const transactions = [];
-  for (const doc of snapshot.docs) {
-    const transaction = { id: doc.id, ...doc.data() } as Transaction;
+  for (const docSnapshot of snapshot.docs) {
+    const transaction = { id: docSnapshot.id, ...docSnapshot.data() } as Transaction;
     
     // Get item data if item_id exists
     if (transaction.item_id) {
@@ -81,8 +81,8 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
   const snapshot = await getDocs(q);
   
   const transactions = [];
-  for (const doc of snapshot.docs) {
-    const transaction = { id: doc.id, ...doc.data() } as Transaction;
+  for (const docSnapshot of snapshot.docs) {
+    const transaction = { id: docSnapshot.id, ...docSnapshot.data() } as Transaction;
     
     if (transaction.item_id) {
       const itemDoc = await getDoc(doc(db, 'items', transaction.item_id));
@@ -114,8 +114,8 @@ export async function getTransactionsByItem(itemId: string) {
   const q = query(transactionsRef, where('item_id', '==', itemId), orderBy('created_at', 'desc'));
   const snapshot = await getDocs(q);
   
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
+  return snapshot.docs.map(docSnapshot => ({
+    id: docSnapshot.id,
+    ...docSnapshot.data()
   })) as Transaction[];
 }
