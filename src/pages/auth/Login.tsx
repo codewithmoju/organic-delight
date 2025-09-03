@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Package } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/store';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
