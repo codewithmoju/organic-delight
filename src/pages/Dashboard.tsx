@@ -73,7 +73,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <StatsCard
           title="Total Items"
@@ -96,7 +96,7 @@ export default function Dashboard() {
         <LowStockAlert items={lowStockItems} />
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <InventoryChart
           data={summary.items?.map((item: any) => ({
             name: item.name,

@@ -16,18 +16,18 @@ interface RecentTransactionsProps {
 
 export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
-    <div className="bg-white shadow rounded-lg">
+    <div className="bg-white shadow rounded-lg overflow-hidden">
       <div className="p-6">
         <h3 className="text-lg font-medium leading-6 text-gray-900">
           Recent Transactions
         </h3>
-        <div className="mt-4 flow-root">
-          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+        <div className="mt-4 flow-root -mx-6">
+          <div className="overflow-x-auto">
+            <div className="inline-block min-w-full py-2 align-middle px-6">
               <table className="min-w-full divide-y divide-gray-300">
                 <thead>
                   <tr>
-                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
+                    <th className="py-3.5 pl-0 pr-3 text-left text-sm font-semibold text-gray-900">
                       Item
                     </th>
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -36,7 +36,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Quantity
                     </th>
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 hidden sm:table-cell">
                       Date
                     </th>
                   </tr>
@@ -44,7 +44,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                 <tbody className="divide-y divide-gray-200">
                   {transactions.map((transaction) => (
                     <tr key={transaction.id}>
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
+                      <td className="py-4 pl-0 pr-3 text-sm font-medium text-gray-900">
                         {transaction.item.name}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm">
@@ -59,7 +59,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {Math.abs(transaction.quantityChanged)}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden sm:table-cell">
                         {format(new Date(transaction.createdAt.toDate ? transaction.createdAt.toDate() : transaction.createdAt), 'MMM d, yyyy')}
                       </td>
                     </tr>
