@@ -14,8 +14,8 @@ export default function Transactions() {
 
   async function loadTransactions() {
     try {
-      const data = await getTransactions();
-      setTransactions(data);
+      const result = await getTransactions();
+      setTransactions(result.transactions || result);
     } catch (error) {
       toast.error('Failed to load transactions');
       console.error(error);

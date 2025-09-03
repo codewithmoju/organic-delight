@@ -23,7 +23,7 @@ export default function Items() {
         getItems(),
         getCategories(),
       ]);
-      setItems(itemsData);
+      setItems(itemsData.items || itemsData);
       setCategories(categoriesData);
     } catch (error) {
       toast.error('Failed to load data');

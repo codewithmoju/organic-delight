@@ -15,12 +15,14 @@ export default function Reports() {
   async function loadReportData() {
     try {
       // Get transactions data
-      const transactions = await getTransactions();
+      const result = await getTransactions();
+      const transactions = result.transactions || result;
 
       // Process monthly transactions
-      const monthlyData = transactions.reduce((acc: any, curr: any) => {
-        const month = new Date(curr.createdAt.toDate ? curr.createdAt.toDate() : curr.createdAt).toLocaleString('default', { month: 'short' });
-        const value = curr.type === 'out' ? Math.abs(curr.quantityChanged) : 0;
+      const monthlyData = transactions.reduce((acc: any, transaction: any) => {
+        const date = transaction.created_at?.toDate ? transaction.created_at.toDate() : new Date(transaction.created_at);
+        const month = date.toLocaleString('default', { month: 'short' });
+        const value = transaction.type === 'out' ? Math.abs(transaction.quantity_changed) : 0;
         
         if (!acc[month]) {
           acc[month] = { name: month, value: 0 };
@@ -30,13 +32,13 @@ export default function Reports() {
       }, {});
 
       // Process top items
-      const itemsData = transactions.reduce((acc: any, curr: any) => {
-        if (curr.type === 'out' && curr.item) {
-          const { name } = curr.item;
+      const itemsData = transactions.reduce((acc: any, transaction: any) => {
+        if (transaction.type === 'out' && transaction.item) {
+          const { name } = transaction.item;
           if (!acc[name]) {
             acc[name] = { name, quantity: 0 };
           }
-          acc[name].quantity += Math.abs(curr.quantityChanged);
+          acc[name].quantity += Math.abs(transaction.quantity_changed);
         }
         return acc;
       }, {});

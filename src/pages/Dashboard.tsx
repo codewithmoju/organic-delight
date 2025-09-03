@@ -1,34 +1,42 @@
 import { useEffect, useState } from 'react';
 import { Package, DollarSign, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import { getInventorySummary, getLowStockItems, getRecentTransactions } from '../lib/api';
+import { getItems } from '../lib/api/items';
+import { getRecentTransactions } from '../lib/api/transactions';
 import StatsCard from '../components/dashboard/StatsCard';
 import InventoryChart from '../components/dashboard/InventoryChart';
 import LowStockAlert from '../components/dashboard/LowStockAlert';
 import RecentTransactions from '../components/dashboard/RecentTransactions';
+import { Item, Transaction } from '../lib/types';
 
 export default function Dashboard() {
   const [summary, setSummary] = useState<any>(null);
-  const [lowStockItems, setLowStockItems] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [lowStockItems, setLowStockItems] = useState<Item[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [summaryData, lowStock, recentTransactions] = await Promise.all([
-          getInventorySummary(),
-          getLowStockItems(),
-          getRecentTransactions(),
+        const [itemsResult, recentTransactions] = await Promise.all([
+          getItems(),
+          getRecentTransactions(5),
         ]);
 
-        console.log('Dashboard data loaded:', { summaryData, lowStock, recentTransactions });
+        const items = itemsResult.items || [];
+        
+        // Calculate summary data
+        const totalValue = items.reduce((acc, item) => acc + (item.quantity * item.unit_price), 0);
+        const lowStock = items.filter(item => item.quantity <= item.reorder_point);
+        
+        console.log('Dashboard data loaded:', { items, lowStock, recentTransactions });
 
         setSummary({
-          totalItems: summaryData.length,
-          totalValue: summaryData.reduce((acc, item) => acc + (item.quantity * item.unit_price), 0),
+          totalItems: items.length,
+          totalValue: totalValue,
           lowStockCount: lowStock.length,
+          items: items.slice(0, 10) // Top 10 items for chart
         });
         setLowStockItems(lowStock);
         setTransactions(recentTransactions);
