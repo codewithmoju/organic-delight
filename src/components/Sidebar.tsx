@@ -101,8 +101,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           
           {/* Footer */}
           <div className="p-4 border-t border-dark-700/50">
-            <div className="text-xs text-gray-500 text-center">
+            <div className="text-xs text-gray-500 text-center space-y-1">
+              <div>
+                Powered by NAM STUDIOS
+              </div>
+              <div>
               {t('app.version')}
+              </div>
             </div>
           </div>
         </div>

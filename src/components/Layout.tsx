@@ -27,6 +27,15 @@ export default function Layout() {
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
+          
+          {/* Footer Attribution */}
+          <footer className="mt-12 pt-8 border-t border-dark-700/50">
+            <div className="max-w-7xl mx-auto text-center">
+              <p className="text-xs text-gray-500">
+                Powered by NAM STUDIOS
+              </p>
+            </div>
+          </footer>
         </motion.main>
       </div>
     </div>
