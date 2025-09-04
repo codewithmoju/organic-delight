@@ -31,7 +31,13 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
   
   const transactions = [];
   for (const docSnapshot of snapshot.docs) {
-    const transaction = { id: docSnapshot.id, ...docSnapshot.data() } as Transaction;
+    const transactionData = docSnapshot.data();
+    const transaction = { 
+      id: docSnapshot.id, 
+      ...transactionData,
+      transaction_date: transactionData.transaction_date?.toDate ? transactionData.transaction_date.toDate() : new Date(transactionData.transaction_date || Date.now()),
+      created_at: transactionData.created_at?.toDate ? transactionData.created_at.toDate() : new Date(transactionData.created_at || Date.now())
+    } as Transaction;
     
     // Get item data
     if (transaction.item_id) {
@@ -72,7 +78,13 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
   
   const transactions = [];
   for (const docSnapshot of snapshot.docs) {
-    const transaction = { id: docSnapshot.id, ...docSnapshot.data() } as Transaction;
+    const transactionData = docSnapshot.data();
+    const transaction = { 
+      id: docSnapshot.id, 
+      ...transactionData,
+      transaction_date: transactionData.transaction_date?.toDate ? transactionData.transaction_date.toDate() : new Date(transactionData.transaction_date || Date.now()),
+      created_at: transactionData.created_at?.toDate ? transactionData.created_at.toDate() : new Date(transactionData.created_at || Date.now())
+    } as Transaction;
     
     // Get item data
     if (transaction.item_id) {
@@ -120,9 +132,9 @@ export async function createTransaction(transactionData: {
   const newTransaction = {
     id: docRef.id,
     ...transactionData,
+    transaction_date: transactionData.transaction_date,
+    created_at: new Date(),
     total_value,
-    transaction_date: Timestamp.fromDate(transactionData.transaction_date),
-    created_at: new Date() as any
   };
   
   // Get item data for the response
@@ -141,7 +153,9 @@ export async function getTransactionsByItem(itemId: string): Promise<Transaction
   
   return snapshot.docs.map(docSnapshot => ({
     id: docSnapshot.id,
-    ...docSnapshot.data()
+    ...docSnapshot.data(),
+    transaction_date: docSnapshot.data().transaction_date?.toDate ? docSnapshot.data().transaction_date.toDate() : new Date(docSnapshot.data().transaction_date || Date.now()),
+    created_at: docSnapshot.data().created_at?.toDate ? docSnapshot.data().created_at.toDate() : new Date(docSnapshot.data().created_at || Date.now())
   })) as Transaction[];
 }
 
@@ -158,6 +172,8 @@ export async function getTransactionsForPeriod(startDate: Date, endDate: Date): 
   
   return snapshot.docs.map(doc => ({
     id: doc.id,
-    ...doc.data()
+    ...doc.data(),
+    transaction_date: doc.data().transaction_date?.toDate ? doc.data().transaction_date.toDate() : new Date(doc.data().transaction_date || Date.now()),
+    created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(doc.data().created_at || Date.now())
   })) as Transaction[];
 }

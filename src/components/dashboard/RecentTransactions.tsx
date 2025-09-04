@@ -65,7 +65,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                   </p>
                   <p className="text-xs text-gray-500">
                     {format(
-                      new Date(transaction.created_at?.toDate ? transaction.created_at.toDate() : transaction.created_at || new Date()), 
+                      transaction.created_at || new Date(), 
                       'MMM d, HH:mm'
                     )}
                   </p>
