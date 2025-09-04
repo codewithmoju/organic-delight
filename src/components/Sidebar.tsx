@@ -125,7 +125,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               >
                 <NavLink
                   to={item.to}
-                  onClick={onClose} // Close sidebar on mobile when nav item is clicked
+                  onClick={() => {
+                    // Only close sidebar on mobile screens
+                    if (window.innerWidth < 1024) {
+                      onClose();
+                    }
+                  }}
                   className={({ isActive }) =>
                     `group flex items-center px-4 py-3 rounded-xl transition-all duration-200 min-h-[44px] ${
                       isActive
