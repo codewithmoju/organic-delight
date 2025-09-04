@@ -2,21 +2,30 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Pencil, Trash2, FolderOpen, Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { getCategories, createCategory, updateCategory, deleteCategory, getCategoryItemCount } from '../../lib/api/categories';
 import { Category } from '../../lib/types';
 import CategoryForm from '../../components/inventory/CategoryForm';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnimatedCard from '../../components/ui/AnimatedCard';
+import { usePagination } from '../../lib/hooks/usePagination';
+import PaginationControls from '../../components/ui/PaginationControls';
 
 interface CategoryWithCount extends Category {
   itemCount?: number;
 }
 
 export default function Categories() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const pagination = usePagination({
+    data: categories,
+    defaultItemsPerPage: 20
+  });
 
   useEffect(() => {
     loadData();
