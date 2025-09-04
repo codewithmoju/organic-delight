@@ -36,7 +36,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -67,7 +67,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
         <textarea
           name="description"
           id="description"
-          rows={5}
+          rows={4}
           defaultValue={initialData?.description || ''}
           className="w-full input-dark input-large"
           placeholder="Enter category description"
@@ -78,14 +78,14 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="flex justify-end gap-4 pt-8 border-t border-dark-700/50"
+        className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-6 sm:pt-8 border-t border-dark-700/50"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           type="button"
           onClick={onCancel}
-          className="btn-secondary px-8 py-3 text-lg"
+          className="btn-secondary px-6 sm:px-8 py-3 text-base sm:text-lg order-2 sm:order-1"
         >
           Cancel
         </motion.button>
@@ -95,7 +95,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
           whileTap={{ scale: 0.95 }}
           type="submit"
           disabled={isSubmitting}
-          className="btn-primary flex items-center gap-2 min-w-[140px] px-8 py-3 text-lg"
+          className="btn-primary flex items-center gap-2 min-w-[140px] px-6 sm:px-8 py-3 text-base sm:text-lg order-1 sm:order-2"
         >
           {isSubmitting ? (
             <>

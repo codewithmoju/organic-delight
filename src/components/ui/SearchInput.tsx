@@ -18,7 +18,7 @@ export default function SearchInput({
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative w-full ${className}`}>
       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
         <Search className="h-5 w-5 text-gray-400" />
       </div>
@@ -31,7 +31,7 @@ export default function SearchInput({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         whileFocus={{ scale: 1.02 }}
-        className={`block w-full rounded-xl border-0 py-3 pl-10 pr-10 input-dark transition-all duration-200 ${
+        className={`block w-full rounded-xl border-0 py-2.5 sm:py-3 pl-10 pr-10 input-dark transition-all duration-200 text-sm sm:text-base ${
           isFocused ? 'shadow-glow ring-2 ring-primary-500/20' : ''
         }`}
       />
