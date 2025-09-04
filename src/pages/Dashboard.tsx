@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { StatsCard } from '../components/dashboard/StatsCard';
 import { MetricsCard } from '../components/dashboard/MetricsCard';
 import { MetricsChart } from '../components/dashboard/MetricsChart';
-import { InventoryChart } from '../components/dashboard/InventoryChart';
+import InventoryChart from '../components/dashboard/InventoryChart';
 import { RecentTransactions } from '../components/dashboard/RecentTransactions';
 import { LowStockAlert } from '../components/dashboard/LowStockAlert';
 import { TimePeriodFilter } from '../components/dashboard/TimePeriodFilter';
