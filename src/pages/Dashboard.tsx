@@ -15,7 +15,7 @@ import MetricsCard from '../components/dashboard/MetricsCard';
 import TimePeriodFilter, { TimePeriod } from '../components/dashboard/TimePeriodFilter';
 import MetricsChart from '../components/dashboard/MetricsChart';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import AnimatedCard from '../components/ui/AnimatedCard';
+import OptimizedAnimatedCard from '../components/ui/OptimizedAnimatedCard';
 import { Item, Transaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
@@ -324,15 +324,15 @@ export default function Dashboard() {
 
           {/* Inventory Overview and Recent Activity */}
           <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
-            <AnimatedCard delay={1.0}>
+            <OptimizedAnimatedCard delay={1.0}>
               <InventoryChart
                 data={memoizedChartData}
               />
-            </AnimatedCard>
+            </OptimizedAnimatedCard>
             
-            <AnimatedCard delay={1.1}>
+            <OptimizedAnimatedCard delay={1.1}>
               <RecentTransactions transactions={transactions} />
-            </AnimatedCard>
+            </OptimizedAnimatedCard>
           </div>
 
           {/* Quick Actions */}
