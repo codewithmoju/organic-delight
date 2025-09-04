@@ -1,5 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface InventoryChartProps {
   data: Array<{
@@ -9,8 +9,6 @@ interface InventoryChartProps {
 }
 
 export default function InventoryChart({ data }: InventoryChartProps) {
-  const shouldReduceMotion = useReducedMotion();
-  
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -25,22 +23,11 @@ export default function InventoryChart({ data }: InventoryChartProps) {
     return null;
   };
 
-  const headerAnimationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    transition: { duration: 0.3 }
-  };
-
-  const chartAnimationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, scale: 0.98 },
-    animate: { opacity: 1, scale: 1 },
-    transition: { delay: 0.1, duration: 0.25, ease: "easeOut" }
-  };
-
   return (
     <div className="p-4 sm:p-6">
       <motion.h3 
-        {...headerAnimationProps}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center"
       >
         <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
@@ -48,13 +35,10 @@ export default function InventoryChart({ data }: InventoryChartProps) {
       </motion.h3>
       
       <motion.div 
-        {...chartAnimationProps}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
         className="h-48 sm:h-64 lg:h-80 xl:h-96"
-        style={{
-          willChange: shouldReduceMotion ? 'auto' : 'transform, opacity',
-          backfaceVisibility: 'hidden',
-          contain: 'layout style paint'
-        }}
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>

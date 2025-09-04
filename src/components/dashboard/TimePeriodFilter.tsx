@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, ChevronDown, Clock } from 'lucide-react';
-import { toast } from 'sonner';
 
 export type TimePeriod = 'today' | 'this-week' | 'this-month' | 'previous-month' | 'last-3-months' | 'last-6-months' | 'this-year';
 
@@ -26,7 +25,6 @@ export default function TimePeriodFilter({
   isLoading = false 
 }: TimePeriodFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const shouldReduceMotion = useReducedMotion();
 
   const selectedPeriodData = TIME_PERIODS.find(p => p.value === selectedPeriod) || TIME_PERIODS[2];
 
@@ -35,33 +33,21 @@ export default function TimePeriodFilter({
     setIsOpen(false);
   };
 
-  const buttonAnimationProps = shouldReduceMotion ? {} : {
-    whileHover: { scale: 1.02 },
-    whileTap: { scale: 0.98 }
-  };
-
-  const dropdownAnimationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, scale: 0.98, y: -5 },
-    animate: { opacity: 1, scale: 1, y: 0 },
-    exit: { opacity: 0, scale: 0.98, y: -5 },
-    transition: { duration: 0.15, ease: "easeOut" }
-  };
-
   return (
     <div className="relative">
       {/* Dropdown Trigger */}
       <motion.button
-        {...buttonAnimationProps}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
-        className={`w-full sm:w-auto min-w-[200px] flex items-center justify-between px-4 py-3 rounded-xl bg-dark-700/50 border border-dark-600/50 hover:border-primary-500/50 transition-all duration-150 ${
+        className={`w-full sm:w-auto min-w-[200px] flex items-center justify-between px-4 py-3 rounded-xl bg-dark-700/50 border border-dark-600/50 hover:border-primary-500/50 transition-all duration-200 ${
           isLoading ? 'opacity-50 cursor-not-allowed' : ''
         }`}
         style={{
-          willChange: shouldReduceMotion ? 'auto' : 'transform',
+          transform: 'translate3d(0, 0, 0)',
           backfaceVisibility: 'hidden',
-          touchAction: 'manipulation',
-          contain: 'layout style paint'
+          touchAction: 'manipulation'
         }}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -70,11 +56,7 @@ export default function TimePeriodFilter({
         <div className="flex items-center space-x-3">
           <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400">
             {isLoading ? (
-              <motion.div 
-                animate={shouldReduceMotion ? {} : { rotate: 360 }}
-                transition={shouldReduceMotion ? {} : { duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-4 h-4 border-2 border-primary-400 border-t-transparent rounded-full"
-              />
+              <div className="w-4 h-4 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
             ) : (
               <Calendar className="w-4 h-4" />
             )}
@@ -88,12 +70,9 @@ export default function TimePeriodFilter({
             </div>
           </div>
         </div>
-        <motion.div
-          animate={shouldReduceMotion ? {} : { rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-        >
-          <ChevronDown className="w-5 h-5 text-gray-400" />
-        </motion.div>
+        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+          isOpen ? 'rotate-180' : ''
+        }`} />
       </motion.button>
 
       {/* Dropdown Menu */}
@@ -105,14 +84,15 @@ export default function TimePeriodFilter({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
               className="fixed inset-0 z-40"
               onClick={() => setIsOpen(false)}
             />
 
             {/* Dropdown Content */}
             <motion.div
-              {...dropdownAnimationProps}
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
               className="absolute top-full left-0 right-0 mt-2 bg-dark-800 border border-dark-600/50 rounded-xl shadow-dark-lg z-50 overflow-hidden"
               role="listbox"
               aria-label="Time period options"
@@ -128,10 +108,10 @@ export default function TimePeriodFilter({
                 {TIME_PERIODS.map((period, index) => (
                   <motion.button
                     key={period.value}
-                    initial={shouldReduceMotion ? {} : { opacity: 0, x: -10 }}
-                    animate={shouldReduceMotion ? {} : { opacity: 1, x: 0 }}
-                    transition={shouldReduceMotion ? {} : { delay: index * 0.05 }}
-                    whileHover={shouldReduceMotion ? {} : { backgroundColor: 'rgba(51, 65, 85, 0.5)' }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ backgroundColor: 'rgba(51, 65, 85, 0.5)' }}
                     onClick={() => handlePeriodSelect(period.value)}
                     className={`w-full flex items-center justify-between p-4 text-left transition-all duration-200 ${
                       selectedPeriod === period.value
@@ -147,9 +127,8 @@ export default function TimePeriodFilter({
                     </div>
                     {selectedPeriod === period.value && (
                       <motion.div
-                        initial={shouldReduceMotion ? {} : { scale: 0 }}
-                        animate={shouldReduceMotion ? {} : { scale: 1 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
                         className="w-2 h-2 bg-primary-500 rounded-full"
                       />
                     )}
@@ -160,11 +139,12 @@ export default function TimePeriodFilter({
               {/* Custom Date Range Option */}
               <div className="p-3 border-t border-dark-700/50 bg-dark-800/50">
                 <motion.button
-                  whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
-                  whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   className="w-full p-3 rounded-lg bg-dark-700/50 text-gray-300 hover:bg-dark-600/50 hover:text-white transition-all duration-200 text-center"
                   onClick={() => {
                     setIsOpen(false);
+                    // Future: Open custom date range picker
                     toast.info('Custom date range coming soon!');
                   }}
                 >

@@ -40,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       }
     };
 
+    // Only add listener on mobile screens
     if (window.innerWidth < 1024) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
@@ -60,10 +61,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
-
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay - appears only on screens < 1024px */}
       <AnimatePresence>
         {isOpen && (
           <motion.div 
@@ -71,26 +71,35 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
             onClick={onClose}
             aria-hidden="true"
           />
         )}
       </AnimatePresence>
       
-      {/* Sidebar */}
+      {/* Sidebar - responsive behavior with smooth animations */}
       <motion.aside 
         data-tour="sidebar"
         initial={false}
         animate={{ 
-          x: isOpen ? 0 : -288
+          x: isOpen ? 0 : -288 // 288px = w-72 (18rem)
         }}
         transition={{ 
           type: "tween",
-          duration: 0.3,
-          ease: "easeOut"
+          duration: window.innerWidth <= 768 ? 0.25 : 0.3,
+          ease: [0.25, 0.46, 0.45, 0.94]
         }}
-        className="fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50 flex flex-col lg:translate-x-0"
+        className={`
+          fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50 flex flex-col sidebar-optimized
+          lg:translate-x-0
+        `}
+        style={{
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          transform: 'translate3d(0, 0, 0)',
+          contain: 'layout style paint'
+        }}
         role="navigation"
         aria-label="Main navigation"
         aria-hidden={!isOpen ? 'true' : 'false'}
@@ -99,6 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {/* Header with logo and close button */}
           <div className="flex items-center justify-between p-6 border-b border-dark-700/50">
             <Logo size="md" animated />
+            {/* Close button - visible on mobile only, minimum 44px touch target */}
             <button
               onClick={onClose}
               className="lg:hidden p-3 rounded-lg hover:bg-dark-700/50 transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -109,38 +119,62 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
           
-          {/* Navigation menu */}
+          {/* Navigation menu with staggered animations */}
           <nav className="flex-1 p-4 space-y-2">
             {navItems.map((item, index) => (
-              <div key={item.to}>
+              <motion.div
+                key={item.to}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ 
+                  delay: window.innerWidth <= 768 ? index * 0.05 : index * 0.1,
+                  duration: 0.2,
+                  ease: [0.25, 0.46, 0.45, 0.94]
+                }}
+                style={{
+                  transform: 'translate3d(0, 0, 0)',
+                  backfaceVisibility: 'hidden'
+                }}
+              >
                 <NavLink
                   to={item.to}
                   onClick={() => {
+                    // Only close sidebar on mobile screens
                     if (window.innerWidth < 1024) {
                       onClose();
                     }
                   }}
                   className={({ isActive }) =>
-                    `group flex items-center px-4 py-3 rounded-xl transition-colors duration-200 min-h-[48px] ${
+                    `group flex items-center px-4 py-3 rounded-xl transition-colors duration-150 min-h-[48px] touch-manipulation ${
                       isActive
                         ? 'bg-gradient-to-r from-primary-600/20 to-accent-600/20 text-primary-400 border-l-4 border-primary-500'
                         : 'text-gray-300 hover:bg-dark-700/50 hover:text-white'
                     }`
                   }
+                  style={{
+                    transform: 'translate3d(0, 0, 0)',
+                    backfaceVisibility: 'hidden',
+                    touchAction: 'manipulation'
+                  }}
                   aria-current={({ isActive }) => isActive ? 'page' : undefined}
                 >
-                  <item.icon className="w-5 h-5 mr-3 transition-transform duration-200 group-hover:scale-110" />
+                  <item.icon className="w-5 h-5 mr-3 transition-transform duration-150 group-hover:scale-110" 
+                    style={{ transform: 'translate3d(0, 0, 0)' }} />
                   <span className="font-medium">{item.label}</span>
                 </NavLink>
-              </div>
+              </motion.div>
             ))}
           </nav>
           
           {/* Footer */}
           <div className="p-4 border-t border-dark-700/50">
             <div className="text-xs text-gray-500 text-center space-y-1">
-              <div>Powered by NAM STUDIOS</div>
-              <div>{t('app.version')}</div>
+              <div>
+                Powered by NAM STUDIOS
+              </div>
+              <div>
+              {t('app.version')}
+              </div>
             </div>
           </div>
         </div>

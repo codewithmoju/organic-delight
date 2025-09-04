@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
 
 interface Transaction {
@@ -17,18 +17,11 @@ interface RecentTransactionsProps {
 }
 
 export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
-  const shouldReduceMotion = useReducedMotion();
-
-  const headerAnimationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    transition: { duration: 0.3 }
-  };
-
   return (
     <div className="p-4 sm:p-6">
       <motion.h3 
-        {...headerAnimationProps}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center"
       >
         <Clock className="w-5 h-5 mr-3 text-primary-400" />
@@ -38,9 +31,8 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
       <div className="space-y-2 sm:space-y-3">
         {transactions.length === 0 ? (
           <motion.div
-            initial={shouldReduceMotion ? {} : { opacity: 0 }}
-            animate={shouldReduceMotion ? {} : { opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="text-center py-6 sm:py-8 text-gray-400"
           >
             No recent transactions
@@ -49,24 +41,11 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
           transactions.map((transaction, index) => (
             <motion.div
               key={transaction.id}
-              initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
-              animate={shouldReduceMotion ? {} : { opacity: 1, x: 0 }}
-              transition={shouldReduceMotion ? {} : { 
-                delay: index * 0.05, 
-                duration: 0.2, 
-                ease: "easeOut" 
-              }}
-              whileHover={shouldReduceMotion ? {} : { 
-                scale: 1.01, 
-                x: 2,
-                transition: { duration: 0.15, ease: "easeOut" }
-              }}
-              className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-150 w-full"
-              style={{
-                willChange: shouldReduceMotion ? 'auto' : 'transform',
-                backfaceVisibility: 'hidden',
-                contain: 'layout style paint'
-              }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, x: 4 }}
+              className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-200 w-full"
             >
               <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                 <div className={`p-2 rounded-lg ${

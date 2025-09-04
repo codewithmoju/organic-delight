@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
-import { PERFORMANCE_CONFIG } from '../lib/utils/performance';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -15,8 +14,10 @@ export default function Layout() {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
+        // Desktop: keep sidebar open
         setSidebarOpen(true);
       } else {
+        // Mobile: close sidebar
         setSidebarOpen(false);
       }
     };
@@ -30,23 +31,17 @@ export default function Layout() {
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      {/* Main content wrapper */}
-      <div className={`transition-all duration-200 ease-out ${sidebarOpen && window.innerWidth >= 1024 ? 'lg:pl-72' : ''}`}>
+      {/* Main content wrapper - responsive margin for sidebar */}
+      <div className={`transition-all duration-300 ${sidebarOpen && window.innerWidth >= 1024 ? 'lg:pl-72' : ''}`}>
         {/* Navbar */}
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         
-        {/* Main content with optimized animations */}
+        {/* Main content */}
         <motion.main 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.NORMAL / 1000 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
           className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8"
-          style={{
-            willChange: 'opacity',
-            backfaceVisibility: 'hidden',
-            transform: 'translate3d(0, 0, 0)',
-            contain: 'layout style paint'
-          }}
         >
           <div className="max-w-7xl mx-auto">
             <Outlet />

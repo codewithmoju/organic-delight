@@ -1,5 +1,5 @@
 import { AlertTriangle, Package } from 'lucide-react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface LowStockAlertProps {
   items: Array<{
@@ -10,34 +10,19 @@ interface LowStockAlertProps {
 }
 
 export default function LowStockAlert({ items }: LowStockAlertProps) {
-  const shouldReduceMotion = useReducedMotion();
-  
   if (items.length === 0) return null;
-
-  const alertAnimationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, scale: 0.98 },
-    animate: { opacity: 1, scale: 1 },
-    transition: { duration: 0.25, ease: "easeOut" }
-  };
-
-  const iconAnimationProps = shouldReduceMotion ? {} : {
-    animate: { rotate: [0, -5, 5, -5, 0] },
-    transition: { duration: 1.5, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }
-  };
 
   return (
     <motion.div
-      {...alertAnimationProps}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
       className="rounded-xl bg-gradient-to-r from-warning-500/10 to-error-500/10 border border-warning-500/20 p-4 sm:p-6"
-      style={{
-        willChange: shouldReduceMotion ? 'auto' : 'transform, opacity',
-        backfaceVisibility: 'hidden'
-      }}
     >
       <div className="flex items-start">
         <motion.div 
           className="flex-shrink-0"
-          {...iconAnimationProps}
+          animate={{ rotate: [0, -10, 10, -10, 0] }}
+          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
         >
           <AlertTriangle className="h-6 w-6 text-warning-400" />
         </motion.div>
@@ -49,9 +34,9 @@ export default function LowStockAlert({ items }: LowStockAlertProps) {
             {items.map((item, index) => (
               <motion.div
                 key={item.name}
-                initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
-                animate={shouldReduceMotion ? {} : { opacity: 1, x: 0 }}
-                transition={shouldReduceMotion ? {} : { delay: index * 0.1, duration: 0.3, ease: "easeOut" }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
                 className="flex items-center justify-between p-3 rounded-lg bg-dark-800/50 border border-dark-700/50"
               >
                 <div className="flex items-center flex-1">

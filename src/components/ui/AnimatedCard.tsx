@@ -16,7 +16,7 @@ export default function AnimatedCard({
 }: AnimatedCardProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  // Skip animations for reduced motion preference
+  // Skip animations for reduced motion preference or low-end devices
   if (shouldReduceMotion) {
     return (
       <div className={`card-dark ${className}`}>
@@ -27,19 +27,25 @@ export default function AnimatedCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ 
-        duration: 0.3, 
+        duration: window.innerWidth <= 768 ? 0.2 : 0.3, 
         delay,
-        ease: "easeOut"
+        ease: [0.25, 0.46, 0.45, 0.94]
       }}
       whileHover={hover ? { 
-        y: -2, 
-        scale: 1.005,
-        transition: { duration: 0.2 }
+        y: -4, 
+        scale: window.innerWidth <= 768 ? 1 : 1.02,
+        transition: { duration: 0.15 }
       } : undefined}
       className={`card-dark ${className}`}
+      style={{
+        willChange: hover && window.innerWidth > 768 ? 'transform, opacity' : 'auto',
+        backfaceVisibility: 'hidden',
+        transform: 'translate3d(0, 0, 0)',
+        contain: 'layout style paint'
+      }}
     >
       {children}
     </motion.div>

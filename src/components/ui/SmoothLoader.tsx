@@ -1,4 +1,4 @@
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Logo from './Logo';
 
@@ -18,11 +18,10 @@ export default function SmoothLoader({
   progress
 }: SmoothLoaderProps) {
   const [loadingText, setLoadingText] = useState(text);
-  const shouldReduceMotion = useReducedMotion();
 
   // Animate loading text for better UX
   useEffect(() => {
-    if (!isLoading || shouldReduceMotion) return;
+    if (!isLoading) return;
 
     const texts = [text, `${text}.`, `${text}..`, `${text}...`];
     let index = 0;
@@ -30,10 +29,10 @@ export default function SmoothLoader({
     const interval = setInterval(() => {
       setLoadingText(texts[index % texts.length]);
       index++;
-    }, 800); // Slower text animation
+    }, 500);
 
     return () => clearInterval(interval);
-  }, [isLoading, text, shouldReduceMotion]);
+  }, [isLoading, text]);
 
   if (variant === 'full-screen') {
     return (
@@ -43,10 +42,10 @@ export default function SmoothLoader({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950"
             style={{
-              willChange: 'opacity',
+              transform: 'translate3d(0, 0, 0)',
               backfaceVisibility: 'hidden',
               contain: 'layout style paint'
             }}
@@ -54,24 +53,24 @@ export default function SmoothLoader({
             {/* Background decoration */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <motion.div 
-                animate={shouldReduceMotion ? {} : { 
+                animate={{ 
                   scale: [1, 1.2, 1],
                   opacity: [0.3, 0.6, 0.3]
                 }}
-                transition={shouldReduceMotion ? {} : { 
-                  duration: 4, 
+                transition={{ 
+                  duration: 3, 
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
                 className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl"
               />
               <motion.div 
-                animate={shouldReduceMotion ? {} : { 
+                animate={{ 
                   scale: [1.2, 1, 1.2],
                   opacity: [0.2, 0.5, 0.2]
                 }}
-                transition={shouldReduceMotion ? {} : { 
-                  duration: 5, 
+                transition={{ 
+                  duration: 4, 
                   repeat: Infinity,
                   ease: "easeInOut",
                   delay: 1
@@ -83,56 +82,56 @@ export default function SmoothLoader({
             <div className="relative z-10 text-center">
               {showLogo && (
                 <motion.div
-                  initial={shouldReduceMotion ? {} : { scale: 0.8, opacity: 0 }}
-                  animate={shouldReduceMotion ? {} : { scale: 1, opacity: 1 }}
-                  transition={shouldReduceMotion ? {} : { 
-                    duration: 0.6,
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ 
+                    duration: 0.5,
                     type: "spring",
                     stiffness: 100
                   }}
                   className="mb-8"
                 >
-                  <Logo size="lg" animated={!shouldReduceMotion} />
+                  <Logo size="lg" animated />
                 </motion.div>
               )}
 
-              {/* Optimized spinner */}
+              {/* Mobile-optimized spinner */}
               <motion.div
-                initial={shouldReduceMotion ? {} : { scale: 0.8, opacity: 0 }}
-                animate={shouldReduceMotion ? {} : { scale: 1, opacity: 1 }}
-                transition={shouldReduceMotion ? {} : { delay: 0.2, duration: 0.4 }}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
                 className="mb-6"
               >
                 <div className="relative">
                   <motion.div
-                    animate={shouldReduceMotion ? {} : { rotate: 360 }}
-                    transition={shouldReduceMotion ? {} : {
-                      duration: 2,
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: window.innerWidth <= 768 ? 1.5 : 2,
                       repeat: Infinity,
                       ease: "linear"
                     }}
                     className="w-16 h-16 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
                     style={{
-                      willChange: shouldReduceMotion ? 'auto' : 'transform',
+                      transform: 'translate3d(0, 0, 0)',
                       backfaceVisibility: 'hidden',
-                      transform: 'translate3d(0, 0, 0)'
+                      willChange: 'transform'
                     }}
                   />
                   
                   {/* Inner pulse animation */}
                   <motion.div
-                    animate={shouldReduceMotion ? {} : {
+                    animate={{
                       scale: [0.8, 1.2, 0.8],
                       opacity: [0.5, 0.8, 0.5]
                     }}
-                    transition={shouldReduceMotion ? {} : {
-                      duration: 2.5,
+                    transition={{
+                      duration: 2,
                       repeat: Infinity,
                       ease: "easeInOut"
                     }}
                     className="absolute inset-2 bg-primary-500/20 rounded-full"
                     style={{
-                      willChange: shouldReduceMotion ? 'auto' : 'transform, opacity',
+                      transform: 'translate3d(0, 0, 0)',
                       backfaceVisibility: 'hidden'
                     }}
                   />
@@ -142,19 +141,19 @@ export default function SmoothLoader({
               {/* Progress bar */}
               {progress !== undefined && (
                 <motion.div
-                  initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-                  animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-                  transition={shouldReduceMotion ? {} : { delay: 0.3, duration: 0.3 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
                   className="w-64 mx-auto mb-4"
                 >
                   <div className="w-full bg-dark-700 rounded-full h-2">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
                       className="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full"
                       style={{
-                        willChange: 'width',
+                        transform: 'translate3d(0, 0, 0)',
                         backfaceVisibility: 'hidden'
                       }}
                     />
@@ -167,18 +166,18 @@ export default function SmoothLoader({
 
               {/* Loading text */}
               <motion.p
-                initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-                animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-                transition={shouldReduceMotion ? {} : { delay: 0.4, duration: 0.3 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
                 className="text-xl font-semibold text-white mb-2"
               >
                 {loadingText}
               </motion.p>
               
               <motion.p
-                initial={shouldReduceMotion ? {} : { opacity: 0 }}
-                animate={shouldReduceMotion ? {} : { opacity: 1 }}
-                transition={shouldReduceMotion ? {} : { delay: 0.5, duration: 0.3 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
                 className="text-gray-400"
               >
                 Please wait while we prepare your experience
@@ -198,32 +197,31 @@ export default function SmoothLoader({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.2 }}
             className="absolute inset-0 z-50 flex items-center justify-center bg-dark-900/80 backdrop-blur-sm"
             style={{
-              willChange: 'opacity',
+              transform: 'translate3d(0, 0, 0)',
               backfaceVisibility: 'hidden'
             }}
           >
             <motion.div
-              initial={shouldReduceMotion ? {} : { scale: 0.8, opacity: 0 }}
-              animate={shouldReduceMotion ? {} : { scale: 1, opacity: 1 }}
-              exit={shouldReduceMotion ? {} : { scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
               className="text-center"
             >
               <motion.div
-                animate={shouldReduceMotion ? {} : { rotate: 360 }}
-                transition={shouldReduceMotion ? {} : {
-                  duration: 1.5,
+                animate={{ rotate: 360 }}
+                transition={{
+                  duration: 1,
                   repeat: Infinity,
                   ease: "linear"
                 }}
                 className="w-12 h-12 border-3 border-primary-500/30 border-t-primary-500 rounded-full mx-auto mb-4"
                 style={{
-                  willChange: shouldReduceMotion ? 'auto' : 'transform',
+                  transform: 'translate3d(0, 0, 0)',
                   backfaceVisibility: 'hidden',
-                  transform: 'translate3d(0, 0, 0)'
+                  willChange: 'transform'
                 }}
               />
               <p className="text-white font-medium">{loadingText}</p>
@@ -240,28 +238,27 @@ export default function SmoothLoader({
       <AnimatePresence>
         {isLoading && (
           <motion.div
-            initial={shouldReduceMotion ? {} : { opacity: 0 }}
-            animate={shouldReduceMotion ? {} : { opacity: 1 }}
-            exit={shouldReduceMotion ? {} : { opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="flex items-center space-x-2"
             style={{
-              willChange: shouldReduceMotion ? 'auto' : 'opacity',
+              transform: 'translate3d(0, 0, 0)',
               backfaceVisibility: 'hidden'
             }}
           >
             <motion.div
-              animate={shouldReduceMotion ? {} : { rotate: 360 }}
-              transition={shouldReduceMotion ? {} : {
-                duration: 1.5,
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 1,
                 repeat: Infinity,
                 ease: "linear"
               }}
               className="w-6 h-6 border-2 border-primary-500/30 border-t-primary-500 rounded-full"
               style={{
-                willChange: shouldReduceMotion ? 'auto' : 'transform',
+                transform: 'translate3d(0, 0, 0)',
                 backfaceVisibility: 'hidden',
-                transform: 'translate3d(0, 0, 0)'
+                willChange: 'transform'
               }}
             />
             <span className="text-sm text-gray-400">{loadingText}</span>
