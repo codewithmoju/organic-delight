@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { getTransactions } from '../lib/api/transactions';
 import { getItems } from '../lib/api/items';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -10,6 +11,7 @@ import { formatCurrency } from '../lib/utils/notifications';
 import FlickerFreeLoader from '../components/ui/FlickerFreeLoader';
 
 export default function Reports() {
+  const { t } = useTranslation();
   const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
   const [topItems, setTopItems] = useState<any[]>([]);
   const [categoryDistribution, setCategoryDistribution] = useState<any[]>([]);
