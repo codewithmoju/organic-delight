@@ -302,6 +302,22 @@ export default function Transactions() {
             </AnimatePresence>
           </div>
         </div>
+        
+        {/* Pagination */}
+        {filteredTransactions.length > 0 && (
+          <div className="p-4 sm:p-6 border-t border-dark-700/50">
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.goToPage}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+              totalItems={pagination.totalItems}
+            />
+          </div>
+        )}
       </AnimatedCard>
     </div>
   );

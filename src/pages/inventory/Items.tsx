@@ -306,8 +306,25 @@ export default function Items() {
         </AnimatePresence>
       </motion.div>
 
+      {/* Pagination */}
+      {filteredItems.length > 0 && (
+        <AnimatedCard delay={0.3}>
+          <div className="p-4 sm:p-6">
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.goToPage}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+              totalItems={pagination.totalItems}
+            />
+          </div>
+        </AnimatedCard>
+      )}
+
       {/* Empty state */}
-      {filteredItems.length === 0 && !isLoading && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

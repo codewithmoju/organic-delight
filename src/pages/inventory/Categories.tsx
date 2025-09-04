@@ -221,6 +221,24 @@ export default function Categories() {
         </AnimatePresence>
       </motion.div>
 
+      {/* Pagination */}
+      {categories.length > 0 && (
+        <AnimatedCard delay={0.2}>
+          <div className="p-4 sm:p-6">
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.goToPage}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
+              startIndex={pagination.startIndex}
+              endIndex={pagination.endIndex}
+              totalItems={pagination.totalItems}
+            />
+          </div>
+        </AnimatedCard>
+      )}
+
       {/* Empty state */}
       {categories.length === 0 && !isLoading && (
         <motion.div
