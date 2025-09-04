@@ -58,6 +58,8 @@ export default function Login() {
         setErrors({ email: 'No account found with this email' });
       } else if (error.code === 'auth/wrong-password') {
         setErrors({ password: 'Incorrect password' });
+      } else if (error.code === 'auth/invalid-credential') {
+        setErrors({ email: 'Invalid email or password. Please check your credentials.' });
       } else if (error.code === 'auth/invalid-email') {
         setErrors({ email: 'Invalid email address' });
       } else if (error.code === 'auth/too-many-requests') {

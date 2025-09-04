@@ -1,18 +1,16 @@
-import { Timestamp } from 'firebase/firestore';
-
 export interface Item {
   id: string;
   name: string;
   description: string;
   category_id: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: Date;
+  updated_at: Date;
   created_by: string;
   category?: Category;
   // Stock tracking fields (calculated from transactions)
   current_quantity?: number;
   average_unit_cost?: number;
-  last_transaction_date?: Timestamp;
+  last_transaction_date?: Date;
   total_value?: number;
 }
 
@@ -20,8 +18,8 @@ export interface Category {
   id: string;
   name: string;
   description: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: Date;
+  updated_at: Date;
   created_by: string;
   color?: string;
   item_count?: number;
@@ -34,11 +32,11 @@ export interface Transaction {
   quantity: number;
   unit_price: number;
   total_value: number; // quantity × unit_price
-  transaction_date: Timestamp;
+  transaction_date: Date;
   supplier_customer: string; // Supplier for stock_in, Customer for stock_out
   reference_number?: string;
   notes?: string;
-  created_at: Timestamp;
+  created_at: Date;
   created_by: string;
   item?: Item;
 }
@@ -47,7 +45,7 @@ export interface StockLevel {
   item_id: string;
   current_quantity: number;
   average_unit_cost: number;
-  last_transaction_date: Timestamp;
+  last_transaction_date: Date;
   total_value: number;
   item?: Item;
 }
@@ -57,8 +55,8 @@ export interface Profile {
   full_name: string;
   email: string;
   preferred_currency: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: Date;
+  updated_at: Date;
   role?: 'admin' | 'manager' | 'user';
   company?: string;
   phone?: string;

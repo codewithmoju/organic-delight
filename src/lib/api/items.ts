@@ -32,7 +32,13 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
   
   const items = [];
   for (const docSnapshot of snapshot.docs) {
-    const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
+    const itemData = docSnapshot.data();
+    const item = { 
+      id: docSnapshot.id, 
+      ...itemData,
+      created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
+      updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
+    } as Item;
     
     // Get category data
     if (item.category_id) {
@@ -64,7 +70,13 @@ export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
   
   const items = [];
   for (const docSnapshot of snapshot.docs) {
-    const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
+    const itemData = docSnapshot.data();
+    const item = { 
+      id: docSnapshot.id, 
+      ...itemData,
+      created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
+      updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
+    } as Item;
     
     // Get stock level data
     const stockData = await getItemStockLevel(item.id);
@@ -89,7 +101,13 @@ export async function getItem(id: string): Promise<Item> {
     throw new Error('Item not found');
   }
   
-  const item = { id: docSnap.id, ...docSnap.data() } as Item;
+  const itemData = docSnap.data();
+  const item = { 
+    id: docSnap.id, 
+    ...itemData,
+    created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
+    updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
+  } as Item;
   
   // Get category data
   if (item.category_id) {
@@ -133,8 +151,8 @@ export async function createItem(itemData: {
   const docRef = await addDoc(collection(db, 'items'), {
     ...itemData,
     name: itemData.name.trim(),
-    created_at: new Date(),
-    updated_at: new Date()
+    created_at: Timestamp.fromDate(new Date()),
+    updated_at: Timestamp.fromDate(new Date())
   });
   
   return getItem(docRef.id);
@@ -170,7 +188,7 @@ export async function updateItem(id: string, itemData: {
   const updateData = {
     ...itemData,
     ...(itemData.name && { name: itemData.name.trim() }),
-    updated_at: new Date()
+    updated_at: Timestamp.fromDate(new Date())
   };
   
   await updateDoc(docRef, updateData);
@@ -200,7 +218,7 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
       item_id: itemId,
       current_quantity: 0,
       average_unit_cost: 0,
-      last_transaction_date: new Date() as any,
+      last_transaction_date: new Date(),
       total_value: 0
     };
   }
@@ -223,9 +241,9 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
   
   sortedDocs.forEach(doc => {
     const transaction = doc.data();
-    const transactionDate = transaction.transaction_date.toDate ? 
+    const transactionDate = transaction.transaction_date?.toDate ? 
       transaction.transaction_date.toDate() : 
-      new Date(transaction.transaction_date);
+      new Date(transaction.transaction_date || Date.now());
     
     if (transactionDate > lastTransactionDate) {
       lastTransactionDate = transactionDate;
@@ -247,7 +265,7 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
     item_id: itemId,
     current_quantity: Math.max(0, currentQuantity),
     average_unit_cost: averageUnitCost,
-    last_transaction_date: lastTransactionDate as any,
+    last_transaction_date: lastTransactionDate,
     total_value: totalValue
   };
 }
@@ -264,7 +282,13 @@ export async function searchItems(searchQuery: string, categoryId?: string): Pro
   
   const items = [];
   for (const docSnapshot of snapshot.docs) {
-    const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
+    const itemData = docSnapshot.data();
+    const item = { 
+      id: docSnapshot.id, 
+      ...itemData,
+      created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
+      updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
+    } as Item;
     
     // Client-side filtering for search
     if (searchQuery && 
