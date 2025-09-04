@@ -7,7 +7,6 @@ export type TimePeriod = 'today' | 'this-week' | 'this-month' | 'previous-month'
 interface TimePeriodFilterProps {
   selectedPeriod: TimePeriod;
   onPeriodChange: (period: TimePeriod) => void;
-  isLoading?: boolean;
 }
 
 const TIME_PERIODS: Array<{ value: TimePeriod; label: string; description: string }> = [
@@ -21,8 +20,7 @@ const TIME_PERIODS: Array<{ value: TimePeriod; label: string; description: strin
 
 export default function TimePeriodFilter({ 
   selectedPeriod, 
-  onPeriodChange, 
-  isLoading = false 
+  onPeriodChange
 }: TimePeriodFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -40,10 +38,7 @@ export default function TimePeriodFilter({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(!isOpen)}
-        disabled={isLoading}
-        className={`w-full sm:w-auto min-w-[200px] flex items-center justify-between px-4 py-3 rounded-xl bg-dark-700/50 border border-dark-600/50 hover:border-primary-500/50 transition-all duration-200 ${
-          isLoading ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
+        className="w-full sm:w-auto min-w-[200px] flex items-center justify-between px-4 py-3 rounded-xl bg-dark-700/50 border border-dark-600/50 hover:border-primary-500/50 transition-all duration-200"
         style={{
           transform: 'translate3d(0, 0, 0)',
           backfaceVisibility: 'hidden',
@@ -55,11 +50,7 @@ export default function TimePeriodFilter({
       >
         <div className="flex items-center space-x-3">
           <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400">
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Calendar className="w-4 h-4" />
-            )}
+            <Calendar className="w-4 h-4" />
           </div>
           <div className="text-left">
             <div className="text-white font-semibold text-sm">

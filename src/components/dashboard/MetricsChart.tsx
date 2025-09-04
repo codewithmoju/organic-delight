@@ -11,10 +11,9 @@ interface MetricsChartProps {
   }>;
   type: 'bar' | 'line';
   title: string;
-  isLoading?: boolean;
 }
 
-export default function MetricsChart({ data, type, title, isLoading = false }: MetricsChartProps) {
+export default function MetricsChart({ data, type, title }: MetricsChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -33,32 +32,22 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
     return null;
   };
 
-  if (isLoading) {
-    return (
-      <div className="card-dark p-4 sm:p-6">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-4"
-        >
-          <div className="h-6 bg-gray-700 rounded mb-6 w-1/3 animate-pulse" />
-          <div className="h-64 sm:h-80 bg-gray-700 rounded animate-pulse" />
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className="card-dark p-4 sm:p-6"
+      style={{
+        transform: 'translate3d(0, 0, 0)',
+        backfaceVisibility: 'hidden',
+        willChange: 'transform, opacity'
+      }}
     >
       <motion.h3 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
+        transition={{ delay: 0.05, duration: 0.15 }}
         className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center"
       >
         <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
@@ -68,7 +57,7 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
+        transition={{ delay: 0.1, duration: 0.15 }}
         className="h-64 sm:h-80 w-full"
       >
         <ResponsiveContainer width="100%" height="100%">

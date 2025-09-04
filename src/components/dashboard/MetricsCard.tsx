@@ -7,7 +7,6 @@ interface MetricsCardProps {
   icon: LucideIcon;
   color: 'primary' | 'success' | 'warning' | 'error';
   delay?: number;
-}
 
 export default function MetricsCard({ 
   title, 
@@ -15,8 +14,7 @@ export default function MetricsCard({
   icon: Icon, 
   color, 
   delay = 0
-}: MetricsCardProps) {
-  const colorClasses = {
+  delay = 0
     primary: {
       bg: 'from-primary-500/20 to-primary-600/20',
       text: 'text-primary-400',
@@ -51,6 +49,11 @@ export default function MetricsCard({
         backfaceVisibility: 'hidden',
         willChange: 'transform, opacity'
       }}
+      style={{
+        transform: 'translate3d(0, 0, 0)',
+        backfaceVisibility: 'hidden',
+        willChange: 'transform, opacity'
+      }}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
@@ -65,10 +68,6 @@ export default function MetricsCard({
           >
             {value}
           </motion.p>
-        </div>
-        
-        <motion.div 
-          className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-gradient-to-br ${colorClasses[color].bg} ${colorClasses[color].text} group-hover:scale-110 transition-all duration-300 flex-shrink-0`}
           whileHover={{ rotate: 360 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >

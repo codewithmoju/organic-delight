@@ -30,14 +30,14 @@ export default function AnimatedCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ 
-        duration: window.innerWidth <= 768 ? 0.2 : 0.3, 
+        duration: window.innerWidth <= 768 ? 0.15 : 0.2, 
         delay,
         ease: [0.25, 0.46, 0.45, 0.94]
       }}
       whileHover={hover ? { 
         y: -4, 
         scale: window.innerWidth <= 768 ? 1 : 1.02,
-        transition: { duration: 0.15 }
+        transition: { duration: 0.1 }
       } : undefined}
       className={`card-dark ${className}`}
       style={{
