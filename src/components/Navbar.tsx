@@ -59,7 +59,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             >
               <motion.img
                 className="h-8 w-8 rounded-full bg-dark-700 ring-2 ring-primary-500/50"
-                src={`https://ui-avatars.com/api/?name=${profile?.full_name || 'User'}&background=1e40af&color=fff`}
+                src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.full_name || 'User'}&background=1e40af&color=fff`}
                 alt="Profile"
                 whileHover={{ scale: 1.1 }}
               />
