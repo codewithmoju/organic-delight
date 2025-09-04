@@ -133,13 +133,6 @@ export default function Dashboard() {
         </p>
       </motion.div>
 
-      {/* Time Period Filter */}
-      <TimePeriodFilter
-        selectedPeriod={selectedPeriod}
-        onPeriodChange={setSelectedPeriod}
-        isLoading={isMetricsLoading}
-      />
-
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6" data-tour="dashboard-stats">
         <MetricsCard
