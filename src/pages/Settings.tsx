@@ -8,7 +8,7 @@ import {
   Palette, 
   Globe, 
   Shield, 
-  Download, 
+  Download,
   Moon, 
   Sun, 
   Monitor,
@@ -20,7 +20,16 @@ import {
   Languages,
   HelpCircle,
   Package,
-  ArrowUpDown
+  ArrowUpDown,
+  Clock,
+  Type,
+  Eye,
+  Zap,
+  RotateCcw,
+  Save,
+  AlertCircle,
+  CheckCircle,
+  Palette as PaletteIcon
 } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { updateUserProfile } from '../lib/api/auth';
@@ -30,6 +39,15 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import AvatarUpload from '../components/ui/AvatarUpload';
 import CurrencySelector from '../components/ui/CurrencySelector';
+import { usePreferences } from '../lib/hooks/usePreferences';
+import PreferenceGroup from '../components/settings/PreferenceGroup';
+import PreferenceToggle from '../components/settings/PreferenceToggle';
+import PreferenceSelect from '../components/settings/PreferenceSelect';
+import PreferenceSlider from '../components/settings/PreferenceSlider';
+import PreferenceSearch from '../components/settings/PreferenceSearch';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { formatDate } from '../lib/utils/notifications';
+import { debounce } from '../lib/utils/debounce';
 import { SUPPORTED_CURRENCIES } from '../lib/types';
 
 export default function Settings() {
@@ -37,6 +55,19 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'notifications'>('profile');
   const profile = useAuthStore((state) => state.profile);
   const setProfile = useAuthStore((state) => state.setProfile);
+
+  const {
+    preferences,
+    updatePreference,
+    savePreferences,
+    resetToDefaults,
+    isLoading: preferencesLoading,
+    hasUnsavedChanges,
+    lastSaved,
+  } = usePreferences();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showResetDialog, setShowResetDialog] = useState(false);
 
   async function handleProfileSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -121,6 +152,19 @@ export default function Settings() {
       console.error(error);
     }
   }
+
+  const handleResetToDefaults = async () => {
+    await resetToDefaults();
+    setShowResetDialog(false);
+  };
+
+  const filteredPreferences = (groupName: string, items: string[]) => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return groupName.toLowerCase().includes(query) || 
+           items.some(item => item.toLowerCase().includes(query));
+  };
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
