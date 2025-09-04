@@ -16,34 +16,17 @@ export function checkLowStockNotifications(items: Item[]): string[] {
   return notifications;
 }
 
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  const currencySymbols: { [key: string]: string } = {
-    'USD': '$',
-    'PKR': '₨',
-    'EUR': '€',
-    'GBP': '£',
-    'JPY': '¥',
-    'CAD': 'C$',
-    'AUD': 'A$',
-    'CHF': 'CHF',
-    'CNY': '¥',
-    'INR': '₹',
-  };
+import { formatCurrencyWithCode } from './currency';
+import { useAuthStore } from '../store';
 
-  // For PKR, use custom formatting
-  if (currency === 'PKR') {
-    return `₨${new Intl.NumberFormat('en-PK', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)}`;
+export function formatCurrency(amount: number, currency?: string): string {
+  // Get user's preferred currency if not specified
+  if (!currency) {
+    const profile = useAuthStore.getState().profile;
+    currency = profile?.preferred_currency || 'USD';
   }
-
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  
+  return formatCurrencyWithCode(amount, currency);
 }
 
 export function formatNumber(value: number): string {

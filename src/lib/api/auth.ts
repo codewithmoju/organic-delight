@@ -60,6 +60,15 @@ export async function updateUserProfile(userId: string, data: Partial<{
   preferred_currency: string;
   company: string;
   phone: string;
+  address: string;
+  avatar_url: string;
+  language: string;
+  theme: 'light' | 'dark' | 'system';
+  notifications_enabled: boolean;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  two_factor_enabled: boolean;
+  timezone: string;
 }>) {
   const userRef = doc(db, 'profiles', userId);
   await updateDoc(userRef, {
