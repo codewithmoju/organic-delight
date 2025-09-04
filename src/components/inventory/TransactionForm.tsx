@@ -84,8 +84,8 @@ export default function TransactionForm({ items, onComplete, onCancel, onSubmit 
         unit_price,
         transaction_date,
         supplier_customer,
-        reference_number: reference_number || undefined,
-        notes: notes || undefined,
+        reference_number: reference_number || null,
+        notes: notes || null,
         created_by: 'current-user'
       });
       
