@@ -93,6 +93,10 @@ export default function Dashboard() {
     }
   }
 
+  const handlePeriodChange = (period: TimePeriod) => {
+    setSelectedPeriod(period);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-[60vh]">
@@ -123,14 +127,30 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center sm:text-left"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">
-          {t('dashboard.title')}
-        </h1>
-        <p className="text-gray-400 text-base sm:text-lg">
-          {t('dashboard.subtitle')}
-        </p>
+        <div className="text-center sm:text-left">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">
+            {t('dashboard.title')}
+          </h1>
+          <p className="text-gray-400 text-base sm:text-lg">
+            {t('dashboard.subtitle')}
+          </p>
+        </div>
+        
+        {/* Time Period Dropdown */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="w-full sm:w-auto"
+        >
+          <TimePeriodFilter
+            selectedPeriod={selectedPeriod}
+            onPeriodChange={handlePeriodChange}
+            isLoading={isMetricsLoading}
+          />
+        </motion.div>
       </motion.div>
 
       {/* Key Metrics Cards */}
