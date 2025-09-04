@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "StockSuite - Gestion Professionnelle d'Inventaire",
+    "description": "Système professionnel de gestion d'inventaire pour les entreprises modernes",
+    "version": "StockSuite v2.0"
+  },
+  "navigation": {
+    "dashboard": "Tableau de Bord",
+    "categories": "Catégories",
+    "items": "Articles",
+    "transactions": "Transactions",
+    "stockLevels": "Niveaux de Stock",
+    "reports": "Rapports",
+    "settings": "Paramètres"
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous à votre compte StockSuite",
+      "email": "Adresse e-mail",
+      "password": "Mot de passe",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié ?",
+      "signIn": "Se connecter",
+      "signUp": "S'inscrire",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "signingIn": "Connexion en cours..."
+    }
+  },
+  "dashboard": {
+    "title": "Aperçu du Tableau de Bord",
+    "subtitle": "Bon retour ! Voici ce qui se passe avec votre inventaire.",
+    "metrics": {
+      "totalStockIn": "Total des Entrées de Stock",
+      "totalStockOut": "Total des Sorties de Stock",
+      "revenueSpent": "Revenus Dépensés (Entrées de Stock)",
+      "revenueEarned": "Revenus Gagnés (Sorties de Stock)",
+      "totalItems": "Total des Articles",
+      "totalValue": "Valeur Totale",
+      "lowStockItems": "Articles en Rupture",
+      "outOfStock": "En Rupture de Stock"
+    }
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter"
+  }
+}

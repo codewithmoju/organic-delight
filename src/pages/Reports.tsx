@@ -110,9 +110,9 @@ export default function Reports() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl sm:text-3xl font-bold text-gradient mb-2">Analytics & Reports</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gradient mb-2">{t('reports.title')}</h1>
         <p className="text-gray-400 text-sm sm:text-base">
-          Comprehensive insights into your inventory performance
+          {t('reports.subtitle')}
         </p>
       </motion.div>
 

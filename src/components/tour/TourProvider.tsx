@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, ArrowRight, Play, SkipForward, CheckCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface TourStep {
   id: string;
@@ -40,100 +41,102 @@ export const useTour = () => {
   return context;
 };
 
-const tourSteps: TourStep[] = [
-  {
-    id: 'welcome',
-    title: 'Welcome to StockSuite! 🎉',
-    content: 'Let\'s take a quick tour to help you get the most out of your inventory management system. This will only take 2 minutes!',
-    position: 'center',
-    spotlight: false,
-  },
-  {
-    id: 'dashboard',
-    title: 'Dashboard Overview',
-    content: 'Your command center! Here you\'ll see key metrics, low stock alerts, and recent activity at a glance.',
-    route: '/',
-    target: '[data-tour="dashboard-stats"]',
-    position: 'bottom',
-    spotlight: true,
-  },
-  {
-    id: 'sidebar',
-    title: 'Navigation Menu',
-    content: 'Use this sidebar to navigate between different sections. Everything you need is just one click away!',
-    target: '[data-tour="sidebar"]',
-    position: 'right',
-    spotlight: true,
-  },
-  {
-    id: 'categories',
-    title: 'Organize with Categories',
-    content: 'Create and manage categories to keep your inventory organized. Think Electronics, Clothing, Food, etc.',
-    route: '/inventory/categories',
-    target: '[data-tour="categories-grid"]',
-    position: 'top',
-    spotlight: true,
-  },
-  {
-    id: 'items',
-    title: 'Manage Your Items',
-    content: 'Add, edit, and track all your inventory items. Each item shows current stock, value, and category.',
-    route: '/inventory/items',
-    target: '[data-tour="items-grid"]',
-    position: 'top',
-    spotlight: true,
-  },
-  {
-    id: 'transactions',
-    title: 'Record Stock Movements',
-    content: 'Track every item that comes in or goes out. This keeps your inventory counts accurate and provides valuable insights.',
-    route: '/transactions',
-    target: '[data-tour="transactions-list"]',
-    position: 'top',
-    spotlight: true,
-    interactive: true,
-  },
-  {
-    id: 'stock-levels',
-    title: 'Real-time Stock Levels',
-    content: 'See current stock quantities calculated from all your transactions. Never lose track of what you have!',
-    route: '/stock-levels',
-    target: '[data-tour="stock-levels-grid"]',
-    position: 'top',
-    spotlight: true,
-  },
-  {
-    id: 'reports',
-    title: 'Powerful Analytics',
-    content: 'Visualize your inventory trends, top-selling items, and business insights with beautiful charts and reports.',
-    route: '/reports',
-    target: '[data-tour="reports-charts"]',
-    position: 'top',
-    spotlight: true,
-  },
-  {
-    id: 'settings',
-    title: 'Customize Your Experience',
-    content: 'Personalize StockSuite with your preferences, currency settings, and account information.',
-    route: '/settings',
-    target: '[data-tour="settings-tabs"]',
-    position: 'bottom',
-    spotlight: true,
-  },
-  {
-    id: 'completion',
-    title: 'You\'re All Set! 🚀',
-    content: 'Congratulations! You now know your way around StockSuite. Start by creating your first category or adding an item. Happy inventory managing!',
-    position: 'center',
-    spotlight: false,
-  },
-];
+  // Generate tour steps with translations
+  const tourSteps: TourStep[] = [
+    {
+      id: 'welcome',
+      title: t('tour.welcome.title'),
+      content: t('tour.welcome.content'),
+      position: 'center',
+      spotlight: false,
+    },
+    {
+      id: 'dashboard',
+      title: t('tour.dashboard.title'),
+      content: t('tour.dashboard.content'),
+      route: '/',
+      target: '[data-tour="dashboard-stats"]',
+      position: 'bottom',
+      spotlight: true,
+    },
+    {
+      id: 'sidebar',
+      title: t('tour.sidebar.title'),
+      content: t('tour.sidebar.content'),
+      target: '[data-tour="sidebar"]',
+      position: 'right',
+      spotlight: true,
+    },
+    {
+      id: 'categories',
+      title: t('tour.categories.title'),
+      content: t('tour.categories.content'),
+      route: '/inventory/categories',
+      target: '[data-tour="categories-grid"]',
+      position: 'top',
+      spotlight: true,
+    },
+    {
+      id: 'items',
+      title: t('tour.items.title'),
+      content: t('tour.items.content'),
+      route: '/inventory/items',
+      target: '[data-tour="items-grid"]',
+      position: 'top',
+      spotlight: true,
+    },
+    {
+      id: 'transactions',
+      title: t('tour.transactions.title'),
+      content: t('tour.transactions.content'),
+      route: '/transactions',
+      target: '[data-tour="transactions-list"]',
+      position: 'top',
+      spotlight: true,
+      interactive: true,
+    },
+    {
+      id: 'stock-levels',
+      title: t('tour.stockLevels.title'),
+      content: t('tour.stockLevels.content'),
+      route: '/stock-levels',
+      target: '[data-tour="stock-levels-grid"]',
+      position: 'top',
+      spotlight: true,
+    },
+    {
+      id: 'reports',
+      title: t('tour.reports.title'),
+      content: t('tour.reports.content'),
+      route: '/reports',
+      target: '[data-tour="reports-charts"]',
+      position: 'top',
+      spotlight: true,
+    },
+    {
+      id: 'settings',
+      title: t('tour.settings.title'),
+      content: t('tour.settings.content'),
+      route: '/settings',
+      target: '[data-tour="settings-tabs"]',
+      position: 'bottom',
+      spotlight: true,
+    },
+    {
+      id: 'completion',
+      title: t('tour.completion.title'),
+      content: t('tour.completion.content'),
+      position: 'center',
+      spotlight: false,
+    },
+  ];
 
 interface TourProviderProps {
   children: React.ReactNode;
 }
 
 export default function TourProvider({ children }: TourProviderProps) {
+  const { t } = useTranslation();
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -182,7 +185,7 @@ export default function TourProvider({ children }: TourProviderProps) {
     setIsActive(false);
     setCurrentStep(0);
     localStorage.setItem('stocksuite-tour-completed', 'true');
-    toast.success('Tour completed! Welcome to StockSuite 🎉');
+    toast.success(t('tour.messages.completed'));
   };
 
   const nextStep = () => {
@@ -203,7 +206,7 @@ export default function TourProvider({ children }: TourProviderProps) {
     setIsActive(false);
     setCurrentStep(0);
     localStorage.setItem('stocksuite-tour-completed', 'true');
-    toast.info('Tour skipped. You can restart it anytime from Settings.');
+    toast.info(t('tour.messages.skipped'));
   };
 
   const getTooltipPosition = (target: string, position: string) => {

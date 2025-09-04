@@ -10,8 +10,10 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnimatedCard from '../../components/ui/AnimatedCard';
 import SearchInput from '../../components/ui/SearchInput';
 import { formatCurrency, formatDate } from '../../lib/utils/notifications';
+import { useTranslation } from 'react-i18next';
 
 export default function Items() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -142,9 +144,9 @@ export default function Items() {
         className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Items</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">{t('items.title')}</h1>
           <p className="text-gray-400 mt-1 text-sm sm:text-base">
-            Manage your product catalog and item definitions
+            {t('items.subtitle')}
           </p>
         </div>
         
@@ -156,7 +158,7 @@ export default function Items() {
           className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
-          Add Item
+          {t('items.addItem')}
         </motion.button>
       </motion.div>
 

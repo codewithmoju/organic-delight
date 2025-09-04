@@ -124,10 +124,10 @@ export default function Dashboard() {
         className="text-center sm:text-left"
       >
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">
-          Dashboard Overview
+          {t('dashboard.title')}
         </h1>
         <p className="text-gray-400 text-base sm:text-lg">
-          Welcome back! Here's what's happening with your inventory.
+          {t('dashboard.subtitle')}
         </p>
       </motion.div>
 
@@ -141,7 +141,7 @@ export default function Dashboard() {
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6" data-tour="dashboard-stats">
         <MetricsCard
-          title="Total Stock In"
+          title={t('dashboard.metrics.totalStockIn')}
           value={metrics?.totalStockIn || 0}
           icon={ArrowUp}
           color="success"
@@ -149,7 +149,7 @@ export default function Dashboard() {
           isLoading={isMetricsLoading}
         />
         <MetricsCard
-          title="Total Stock Out"
+          title={t('dashboard.metrics.totalStockOut')}
           value={metrics?.totalStockOut || 0}
           icon={ArrowDown}
           color="error"
@@ -157,7 +157,7 @@ export default function Dashboard() {
           isLoading={isMetricsLoading}
         />
         <MetricsCard
-          title="Revenue Spent (Stock In)"
+          title={t('dashboard.metrics.revenueSpent')}
           value={formatCurrency(metrics?.revenueSpentOnStockIn || 0)}
           icon={DollarSign}
           color="warning"
@@ -165,7 +165,7 @@ export default function Dashboard() {
           isLoading={isMetricsLoading}
         />
         <MetricsCard
-          title="Revenue Earned (Stock Out)"
+          title={t('dashboard.metrics.revenueEarned')}
           value={formatCurrency(metrics?.revenueEarnedFromStockOut || 0)}
           icon={TrendingUp}
           color="primary"

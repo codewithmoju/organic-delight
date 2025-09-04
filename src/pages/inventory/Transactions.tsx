@@ -10,8 +10,10 @@ import TransactionForm from '../../components/inventory/TransactionForm';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnimatedCard from '../../components/ui/AnimatedCard';
 import { formatCurrency } from '../../lib/utils/notifications';
+import { useTranslation } from 'react-i18next';
 
 export default function Transactions() {
+  const { t } = useTranslation();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -160,7 +162,7 @@ export default function Transactions() {
           className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
-          New Transaction
+          {t('transactions.newTransaction')}
         </motion.button>
       </motion.div>
 

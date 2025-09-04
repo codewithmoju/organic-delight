@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../lib/store';
 import Logo from './ui/Logo';
+import LanguageSelector from './ui/LanguageSelector';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -36,6 +37,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       
       <div className="flex flex-1 gap-x-2 sm:gap-x-4 self-stretch items-center justify-end">
         <div className="flex items-center gap-x-4 lg:gap-x-6">
+          <LanguageSelector variant="compact" showSearch={false} />
+          
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}

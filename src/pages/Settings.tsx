@@ -50,8 +50,11 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { formatDate } from '../lib/utils/notifications';
 import { debounce } from '../lib/utils/debounce';
 import { SUPPORTED_CURRENCIES } from '../lib/types';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from '../components/ui/LanguageSelector';
 
 export default function Settings() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'notifications'>('profile');
   const profile = useAuthStore((state) => state.profile);
@@ -168,10 +171,10 @@ export default function Settings() {
   };
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Lock },
-    { id: 'preferences', label: 'Preferences', icon: Palette },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'profile', label: t('settings.tabs.profile'), icon: User },
+    { id: 'security', label: t('settings.tabs.security'), icon: Lock },
+    { id: 'preferences', label: t('settings.tabs.preferences'), icon: Palette },
+    { id: 'notifications', label: t('settings.tabs.notifications'), icon: Bell },
   ] as const;
 
   return (
@@ -181,9 +184,9 @@ export default function Settings() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl sm:text-3xl font-bold text-gradient mb-2">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gradient mb-2">{t('settings.title')}</h1>
         <p className="text-gray-400 text-sm sm:text-base">
-          Manage your account preferences and security settings
+          {t('settings.subtitle')}
         </p>
       </motion.div>
 
@@ -251,7 +254,7 @@ export default function Settings() {
                     >
                       <label htmlFor="fullName" className="block text-base font-medium text-gray-300 mb-3">
                         <User className="w-4 h-4 inline mr-2" />
-                        Full Name
+                        {t('settings.profile.fullName')}
                       </label>
                       <input
                         type="text"
@@ -260,7 +263,7 @@ export default function Settings() {
                         defaultValue={profile?.full_name}
                         required
                         className="w-full input-dark input-large"
-                        placeholder="Enter your full name"
+                        placeholder={t('settings.profile.fullNamePlaceholder')}
                       />
                     </motion.div>
 
@@ -271,7 +274,7 @@ export default function Settings() {
                     >
                       <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
                         <Mail className="w-4 h-4 inline mr-2" />
-                        Email Address
+                        {t('settings.profile.email')}
                       </label>
                       <input
                         type="email"
@@ -533,8 +536,8 @@ export default function Settings() {
                     </div>
 
                     <PreferenceSelect
-                      label="Language"
-                      description="Choose your preferred language"
+                      label={t('settings.preferences.currencyLocalization.language')}
+                      description={t('settings.preferences.currencyLocalization.languageDescription')}
                       icon={<Languages className="w-4 h-4" />}
                       value={preferences.language}
                       options={[
@@ -546,9 +549,23 @@ export default function Settings() {
                         { value: 'pt', label: 'Português' },
                         { value: 'zh', label: '中文' },
                         { value: 'ja', label: '日本語' },
+                        { value: 'ar', label: 'العربية' },
+                        { value: 'hi', label: 'हिन्दी' },
                       ]}
                       onChange={(value) => updatePreference('language', value)}
                     />
+
+                    <div>
+                      <label className="block text-base font-medium text-gray-300 mb-3">
+                        <Languages className="w-4 h-4 inline mr-2" />
+                        {t('settings.preferences.currencyLocalization.language')} (Advanced)
+                      </label>
+                      <LanguageSelector
+                        variant="dropdown"
+                        showSearch={true}
+                        className="w-full"
+                      />
+                    </div>
 
                     <PreferenceSelect
                       label="Date Format"

@@ -12,6 +12,7 @@ import {
   Layers
 } from 'lucide-react';
 import Logo from './ui/Logo';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,14 +20,16 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
+  
   const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/inventory/categories', icon: FolderOpen, label: 'Categories' },
-    { to: '/inventory/items', icon: Package, label: 'Items' },
-    { to: '/transactions', icon: ArrowUpDown, label: 'Transactions' },
-    { to: '/stock-levels', icon: Layers, label: 'Stock Levels' },
-    { to: '/reports', icon: BarChart3, label: 'Reports' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
+    { to: '/', icon: LayoutDashboard, label: t('navigation.dashboard') },
+    { to: '/inventory/categories', icon: FolderOpen, label: t('navigation.categories') },
+    { to: '/inventory/items', icon: Package, label: t('navigation.items') },
+    { to: '/transactions', icon: ArrowUpDown, label: t('navigation.transactions') },
+    { to: '/stock-levels', icon: Layers, label: t('navigation.stockLevels') },
+    { to: '/reports', icon: BarChart3, label: t('navigation.reports') },
+    { to: '/settings', icon: Settings, label: t('navigation.settings') },
   ];
 
   return (
@@ -99,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {/* Footer */}
           <div className="p-4 border-t border-dark-700/50">
             <div className="text-xs text-gray-500 text-center">
-              StockSuite v2.0
+              {t('app.version')}
             </div>
           </div>
         </div>

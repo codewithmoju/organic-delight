@@ -124,9 +124,9 @@ export default function Categories() {
         className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Categories</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">{t('categories.title')}</h1>
           <p className="text-gray-400 mt-1 text-sm sm:text-base">
-            Organize your inventory with custom categories
+            {t('categories.subtitle')}
           </p>
         </div>
         
@@ -138,7 +138,7 @@ export default function Categories() {
           className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
-          Add Category
+          {t('categories.addCategory')}
         </motion.button>
       </motion.div>
 

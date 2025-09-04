@@ -9,8 +9,10 @@ import { getProfile } from '../../lib/api/auth';
 import { useAuthStore } from '../../lib/store';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Logo from '../../components/ui/Logo';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
@@ -31,11 +33,11 @@ export default function Login() {
       const password = formData.get('password') as string;
 
       if (!email) {
-        setErrors(prev => ({ ...prev, email: 'Email is required' }));
+        setErrors(prev => ({ ...prev, email: t('auth.login.errors.emailRequired') }));
         return;
       }
       if (!password) {
-        setErrors(prev => ({ ...prev, password: 'Password is required' }));
+        setErrors(prev => ({ ...prev, password: t('auth.login.errors.passwordRequired') }));
         return;
       }
 
@@ -55,17 +57,17 @@ export default function Login() {
       console.error('Login error:', error);
       
       if (error.code === 'auth/user-not-found') {
-        setErrors({ email: 'No account found with this email' });
+        setErrors({ email: t('auth.login.errors.userNotFound') });
       } else if (error.code === 'auth/wrong-password') {
-        setErrors({ password: 'Incorrect password' });
+        setErrors({ password: t('auth.login.errors.wrongPassword') });
       } else if (error.code === 'auth/invalid-credential') {
-        setErrors({ email: 'Invalid email or password. Please check your credentials.' });
+        setErrors({ email: t('auth.login.errors.invalidCredentials') });
       } else if (error.code === 'auth/invalid-email') {
-        setErrors({ email: 'Invalid email address' });
+        setErrors({ email: t('auth.login.errors.invalidEmail') });
       } else if (error.code === 'auth/too-many-requests') {
-        toast.error('Too many failed attempts. Please try again later.');
+        toast.error(t('auth.login.errors.tooManyRequests'));
       } else {
-        toast.error('Failed to sign in. Please try again.');
+        toast.error(t('errors.generic'));
       }
     } finally {
       setIsLoading(false);
@@ -114,7 +116,7 @@ export default function Login() {
               transition={{ delay: 0.4 }}
             >
               <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
-                Email address
+                {t('auth.login.email')}
               </label>
               <input
                 id="email"
@@ -123,7 +125,7 @@ export default function Login() {
                 autoComplete="email"
                 required
                 className={`w-full input-dark input-large ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
-                placeholder="Enter your email"
+                placeholder={t('auth.login.password')}
               />
               {errors.email && (
                 <motion.div 
@@ -143,7 +145,7 @@ export default function Login() {
               transition={{ delay: 0.5 }}
             >
               <label htmlFor="password" className="block text-base font-medium text-gray-300 mb-3">
-                Password
+                {t('auth.login.password')}
               </label>
               <div className="relative">
                 <input
@@ -219,10 +221,10 @@ export default function Login() {
                 {isLoading ? (
                   <>
                     <LoadingSpinner size="sm" color="white" />
-                    Signing in...
+                    {t('auth.login.signingIn')}
                   </>
                 ) : (
-                  'Sign in'
+                  t('auth.login.signIn')
                 )}
               </motion.button>
             </motion.div>
@@ -234,12 +236,12 @@ export default function Login() {
             transition={{ delay: 0.8 }}
             className="mt-8 text-center text-base text-gray-400"
           >
-            Don't have an account?{' '}
+            {t('auth.login.noAccount')}{' '}
             <Link
               to="/register-multi"
               className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
             >
-              Sign up
+              {t('auth.login.signUp')}
             </Link>
           </motion.p>
         </div>
