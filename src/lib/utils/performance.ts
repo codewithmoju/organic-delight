@@ -1,7 +1,7 @@
-// Performance optimization utilities for mobile dashboard
+// Performance optimization utilities
 
-// Optimized debounce for mobile interactions
-export function createMobileOptimizedDebounce<T extends (...args: any[]) => any>(
+// Debounced function for expensive operations
+export function createOptimizedDebounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number,
   immediate?: boolean
@@ -25,38 +25,29 @@ export function createMobileOptimizedDebounce<T extends (...args: any[]) => any>
   };
 }
 
-// Throttled function optimized for mobile scroll/touch events
-export function createMobileOptimizedThrottle<T extends (...args: any[]) => any>(
+// Throttled function for scroll/resize events
+export function createOptimizedThrottle<T extends (...args: any[]) => any>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  let lastFunc: NodeJS.Timeout;
-  let lastRan: number;
   
   return function executedFunction(...args: Parameters<T>) {
-    if (!lastRan) {
+    if (!inThrottle) {
       func.apply(this, args);
-      lastRan = Date.now();
-    } else {
-      clearTimeout(lastFunc);
-      lastFunc = setTimeout(() => {
-        if ((Date.now() - lastRan) >= limit) {
-          func.apply(this, args);
-          lastRan = Date.now();
-        }
-      }, limit - (Date.now() - lastRan));
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
     }
   };
 }
 
-// Optimized intersection observer for mobile lazy loading
-export function createMobileIntersectionObserver(
+// Optimized intersection observer for lazy loading
+export function createOptimizedIntersectionObserver(
   callback: IntersectionObserverCallback,
   options?: IntersectionObserverInit
 ) {
   const defaultOptions: IntersectionObserverInit = {
-    rootMargin: '20px', // Reduced for mobile
+    rootMargin: '50px',
     threshold: 0.1,
     ...options
   };
@@ -64,8 +55,8 @@ export function createMobileIntersectionObserver(
   return new IntersectionObserver(callback, defaultOptions);
 }
 
-// Memory-efficient array chunking for mobile
-export function chunkArrayForMobile<T>(array: T[], chunkSize: number = 10): T[][] {
+// Memory-efficient array chunking
+export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < array.length; i += chunkSize) {
     chunks.push(array.slice(i, i + chunkSize));
@@ -73,34 +64,23 @@ export function chunkArrayForMobile<T>(array: T[], chunkSize: number = 10): T[][
   return chunks;
 }
 
-// Mobile-optimized image preloading
-export function preloadCriticalImages(urls: string[]): Promise<void[]> {
-  // Limit concurrent image loads on mobile
-  const maxConcurrent = window.innerWidth <= 768 ? 2 : 4;
-  const chunks = chunkArrayForMobile(urls, maxConcurrent);
-  
-  return chunks.reduce(async (promise, chunk) => {
-    await promise;
-    return Promise.all(
-      chunk.map(url => 
-        new Promise<void>((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => resolve(); // Don't fail on image errors
-          img.src = url;
-          
-          // Timeout for mobile networks
-          setTimeout(() => resolve(), 3000);
-        })
-      )
-    );
-  }, Promise.resolve([]));
+// Optimized image preloading
+export function preloadImages(urls: string[]): Promise<void[]> {
+  return Promise.all(
+    urls.map(url => 
+      new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+        img.src = url;
+      })
+    )
+  );
 }
 
 // Performance measurement utilities
-export class MobilePerformanceTracker {
+export class PerformanceTracker {
   private static marks: Map<string, number> = new Map();
-  private static isMobile = window.innerWidth <= 768;
 
   static mark(name: string): void {
     this.marks.set(name, performance.now());
@@ -114,12 +94,7 @@ export class MobilePerformanceTracker {
     }
     
     const duration = performance.now() - startTime;
-    
-    // Only log performance issues on mobile
-    if (this.isMobile && duration > 100) {
-      console.warn(`${name}: ${duration.toFixed(2)}ms (slow on mobile)`);
-    }
-    
+    console.log(`${name}: ${duration.toFixed(2)}ms`);
     return duration;
   }
 
@@ -128,16 +103,14 @@ export class MobilePerformanceTracker {
   }
 }
 
-// Mobile device capability detection
-export function getMobileDeviceCapabilities() {
+// Device capability detection
+export function getDeviceCapabilities() {
   const capabilities = {
     cores: navigator.hardwareConcurrency || 1,
     memory: (navigator as any).deviceMemory || 1,
     connection: (navigator as any).connection?.effectiveType || 'unknown',
     isLowEnd: false,
-    isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
-    supportsWebGL: !!window.WebGLRenderingContext,
-    devicePixelRatio: window.devicePixelRatio || 1
+    isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   };
 
   // Determine if device is low-end
@@ -150,48 +123,47 @@ export function getMobileDeviceCapabilities() {
   return capabilities;
 }
 
-// Optimized animation controller for mobile
-export function createMobileAnimationController() {
-  const capabilities = getMobileDeviceCapabilities();
-  
-  return {
-    // Reduced durations for mobile
-    duration: {
-      fast: capabilities.isMobile ? 0.1 : 0.15,
-      normal: capabilities.isMobile ? 0.15 : 0.2,
-      slow: capabilities.isMobile ? 0.2 : 0.3
-    },
+// Bundle size analyzer (development only)
+export function analyzeBundleSize() {
+  if (import.meta.env.DEV) {
+    const scripts = Array.from(document.querySelectorAll('script[src]'));
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
     
-    // Optimized easing for mobile
-    easing: {
-      easeOut: [0.25, 0.46, 0.45, 0.94],
-      easeInOut: [0.4, 0, 0.2, 1],
-      spring: capabilities.isLowEnd ? [0.25, 0.46, 0.45, 0.94] : [0.25, 0.46, 0.45, 0.94]
-    },
+    console.group('Bundle Analysis');
+    console.log('Script files:', scripts.length);
+    console.log('Stylesheet files:', styles.length);
     
-    // Disable complex animations on low-end devices
-    shouldReduceMotion: capabilities.isLowEnd || window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  };
+    // Estimate total size (rough calculation)
+    let totalEstimatedSize = 0;
+    scripts.forEach(script => {
+      const src = (script as HTMLScriptElement).src;
+      if (src.includes('node_modules')) {
+        totalEstimatedSize += 100; // Estimate vendor chunks
+      } else {
+        totalEstimatedSize += 50; // Estimate app chunks
+      }
+    });
+    
+    console.log(`Estimated bundle size: ~${totalEstimatedSize}KB`);
+    console.groupEnd();
+  }
 }
 
-// Critical resource hints for mobile
-export function addMobileResourceHints() {
+// Critical resource hints
+export function addResourceHints() {
   const head = document.head;
   
-  // Preconnect to critical domains
+  // Preconnect to external domains
   const preconnectDomains = [
     'https://fonts.googleapis.com',
     'https://images.unsplash.com'
   ];
   
   preconnectDomains.forEach(domain => {
-    if (!document.querySelector(`link[href="${domain}"]`)) {
-      const link = document.createElement('link');
-      link.rel = 'preconnect';
-      link.href = domain;
-      link.crossOrigin = 'anonymous';
-      head.appendChild(link);
-    }
+    const link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = domain;
+    head.appendChild(link);
   });
   
   // DNS prefetch for external resources
@@ -200,69 +172,9 @@ export function addMobileResourceHints() {
   ];
   
   dnsPrefetchDomains.forEach(domain => {
-    if (!document.querySelector(`link[href="${domain}"]`)) {
-      const link = document.createElement('link');
-      link.rel = 'dns-prefetch';
-      link.href = domain;
-      head.appendChild(link);
-    }
+    const link = document.createElement('link');
+    link.rel = 'dns-prefetch';
+    link.href = domain;
+    head.appendChild(link);
   });
-}
-
-// Optimized cache management for mobile
-export class MobileCacheManager {
-  private static cache = new Map<string, { data: any; timestamp: number; size: number }>();
-  private static maxCacheSize = window.innerWidth <= 768 ? 5 * 1024 * 1024 : 10 * 1024 * 1024; // 5MB mobile, 10MB desktop
-  private static currentCacheSize = 0;
-
-  static set(key: string, data: any, ttl: number = 5 * 60 * 1000): void {
-    const size = JSON.stringify(data).length;
-    
-    // Check if adding this item would exceed cache size
-    if (this.currentCacheSize + size > this.maxCacheSize) {
-      this.cleanup();
-    }
-    
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      size
-    });
-    
-    this.currentCacheSize += size;
-  }
-
-  static get(key: string, ttl: number = 5 * 60 * 1000): any | null {
-    const item = this.cache.get(key);
-    
-    if (!item) return null;
-    
-    if (Date.now() - item.timestamp > ttl) {
-      this.cache.delete(key);
-      this.currentCacheSize -= item.size;
-      return null;
-    }
-    
-    return item.data;
-  }
-
-  static cleanup(): void {
-    // Remove oldest entries first
-    const entries = Array.from(this.cache.entries())
-      .sort(([, a], [, b]) => a.timestamp - b.timestamp);
-    
-    // Remove oldest 25% of entries
-    const toRemove = Math.ceil(entries.length * 0.25);
-    
-    for (let i = 0; i < toRemove; i++) {
-      const [key, item] = entries[i];
-      this.cache.delete(key);
-      this.currentCacheSize -= item.size;
-    }
-  }
-
-  static clear(): void {
-    this.cache.clear();
-    this.currentCacheSize = 0;
-  }
 }

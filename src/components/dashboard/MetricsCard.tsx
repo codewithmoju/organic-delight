@@ -7,6 +7,7 @@ interface MetricsCardProps {
   icon: LucideIcon;
   color: 'primary' | 'success' | 'warning' | 'error';
   delay?: number;
+  isLoading?: boolean;
 }
 
 export default function MetricsCard({ 
@@ -14,7 +15,8 @@ export default function MetricsCard({
   value, 
   icon: Icon, 
   color, 
-  delay = 0
+  delay = 0,
+  isLoading = false 
 }: MetricsCardProps) {
   const colorClasses = {
     primary: {
@@ -43,33 +45,33 @@ export default function MetricsCard({
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.2, delay, ease: "easeOut" }}
+      transition={{ duration: 0.4, delay, ease: "easeOut" }}
       whileHover={{ y: -4, scale: 1.02 }}
       className={`card-dark p-4 sm:p-6 group cursor-pointer border ${colorClasses[color].border} hover:${colorClasses[color].border}`}
-      style={{
-        transform: 'translate3d(0, 0, 0)',
-        backfaceVisibility: 'hidden',
-        willChange: 'transform, opacity'
-      }}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm font-medium text-gray-400 mb-2 truncate">
             {title}
           </p>
-          <motion.p 
-            className="text-xl sm:text-2xl lg:text-3xl font-bold text-white"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: delay + 0.05, duration: 0.15, ease: "easeOut" }}
-          >
-            {value}
-          </motion.p>
+          {isLoading ? (
+            <div className="h-8 sm:h-10 bg-gray-700 rounded animate-pulse" />
+          ) : (
+            <motion.p 
+              className="text-xl sm:text-2xl lg:text-3xl font-bold text-white"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: delay + 0.1, duration: 0.3, ease: "easeOut" }}
+            >
+              {value}
+            </motion.p>
+          )}
         </div>
-        <motion.div
-          className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${colorClasses[color].bg} ${colorClasses[color].text} group-hover:scale-110 transition-transform duration-200`}
+        
+        <motion.div 
+          className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-gradient-to-br ${colorClasses[color].bg} ${colorClasses[color].text} group-hover:scale-110 transition-all duration-300 flex-shrink-0`}
           whileHover={{ rotate: 360 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
         >
           <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
         </motion.div>

@@ -6,8 +6,8 @@
 @media (max-width: 768px) {
   /* Reduce animation complexity on mobile */
   * {
-    animation-duration: 0.15s !important;
-    transition-duration: 0.1s !important;
+    animation-duration: 0.2s !important;
+    transition-duration: 0.15s !important;
   }
   
   /* Optimize transforms for mobile */
@@ -15,24 +15,16 @@
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
     perspective: 1000px;
-    will-change: transform;
   }
   
   /* Reduce blur effects on mobile for better performance */
   .glass-effect {
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
   }
   
   /* Optimize grid layouts for mobile */
   .grid {
     contain: layout style;
-  }
-  
-  /* Optimize button interactions for mobile */
-  button, [role="button"] {
-    touch-action: manipulation;
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
   }
 }
 
@@ -50,11 +42,11 @@
 /* Mobile-optimized animations */
 @media (max-width: 768px) {
   .animate-spin {
-    animation: mobile-spin 0.8s linear infinite;
+    animation: mobile-spin 1s linear infinite;
   }
   
   .animate-pulse {
-    animation: mobile-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: mobile-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }
 
@@ -70,8 +62,8 @@
 
 /* Mobile-optimized shimmer animation */
 @keyframes mobile-shimmer {
-  0% { background-position: -100% 0; }
-  100% { background-position: 100% 0; }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Smooth loader animations */
@@ -81,17 +73,34 @@
   will-change: transform;
 }
 
+/* Prevent FOUC (Flash of Unstyled Content) */
+.loading-container {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+
+.loading-container.loaded {
+  visibility: visible;
+  opacity: 1;
+}
+
 /* Mobile-specific loading optimizations */
 @media (max-width: 768px) {
   /* Reduce animation complexity on mobile */
   .mobile-optimized-spinner {
-    animation-duration: 0.6s !important;
+    animation-duration: 0.8s !important;
   }
   
   /* Optimize shimmer for mobile */
   @keyframes mobile-shimmer {
-    0% { background-position: -50% 0; }
-    100% { background-position: 50% 0; }
+    0% { background-position: -100% 0; }
+    100% { background-position: 100% 0; }
+  }
+  
+  /* Faster transitions on mobile */
+  .loading-container {
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
   }
 }
 
