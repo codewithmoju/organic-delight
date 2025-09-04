@@ -7,10 +7,7 @@ import { debounce } from '../utils/debounce';
 export interface PreferenceSettings {
   preferred_currency: string;
   language: string;
-  theme: 'light' | 'dark' | 'system';
   timezone: string;
-  date_format: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
-  time_format: '12h' | '24h';
   notifications_enabled: boolean;
   email_notifications: boolean;
   push_notifications: boolean;
@@ -18,21 +15,13 @@ export interface PreferenceSettings {
   transaction_alerts: boolean;
   marketing_emails: boolean;
   auto_save: boolean;
-  compact_view: boolean;
-  show_animations: boolean;
-  high_contrast: boolean;
-  font_size: 'small' | 'medium' | 'large';
-  items_per_page: number;
   default_currency_display: 'symbol' | 'code' | 'both';
 }
 
 const DEFAULT_PREFERENCES: PreferenceSettings = {
   preferred_currency: 'USD',
   language: 'en',
-  theme: 'dark',
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  date_format: 'MM/DD/YYYY',
-  time_format: '12h',
   notifications_enabled: true,
   email_notifications: true,
   push_notifications: true,
@@ -40,11 +29,6 @@ const DEFAULT_PREFERENCES: PreferenceSettings = {
   transaction_alerts: true,
   marketing_emails: false,
   auto_save: true,
-  compact_view: false,
-  show_animations: true,
-  high_contrast: false,
-  font_size: 'medium',
-  items_per_page: 25,
   default_currency_display: 'symbol',
 };
 

@@ -19,17 +19,11 @@ import {
   Building,
   Languages,
   HelpCircle,
-  Package,
   ArrowUpDown,
-  Clock,
-  Type,
-  Eye,
-  Zap,
   RotateCcw,
   Save,
   AlertCircle,
   CheckCircle,
-  Palette as PaletteIcon,
   Accessibility
 } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
@@ -546,96 +540,12 @@ export default function Settings() {
                         className="w-full"
                       />
                     </div>
-
-                    <PreferenceSelect
-                      label="Date Format"
-                      description="Choose how dates are displayed"
-                      icon={<Clock className="w-4 h-4" />}
-                      value={preferences.date_format}
-                      options={[
-                        { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY (US)' },
-                        { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY (EU)' },
-                        { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD (ISO)' },
-                      ]}
-                      onChange={(value) => updatePreference('date_format', value)}
-                    />
-
-                    <PreferenceSelect
-                      label="Time Format"
-                      description="Choose 12-hour or 24-hour time format"
-                      icon={<Clock className="w-4 h-4" />}
-                      value={preferences.time_format}
-                      options={[
-                        { value: '12h', label: '12-hour (AM/PM)' },
-                        { value: '24h', label: '24-hour' },
-                      ]}
-                      onChange={(value) => updatePreference('time_format', value)}
-                    />
                   </div>
                 </PreferenceGroup>
               )}
 
-              {/* Appearance */}
-              {filteredPreferences('Appearance', ['theme', 'font size', 'animations', 'contrast']) && (
-                <PreferenceGroup
-                  title="Appearance"
-                  description="Customize the look and feel of the application"
-                  icon={<PaletteIcon className="w-5 h-5" />}
-                >
-                  <PreferenceSelect
-                    label="Theme"
-                    description="Choose your preferred color scheme"
-                    icon={<Monitor className="w-4 h-4" />}
-                    value={preferences.theme}
-                    options={[
-                      { value: 'light', label: '☀️ Light Mode' },
-                      { value: 'dark', label: '🌙 Dark Mode' },
-                      { value: 'system', label: '💻 System Default' },
-                    ]}
-                    onChange={(value) => updatePreference('theme', value)}
-                  />
-
-                  <PreferenceSelect
-                    label="Font Size"
-                    description="Adjust text size for better readability"
-                    icon={<Type className="w-4 h-4" />}
-                    value={preferences.font_size}
-                    options={[
-                      { value: 'small', label: 'Small' },
-                      { value: 'medium', label: 'Medium' },
-                      { value: 'large', label: 'Large' },
-                    ]}
-                    onChange={(value) => updatePreference('font_size', value)}
-                  />
-
-                  <PreferenceToggle
-                    label="Show Animations"
-                    description="Enable smooth transitions and animations"
-                    icon={<Zap className="w-4 h-4" />}
-                    checked={preferences.show_animations}
-                    onChange={(checked) => updatePreference('show_animations', checked)}
-                  />
-
-                  <PreferenceToggle
-                    label="High Contrast Mode"
-                    description="Increase contrast for better visibility"
-                    icon={<Eye className="w-4 h-4" />}
-                    checked={preferences.high_contrast}
-                    onChange={(checked) => updatePreference('high_contrast', checked)}
-                  />
-
-                  <PreferenceToggle
-                    label="Compact View"
-                    description="Show more content in less space"
-                    icon={<Package className="w-4 h-4" />}
-                    checked={preferences.compact_view}
-                    onChange={(checked) => updatePreference('compact_view', checked)}
-                  />
-                </PreferenceGroup>
-              )}
-
               {/* Behavior */}
-              {filteredPreferences('Behavior', ['auto save', 'items per page', 'currency display']) && (
+              {filteredPreferences('Behavior', ['auto save', 'currency display']) && (
                 <PreferenceGroup
                   title="Behavior"
                   description="Configure how the application behaves"
@@ -647,17 +557,6 @@ export default function Settings() {
                     icon={<Save className="w-4 h-4" />}
                     checked={preferences.auto_save}
                     onChange={(checked) => updatePreference('auto_save', checked)}
-                  />
-
-                  <PreferenceSlider
-                    label="Items Per Page"
-                    description="Number of items to show in lists"
-                    icon={<Package className="w-4 h-4" />}
-                    value={preferences.items_per_page}
-                    min={10}
-                    max={100}
-                    step={5}
-                    onChange={(value) => updatePreference('items_per_page', value)}
                   />
 
                   <PreferenceSelect
