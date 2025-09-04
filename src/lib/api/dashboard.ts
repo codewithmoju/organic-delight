@@ -67,9 +67,9 @@ export async function getInventoryTrends(period: TimePeriod) {
   
   snapshot.docs.forEach(doc => {
     const transaction = doc.data();
-    const date = transaction.transaction_date.toDate ? 
+    const date = transaction.transaction_date?.toDate ? 
       transaction.transaction_date.toDate() : 
-      new Date(transaction.transaction_date);
+      new Date(transaction.transaction_date || Date.now());
     
     let key: string;
     
