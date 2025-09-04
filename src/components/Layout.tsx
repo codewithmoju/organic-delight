@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
@@ -11,7 +11,7 @@ export default function Layout() {
   });
 
   // Handle window resize to manage sidebar state
-  React.useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         // Desktop: keep sidebar open
