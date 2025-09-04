@@ -272,7 +272,7 @@ export default function TourProvider({ children }: TourProviderProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
+              className="fixed inset-0 bg-black/50 z-[9998]"
               style={{ pointerEvents: currentStepData.spotlight ? 'auto' : 'none' }}
             />
 
@@ -301,7 +301,7 @@ export default function TourProvider({ children }: TourProviderProps) {
                   })(),
                 }}
               >
-                <div className="w-full h-full rounded-xl border-4 border-primary-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] bg-transparent animate-pulse" />
+                <div className="w-full h-full rounded-xl border-4 border-primary-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] bg-white/5 backdrop-blur-[1px] animate-pulse" />
               </motion.div>
             )}
 
