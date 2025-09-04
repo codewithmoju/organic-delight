@@ -383,7 +383,7 @@ export default function TourProvider({ children }: TourProviderProps) {
                         className="btn-secondary flex items-center gap-2 px-4 py-2 text-sm"
                       >
                         <ArrowLeft className="w-4 h-4" />
-                        Previous
+                        {t('tour.controls.previous')}
                       </motion.button>
                     )}
                     
@@ -394,7 +394,7 @@ export default function TourProvider({ children }: TourProviderProps) {
                       className="text-gray-400 hover:text-white text-sm px-3 py-2 transition-colors"
                     >
                       <SkipForward className="w-4 h-4 inline mr-1" />
-                      Skip Tour
+                      {t('tour.controls.skip')}
                     </motion.button>
                   </div>
 
@@ -407,11 +407,11 @@ export default function TourProvider({ children }: TourProviderProps) {
                     {currentStep === totalSteps - 1 ? (
                       <>
                         <CheckCircle className="w-4 h-4" />
-                        Finish
+                        {t('tour.controls.finish')}
                       </>
                     ) : (
                       <>
-                        Next
+                        {t('tour.controls.next')}
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}

@@ -86,6 +86,7 @@ export default function TourTrigger({
 
 // Restart Tour Button Component
 export function RestartTourButton({ className = '' }: { className?: string }) {
+  const { t } = useTranslation();
   const { startTour, isActive } = useTour();
 
   if (isActive) return null;
@@ -98,7 +99,7 @@ export function RestartTourButton({ className = '' }: { className?: string }) {
       className={`btn-secondary flex items-center gap-2 ${className}`}
     >
       <RotateCcw className="w-4 h-4" />
-      Restart Tour
+      {t('tour.controls.restartTour')}
     </motion.button>
   );
 }
