@@ -8,7 +8,7 @@ import { InventoryChart } from '../components/dashboard/InventoryChart';
 import { RecentTransactions } from '../components/dashboard/RecentTransactions';
 import { LowStockAlert } from '../components/dashboard/LowStockAlert';
 import { TimePeriodFilter } from '../components/dashboard/TimePeriodFilter';
-import { AnimatedCard } from '../components/ui/AnimatedCard';
+import AnimatedCard from '../components/ui/AnimatedCard';
 import { getDashboardData } from '../lib/api/dashboard';
 import { DashboardData } from '../lib/types';
 
