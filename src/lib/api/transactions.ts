@@ -15,7 +15,21 @@ import {
 import { db } from '../firebase';
 import { Transaction } from '../types';
 
+// Cache for transaction data
+const transactionsCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 1 * 60 * 1000; // 1 minute for transactions
+
+function isCacheValid(timestamp: number): boolean {
+  return Date.now() - timestamp < CACHE_DURATION;
+}
 export async function getTransactions(limitCount?: number, lastDoc?: DocumentSnapshot) {
+  const cacheKey = `transactions-${limitCount || 'all'}-${lastDoc?.id || 'start'}`;
+  const cached = transactionsCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
   const transactionsRef = collection(db, 'transactions');
   let q = query(transactionsRef, orderBy('transaction_date', 'desc'));
   
@@ -58,12 +72,34 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
     transactions.push(transaction);
   }
   
-  return { transactions, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
+  const result = { transactions, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
+  
+  // Cache the result
+  transactionsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  
+  return result;
 }
 
 export async function getRecentTransactions(limitCount: number = 5): Promise<Transaction[]> {
+  const cacheKey = `recent-transactions-${limitCount}`;
+  const cached = transactionsCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
   const result = await getTransactions(limitCount);
-  return result.transactions;
+  const transactions = result.transactions;
+  
+  // Cache the result
+  transactionsCache.set(cacheKey, { data: transactions, timestamp: Date.now() });
+  
+  return transactions;
+}
+
+// Clear cache when new transactions are created
+export function clearTransactionsCache() {
+  transactionsCache.clear();
 }
 
 export async function getTransactionsByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
