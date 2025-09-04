@@ -163,6 +163,7 @@ export default function Dashboard() {
       </div>
     </motion.div>
   );
+  
   if (error) {
     return (
       <motion.div 
@@ -197,183 +198,184 @@ export default function Dashboard() {
       
       {/* Main content */}
       <div className="space-y-6 sm:space-y-8">
-    <div className="space-y-6 sm:space-y-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div className="text-center sm:text-left">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">
-            {t('dashboard.title')}
-          </h1>
-          <p className="text-gray-400 text-base sm:text-lg">
-            {t('dashboard.subtitle')}
-          </p>
+        <div className="space-y-6 sm:space-y-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+          >
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">
+                {t('dashboard.title')}
+              </h1>
+              <p className="text-gray-400 text-base sm:text-lg">
+                {t('dashboard.subtitle')}
+              </p>
+            </div>
+            
+            {/* Time Period Dropdown */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="w-full sm:w-auto"
+            >
+              <TimePeriodFilter
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={handlePeriodChange}
+                isLoading={isMetricsLoading}
+              />
+            </motion.div>
+          </motion.div>
+
+          {/* Key Metrics Cards */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6" data-tour="dashboard-stats">
+            <MetricsCard
+              title={t('dashboard.metrics.totalStockIn')}
+              value={metrics?.totalStockIn || 0}
+              icon={ArrowUp}
+              color="success"
+              delay={0.2}
+              isLoading={isMetricsLoading}
+            />
+            <MetricsCard
+              title={t('dashboard.metrics.totalStockOut')}
+              value={metrics?.totalStockOut || 0}
+              icon={ArrowDown}
+              color="error"
+              delay={0.3}
+              isLoading={isMetricsLoading}
+            />
+            <MetricsCard
+              title={t('dashboard.metrics.revenueSpent')}
+              value={formatCurrency(metrics?.revenueSpentOnStockIn || 0)}
+              icon={DollarSign}
+              color="warning"
+              delay={0.4}
+              isLoading={isMetricsLoading}
+            />
+            <MetricsCard
+              title={t('dashboard.metrics.revenueEarned')}
+              value={formatCurrency(metrics?.revenueEarnedFromStockOut || 0)}
+              icon={TrendingUp}
+              color="primary"
+              delay={0.5}
+              isLoading={isMetricsLoading}
+            />
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
+            <StatsCard
+              title="Total Items"
+              value={summary?.totalItems || 0}
+              icon={<Package className="h-6 w-6" />}
+              delay={0.6}
+            />
+            <StatsCard
+              title="Total Value"
+              value={formatCurrency(summary?.totalValue || 0)}
+              icon={<DollarSign className="h-6 w-6" />}
+              delay={0.7}
+            />
+            <StatsCard
+              title="Low Stock Items"
+              value={summary?.lowStockCount || 0}
+              icon={<ShoppingCart className="h-6 w-6" />}
+              delay={0.8}
+            />
+            <StatsCard
+              title="Out of Stock"
+              value={summary?.outOfStockCount || 0}
+              icon={<AlertTriangle className="h-6 w-6" />}
+              delay={0.9}
+            />
+          </div>
+
+          {/* Low Stock Alert */}
+          {lowStockItems.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.0, duration: 0.4 }}
+            >
+              <LowStockAlert items={lowStockItems} />
+            </motion.div>
+          )}
+
+          {/* Metrics Charts */}
+          <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
+            <MetricsChart
+              data={chartData}
+              type="bar"
+              title="Stock Movement Trends"
+              isLoading={isMetricsLoading}
+            />
+            
+            <MetricsChart
+              data={chartData}
+              type="line"
+              title="Revenue Trends"
+              isLoading={isMetricsLoading}
+            />
+          </div>
+
+          {/* Inventory Overview and Recent Activity */}
+          <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
+            <AnimatedCard delay={1.0}>
+              <InventoryChart
+                data={memoizedChartData}
+              />
+            </AnimatedCard>
+            
+            <AnimatedCard delay={1.1}>
+              <RecentTransactions transactions={transactions} />
+            </AnimatedCard>
+          </div>
+
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.3, duration: 0.4 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+          >
+            <TourTrigger variant="card" />
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/inventory/categories')}
+              className="btn-primary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
+            >
+              <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8" />
+              <span className="text-base sm:text-lg font-semibold">Manage Categories</span>
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/transactions')}
+              className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
+            >
+              <ArrowUpDown className="w-6 h-6 sm:w-8 sm:h-8" />
+              <span className="text-base sm:text-lg font-semibold">Record Transaction</span>
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/stock-levels')}
+              className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px] sm:col-span-2 lg:col-span-1"
+            >
+              <Layers className="w-6 h-6 sm:w-8 sm:h-8" />
+              <span className="text-base sm:text-lg font-semibold">View Stock Levels</span>
+            </motion.button>
+          </motion.div>
         </div>
-        
-        {/* Time Period Dropdown */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-          className="w-full sm:w-auto"
-        >
-          <TimePeriodFilter
-            selectedPeriod={selectedPeriod}
-            onPeriodChange={handlePeriodChange}
-            isLoading={isMetricsLoading}
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6" data-tour="dashboard-stats">
-        <MetricsCard
-          title={t('dashboard.metrics.totalStockIn')}
-          value={metrics?.totalStockIn || 0}
-          icon={ArrowUp}
-          color="success"
-          delay={0.2}
-          isLoading={isMetricsLoading}
-        />
-        <MetricsCard
-          title={t('dashboard.metrics.totalStockOut')}
-          value={metrics?.totalStockOut || 0}
-          icon={ArrowDown}
-          color="error"
-          delay={0.3}
-          isLoading={isMetricsLoading}
-        />
-        <MetricsCard
-          title={t('dashboard.metrics.revenueSpent')}
-          value={formatCurrency(metrics?.revenueSpentOnStockIn || 0)}
-          icon={DollarSign}
-          color="warning"
-          delay={0.4}
-          isLoading={isMetricsLoading}
-        />
-        <MetricsCard
-          title={t('dashboard.metrics.revenueEarned')}
-          value={formatCurrency(metrics?.revenueEarnedFromStockOut || 0)}
-          icon={TrendingUp}
-          color="primary"
-          delay={0.5}
-          isLoading={isMetricsLoading}
-        />
       </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
-        <StatsCard
-          title="Total Items"
-          value={summary?.totalItems || 0}
-          icon={<Package className="h-6 w-6" />}
-          delay={0.6}
-        />
-        <StatsCard
-          title="Total Value"
-          value={formatCurrency(summary?.totalValue || 0)}
-          icon={<DollarSign className="h-6 w-6" />}
-          delay={0.7}
-        />
-        <StatsCard
-          title="Low Stock Items"
-          value={summary?.lowStockCount || 0}
-          icon={<ShoppingCart className="h-6 w-6" />}
-          delay={0.8}
-        />
-        <StatsCard
-          title="Out of Stock"
-          value={summary?.outOfStockCount || 0}
-          icon={<AlertTriangle className="h-6 w-6" />}
-          delay={0.9}
-        />
-      </div>
-
-      {/* Low Stock Alert */}
-      {lowStockItems.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1.0, duration: 0.4 }}
-        >
-          <LowStockAlert items={lowStockItems} />
-        </motion.div>
-      )}
-
-      {/* Metrics Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
-        <MetricsChart
-          data={chartData}
-          type="bar"
-          title="Stock Movement Trends"
-          isLoading={isMetricsLoading}
-        />
-        
-        <MetricsChart
-          data={chartData}
-          type="line"
-          title="Revenue Trends"
-          isLoading={isMetricsLoading}
-        />
-      </div>
-
-      {/* Inventory Overview and Recent Activity */}
-      <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
-        <AnimatedCard delay={1.0}>
-          <InventoryChart
-            data={memoizedChartData}
-          />
-        </AnimatedCard>
-        
-        <AnimatedCard delay={1.1}>
-          <RecentTransactions transactions={transactions} />
-        </AnimatedCard>
-      </div>
-
-      {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.3, duration: 0.4 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
-      >
-        <TourTrigger variant="card" />
-        
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/inventory/categories')}
-          className="btn-primary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
-        >
-          <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8" />
-          <span className="text-base sm:text-lg font-semibold">Manage Categories</span>
-        </motion.button>
-        
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/transactions')}
-          className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
-        >
-          <ArrowUpDown className="w-6 h-6 sm:w-8 sm:h-8" />
-          <span className="text-base sm:text-lg font-semibold">Record Transaction</span>
-        </motion.button>
-        
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/stock-levels')}
-          className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px] sm:col-span-2 lg:col-span-1"
-        >
-          <Layers className="w-6 h-6 sm:w-8 sm:h-8" />
-          <span className="text-base sm:text-lg font-semibold">View Stock Levels</span>
-        </motion.button>
-      </motion.div>
-    </div>
-    </div>
+    </>
   );
 }
