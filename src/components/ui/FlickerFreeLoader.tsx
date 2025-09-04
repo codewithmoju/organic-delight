@@ -18,6 +18,7 @@ export default function FlickerFreeLoader({
 }: FlickerFreeLoaderProps) {
   const [showContent, setShowContent] = useState(false);
   const [loadStartTime] = useState(Date.now());
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -27,12 +28,15 @@ export default function FlickerFreeLoader({
       // Ensure minimum loading time to prevent flickering
       setTimeout(() => {
         setShowContent(true);
+        setIsReady(true);
       }, remainingTime);
     } else {
       setShowContent(false);
+      setIsReady(false);
     }
   }, [isLoading, loadStartTime, minLoadTime]);
 
+  // Always render children container to prevent layout shifts
   return (
     <div 
       className={`relative ${className}`}
@@ -42,8 +46,22 @@ export default function FlickerFreeLoader({
         contain: 'layout style paint'
       }}
     >
+      {/* Always render children but control visibility */}
+      <div 
+        className={`transition-opacity duration-300 ${
+          showContent && isReady ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          transform: 'translate3d(0, 0, 0)',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        {children}
+      </div>
+
+      {/* Loading overlay */}
       <AnimatePresence mode="wait">
-        {isLoading || !showContent ? (
+        {(isLoading || !showContent) && (
           <motion.div
             key="loading"
             initial={{ opacity: 0 }}
@@ -53,7 +71,7 @@ export default function FlickerFreeLoader({
               duration: window.innerWidth <= 768 ? 0.15 : 0.2,
               ease: "easeOut"
             }}
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center bg-dark-900/95 backdrop-blur-sm z-10"
             style={{
               transform: 'translate3d(0, 0, 0)',
               backfaceVisibility: 'hidden'
@@ -78,22 +96,6 @@ export default function FlickerFreeLoader({
                 <p className="text-gray-400 text-sm font-medium">Loading...</p>
               </div>
             )}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="content"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              duration: window.innerWidth <= 768 ? 0.2 : 0.3,
-              ease: [0.25, 0.46, 0.45, 0.94]
-            }}
-            style={{
-              transform: 'translate3d(0, 0, 0)',
-              backfaceVisibility: 'hidden'
-            }}
-          >
-            {children}
           </motion.div>
         )}
       </AnimatePresence>

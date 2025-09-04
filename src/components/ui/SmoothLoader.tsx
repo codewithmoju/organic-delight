@@ -234,35 +234,37 @@ export default function SmoothLoader({
 
   // Inline variant
   return (
-    <AnimatePresence>
-      {isLoading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="flex items-center space-x-2"
-          style={{
-            transform: 'translate3d(0, 0, 0)',
-            backfaceVisibility: 'hidden'
-          }}
-        >
+    <div className="inline-flex items-center space-x-2">
+      <AnimatePresence>
+        {isLoading && (
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: 1,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="w-6 h-6 border-2 border-primary-500/30 border-t-primary-500 rounded-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center space-x-2"
             style={{
               transform: 'translate3d(0, 0, 0)',
-              backfaceVisibility: 'hidden',
-              willChange: 'transform'
+              backfaceVisibility: 'hidden'
             }}
-          />
-          <span className="text-sm text-gray-400">{loadingText}</span>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              className="w-6 h-6 border-2 border-primary-500/30 border-t-primary-500 rounded-full"
+              style={{
+                transform: 'translate3d(0, 0, 0)',
+                backfaceVisibility: 'hidden',
+                willChange: 'transform'
+              }}
+            />
+            <span className="text-sm text-gray-400">{loadingText}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
