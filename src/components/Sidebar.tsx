@@ -70,14 +70,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-        delay: index * 0.03,
-        duration: 0.15,
+            transition={{
+              delay: 0,
+              duration: 0.15
+            }}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={onClose}
             aria-hidden="true"
           />
         )}
-        backfaceVisibility: 'hidden',
-        contain: 'layout style paint'
+      </AnimatePresence>
       
       {/* Sidebar - responsive behavior with smooth animations */}
       <motion.aside 
@@ -89,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         transition={{ 
           type: "tween",
           duration: window.innerWidth <= 768 ? 0.25 : 0.3,
-          `group flex items-center px-4 py-3 rounded-xl transition-colors duration-100 min-h-[48px] touch-manipulation ${
+          ease: [0.25, 0.46, 0.45, 0.94]
         }}
         className={`
           fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50 flex flex-col sidebar-optimized
@@ -104,7 +106,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         role="navigation"
         aria-label="Main navigation"
         aria-hidden={!isOpen ? 'true' : 'false'}
-        <item.icon className="w-5 h-5 mr-3 transition-transform duration-100 group-hover:scale-105" 
+      >
         <div className="flex flex-col h-full">
           {/* Header with logo and close button */}
           <div className="flex items-center justify-between p-6 border-b border-dark-700/50">
@@ -146,7 +148,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     }
                   }}
                   className={({ isActive }) =>
-                    `group flex items-center px-4 py-3 rounded-xl transition-colors duration-150 min-h-[48px] touch-manipulation ${
+                    \`group flex items-center px-4 py-3 rounded-xl transition-colors duration-150 min-h-[48px] touch-manipulation ${
                       isActive
                         ? 'bg-gradient-to-r from-primary-600/20 to-accent-600/20 text-primary-400 border-l-4 border-primary-500'
                         : 'text-gray-300 hover:bg-dark-700/50 hover:text-white'
