@@ -178,7 +178,7 @@ export default function Login() {
                 {isLoading ? (
                   <>
                     <LoadingSpinner size="sm" color="white" />
-                    {t('auth.login.signingIn')}
+                   Signing in...
                   </>
                 ) : (
                   t('auth.login.signIn')
