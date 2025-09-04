@@ -265,7 +265,4 @@ export default function SmoothLoader({
       )}
     </AnimatePresence>
   );
--    </div>
-+    </motion.div>
-   );
- }
+}
