@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
@@ -6,16 +7,17 @@ import { useState } from 'react';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
+    <div className="min-h-screen bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 flex">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className="lg:pl-72 transition-all duration-300">
+      <div className="flex-1 lg:pl-72 transition-all duration-300 min-h-screen flex flex-col">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         
-        <main className="py-6 lg:py-10">
-          <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <main className="flex-1 py-6 lg:py-10">
+          <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto h-full">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
@@ -23,6 +25,7 @@ export default function Layout() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
+                className="h-full"
               >
                 <Outlet />
               </motion.div>

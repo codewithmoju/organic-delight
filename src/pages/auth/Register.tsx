@@ -86,79 +86,118 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10 border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-lg relative z-10"
+      >
+        <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="flex justify-center mb-6">
-              <Logo size="lg" />
+            <div className="text-center mb-8">
+              <Logo size="lg" animated />
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-6 text-3xl lg:text-4xl font-bold text-white"
+              >
+                Create your account
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-2 text-gray-400 text-lg"
+              >
+                Join StockSuite and start managing your inventory
+              </motion.p>
             </div>
-            <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-              Create your account
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Join StockSuite and start managing your inventory
-            </p>
           </div>
 
-          <form className="space-y-6 mt-8" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium leading-6 text-gray-900">
+          <form className="space-y-8 mt-8" onSubmit={handleSubmit}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <label htmlFor="fullName" className="block text-base font-medium text-gray-300 mb-3">
                 Full Name
               </label>
-              <div className="mt-2">
                 <input
                   id="fullName"
                   name="fullName"
                   type="text"
                   autoComplete="name"
                   required
-                  className={`block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-all duration-200 ${
+                  className={`w-full input-dark py-4 px-4 text-lg ${
                     errors.fullName 
-                      ? 'ring-red-300 focus:ring-red-500' 
-                      : 'ring-gray-300 focus:ring-blue-600'
+                      ? 'ring-error-500 border-error-500' 
+                      : ''
                   }`}
+                  placeholder="Enter your full name"
                 />
                 {errors.fullName && (
-                  <div className="mt-1 flex items-center text-sm text-red-600">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 flex items-center text-sm text-error-400"
+                  >
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {errors.fullName}
-                  </div>
+                  </motion.div>
                 )}
-              </div>
-            </div>
+            </motion.div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
                 Email address
               </label>
-              <div className="mt-2">
                 <input
                   id="email"
                   name="email"
                   type="email"
                   autoComplete="email"
                   required
-                  className={`block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-all duration-200 ${
+                  className={`w-full input-dark py-4 px-4 text-lg ${
                     errors.email 
-                      ? 'ring-red-300 focus:ring-red-500' 
-                      : 'ring-gray-300 focus:ring-blue-600'
+                      ? 'ring-error-500 border-error-500' 
+                      : ''
                   }`}
+                  placeholder="Enter your email"
                 />
                 {errors.email && (
-                  <div className="mt-1 flex items-center text-sm text-red-600">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 flex items-center text-sm text-error-400"
+                  >
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {errors.email}
-                  </div>
+                  </motion.div>
                 )}
-              </div>
-            </div>
+            </motion.div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <label htmlFor="password" className="block text-base font-medium text-gray-300 mb-3">
                 Password
               </label>
-              <div className="mt-2 relative">
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
@@ -167,114 +206,149 @@ export default function Register() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className={`block w-full rounded-md border-0 py-2.5 pr-10 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-all duration-200 ${
+                  className={`w-full input-dark py-4 px-4 pr-12 text-lg ${
                     errors.password 
-                      ? 'ring-red-300 focus:ring-red-500' 
-                      : 'ring-gray-300 focus:ring-blue-600'
+                      ? 'ring-error-500 border-error-500' 
+                      : ''
                   }`}
+                  placeholder="Create a strong password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-6 w-6 text-gray-400 hover:text-gray-200" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-6 w-6 text-gray-400 hover:text-gray-200" />
                   )}
                 </button>
                 {errors.password && (
-                  <div className="mt-1 flex items-center text-sm text-red-600">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 flex items-center text-sm text-error-400"
+                  >
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {errors.password}
-                  </div>
+                  </motion.div>
                 )}
               </div>
               
               {/* Password strength indicator */}
               {password && (
-                <div className="mt-2 space-y-1">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-3 space-y-2"
+                >
                   {passwordRequirements.map((req, index) => (
-                    <div key={index} className="flex items-center text-xs">
-                      <Check className={`h-3 w-3 mr-1 ${
+                    <motion.div 
+                      key={index} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center text-sm"
+                    >
+                      <Check className={`h-4 w-4 mr-2 ${
                         req.test(password) ? 'text-green-500' : 'text-gray-300'
                       }`} />
-                      <span className={req.test(password) ? 'text-green-600' : 'text-gray-500'}>
+                      <span className={req.test(password) ? 'text-green-400' : 'text-gray-500'}>
                         {req.label}
                       </span>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
               )}
-            </div>
+            </motion.div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium leading-6 text-gray-900">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <label htmlFor="confirmPassword" className="block text-base font-medium text-gray-300 mb-3">
                 Confirm Password
               </label>
-              <div className="mt-2 relative">
+              <div className="relative">
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   required
-                  className={`block w-full rounded-md border-0 py-2.5 pr-10 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-all duration-200 ${
+                  className={`w-full input-dark py-4 px-4 pr-12 text-lg ${
                     errors.confirmPassword 
-                      ? 'ring-red-300 focus:ring-red-500' 
-                      : 'ring-gray-300 focus:ring-blue-600'
+                      ? 'ring-error-500 border-error-500' 
+                      : ''
                   }`}
+                  placeholder="Confirm your password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-6 w-6 text-gray-400 hover:text-gray-200" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-6 w-6 text-gray-400 hover:text-gray-200" />
                   )}
                 </button>
                 {errors.confirmPassword && (
-                  <div className="mt-1 flex items-center text-sm text-red-600">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 flex items-center text-sm text-error-400"
+                  >
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {errors.confirmPassword}
-                  </div>
+                  </motion.div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
-            <div>
-              <button
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
               >
                 {isLoading ? (
-                  <div className="flex items-center">
+                  <>
                     <LoadingSpinner size="sm" color="white" />
-                    <span className="ml-2">Creating account...</span>
-                  </div>
+                    Creating account...
+                  </>
                 ) : (
                   'Create account'
                 )}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </form>
 
-          <p className="mt-10 text-center text-sm text-gray-500">
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            className="mt-8 text-center text-base text-gray-400"
+          >
             Already have an account?{' '}
             <Link
               to="/login"
-              className="font-semibold leading-6 text-blue-600 hover:text-blue-500 transition-colors duration-200"
+              className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
             >
               Sign in
             </Link>
-          </p>
+          </motion.p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

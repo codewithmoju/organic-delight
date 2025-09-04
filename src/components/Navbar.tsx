@@ -1,5 +1,6 @@
 import { Bell, Menu, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../lib/store';
 import Logo from './ui/Logo';
@@ -9,6 +10,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
+  const navigate = useNavigate();
   const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -79,7 +81,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     <button
                       onClick={() => {
                         setShowUserMenu(false);
-                        // Navigate to profile/settings
+                        navigate('/settings');
                       }}
                       className="flex w-full items-center px-4 py-2 text-sm text-gray-300 hover:bg-dark-700/50 hover:text-white transition-colors duration-200"
                     >

@@ -49,54 +49,87 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10 border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-lg relative z-10"
+      >
+        <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="flex justify-center mb-6">
-              <Logo size="lg" />
+            <div className="text-center mb-8">
+              <Logo size="lg" animated />
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-6 text-3xl lg:text-4xl font-bold text-white"
+              >
+                Reset your password
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-2 text-gray-400 text-lg"
+              >
+                Enter your email to receive reset instructions
+              </motion.p>
             </div>
-            <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-              Reset your password
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Enter your email to receive reset instructions
-            </p>
           </div>
 
           {isEmailSent ? (
-            <div className="mt-8 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
-                <Mail className="h-6 w-6 text-green-600" />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-8 text-center"
+            >
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-500/20 mb-6">
+                <Mail className="h-8 w-8 text-success-400" />
               </div>
-              <div className="text-sm text-gray-700">
-                <p className="mb-2 font-medium text-gray-900">
+              <div className="text-gray-300">
+                <p className="mb-3 font-medium text-white text-xl">
                   Check your email
                 </p>
-                <p className="mb-4">
+                <p className="mb-6 text-lg">
                   We've sent password reset instructions to <strong>{email}</strong>
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm text-gray-400">
                   Didn't receive the email? Check your spam folder or try again.
                 </p>
               </div>
-              <div className="mt-6">
-                <Link
-                  to="/login"
-                  className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold leading-6 text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-all duration-200"
+              <div className="mt-8">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
+                  <Link
+                  to="/login"
+                    className="btn-primary inline-flex items-center justify-center px-6 py-4 text-lg font-semibold"
+                  >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Return to login
-                </Link>
+                  </Link>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           ) : (
-            <form className="space-y-6 mt-8" onSubmit={handleSubmit}>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+            <form className="space-y-8 mt-8" onSubmit={handleSubmit}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
                   Email address
                 </label>
-                <div className="mt-2">
                   <input
                     id="email"
                     name="email"
@@ -105,51 +138,66 @@ export default function ForgotPassword() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className={`block w-full rounded-md border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-all duration-200 ${
+                    className={`w-full input-dark py-4 px-4 text-lg ${
                       error 
-                        ? 'ring-red-300 focus:ring-red-500' 
-                        : 'ring-gray-300 focus:ring-blue-600'
+                        ? 'ring-error-500 border-error-500' 
+                        : ''
                     }`}
+                    placeholder="Enter your email address"
                   />
                   {error && (
-                    <div className="mt-1 flex items-center text-sm text-red-600">
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="mt-2 flex items-center text-sm text-error-400"
+                    >
                       <AlertCircle className="h-4 w-4 mr-1" />
                       {error}
-                    </div>
+                    </motion.div>
                   )}
-                </div>
-              </div>
+              </motion.div>
 
-              <div>
-                <button
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isLoading}
-                  className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
                 >
                   {isLoading ? (
-                    <div className="flex items-center">
+                    <>
                       <LoadingSpinner size="sm" color="white" />
-                      <span className="ml-2">Sending...</span>
-                    </div>
+                      Sending...
+                    </>
                   ) : (
                     'Send reset instructions'
                   )}
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             </form>
           )}
 
-          <p className="mt-10 text-center text-sm text-gray-500">
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 text-center text-base text-gray-400"
+          >
             Remember your password?{' '}
             <Link
               to="/login"
-              className="font-semibold leading-6 text-blue-600 hover:text-blue-500 transition-colors duration-200"
+              className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
             >
               Sign in
             </Link>
-          </p>
+          </motion.p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

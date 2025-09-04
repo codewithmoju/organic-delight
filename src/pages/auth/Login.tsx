@@ -82,16 +82,16 @@ export default function Login() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-10"
+        className="w-full max-w-lg relative z-10"
       >
-        <div className="glass-effect p-8 rounded-2xl border border-dark-700/50 shadow-dark-lg">
+        <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
           <div className="text-center mb-8">
             <Logo size="lg" animated />
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mt-6 text-3xl font-bold text-white"
+              className="mt-6 text-3xl lg:text-4xl font-bold text-white"
             >
               Welcome back
             </motion.h2>
@@ -99,19 +99,19 @@ export default function Login() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="mt-2 text-gray-400"
+              className="mt-2 text-gray-400 text-lg"
             >
               Sign in to your StockSuite account
             </motion.p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-8" onSubmit={handleSubmit}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
                 Email address
               </label>
               <input
@@ -120,14 +120,14 @@ export default function Login() {
                 type="email"
                 autoComplete="email"
                 required
-                className={`w-full input-dark ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
+                className={`w-full input-dark py-4 px-4 text-lg ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
                 placeholder="Enter your email"
               />
               {errors.email && (
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-1 flex items-center text-sm text-error-400"
+                  className="mt-2 flex items-center text-sm text-error-400"
                 >
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.email}
@@ -140,7 +140,7 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-base font-medium text-gray-300 mb-3">
                 Password
               </label>
               <div className="relative">
@@ -150,18 +150,18 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className={`w-full input-dark pr-10 ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
+                  className={`w-full input-dark py-4 px-4 pr-12 text-lg ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-200" />
+                    <EyeOff className="h-6 w-6 text-gray-400 hover:text-gray-200" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-200" />
+                    <Eye className="h-6 w-6 text-gray-400 hover:text-gray-200" />
                   )}
                 </button>
               </div>
@@ -169,7 +169,7 @@ export default function Login() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-1 flex items-center text-sm text-error-400"
+                  className="mt-2 flex items-center text-sm text-error-400"
                 >
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.password}
@@ -188,15 +188,15 @@ export default function Login() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800"
+                  className="h-5 w-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
+                <label htmlFor="remember-me" className="ml-3 block text-base text-gray-300">
                   Remember me
                 </label>
               </div>
               <Link
                 to="/forgot-password"
-                className="text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200"
+                className="text-base font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200"
               >
                 Forgot password?
               </Link>
@@ -212,7 +212,7 @@ export default function Login() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="btn-primary w-full flex items-center justify-center gap-2 py-3"
+                className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
               >
                 {isLoading ? (
                   <>
@@ -230,12 +230,12 @@ export default function Login() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="mt-8 text-center text-sm text-gray-400"
+            className="mt-8 text-center text-base text-gray-400"
           >
             Don't have an account?{' '}
             <Link
               to="/register"
-              className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200"
+              className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
             >
               Sign up
             </Link>
