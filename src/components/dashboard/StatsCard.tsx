@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { PERFORMANCE_CONFIG } from '../../lib/utils/performance';
 
 interface StatsCardProps {
   title: string;
@@ -16,13 +17,17 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
   const shouldReduceMotion = useReducedMotion();
 
   const animationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, y: 20, scale: 0.95 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    transition: { duration: 0.4, delay, ease: "easeOut" },
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: { 
+      duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.NORMAL / 1000, 
+      delay, 
+      ease: "easeOut" 
+    },
     whileHover: { 
-      y: -4, 
-      scale: 1.02,
-      transition: { duration: 0.2, ease: "easeOut" }
+      y: -2, 
+      scale: 1.005,
+      transition: { duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 }
     }
   };
 
@@ -41,9 +46,12 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
           <p className="text-xs sm:text-sm font-medium text-gray-400 mb-1 truncate">{title}</p>
           <motion.p 
             className="text-xl sm:text-2xl lg:text-3xl font-bold text-white"
-            initial={shouldReduceMotion ? {} : { scale: 0.8 }}
+            initial={shouldReduceMotion ? {} : { scale: 0.9 }}
             animate={shouldReduceMotion ? {} : { scale: 1 }}
-            transition={shouldReduceMotion ? {} : { delay: delay + 0.1, duration: 0.3, ease: "easeOut" }}
+            transition={shouldReduceMotion ? {} : { 
+              delay: delay + 0.1, 
+              duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 
+            }}
           >
             {value}
           </motion.p>
@@ -54,7 +62,10 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
               }`}
               initial={shouldReduceMotion ? {} : { opacity: 0 }}
               animate={shouldReduceMotion ? {} : { opacity: 1 }}
-              transition={shouldReduceMotion ? {} : { delay: delay + 0.2, duration: 0.3 }}
+              transition={shouldReduceMotion ? {} : { 
+                delay: delay + 0.15, 
+                duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 
+              }}
             >
               {trend.value >= 0 ? (
                 <TrendingUp className="w-4 h-4 mr-1" />
@@ -67,10 +78,10 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
         </div>
         
         <motion.div 
-          className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 text-primary-400 group-hover:from-primary-500/30 group-hover:to-accent-500/30 transition-all duration-300 flex-shrink-0"
+          className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 text-primary-400 group-hover:from-primary-500/30 group-hover:to-accent-500/30 transition-all duration-200 flex-shrink-0"
           whileHover={shouldReduceMotion ? {} : { 
-            rotate: 5,
-            transition: { duration: 0.2, ease: "easeOut" }
+            rotate: 3,
+            transition: { duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 }
           }}
         >
           {icon}

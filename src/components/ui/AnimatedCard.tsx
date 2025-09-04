@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { ReactNode } from 'react';
+import { PERFORMANCE_CONFIG } from '../../lib/utils/performance';
 
 interface AnimatedCardProps {
   children: ReactNode;
@@ -27,17 +28,17 @@ export default function AnimatedCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ 
-        duration: 0.4, 
+        duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.NORMAL / 1000, 
         delay,
         ease: "easeOut"
       }}
       whileHover={hover ? { 
-        y: -4, 
-        scale: 1.01,
-        transition: { duration: 0.2, ease: "easeOut" }
+        y: -2, 
+        scale: 1.005,
+        transition: { duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 }
       } : undefined}
       className={`card-dark ${className}`}
       style={{

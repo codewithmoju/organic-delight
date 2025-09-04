@@ -6,8 +6,8 @@
 @media (max-width: 768px) {
   /* Reduce animation complexity on mobile */
   * {
-    animation-duration: 0.3s !important;
-    transition-duration: 0.2s !important;
+    animation-duration: 0.15s !important;
+    transition-duration: 0.15s !important;
   }
   
   /* Optimize transforms for mobile */
@@ -15,17 +15,35 @@
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
     perspective: 1000px;
+    contain: layout style paint;
   }
   
   /* Reduce blur effects on mobile for better performance */
   .glass-effect {
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
   }
   
   /* Optimize grid layouts for mobile */
   .grid {
     contain: layout style;
   }
+}
+
+/* Performance optimizations for all devices */
+* {
+  /* Optimize rendering performance */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
+}
+
+/* Optimize animations globally */
+.animate-spin,
+.animate-pulse,
+.animate-bounce,
+[class*="animate-"] {
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
 }
 
 /* GPU Acceleration for all animated elements */
@@ -36,17 +54,17 @@
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   perspective: 1000px;
-  will-change: transform;
+  contain: layout style paint;
 }
 
 /* Mobile-optimized animations */
 @media (max-width: 768px) {
   .animate-spin {
-    animation: mobile-spin 1.5s ease-in-out infinite;
+    animation: mobile-spin 1s ease-out infinite;
   }
   
   .animate-pulse {
-    animation: mobile-pulse 2.5s ease-in-out infinite;
+    animation: mobile-pulse 2s ease-out infinite;
   }
 }
 
@@ -62,22 +80,22 @@
 
 /* Mobile-optimized shimmer animation */
 @keyframes mobile-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
 }
 
 /* Smooth loader animations */
 .mobile-optimized-spinner {
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
-  will-change: transform;
+  contain: layout style paint;
 }
 
 /* Prevent FOUC (Flash of Unstyled Content) */
 .loading-container {
   visibility: hidden;
   opacity: 0;
-  transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+  transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
 }
 
 .loading-container.loaded {
@@ -89,7 +107,7 @@
 @media (max-width: 768px) {
   /* Reduce animation complexity on mobile */
   .mobile-optimized-spinner {
-    animation-duration: 1.2s !important;
+    animation-duration: 0.8s !important;
   }
   
   /* Optimize shimmer for mobile */
@@ -100,7 +118,7 @@
   
   /* Faster transitions on mobile */
   .loading-container {
-    transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+    transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
   }
 }
 
