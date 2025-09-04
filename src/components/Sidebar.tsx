@@ -148,8 +148,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     }
                   }}
                   className={({ isActive }) =>
-                    \`group flex items-center px-4 py-3 rounded-xl transition-colors duration-150 min-h-[48px] touch-manipulation ${
-                      isActive
+                    `group flex items-center px-4 py-3 rounded-xl transition-colors duration-150 min-h-[48px] touch-manipulation ${
                         ? 'bg-gradient-to-r from-primary-600/20 to-accent-600/20 text-primary-400 border-l-4 border-primary-500'
                         : 'text-gray-300 hover:bg-dark-700/50 hover:text-white'
                     }`

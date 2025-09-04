@@ -55,7 +55,6 @@ export default defineConfig({
     // Optimize dev server
     hmr: {
       overlay: false,
-      port: 24678
     },
     // Mobile testing optimization
     host: true,
