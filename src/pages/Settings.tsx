@@ -53,7 +53,6 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'accessibility'>('profile');
   const profile = useAuthStore((state) => state.profile);
-  const setProfile = useAuthStore((state) => state.setProfile);
 
   const {
     preferences,
@@ -89,22 +88,12 @@ export default function Settings() {
     } catch (error) {
       toast.error('Failed to update profile');
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
   }
-
-  async function handlePasswordChange(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const formData = new FormData(e.currentTarget);
       const currentPassword = formData.get('currentPassword') as string;
       const newPassword = formData.get('newPassword') as string;
       const confirmPassword = formData.get('confirmPassword') as string;
 
-      if (newPassword !== confirmPassword) {
         throw new Error('New passwords do not match');
       }
 

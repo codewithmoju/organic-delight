@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, memo } from 'react';
-import { motion } from 'framer-motion';
 
 interface LazyImageProps {
   src: string;
@@ -10,7 +9,7 @@ interface LazyImageProps {
   onError?: () => void;
 }
 
-// Optimized lazy loading image component
+// Optimized lazy loading image component for performance
 const LazyImage = memo(({ 
   src, 
   alt, 
@@ -59,7 +58,7 @@ const LazyImage = memo(({
   return (
     <div ref={imgRef} className={`relative overflow-hidden ${className}`}>
       {/* Placeholder */}
-      <motion.img
+      <img
         src={placeholder}
         alt=""
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
@@ -70,15 +69,14 @@ const LazyImage = memo(({
       
       {/* Actual image */}
       {isInView && !hasError && (
-        <motion.img
+        <img
           src={src}
           alt={alt}
           onLoad={handleLoad}
           onError={handleError}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isLoaded ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-opacity duration-300 ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
           loading="lazy"
           decoding="async"
         />
