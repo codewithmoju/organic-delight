@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { 
   User, 
@@ -18,7 +18,9 @@ import {
   Phone,
   Building,
   Languages,
-  HelpCircle
+  HelpCircle,
+  Package,
+  ArrowUpDown
 } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { updateUserProfile } from '../lib/api/auth';
@@ -230,6 +232,23 @@ export default function Settings() {
 
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                    >
+                      <label htmlFor="phone" className="block text-base font-medium text-gray-300 mb-3">
+                        <Phone className="w-4 h-4 inline mr-2" />
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        id="phone"
+                        defaultValue={profile?.phone || ''}
+                        className="w-full input-dark input-large"
+                        placeholder="Enter phone number"
+                      />
+                    </motion.div>
+
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -249,7 +268,7 @@ export default function Settings() {
                       />
                     </motion.div>
                   </div>
-                      animate={{ opacity: 1, y: 0 }}
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -268,7 +287,7 @@ export default function Settings() {
                       placeholder="Enter your address"
                     />
                   </motion.div>
-                      transition={{ delay: 0.5 }}
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -297,7 +316,7 @@ export default function Settings() {
             </AnimatedCard>
           </motion.div>
         )}
-                    >
+
         {activeTab === 'security' && (
           <motion.div
             key="security"
@@ -313,7 +332,7 @@ export default function Settings() {
                   </div>
                   <h3 className="text-xl font-semibold text-white">Security Settings</h3>
                 </div>
-                      <label htmlFor="phone" className="block text-base font-medium text-gray-300 mb-3">
+
                 <form onSubmit={handlePasswordChange} className="space-y-6">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -332,7 +351,7 @@ export default function Settings() {
                       placeholder="Enter current password"
                     />
                   </motion.div>
-                        <Phone className="w-4 h-4 inline mr-2" />
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -350,7 +369,7 @@ export default function Settings() {
                       placeholder="Enter new password"
                     />
                   </motion.div>
-                        Phone Number
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -368,7 +387,7 @@ export default function Settings() {
                       placeholder="Confirm new password"
                     />
                   </motion.div>
-                      </label>
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -393,7 +412,7 @@ export default function Settings() {
                     </motion.button>
                   </motion.div>
                 </form>
-                      <input
+
                 {/* Two-Factor Authentication */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -420,7 +439,7 @@ export default function Settings() {
             </AnimatedCard>
           </motion.div>
         )}
-                        type="tel"
+
         {activeTab === 'preferences' && (
           <motion.div
             key="preferences"
@@ -436,7 +455,7 @@ export default function Settings() {
                   </div>
                   <h3 className="text-xl font-semibold text-white">Preferences</h3>
                 </div>
-                        name="phone"
+
                 <div className="space-y-8">
                   {/* Currency Selection */}
                   <motion.div
@@ -453,7 +472,7 @@ export default function Settings() {
                       onCurrencyChange={handleCurrencyChange}
                     />
                   </motion.div>
-                        id="phone"
+
                   {/* Language Selection */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -473,7 +492,7 @@ export default function Settings() {
                       <option value="ja">日本語</option>
                     </select>
                   </motion.div>
-                        defaultValue={profile?.phone || ''}
+
                   {/* Theme Selection */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -505,7 +524,7 @@ export default function Settings() {
                       ))}
                     </div>
                   </motion.div>
-                        className="w-full input-dark input-large"
+
                   {/* Data Export */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -533,7 +552,7 @@ export default function Settings() {
             </AnimatedCard>
           </motion.div>
         )}
-                        placeholder="Enter phone number"
+
         {activeTab === 'notifications' && (
           <motion.div
             key="notifications"
@@ -549,7 +568,7 @@ export default function Settings() {
                   </div>
                   <h3 className="text-xl font-semibold text-white">Notification Settings</h3>
                 </div>
-                      />
+
                 <div className="space-y-6">
                   {[
                     {
@@ -604,7 +623,7 @@ export default function Settings() {
                     </motion.div>
                   ))}
                 </div>
-                    </motion.div>
+
                 {/* Help Section */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
