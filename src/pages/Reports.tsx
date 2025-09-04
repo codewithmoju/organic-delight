@@ -8,7 +8,7 @@ import { getItems } from '../lib/api/items';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import { formatCurrency } from '../lib/utils/notifications';
-import FlickerFreeLoader from '../components/ui/FlickerFreeLoader';
+import ContextualLoader from '../components/ui/ContextualLoader';
 
 export default function Reports() {
   const { t } = useTranslation();
@@ -99,13 +99,13 @@ export default function Reports() {
   };
 
   return (
-    <FlickerFreeLoader 
-      isLoading={isLoading} 
-      fallback={
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" text="Loading reports" variant="dots" />
-        </div>
-      }>
+    <div className="relative">
+      <ContextualLoader
+        isLoading={isLoading}
+        context="reports"
+        variant="overlay"
+      />
+      
     <div className="space-y-8">
       {/* Header */}
       <motion.div
@@ -229,6 +229,6 @@ export default function Reports() {
         </div>
       </AnimatedCard>
     </div>
-    </FlickerFreeLoader>
+    </div>
   );
 }

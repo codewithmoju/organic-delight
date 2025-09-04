@@ -12,7 +12,7 @@ import SearchInput from '../../components/ui/SearchInput';
 import { formatCurrency, formatDate } from '../../lib/utils/notifications';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
-import FlickerFreeLoader from '../../components/ui/FlickerFreeLoader';
+import ContextualLoader from '../../components/ui/ContextualLoader';
 
 export default function Items() {
   const [items, setItems] = useState<Item[]>([]);
@@ -134,13 +134,13 @@ export default function Items() {
   }
 
   return (
-    <FlickerFreeLoader 
-      isLoading={isLoading} 
-      fallback={
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" text="Loading items" variant="dots" />
-        </div>
-      }>
+    <div className="relative">
+      <ContextualLoader
+        isLoading={isLoading}
+        context="items"
+        variant="overlay"
+      />
+      
     <div className="space-y-6">
       {/* Header */}
       <motion.div
@@ -358,6 +358,6 @@ export default function Items() {
         </motion.div>
       )}
     </div>
-    </FlickerFreeLoader>
+    </div>
   );
 }

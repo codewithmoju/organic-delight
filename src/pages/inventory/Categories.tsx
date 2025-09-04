@@ -9,8 +9,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnimatedCard from '../../components/ui/AnimatedCard';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
-import FlickerFreeLoader from '../../components/ui/FlickerFreeLoader';
-import { PageSkeleton } from '../../components/ui/SkeletonLoader';
+import ContextualLoader from '../../components/ui/ContextualLoader';
 
 interface CategoryWithCount extends Category {
   itemCount?: number;
@@ -117,13 +116,13 @@ export default function Categories() {
   }
 
   return (
-    <FlickerFreeLoader 
-      isLoading={isLoading} 
-      fallback={
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" text="Loading categories" variant="dots" />
-        </div>
-      }>
+    <div className="relative">
+      <ContextualLoader
+        isLoading={isLoading}
+        context="categories"
+        variant="overlay"
+      />
+      
     <div className="space-y-6">
       {/* Header */}
       <motion.div
@@ -271,6 +270,6 @@ export default function Categories() {
         </motion.div>
       )}
     </div>
-    </FlickerFreeLoader>
+    </div>
   );
 }

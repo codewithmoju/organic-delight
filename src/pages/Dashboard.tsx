@@ -19,8 +19,8 @@ import AnimatedCard from '../components/ui/AnimatedCard';
 import { Item, Transaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
-import SmoothLoader from '../components/ui/SmoothLoader';
-import FlickerFreeLoader from '../components/ui/FlickerFreeLoader';
+import ContextualLoader from '../components/ui/ContextualLoader';
+import FullScreenLoader from '../components/ui/FullScreenLoader';
 import { useMemo } from 'react';
 
 export default function Dashboard() {
@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingStage, setLoadingStage] = useState('Initializing...');
 
   useEffect(() => {
     loadInitialData();
@@ -47,13 +48,16 @@ export default function Dashboard() {
 
   async function loadInitialData() {
     setLoadingProgress(10);
+    setLoadingStage('Fetching dashboard data...');
     try {
       setLoadingProgress(30);
+      setLoadingStage('Loading inventory items...');
       const [itemsResult, recentTransactions] = await Promise.all([
         getItems(),
         getRecentTransactions(5),
       ]);
       setLoadingProgress(60);
+      setLoadingStage('Calculating metrics...');
 
       const items = itemsResult.items || [];
       
@@ -73,10 +77,12 @@ export default function Dashboard() {
       setTransactions(recentTransactions);
       setError(null);
       setLoadingProgress(80);
+      setLoadingStage('Preparing dashboard...');
       
       // Load metrics data
       await loadMetricsData();
       setLoadingProgress(100);
+      setLoadingStage('Dashboard ready!');
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       setError('Unable to load dashboard data. Please try again later.');
@@ -175,16 +181,27 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Top-positioned loader */}
-      {isLoading && <TopLoader />}
+      {/* Full screen loader for initial load */}
+      <FullScreenLoader
+        isLoading={isLoading}
+        progress={loadingProgress}
+        variant="progress"
+      />
       
-      {/* Main content with proper spacing when loading */}
-      <div className={`transition-all duration-300 ${isLoading ? 'pt-24' : 'pt-0'}`}>
+      {/* Contextual loader for metrics updates */}
+      <ContextualLoader
+        isLoading={isMetricsLoading}
+        context="dashboard"
+        variant="overlay"
+      />
+      
+      {/* Main content */}
+      <div className="space-y-6 sm:space-y-8">
     <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: isLoading ? 0.3 : 1, y: 0 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
@@ -357,7 +374,6 @@ export default function Dashboard() {
         </motion.button>
       </motion.div>
     </div>
-      </div>
-    </>
+    </div>
   );
 }
