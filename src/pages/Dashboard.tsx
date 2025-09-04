@@ -14,13 +14,10 @@ import RecentTransactions from '../components/dashboard/RecentTransactions';
 import MetricsCard from '../components/dashboard/MetricsCard';
 import TimePeriodFilter, { TimePeriod } from '../components/dashboard/TimePeriodFilter';
 import MetricsChart from '../components/dashboard/MetricsChart';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import { Item, Transaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
-import SmoothLoader from '../components/ui/SmoothLoader';
-import FlickerFreeLoader from '../components/ui/FlickerFreeLoader';
 import { useMemo } from 'react';
 
 export default function Dashboard() {
@@ -33,9 +30,7 @@ export default function Dashboard() {
   const [lowStockItems, setLowStockItems] = useState<Item[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadingProgress, setLoadingProgress] = useState(0);
 
   useEffect(() => {
     loadInitialData();
@@ -46,14 +41,11 @@ export default function Dashboard() {
   }, [selectedPeriod]);
 
   async function loadInitialData() {
-    setLoadingProgress(10);
     try {
-      setLoadingProgress(30);
       const [itemsResult, recentTransactions] = await Promise.all([
         getItems(),
         getRecentTransactions(5),
       ]);
-      setLoadingProgress(60);
 
       const items = itemsResult.items || [];
       
@@ -72,11 +64,9 @@ export default function Dashboard() {
       setLowStockItems(lowStock);
       setTransactions(recentTransactions);
       setError(null);
-      setLoadingProgress(80);
       
       // Load metrics data
       await loadMetricsData();
-      setLoadingProgress(100);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       setError('Unable to load dashboard data. Please try again later.');
@@ -87,9 +77,6 @@ export default function Dashboard() {
   }
 
   async function loadMetricsData() {
-    if (!isLoading) {
-      setIsMetricsLoading(true);
-    }
     try {
       const [metricsData, trendsData] = await Promise.all([
         getDashboardMetrics(selectedPeriod),
@@ -101,8 +88,6 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error loading metrics:', error);
       toast.error('Failed to load metrics data');
-    } finally {
-      setIsMetricsLoading(false);
     }
   }
 
@@ -118,45 +103,24 @@ export default function Dashboard() {
     })) || [];
   }, [summary?.items]);
 
-  // Top-positioned loading indicator
-  const TopLoader = () => (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-dark-900/95 backdrop-blur-sm border-b border-primary-500/30"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-6 h-6 border-2 border-primary-500/30 border-t-primary-500 rounded-full"
-            />
-            <div>
-              <p className="text-white font-medium">Loading Dashboard</p>
-              <p className="text-gray-400 text-sm">Fetching your inventory data...</p>
-            </div>
-          </div>
-          <div className="text-primary-400 font-semibold">
-            {loadingProgress}%
-          </div>
+  // Simple loading state for initial render
+  if (isLoading) {
+    return (
+      <div className="space-y-6 sm:space-y-8 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded w-1/3"></div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="card-dark p-6 h-32"></div>
+          ))}
         </div>
-        
-        {/* Progress bar */}
-        <div className="mt-3 w-full bg-dark-700 rounded-full h-1">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${loadingProgress}%` }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="bg-gradient-to-r from-primary-500 to-accent-500 h-1 rounded-full"
-          />
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="card-dark p-6 h-80"></div>
+          ))}
         </div>
       </div>
-    </motion.div>
-  );
+    );
+  }
   if (error) {
     return (
       <motion.div 
@@ -174,18 +138,12 @@ export default function Dashboard() {
   }
 
   return (
-    <>
-      {/* Top-positioned loader */}
-      {isLoading && <TopLoader />}
-      
-      {/* Main content with proper spacing when loading */}
-      <div className={`transition-all duration-300 ${isLoading ? 'pt-24' : 'pt-0'}`}>
     <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: isLoading ? 0.3 : 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div className="text-center sm:text-left">
@@ -201,13 +159,12 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
+          transition={{ delay: 0.1, duration: 0.2 }}
           className="w-full sm:w-auto"
         >
           <TimePeriodFilter
             selectedPeriod={selectedPeriod}
             onPeriodChange={handlePeriodChange}
-            isLoading={isMetricsLoading}
           />
         </motion.div>
       </motion.div>
@@ -219,32 +176,28 @@ export default function Dashboard() {
           value={metrics?.totalStockIn || 0}
           icon={ArrowUp}
           color="success"
-          delay={0.2}
-          isLoading={isMetricsLoading}
+          delay={0.05}
         />
         <MetricsCard
           title={t('dashboard.metrics.totalStockOut')}
           value={metrics?.totalStockOut || 0}
           icon={ArrowDown}
           color="error"
-          delay={0.3}
-          isLoading={isMetricsLoading}
+          delay={0.1}
         />
         <MetricsCard
           title={t('dashboard.metrics.revenueSpent')}
           value={formatCurrency(metrics?.revenueSpentOnStockIn || 0)}
           icon={DollarSign}
           color="warning"
-          delay={0.4}
-          isLoading={isMetricsLoading}
+          delay={0.15}
         />
         <MetricsCard
           title={t('dashboard.metrics.revenueEarned')}
           value={formatCurrency(metrics?.revenueEarnedFromStockOut || 0)}
           icon={TrendingUp}
           color="primary"
-          delay={0.5}
-          isLoading={isMetricsLoading}
+          delay={0.2}
         />
       </div>
 
@@ -254,25 +207,25 @@ export default function Dashboard() {
           title="Total Items"
           value={summary?.totalItems || 0}
           icon={<Package className="h-6 w-6" />}
-          delay={0.6}
+          delay={0.25}
         />
         <StatsCard
           title="Total Value"
           value={formatCurrency(summary?.totalValue || 0)}
           icon={<DollarSign className="h-6 w-6" />}
-          delay={0.7}
+          delay={0.3}
         />
         <StatsCard
           title="Low Stock Items"
           value={summary?.lowStockCount || 0}
           icon={<ShoppingCart className="h-6 w-6" />}
-          delay={0.8}
+          delay={0.35}
         />
         <StatsCard
           title="Out of Stock"
           value={summary?.outOfStockCount || 0}
           icon={<AlertTriangle className="h-6 w-6" />}
-          delay={0.9}
+          delay={0.4}
         />
       </div>
 
@@ -281,7 +234,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1.0, duration: 0.4 }}
+          transition={{ delay: 0.45, duration: 0.2 }}
         >
           <LowStockAlert items={lowStockItems} />
         </motion.div>
@@ -293,26 +246,24 @@ export default function Dashboard() {
           data={chartData}
           type="bar"
           title="Stock Movement Trends"
-          isLoading={isMetricsLoading}
         />
         
         <MetricsChart
           data={chartData}
           type="line"
           title="Revenue Trends"
-          isLoading={isMetricsLoading}
         />
       </div>
 
       {/* Inventory Overview and Recent Activity */}
       <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
-        <AnimatedCard delay={1.0}>
+        <AnimatedCard delay={0.5}>
           <InventoryChart
             data={memoizedChartData}
           />
         </AnimatedCard>
         
-        <AnimatedCard delay={1.1}>
+        <AnimatedCard delay={0.55}>
           <RecentTransactions transactions={transactions} />
         </AnimatedCard>
       </div>
@@ -321,7 +272,7 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.3, duration: 0.4 }}
+        transition={{ delay: 0.6, duration: 0.2 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
       >
         <TourTrigger variant="card" />
@@ -357,7 +308,5 @@ export default function Dashboard() {
         </motion.button>
       </motion.div>
     </div>
-      </div>
-    </>
   );
 }
