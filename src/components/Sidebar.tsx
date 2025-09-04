@@ -86,15 +86,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           x: isOpen ? 0 : -288 // 288px = w-72 (18rem)
         }}
         transition={{ 
-          type: "spring", 
-          stiffness: 400, 
-          damping: 40,
-          mass: 0.8
+          type: "tween",
+          duration: 0.3,
+          ease: [0.25, 0.46, 0.45, 0.94] // Optimized easing curve
         }}
         className={`
-          fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50 flex flex-col
+          fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50 flex flex-col sidebar-optimized
           lg:translate-x-0
         `}
+        style={{
+          willChange: isOpen ? 'transform' : 'auto',
+          backfaceVisibility: 'hidden',
+          transform: 'translate3d(0, 0, 0)'
+        }}
         role="navigation"
         aria-label="Main navigation"
         aria-hidden={!isOpen ? 'true' : 'false'}
