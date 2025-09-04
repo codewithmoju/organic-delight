@@ -87,17 +87,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         }}
         transition={{ 
           type: "tween",
-          duration: 0.3,
-          ease: [0.25, 0.46, 0.45, 0.94] // Optimized easing curve
+          duration: window.innerWidth <= 768 ? 0.25 : 0.3,
+          ease: [0.25, 0.46, 0.45, 0.94]
         }}
         className={`
           fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50 flex flex-col sidebar-optimized
           lg:translate-x-0
         `}
         style={{
-          willChange: isOpen ? 'transform' : 'auto',
+          willChange: 'transform',
           backfaceVisibility: 'hidden',
-          transform: 'translate3d(0, 0, 0)'
+          transform: 'translate3d(0, 0, 0)',
+          contain: 'layout style paint'
         }}
         role="navigation"
         aria-label="Main navigation"
@@ -125,7 +126,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 key={item.to}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ 
+                  delay: window.innerWidth <= 768 ? index * 0.05 : index * 0.1,
+                  duration: 0.2,
+                  ease: [0.25, 0.46, 0.45, 0.94]
+                }}
+                style={{
+                  transform: 'translate3d(0, 0, 0)',
+                  backfaceVisibility: 'hidden'
+                }}
               >
                 <NavLink
                   to={item.to}
@@ -136,15 +145,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     }
                   }}
                   className={({ isActive }) =>
-                    `group flex items-center px-4 py-3 rounded-xl transition-all duration-200 min-h-[44px] ${
+                    `group flex items-center px-4 py-3 rounded-xl transition-colors duration-150 min-h-[48px] touch-manipulation ${
                       isActive
                         ? 'bg-gradient-to-r from-primary-600/20 to-accent-600/20 text-primary-400 border-l-4 border-primary-500'
                         : 'text-gray-300 hover:bg-dark-700/50 hover:text-white'
                     }`
                   }
+                  style={{
+                    transform: 'translate3d(0, 0, 0)',
+                    backfaceVisibility: 'hidden',
+                    touchAction: 'manipulation'
+                  }}
                   aria-current={({ isActive }) => isActive ? 'page' : undefined}
                 >
-                  <item.icon className="w-5 h-5 mr-3 transition-transform duration-200 group-hover:scale-110" />
+                  <item.icon className="w-5 h-5 mr-3 transition-transform duration-150 group-hover:scale-110" 
+                    style={{ transform: 'translate3d(0, 0, 0)' }} />
                   <span className="font-medium">{item.label}</span>
                 </NavLink>
               </motion.div>

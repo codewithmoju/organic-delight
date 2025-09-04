@@ -27,24 +27,24 @@ export default function AnimatedCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, transform: 'translate3d(0, 20px, 0)' }}
-      animate={{ opacity: 1, y: 0, transform: 'translate3d(0, 0, 0)' }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ 
-        duration: 0.3, 
+        duration: window.innerWidth <= 768 ? 0.2 : 0.3, 
         delay,
-        ease: [0.25, 0.46, 0.45, 0.94] // Optimized easing
+        ease: [0.25, 0.46, 0.45, 0.94]
       }}
       whileHover={hover ? { 
         y: -4, 
-        scale: 1.02,
-        transform: 'translate3d(0, -4px, 0) scale(1.02)',
-        transition: { duration: 0.2 }
+        scale: window.innerWidth <= 768 ? 1 : 1.02,
+        transition: { duration: 0.15 }
       } : undefined}
       className={`card-dark ${className}`}
       style={{
-        willChange: 'transform, opacity',
+        willChange: hover && window.innerWidth > 768 ? 'transform, opacity' : 'auto',
         backfaceVisibility: 'hidden',
-        transform: 'translate3d(0, 0, 0)'
+        transform: 'translate3d(0, 0, 0)',
+        contain: 'layout style paint'
       }}
     >
       {children}

@@ -44,6 +44,11 @@ export default function TimePeriodFilter({
         className={`w-full sm:w-auto min-w-[200px] flex items-center justify-between px-4 py-3 rounded-xl bg-dark-700/50 border border-dark-600/50 hover:border-primary-500/50 transition-all duration-200 ${
           isLoading ? 'opacity-50 cursor-not-allowed' : ''
         }`}
+        style={{
+          transform: 'translate3d(0, 0, 0)',
+          backfaceVisibility: 'hidden',
+          touchAction: 'manipulation'
+        }}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label="Select time period"

@@ -26,7 +26,8 @@ export function usePerformanceOptimization() {
         navigator.hardwareConcurrency <= 2 || // 2 or fewer CPU cores
         (navigator as any).deviceMemory <= 2 || // 2GB or less RAM
         /Android.*Chrome\/[0-5]/.test(navigator.userAgent) || // Old Android Chrome
-        /iPhone.*OS [0-9]_/.test(navigator.userAgent); // Old iOS
+        /iPhone.*OS [0-9]_/.test(navigator.userAgent) || // Old iOS
+        window.innerWidth <= 768; // Mobile devices
 
       // Check connection speed
       const connection = (navigator as any).connection;
@@ -113,24 +114,30 @@ export function usePerformanceOptimization() {
     switch (type) {
       case 'slide':
         return {
-          initial: { opacity: 0, y: 20, transform: 'translate3d(0, 20px, 0)' },
-          animate: { opacity: 1, y: 0, transform: 'translate3d(0, 0, 0)' },
-          exit: { opacity: 0, y: -20, transform: 'translate3d(0, -20px, 0)' },
-          transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: -20 },
+          transition: { 
+            duration: window.innerWidth <= 768 ? 0.2 : 0.3, 
+            ease: [0.25, 0.46, 0.45, 0.94] 
+          }
         };
       case 'fade':
         return {
           initial: { opacity: 0 },
           animate: { opacity: 1 },
           exit: { opacity: 0 },
-          transition: { duration: 0.2 }
+          transition: { duration: window.innerWidth <= 768 ? 0.15 : 0.2 }
         };
       case 'scale':
         return {
-          initial: { opacity: 0, scale: 0.95, transform: 'translate3d(0, 0, 0) scale(0.95)' },
-          animate: { opacity: 1, scale: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-          exit: { opacity: 0, scale: 0.95, transform: 'translate3d(0, 0, 0) scale(0.95)' },
-          transition: { duration: 0.25, ease: 'easeOut' }
+          initial: { opacity: 0, scale: 0.95 },
+          animate: { opacity: 1, scale: 1 },
+          exit: { opacity: 0, scale: 0.95 },
+          transition: { 
+            duration: window.innerWidth <= 768 ? 0.2 : 0.25, 
+            ease: 'easeOut' 
+          }
         };
       default:
         return {};
@@ -181,12 +188,27 @@ export function useOptimizedEventHandlers() {
   const debouncedInput = useMemo(
     () => debounce((callback: (value: string) => void, value: string) => {
       callback(value);
-    }, 300),
+    }, window.innerWidth <= 768 ? 200 : 300), // Faster response on mobile
+    []
+  );
+
+  // Mobile-optimized touch handlers
+  const optimizedTouchHandler = useMemo(
+    () => (callback: () => void) => {
+      // Add small delay to prevent accidental touches
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        setTimeout(callback, 50);
+      } else {
+        callback();
+      }
+    },
     []
   );
 
   return {
     throttledScroll,
-    debouncedInput
+    debouncedInput,
+    optimizedTouchHandler
   };
 }
