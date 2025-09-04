@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Package, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { getItems } from '../lib/api/items';
@@ -15,6 +16,7 @@ import { Item, Transaction } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const navigate = useNavigate();
   const [summary, setSummary] = useState<any>(null);
   const [lowStockItems, setLowStockItems] = useState<Item[]>([]);
@@ -165,6 +167,7 @@ export default function Dashboard() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/inventory/items')}
+          onClick={() => navigate('/inventory/items')}
           className="btn-primary p-4 rounded-xl text-center"
         >
           <Package className="w-6 h-6 mx-auto mb-2" />
@@ -175,6 +178,7 @@ export default function Dashboard() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/transactions')}
+          onClick={() => navigate('/transactions')}
           className="btn-secondary p-4 rounded-xl text-center"
         >
           <ArrowUpDown className="w-6 h-6 mx-auto mb-2" />
@@ -184,6 +188,7 @@ export default function Dashboard() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/reports')}
           onClick={() => navigate('/reports')}
           className="btn-secondary p-4 rounded-xl text-center"
         >

@@ -100,6 +100,17 @@ export default function Register() {
         className="w-full max-w-lg relative z-10"
       >
         <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-lg relative z-10"
+      >
+        <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <div className="text-center mb-8">
               <Logo size="lg" animated />
@@ -119,10 +130,24 @@ export default function Register() {
               >
                 Join StockSuite and start managing your inventory
               </motion.p>
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-6 text-3xl lg:text-4xl font-bold text-white"
+              >
+                Create your account
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-2 text-gray-400 text-lg"
+              >
+                Join StockSuite and start managing your inventory
+              </motion.p>
             </div>
-          </div>
-
-          <form className="space-y-8 mt-8" onSubmit={handleSubmit}>
+              transition={{ delay: 0.4 }}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -130,7 +155,6 @@ export default function Register() {
             >
               <label htmlFor="fullName" className="block text-base font-medium text-gray-300 mb-3">
                 Full Name
-              </label>
                 <input
                   id="fullName"
                   name="fullName"
@@ -143,9 +167,14 @@ export default function Register() {
                       : ''
                   }`}
                   placeholder="Enter your full name"
+                  placeholder="Enter your full name"
                 />
                 {errors.fullName && (
                   <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 flex items-center text-sm text-error-400"
+                  >
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="mt-2 flex items-center text-sm text-error-400"
@@ -157,13 +186,15 @@ export default function Register() {
             </motion.div>
 
             <motion.div
+            </motion.div>
+              transition={{ delay: 0.5 }}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
               <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
                 Email address
-              </label>
                 <input
                   id="email"
                   name="email"
@@ -176,9 +207,14 @@ export default function Register() {
                       : ''
                   }`}
                   placeholder="Enter your email"
+                  placeholder="Enter your email"
                 />
                 {errors.email && (
                   <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 flex items-center text-sm text-error-400"
+                  >
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="mt-2 flex items-center text-sm text-error-400"
@@ -189,6 +225,9 @@ export default function Register() {
                 )}
             </motion.div>
 
+            <motion.div
+            </motion.div>
+              transition={{ delay: 0.6 }}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -212,6 +251,7 @@ export default function Register() {
                       : ''
                   }`}
                   placeholder="Create a strong password"
+                  placeholder="Create a strong password"
                 />
                 <button
                   type="button"
@@ -225,6 +265,10 @@ export default function Register() {
                   )}
                 </button>
                 {errors.password && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 flex items-center text-sm text-error-400"
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -243,9 +287,19 @@ export default function Register() {
                   animate={{ opacity: 1 }}
                   className="mt-3 space-y-2"
                 >
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-3 space-y-2"
+                >
                   {passwordRequirements.map((req, index) => (
                     <motion.div 
                       key={index} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center text-sm"
+                    >
+                      <Check className={`h-4 w-4 mr-2 ${
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -267,6 +321,10 @@ export default function Register() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
             >
               <label htmlFor="confirmPassword" className="block text-base font-medium text-gray-300 mb-3">
                 Confirm Password
@@ -283,6 +341,7 @@ export default function Register() {
                       ? 'ring-error-500 border-error-500' 
                       : ''
                   }`}
+                  placeholder="Confirm your password"
                   placeholder="Confirm your password"
                 />
                 <button
@@ -302,6 +361,10 @@ export default function Register() {
                     animate={{ opacity: 1 }}
                     className="mt-2 flex items-center text-sm text-error-400"
                   >
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 flex items-center text-sm text-error-400"
+                  >
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {errors.confirmPassword}
                   </motion.div>
@@ -309,6 +372,12 @@ export default function Register() {
               </div>
             </motion.div>
 
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              <motion.button
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -334,6 +403,11 @@ export default function Register() {
           </form>
 
           <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            className="mt-8 text-center text-base text-gray-400"
+          >
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9 }}
