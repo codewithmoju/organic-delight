@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, ArrowLeft, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Mail, ArrowLeft, AlertCircle, CheckCircle, Clock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
@@ -308,7 +308,6 @@ export default function ForgotPassword() {
                   </motion.div>
                 )}
               </motion.div>
-          )}
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -333,6 +332,8 @@ export default function ForgotPassword() {
                 </motion.button>
               </motion.div>
             </form>
+          )}
+
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
