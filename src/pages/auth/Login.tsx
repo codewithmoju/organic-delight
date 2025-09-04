@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -82,39 +81,20 @@ export default function Login() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-lg relative z-10"
-      >
+      <div className="w-full max-w-lg relative z-10">
         <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
           <div className="text-center mb-8">
-            <Logo size="lg" animated />
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-6 text-3xl lg:text-4xl font-bold text-white"
-            >
+            <Logo size="lg" />
+            <h2 className="mt-6 text-3xl lg:text-4xl font-bold text-white">
               Welcome back
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-2 text-gray-400 text-lg"
-            >
+            </h2>
+            <p className="mt-2 text-gray-400 text-lg">
               Sign in to your StockSuite account
-            </motion.p>
+            </p>
           </div>
 
           <form className="space-y-8" onSubmit={handleSubmit}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
+            <div>
               <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
                 {t('auth.login.email')}
               </label>
@@ -128,22 +108,14 @@ export default function Login() {
                 placeholder={t('auth.login.password')}
               />
               {errors.email && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-2 flex items-center text-sm text-error-400"
-                >
+                <div className="mt-2 flex items-center text-sm text-error-400">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.email}
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
+            <div>
               <label htmlFor="password" className="block text-base font-medium text-gray-300 mb-3">
                 {t('auth.login.password')}
               </label>
@@ -170,23 +142,14 @@ export default function Login() {
                 </button>
               </div>
               {errors.password && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-2 flex items-center text-sm text-error-400"
-                >
+                <div className="mt-2 flex items-center text-sm text-error-400">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.password}
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center justify-between"
-            >
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
                   id="remember-me"
@@ -204,16 +167,10 @@ export default function Login() {
               >
                 Forgot password?
               </Link>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-            >
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+            <div>
+              <button
                 type="submit"
                 disabled={isLoading}
                 className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
@@ -226,16 +183,11 @@ export default function Login() {
                 ) : (
                   t('auth.login.signIn')
                 )}
-              </motion.button>
-            </motion.div>
+              </button>
+            </div>
           </form>
 
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-8 text-center text-base text-gray-400"
-          >
+          <p className="mt-8 text-center text-base text-gray-400">
             {t('auth.login.noAccount')}{' '}
             <Link
               to="/register-multi"
@@ -243,9 +195,9 @@ export default function Login() {
             >
               {t('auth.login.signUp')}
             </Link>
-          </motion.p>
+          </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
