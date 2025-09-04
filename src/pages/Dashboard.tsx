@@ -18,8 +18,10 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import { Item, Transaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
+import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
