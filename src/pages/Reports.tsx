@@ -110,27 +110,27 @@ export default function Reports() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-3xl font-bold text-gradient mb-2">Analytics & Reports</h1>
-        <p className="text-gray-400">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gradient mb-2">Analytics & Reports</h1>
+        <p className="text-gray-400 text-sm sm:text-base">
           Comprehensive insights into your inventory performance
         </p>
       </motion.div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
         {/* Monthly Transactions */}
         <AnimatedCard delay={0.1}>
-          <div className="p-6">
-            <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+          <div className="p-4 sm:p-6">
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center">
               <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
               Monthly Transaction Volume
             </h3>
-            <div className="h-80">
+            <div className="h-64 sm:h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyTransactions}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                  <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} />
-                  <YAxis stroke="#9CA3AF" fontSize={12} />
+                  <XAxis dataKey="name" stroke="#9CA3AF" fontSize={10} />
+                  <YAxis stroke="#9CA3AF" fontSize={10} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="value" fill="url(#colorGradient)" radius={[4, 4, 0, 0]} />
                   <defs>
@@ -147,19 +147,19 @@ export default function Reports() {
 
         {/* Category Distribution */}
         <AnimatedCard delay={0.2}>
-          <div className="p-6">
-            <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+          <div className="p-4 sm:p-6">
+            <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center">
               <div className="w-2 h-6 bg-gradient-to-b from-success-500 to-warning-500 rounded-full mr-3" />
               Category Distribution
             </h3>
-            <div className="h-80">
+            <div className="h-64 sm:h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={categoryDistribution}
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
+                    outerRadius="80%"
                     fill="#8884d8"
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -178,23 +178,23 @@ export default function Reports() {
 
       {/* Top Items Table */}
       <AnimatedCard delay={0.3}>
-        <div className="p-6">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+        <div className="p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center">
             <div className="w-2 h-6 bg-gradient-to-b from-warning-500 to-error-500 rounded-full mr-3" />
             Top Performing Items
           </h3>
           
-          <div className="overflow-hidden rounded-xl border border-dark-700/50">
-            <table className="min-w-full divide-y divide-dark-700/50">
+          <div className="overflow-x-auto rounded-xl border border-dark-700/50">
+            <table className="w-full min-w-full divide-y divide-dark-700/50">
               <thead className="bg-dark-800/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Item Name
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Quantity Sold
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Revenue
                   </th>
                 </tr>
@@ -208,13 +208,15 @@ export default function Reports() {
                     transition={{ delay: index * 0.1 }}
                     className="hover:bg-dark-700/30 transition-colors duration-200"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium text-white">
+                      <div className="truncate max-w-[150px] sm:max-w-none">
                       {item.name}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-300">
                       {item.quantity}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-400 font-semibold">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-primary-400 font-semibold">
                       {formatCurrency(item.revenue)}
                     </td>
                   </motion.tr>

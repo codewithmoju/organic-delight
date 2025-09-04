@@ -24,11 +24,11 @@ export default function InventoryChart({ data }: InventoryChartProps) {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6 w-full">
       <motion.h3 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="text-xl font-semibold text-white mb-6 flex items-center"
+        className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center"
       >
         <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
         Inventory Levels
@@ -38,7 +38,7 @@ export default function InventoryChart({ data }: InventoryChartProps) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2 }}
-        className="h-64 sm:h-80 lg:h-96"
+        className="h-48 sm:h-64 lg:h-80 xl:h-96 w-full"
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -46,12 +46,16 @@ export default function InventoryChart({ data }: InventoryChartProps) {
             <XAxis 
               dataKey="name" 
               stroke="#9CA3AF" 
-              fontSize={12}
+              fontSize={10}
               tick={{ fill: '#9CA3AF' }}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={60}
             />
             <YAxis 
               stroke="#9CA3AF" 
-              fontSize={12}
+              fontSize={10}
               tick={{ fill: '#9CA3AF' }}
             />
             <Tooltip content={<CustomTooltip />} />

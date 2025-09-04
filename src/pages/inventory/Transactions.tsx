@@ -121,11 +121,11 @@ export default function Transactions() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gradient">Transactions</h1>
-          <p className="text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Transactions</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">
             Track all inventory movements and changes
           </p>
         </div>
@@ -135,7 +135,7 @@ export default function Transactions() {
           whileTap={{ scale: 0.95 }}
           type="button"
           onClick={() => setIsFormOpen(true)}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
           New Transaction
@@ -144,7 +144,7 @@ export default function Transactions() {
 
       {/* Filters */}
       <AnimatedCard delay={0.1}>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -182,18 +182,18 @@ export default function Transactions() {
 
       {/* Transactions List */}
       <AnimatedCard delay={0.2}>
-        <div className="p-6">
-          <div className="space-y-4">
+        <div className="p-4 sm:p-6">
+          <div className="space-y-3 sm:space-y-4">
             <AnimatePresence>
               {filteredTransactions.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center py-16"
+                  className="text-center py-12 sm:py-16 px-4"
                 >
                   <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-400 mb-2">No transactions found</h3>
-                  <p className="text-gray-500 mb-6">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-400 mb-2">No transactions found</h3>
+                  <p className="text-gray-500 mb-6 text-sm sm:text-base">
                     {filterType !== 'all' || dateFilter !== 'all' 
                       ? 'Try adjusting your filter criteria'
                       : 'Start by recording your first transaction'
@@ -221,14 +221,14 @@ export default function Transactions() {
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.05 }}
                     whileHover={{ scale: 1.02, x: 4 }}
-                    className="flex items-center justify-between p-4 rounded-xl bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-200"
+                    className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-200 w-full"
                   >
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
                       <div className={`p-3 rounded-xl ${
                         transaction.type === 'in' 
                           ? 'bg-success-500/20 text-success-400' 
                           : 'bg-error-500/20 text-error-400'
-                      }`}>
+                      } flex-shrink-0`}>
                         {transaction.type === 'in' ? (
                           <ArrowUpRight className="w-5 h-5" />
                         ) : (
@@ -236,11 +236,11 @@ export default function Transactions() {
                         )}
                       </div>
                       
-                      <div>
-                        <h4 className="text-white font-semibold">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-white font-semibold text-sm sm:text-base truncate">
                           {transaction.item?.name || 'Unknown Item'}
                         </h4>
-                        <div className="flex items-center text-sm text-gray-400 mt-1">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-400 mt-1">
                           <Calendar className="w-4 h-4 mr-1" />
                           {format(
                             new Date(transaction.created_at.toDate ? transaction.created_at.toDate() : transaction.created_at), 
@@ -250,17 +250,17 @@ export default function Transactions() {
                       </div>
                     </div>
                     
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <div className={`text-lg font-bold ${
                         transaction.type === 'in' ? 'text-success-400' : 'text-error-400'
-                      }`}>
+                      } text-sm sm:text-lg`}>
                         {transaction.type === 'in' ? '+' : '-'}{Math.abs(transaction.quantity_changed)}
                       </div>
-                      <div className="text-sm text-gray-400">
+                      <div className="text-xs sm:text-sm text-gray-400">
                         {transaction.item?.unit || 'units'}
                       </div>
                       {transaction.cost_per_unit && (
-                        <div className="text-sm text-primary-400 mt-1">
+                        <div className="text-xs sm:text-sm text-primary-400 mt-1">
                           {formatCurrency(
                             Math.abs(transaction.quantity_changed) * transaction.cost_per_unit,
                             transaction.item?.currency || 'USD'

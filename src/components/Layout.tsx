@@ -8,19 +8,19 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
+    <div className="min-h-screen w-full bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 overflow-x-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className="lg:pl-72">
+      <div className="w-full lg:pl-72 transition-all duration-300">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         
         <motion.main 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)]"
+          className="w-full py-4 px-4 sm:py-6 sm:px-6 lg:py-8 lg:px-8 min-h-[calc(100vh-4rem)] max-w-none"
         >
-          <div className="mx-auto max-w-7xl">
+          <div className="w-full max-w-none">
             <Outlet />
           </div>
         </motion.main>

@@ -19,7 +19,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     <motion.div 
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 glass-effect border-b border-dark-700/50 px-4 sm:gap-x-6 sm:px-6 lg:px-8"
+      className="sticky top-0 z-40 w-full flex h-16 shrink-0 items-center gap-x-4 glass-effect border-b border-dark-700/50 px-4 sm:gap-x-6 sm:px-6 lg:px-8"
     >
       <button
         type="button"
@@ -34,7 +34,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         <Logo size="sm" />
       </div>
       
-      <div className="flex flex-1 gap-x-4 self-stretch items-center justify-end">
+      <div className="flex flex-1 gap-x-2 sm:gap-x-4 self-stretch items-center justify-end">
         <div className="flex items-center gap-x-4 lg:gap-x-6">
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -54,7 +54,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               type="button"
-              className="flex items-center gap-x-3 rounded-xl p-2 text-sm leading-6 text-gray-200 hover:bg-dark-700/50 transition-all duration-200"
+              className="flex items-center gap-x-2 sm:gap-x-3 rounded-xl p-2 text-sm leading-6 text-gray-200 hover:bg-dark-700/50 transition-all duration-200"
               onClick={() => setShowUserMenu(!showUserMenu)}
             >
               <motion.img
@@ -63,7 +63,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 alt="Profile"
                 whileHover={{ scale: 1.1 }}
               />
-              <span className="hidden lg:block text-sm font-semibold leading-6 text-gray-200">
+              <span className="hidden sm:block text-sm font-semibold leading-6 text-gray-200 truncate max-w-[120px]">
                 {profile?.full_name || 'User'}
               </span>
             </motion.button>

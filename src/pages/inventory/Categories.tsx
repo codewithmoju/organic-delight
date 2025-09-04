@@ -121,11 +121,11 @@ export default function Categories() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gradient">Categories</h1>
-          <p className="text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Categories</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">
             Organize your inventory with custom categories
           </p>
         </div>
@@ -135,7 +135,7 @@ export default function Categories() {
           whileTap={{ scale: 0.95 }}
           type="button"
           onClick={() => setIsFormOpen(true)}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
           Add Category
@@ -145,7 +145,7 @@ export default function Categories() {
       {/* Categories Grid */}
       <motion.div 
         layout
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6"
       >
         <AnimatePresence>
           {categories.map((category, index) => (
@@ -157,20 +157,20 @@ export default function Categories() {
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ y: -8, scale: 1.03 }}
-              className="card-dark p-6 group cursor-pointer relative overflow-hidden"
+              className="card-dark p-4 sm:p-6 group cursor-pointer relative overflow-hidden w-full"
             >
               {/* Background gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
               <div className="relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center">
+                <div className="flex items-start justify-between mb-3 sm:mb-4">
+                  <div className="flex items-center flex-1 min-w-0">
                     <div className="p-3 rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 group-hover:from-primary-500/30 group-hover:to-accent-500/30 transition-all duration-300">
                       <FolderOpen className="w-6 h-6 text-primary-400" />
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -178,7 +178,7 @@ export default function Categories() {
                         setSelectedCategory(category);
                         setIsFormOpen(true);
                       }}
-                      className="p-2 rounded-lg bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 transition-colors duration-200"
+                      className="p-1.5 sm:p-2 rounded-lg bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 transition-colors duration-200"
                     >
                       <Pencil className="h-4 w-4" />
                     </motion.button>
@@ -187,26 +187,26 @@ export default function Categories() {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleDelete(category.id)}
-                      className="p-2 rounded-lg bg-error-500/20 text-error-400 hover:bg-error-500/30 transition-colors duration-200"
+                      className="p-1.5 sm:p-2 rounded-lg bg-error-500/20 text-error-400 hover:bg-error-500/30 transition-colors duration-200"
                     >
                       <Trash2 className="h-4 w-4" />
                     </motion.button>
                   </div>
                 </div>
                 
-                <div>
-                  <h3 className="text-lg font-semibold text-white group-hover:text-primary-300 transition-colors duration-200 mb-2">
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold text-white group-hover:text-primary-300 transition-colors duration-200 mb-2 truncate">
                     {category.name}
                   </h3>
                   
                   {category.description && (
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                    <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
                       {category.description}
                     </p>
                   )}
                   
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center text-gray-400 text-sm">
+                    <div className="flex items-center text-gray-400 text-xs sm:text-sm">
                       <Package className="w-4 h-4 mr-1" />
                       {category.itemCount || 0} items
                     </div>
@@ -225,11 +225,11 @@ export default function Categories() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-16"
+          className="text-center py-12 sm:py-16 px-4"
         >
           <FolderOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-400 mb-2">No categories yet</h3>
-          <p className="text-gray-500 mb-6">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-400 mb-2">No categories yet</h3>
+          <p className="text-gray-500 mb-6 text-sm sm:text-base">
             Create your first category to organize your inventory
           </p>
           <motion.button

@@ -84,23 +84,23 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8 w-full">
+    <div className="w-full max-w-none space-y-6 sm:space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center lg:text-left"
+        className="text-center sm:text-left"
       >
-        <h1 className="text-3xl lg:text-4xl font-bold text-gradient mb-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">
           Dashboard Overview
         </h1>
-        <p className="text-gray-400 text-lg">
+        <p className="text-gray-400 text-base sm:text-lg">
           Welcome back! Here's what's happening with your inventory.
         </p>
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
         <StatsCard
           title="Total Items"
           value={summary?.totalItems || 0}
@@ -133,13 +133,14 @@ export default function Dashboard() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
+          className="w-full"
         >
           <LowStockAlert items={lowStockItems} />
         </motion.div>
       )}
 
       {/* Charts and Recent Activity */}
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
         <AnimatedCard delay={0.6}>
           <InventoryChart
             data={summary?.items?.map((item: any) => ({
@@ -159,36 +160,36 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/inventory/items')}
-          className="btn-primary p-6 rounded-xl text-center flex flex-col items-center gap-3"
+          className="btn-primary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
         >
-          <Package className="w-8 h-8" />
-          <span className="text-lg font-semibold">Add New Item</span>
+          <Package className="w-6 h-6 sm:w-8 sm:h-8" />
+          <span className="text-base sm:text-lg font-semibold">Add New Item</span>
         </motion.button>
         
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/transactions')}
-          className="btn-secondary p-6 rounded-xl text-center flex flex-col items-center gap-3"
+          className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
         >
-          <ArrowUpDown className="w-8 h-8" />
-          <span className="text-lg font-semibold">Record Transaction</span>
+          <ArrowUpDown className="w-6 h-6 sm:w-8 sm:h-8" />
+          <span className="text-base sm:text-lg font-semibold">Record Transaction</span>
         </motion.button>
         
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/reports')}
-          className="btn-secondary p-6 rounded-xl text-center flex flex-col items-center gap-3"
+          className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px] sm:col-span-2 lg:col-span-1"
         >
-          <TrendingUp className="w-8 h-8" />
-          <span className="text-lg font-semibold">View Reports</span>
+          <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8" />
+          <span className="text-base sm:text-lg font-semibold">View Reports</span>
         </motion.button>
       </motion.div>
     </div>

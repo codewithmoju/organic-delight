@@ -7,10 +7,20 @@
     @apply text-gray-100 antialiased;
     background: #020617;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    overflow-x: hidden;
   }
 
   * {
     border-color: #334155;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Ensure proper box-sizing */
+  *, *::before, *::after {
+    box-sizing: border-box;
   }
 }
 
@@ -27,6 +37,8 @@
     border: 1px solid rgba(51, 65, 85, 0.5);
     border-radius: 0.75rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 100%;
   }
   
   .btn-primary {
@@ -39,6 +51,18 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     border: none;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .btn-primary {
+      padding: 0.875rem 1.25rem;
+      font-size: 0.875rem;
+    }
   }
   
   .btn-primary:hover {
@@ -62,6 +86,18 @@
     transition: all 0.2s;
     border: 1px solid #475569;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .btn-secondary {
+      padding: 0.875rem 1.25rem;
+      font-size: 0.875rem;
+    }
   }
   
   .btn-secondary:hover {
@@ -79,6 +115,8 @@
     padding: 1rem 1.25rem;
     font-size: 1rem;
     line-height: 1.5;
+    width: 100%;
+    max-width: 100%;
   }
   
   .input-dark::placeholder {
@@ -97,11 +135,89 @@
     font-size: 1.125rem;
     line-height: 1.75;
   }
+
+  @media (max-width: 640px) {
+    .input-large {
+      padding: 1rem 1.25rem;
+      font-size: 1rem;
+    }
+  }
   
   .shimmer {
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
+  }
+
+  /* Responsive container utilities */
+  .container-responsive {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-responsive {
+      max-width: 640px;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .container-responsive {
+      max-width: 768px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-responsive {
+      max-width: 1024px;
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container-responsive {
+      max-width: 1280px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .container-responsive {
+      max-width: 1536px;
+    }
+  }
+
+  /* Grid responsive utilities */
+  .grid-responsive {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .grid-responsive {
+      gap: 1.5rem;
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-responsive {
+      gap: 2rem;
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .grid-responsive {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 }
 

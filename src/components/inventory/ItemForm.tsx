@@ -46,8 +46,8 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+      <div className="grid grid-cols-1 gap-6 sm:gap-8 sm:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

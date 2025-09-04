@@ -138,11 +138,11 @@ export default function Items() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gradient">Inventory Items</h1>
-          <p className="text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Inventory Items</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">
             Manage your inventory items and stock levels
           </p>
         </div>
@@ -152,7 +152,7 @@ export default function Items() {
           whileTap={{ scale: 0.95 }}
           type="button"
           onClick={() => setIsFormOpen(true)}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
           Add Item
@@ -161,9 +161,9 @@ export default function Items() {
 
       {/* Filters */}
       <AnimatedCard delay={0.1}>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
               <SearchInput
                 placeholder="Search items by name, description, or SKU..."
                 value={searchQuery}
@@ -193,7 +193,7 @@ export default function Items() {
       {/* Items Grid */}
       <motion.div 
         layout
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6"
       >
         <AnimatePresence>
           {filteredItems.map((item, index) => (
@@ -205,7 +205,7 @@ export default function Items() {
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ y: -8, scale: 1.03 }}
-              className="card-dark p-6 group cursor-pointer relative overflow-hidden"
+              className="card-dark p-4 sm:p-6 group cursor-pointer relative overflow-hidden w-full"
             >
               {/* Background gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -222,46 +222,46 @@ export default function Items() {
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white group-hover:text-primary-300 transition-colors duration-200">
+                    <h3 className="text-base sm:text-lg font-semibold text-white group-hover:text-primary-300 transition-colors duration-200 truncate">
                       {item.name}
                     </h3>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1 truncate">
                       {item.category?.name || 'Uncategorized'}
                     </p>
                   </div>
                 </div>
                 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400 text-sm">Stock</span>
+                    <span className="text-gray-400 text-xs sm:text-sm">Stock</span>
                     <span className={`font-semibold ${
                       item.quantity === 0 
                         ? 'text-error-400' 
                         : item.quantity <= item.reorder_point 
                           ? 'text-warning-400' 
                           : 'text-success-400'
-                    }`}>
+                    } text-xs sm:text-sm`}>
                       {item.quantity} {item.unit}
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400 text-sm">Price</span>
-                    <span className="text-white font-semibold">
+                    <span className="text-gray-400 text-xs sm:text-sm">Price</span>
+                    <span className="text-white font-semibold text-xs sm:text-sm">
                       {formatCurrency(item.unit_price, item.currency)}
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400 text-sm">Total Value</span>
-                    <span className="text-primary-400 font-semibold">
+                    <span className="text-gray-400 text-xs sm:text-sm">Total Value</span>
+                    <span className="text-primary-400 font-semibold text-xs sm:text-sm">
                       {formatCurrency(item.quantity * item.unit_price, item.currency)}
                     </span>
                   </div>
                 </div>
                 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="flex items-center justify-end gap-1 sm:gap-2 mt-3 sm:mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -269,7 +269,7 @@ export default function Items() {
                       setSelectedItem(item);
                       setIsFormOpen(true);
                     }}
-                    className="p-2 rounded-lg bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 transition-colors duration-200"
+                    className="p-1.5 sm:p-2 rounded-lg bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 transition-colors duration-200"
                   >
                     <Pencil className="h-4 w-4" />
                   </motion.button>
@@ -278,7 +278,7 @@ export default function Items() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleDelete(item.id)}
-                    className="p-2 rounded-lg bg-error-500/20 text-error-400 hover:bg-error-500/30 transition-colors duration-200"
+                    className="p-1.5 sm:p-2 rounded-lg bg-error-500/20 text-error-400 hover:bg-error-500/30 transition-colors duration-200"
                   >
                     <Trash2 className="h-4 w-4" />
                   </motion.button>
@@ -294,11 +294,11 @@ export default function Items() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-16"
+          className="text-center py-12 sm:py-16 px-4"
         >
           <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-400 mb-2">No items found</h3>
-          <p className="text-gray-500 mb-6">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-400 mb-2">No items found</h3>
+          <p className="text-gray-500 mb-6 text-sm sm:text-base">
             {searchQuery || selectedCategory 
               ? 'Try adjusting your search or filter criteria'
               : 'Get started by adding your first inventory item'
