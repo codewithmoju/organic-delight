@@ -78,18 +78,14 @@ export default function Items() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this item? Items with transaction history will be archived instead of permanently deleted.')) return;
 
     try {
       await deleteItem(id);
       await loadData();
-      toast.success('Item deleted successfully');
+      toast.success('Item processed successfully');
     } catch (error: any) {
-      if (error.message.includes('transaction history')) {
-        toast.error('Cannot delete item with transaction history');
-      } else {
-        toast.error('Failed to delete item');
-      }
+      toast.error('Failed to process item');
       console.error(error);
     }
   }

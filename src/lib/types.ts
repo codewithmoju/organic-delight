@@ -6,6 +6,7 @@ export interface Item {
   created_at: Date;
   updated_at: Date;
   created_by: string;
+  is_archived?: boolean;
   category?: Category;
   // Stock tracking fields (calculated from transactions)
   current_quantity?: number;

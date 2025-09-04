@@ -11,14 +11,15 @@ import {
   orderBy,
   limit,
   startAfter,
-  DocumentSnapshot
+  DocumentSnapshot,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Item, StockLevel } from '../types';
 
 export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) {
   const itemsRef = collection(db, 'items');
-  let q = query(itemsRef, orderBy('name'));
+  let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
   
   if (limitCount) {
     q = query(q, limit(limitCount));
@@ -65,7 +66,7 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
 
 export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
   const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where('category_id', '==', categoryId), orderBy('name'));
+  const q = query(itemsRef, where('category_id', '==', categoryId), where('is_archived', '!=', true), orderBy('name'));
   const snapshot = await getDocs(q);
   
   const items = [];
@@ -202,7 +203,13 @@ export async function deleteItem(id: string): Promise<void> {
   const transactionsSnapshot = await getDocs(transactionsQuery);
   
   if (!transactionsSnapshot.empty) {
-    throw new Error('Cannot delete item that has transaction history. Archive the item instead.');
+    // Archive the item instead of deleting it
+    const docRef = doc(db, 'items', id);
+    await updateDoc(docRef, {
+      is_archived: true,
+      updated_at: Timestamp.fromDate(new Date())
+    });
+    return;
   }
   
   await deleteDoc(doc(db, 'items', id));
@@ -272,10 +279,10 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
 
 export async function searchItems(searchQuery: string, categoryId?: string): Promise<Item[]> {
   const itemsRef = collection(db, 'items');
-  let q = query(itemsRef, orderBy('name'));
+  let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
   
   if (categoryId) {
-    q = query(itemsRef, where('category_id', '==', categoryId), orderBy('name'));
+    q = query(itemsRef, where('category_id', '==', categoryId), where('is_archived', '!=', true), orderBy('name'));
   }
   
   const snapshot = await getDocs(q);
