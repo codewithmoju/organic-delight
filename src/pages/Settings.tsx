@@ -24,7 +24,8 @@ import {
   Save,
   AlertCircle,
   CheckCircle,
-  Accessibility
+  Accessibility,
+  Zap
 } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { updateUserProfile } from '../lib/api/auth';
