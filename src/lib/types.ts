@@ -70,6 +70,13 @@ export interface ImportResult {
   errors: string[];
 }
 
+export interface DashboardMetrics {
+  totalStockIn: number;
+  totalStockOut: number;
+  revenueSpentOnStockIn: number;
+  revenueEarnedFromStockOut: number;
+}
+
 export interface ExportOptions {
   format: 'csv' | 'json' | 'xlsx';
   includeTransactions: boolean;
