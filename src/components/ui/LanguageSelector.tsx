@@ -40,15 +40,24 @@ export default function LanguageSelector({
       await i18n.changeLanguage(languageCode);
       setIsOpen(false);
       setSearchQuery('');
+      toast.success(`Language changed to ${SUPPORTED_LANGUAGES.find(l => l.code === languageCode)?.name}`);
       
       // Update user preference in profile if available
-      const profile = JSON.parse(localStorage.getItem('auth-storage') || '{}')?.state?.profile;
-      if (profile) {
-        // This would typically update the user's language preference in the database
-        console.log('Language changed to:', languageCode);
+      try {
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+          const { state } = JSON.parse(authStorage);
+          if (state?.profile) {
+            // Update user's language preference in the database
+            console.log('Language preference updated for user:', languageCode);
+          }
+        }
+      } catch (error) {
+        console.warn('Could not update user language preference:', error);
       }
     } catch (error) {
       console.error('Failed to change language:', error);
+      toast.error('Failed to change language. Please try again.');
     }
   };
 

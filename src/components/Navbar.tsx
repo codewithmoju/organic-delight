@@ -37,7 +37,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       
       <div className="flex flex-1 gap-x-2 sm:gap-x-4 self-stretch items-center justify-end">
         <div className="flex items-center gap-x-4 lg:gap-x-6">
-          <LanguageSelector variant="compact" showSearch={false} />
+          <LanguageSelector variant="compact" showSearch={false} className="hidden sm:block" />
           
           <motion.button
             whileHover={{ scale: 1.1 }}

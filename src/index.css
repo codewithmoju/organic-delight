@@ -24,6 +24,163 @@
   }
 }
 
+/* Accessibility Features */
+
+/* Font Size System */
+:root {
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --spacing-scale: 1;
+  --padding-scale: 1;
+  --animation-duration: 0.3s;
+  --transition-duration: 0.2s;
+}
+
+/* Font Size Variants */
+[data-font-size="small"] {
+  font-size: var(--font-size-sm);
+}
+
+[data-font-size="medium"] {
+  font-size: var(--font-size-base);
+}
+
+[data-font-size="large"] {
+  font-size: var(--font-size-lg);
+}
+
+[data-font-size="extra-large"] {
+  font-size: var(--font-size-xl);
+}
+
+/* High Contrast Mode */
+[data-contrast="high"] {
+  --tw-bg-opacity: 1;
+  --tw-text-opacity: 1;
+}
+
+[data-contrast="high"] .card-dark {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+[data-contrast="high"] .text-gray-400 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-contrast="high"] .text-gray-300 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-contrast="high"] .btn-primary {
+  background: #000;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+[data-contrast="high"] .btn-secondary {
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+}
+
+[data-contrast="high"] .input-dark {
+  background: #000;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+/* Compact View Mode */
+[data-view-mode="compact"] {
+  --spacing-scale: 0.75;
+  --padding-scale: 0.8;
+}
+
+[data-view-mode="compact"] .card-dark {
+  padding: calc(1rem * var(--padding-scale));
+}
+
+[data-view-mode="compact"] .space-y-6 > * + * {
+  margin-top: calc(1.5rem * var(--spacing-scale));
+}
+
+[data-view-mode="compact"] .space-y-4 > * + * {
+  margin-top: calc(1rem * var(--spacing-scale));
+}
+
+[data-view-mode="compact"] .space-y-3 > * + * {
+  margin-top: calc(0.75rem * var(--spacing-scale));
+}
+
+[data-view-mode="compact"] .p-6 {
+  padding: calc(1.5rem * var(--padding-scale));
+}
+
+[data-view-mode="compact"] .p-4 {
+  padding: calc(1rem * var(--padding-scale));
+}
+
+[data-view-mode="compact"] .py-4 {
+  padding-top: calc(1rem * var(--padding-scale));
+  padding-bottom: calc(1rem * var(--padding-scale));
+}
+
+[data-view-mode="compact"] .px-6 {
+  padding-left: calc(1.5rem * var(--padding-scale));
+  padding-right: calc(1.5rem * var(--padding-scale));
+}
+
+/* Animation Control */
+[data-animations="false"] *,
+[data-animations="false"] *::before,
+[data-animations="false"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+}
+
+[data-animations="false"] .animate-spin {
+  animation: none !important;
+}
+
+[data-animations="false"] .animate-pulse {
+  animation: none !important;
+}
+
+[data-animations="false"] .animate-bounce {
+  animation: none !important;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* Responsive Font Scaling */
+.text-xs { font-size: var(--font-size-xs); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-lg { font-size: var(--font-size-lg); }
+.text-xl { font-size: var(--font-size-xl); }
+.text-2xl { font-size: var(--font-size-2xl); }
+.text-3xl { font-size: var(--font-size-3xl); }
+.text-4xl { font-size: var(--font-size-4xl); }
+
 @layer base {
   body {
     @apply text-gray-100 antialiased;

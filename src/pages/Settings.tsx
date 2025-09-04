@@ -746,6 +746,21 @@ export default function Settings() {
             </div>
           </motion.div>
         )}
+
+        {activeTab === 'accessibility' && (
+          <motion.div
+            key="accessibility"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <AnimatedCard delay={0.2}>
+              <div className="p-6 sm:p-8">
+                <AccessibilityPanel />
+              </div>
+            </AnimatedCard>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
