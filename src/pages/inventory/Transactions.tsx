@@ -10,10 +10,10 @@ import TransactionForm from '../../components/inventory/TransactionForm';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnimatedCard from '../../components/ui/AnimatedCard';
 import { formatCurrency } from '../../lib/utils/notifications';
-import { useTranslation } from 'react-i18next';
+import { usePagination } from '../../lib/hooks/usePagination';
+import PaginationControls from '../../components/ui/PaginationControls';
 
 export default function Transactions() {
-  const { t } = useTranslation();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -21,6 +21,11 @@ export default function Transactions() {
   const [isLoading, setIsLoading] = useState(true);
   const [filterType, setFilterType] = useState<'all' | 'stock_in' | 'stock_out'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+
+  const pagination = usePagination({
+    data: filteredTransactions,
+    defaultItemsPerPage: 25
+  });
 
   useEffect(() => {
     loadData();
@@ -162,7 +167,7 @@ export default function Transactions() {
           className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
-          {t('transactions.newTransaction')}
+          New Transaction
         </motion.button>
       </motion.div>
 
@@ -209,7 +214,7 @@ export default function Transactions() {
         <div className="p-4 sm:p-6" data-tour="transactions-list">
           <div className="space-y-4">
             <AnimatePresence>
-              {filteredTransactions.length === 0 ? (
+              {pagination.paginatedData.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -236,7 +241,7 @@ export default function Transactions() {
                   )}
                 </motion.div>
               ) : (
-                filteredTransactions.map((transaction, index) => (
+                pagination.paginatedData.map((transaction, index) => (
                   <motion.div
                     key={transaction.id}
                     layout

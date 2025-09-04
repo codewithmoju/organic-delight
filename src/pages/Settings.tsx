@@ -29,7 +29,8 @@ import {
   Save,
   AlertCircle,
   CheckCircle,
-  Palette as PaletteIcon
+  Palette as PaletteIcon,
+  Accessibility
 } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { updateUserProfile } from '../lib/api/auth';
@@ -50,13 +51,12 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { formatDate } from '../lib/utils/notifications';
 import { debounce } from '../lib/utils/debounce';
 import { SUPPORTED_CURRENCIES } from '../lib/types';
-import { useTranslation } from 'react-i18next';
 import LanguageSelector from '../components/ui/LanguageSelector';
+import AccessibilityPanel from '../components/ui/AccessibilityPanel';
 
 export default function Settings() {
-  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'notifications'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'accessibility'>('profile');
   const profile = useAuthStore((state) => state.profile);
   const setProfile = useAuthStore((state) => state.setProfile);
 
@@ -171,10 +171,10 @@ export default function Settings() {
   };
 
   const tabs = [
-    { id: 'profile', label: t('settings.tabs.profile'), icon: User },
-    { id: 'security', label: t('settings.tabs.security'), icon: Lock },
-    { id: 'preferences', label: t('settings.tabs.preferences'), icon: Palette },
-    { id: 'notifications', label: t('settings.tabs.notifications'), icon: Bell },
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'security', label: 'Security', icon: Lock },
+    { id: 'preferences', label: 'Preferences', icon: Palette },
+    { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
   ] as const;
 
   return (
@@ -184,15 +184,15 @@ export default function Settings() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl sm:text-3xl font-bold text-gradient mb-2">{t('settings.title')}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gradient mb-2">Settings</h1>
         <p className="text-gray-400 text-sm sm:text-base">
-          {t('settings.subtitle')}
+          Manage your account preferences and security settings
         </p>
       </motion.div>
 
       {/* Tab Navigation */}
       <AnimatedCard delay={0.1}>
-        <div className="p-4 sm:p-6">
+        <div className="p-4 sm:p-6" data-tour="settings-tabs">
           <div className="flex flex-wrap gap-2 sm:gap-4">
             {tabs.map((tab, index) => (
               <motion.button
@@ -254,7 +254,7 @@ export default function Settings() {
                     >
                       <label htmlFor="fullName" className="block text-base font-medium text-gray-300 mb-3">
                         <User className="w-4 h-4 inline mr-2" />
-                        {t('settings.profile.fullName')}
+                        Full Name
                       </label>
                       <input
                         type="text"
@@ -263,7 +263,7 @@ export default function Settings() {
                         defaultValue={profile?.full_name}
                         required
                         className="w-full input-dark input-large"
-                        placeholder={t('settings.profile.fullNamePlaceholder')}
+                        placeholder="Enter your full name"
                       />
                     </motion.div>
 
@@ -274,7 +274,7 @@ export default function Settings() {
                     >
                       <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
                         <Mail className="w-4 h-4 inline mr-2" />
-                        {t('settings.profile.email')}
+                        Email Address
                       </label>
                       <input
                         type="email"
@@ -535,30 +535,10 @@ export default function Settings() {
                       />
                     </div>
 
-                    <PreferenceSelect
-                      label={t('settings.preferences.currencyLocalization.language')}
-                      description={t('settings.preferences.currencyLocalization.languageDescription')}
-                      icon={<Languages className="w-4 h-4" />}
-                      value={preferences.language}
-                      options={[
-                        { value: 'en', label: 'English' },
-                        { value: 'es', label: 'Español' },
-                        { value: 'fr', label: 'Français' },
-                        { value: 'de', label: 'Deutsch' },
-                        { value: 'it', label: 'Italiano' },
-                        { value: 'pt', label: 'Português' },
-                        { value: 'zh', label: '中文' },
-                        { value: 'ja', label: '日本語' },
-                        { value: 'ar', label: 'العربية' },
-                        { value: 'hi', label: 'हिन्दी' },
-                      ]}
-                      onChange={(value) => updatePreference('language', value)}
-                    />
-
                     <div>
                       <label className="block text-base font-medium text-gray-300 mb-3">
                         <Languages className="w-4 h-4 inline mr-2" />
-                        {t('settings.preferences.currencyLocalization.language')} (Advanced)
+                        Language
                       </label>
                       <LanguageSelector
                         variant="dropdown"
@@ -762,6 +742,18 @@ export default function Settings() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Reset Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showResetDialog}
+        title="Reset Preferences"
+        message="Are you sure you want to reset all preferences to their default values? This action cannot be undone."
+        confirmText="Reset"
+        cancelText="Cancel"
+        variant="warning"
+        onConfirm={handleResetToDefaults}
+        onCancel={() => setShowResetDialog(false)}
+      />
     </div>
   );
 }

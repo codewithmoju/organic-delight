@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Pencil, Trash2, FolderOpen, Package } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { getCategories, createCategory, updateCategory, deleteCategory, getCategoryItemCount } from '../../lib/api/categories';
 import { Category } from '../../lib/types';
 import CategoryForm from '../../components/inventory/CategoryForm';
@@ -16,7 +15,6 @@ interface CategoryWithCount extends Category {
 }
 
 export default function Categories() {
-  const { t } = useTranslation();
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -56,12 +54,12 @@ export default function Categories() {
     }
   }
 
-  async function handleSubmit(data: Partial<Category>) {
+  async function handleSubmit(data: { name: string; description: string; created_by: string }) {
     try {
       if (selectedCategory) {
         await updateCategory(selectedCategory.id, data);
       } else {
-        await createCategory(data as Omit<Category, 'id'>);
+        await createCategory(data);
       }
       await loadData();
       setIsFormOpen(false);
@@ -133,9 +131,9 @@ export default function Categories() {
         className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">{t('categories.title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Categories</h1>
           <p className="text-gray-400 mt-1 text-sm sm:text-base">
-            {t('categories.subtitle')}
+            Organize your inventory with custom categories
           </p>
         </div>
         
@@ -147,7 +145,7 @@ export default function Categories() {
           className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
-          {t('categories.addCategory')}
+          Add Category
         </motion.button>
       </motion.div>
 
@@ -158,7 +156,7 @@ export default function Categories() {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 px-2 sm:px-0"
       >
         <AnimatePresence>
-          {categories.map((category, index) => (
+          {pagination.paginatedData.map((category, index) => (
             <motion.div
               key={category.id}
               layout
