@@ -3,13 +3,13 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import './i18n'
-import { addResourceHints, MobilePerformanceTracker } from './lib/utils/performance'
+import { addMobileResourceHints, MobilePerformanceTracker } from './lib/utils/performance'
 
 // Start performance tracking
 MobilePerformanceTracker.mark('app-start');
 
 // Add resource hints for better loading performance
-addResourceHints();
+addMobileResourceHints();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
