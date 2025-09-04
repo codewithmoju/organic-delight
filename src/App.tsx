@@ -10,6 +10,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
+import MultiStepRegister from './pages/auth/MultiStepRegister';
+import EmailVerification from './pages/auth/EmailVerification';
 import Dashboard from './pages/Dashboard';
 import Items from './pages/inventory/Items';
 import Categories from './pages/inventory/Categories';
@@ -58,7 +60,9 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/register-multi" element={<MultiStepRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
         
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="/" element={<Dashboard />} />

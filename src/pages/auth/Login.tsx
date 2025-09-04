@@ -236,7 +236,7 @@ export default function Login() {
           >
             Don't have an account?{' '}
             <Link
-              to="/register"
+              to="/register-multi"
               className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
             >
               Sign up
