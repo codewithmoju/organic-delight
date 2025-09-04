@@ -502,119 +502,6 @@ export default function Settings() {
             <AnimatedCard delay={0.2}>
               <div className="p-6 sm:p-8">
                 <div className="flex items-center mb-8">
-                  <div className="p-3 rounded-lg bg-success-500/20 text-success-400 mr-4">
-                    <Palette className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">Preferences</h3>
-                </div>
-
-                <div className="space-y-8">
-                  {/* Currency Selection */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <label className="block text-base font-medium text-gray-300 mb-4">
-                      <Globe className="w-4 h-4 inline mr-2" />
-                      Preferred Currency
-                    </label>
-                    <CurrencySelector
-                      selectedCurrency={profile?.preferred_currency || 'USD'}
-                      onCurrencyChange={handleCurrencyChange}
-                    />
-                  </motion.div>
-
-                  {/* Language Selection */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    <label className="block text-base font-medium text-gray-300 mb-4">
-                      <Languages className="w-4 h-4 inline mr-2" />
-                      Language
-                    </label>
-                    <select className="w-full input-dark input-large">
-                      <option value="en">English</option>
-                      <option value="es">Español</option>
-                      <option value="fr">Français</option>
-                      <option value="de">Deutsch</option>
-                      <option value="zh">中文</option>
-                      <option value="ja">日本語</option>
-                    </select>
-                  </motion.div>
-
-                  {/* Theme Selection */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <label className="block text-base font-medium text-gray-300 mb-4">
-                      Theme Preference
-                    </label>
-                    <div className="grid grid-cols-3 gap-4">
-                      {[
-                        { id: 'light', label: 'Light', icon: Sun },
-                        { id: 'dark', label: 'Dark', icon: Moon },
-                        { id: 'system', label: 'System', icon: Monitor },
-                      ].map((theme) => (
-                        <motion.button
-                          key={theme.id}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                            (profile?.theme || 'dark') === theme.id
-                              ? 'border-primary-500 bg-primary-500/10 text-primary-400'
-                              : 'border-dark-600 bg-dark-700/30 text-gray-400 hover:border-primary-500/50'
-                          }`}
-                        >
-                          <theme.icon className="w-6 h-6 mx-auto mb-2" />
-                          <div className="font-medium">{theme.label}</div>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </motion.div>
-
-                  {/* Data Export */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="pt-6 border-t border-dark-700/50"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-lg font-semibold text-white mb-2">Data Export</h4>
-                        <p className="text-gray-400 text-sm">Download your data for backup or migration</p>
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="btn-secondary flex items-center gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        Export Data
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-            </AnimatedCard>
-          </motion.div>
-        )}
-
-        {activeTab === 'notifications' && (
-          <motion.div
-            key="notifications"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-          >
-            <AnimatedCard delay={0.2}>
-              <div className="p-6 sm:p-8">
-                <div className="flex items-center mb-8">
                   <div className="p-3 rounded-lg bg-warning-500/20 text-warning-400 mr-4">
                     <Bell className="w-6 h-6" />
                   </div>
@@ -624,7 +511,7 @@ export default function Settings() {
                 <div className="space-y-6">
                   {[
                     {
-                      id: 'email_notifications',
+                      id: 'email_notifications', 
                       title: 'Email Notifications',
                       description: 'Receive notifications via email',
                       icon: Mail,
@@ -648,31 +535,14 @@ export default function Settings() {
                       icon: ArrowUpDown,
                     },
                   ].map((setting, index) => (
-                    <motion.div
+                    <PreferenceToggle
                       key={setting.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + index * 0.1 }}
-                      className="flex items-center justify-between p-4 rounded-xl bg-dark-700/30 border border-dark-600/50"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400">
-                          <setting.icon className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="text-white font-medium">{setting.title}</h4>
-                          <p className="text-gray-400 text-sm">{setting.description}</p>
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          defaultChecked={true}
-                        />
-                        <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                      </label>
-                    </motion.div>
+                      label={setting.title}
+                      description={setting.description}
+                      icon={<setting.icon className="w-4 h-4" />}
+                      checked={preferences[setting.id as keyof typeof preferences] as boolean ?? true}
+                      onChange={(checked) => updatePreference(setting.id as any, checked)}
+                    />
                   ))}
                 </div>
 
