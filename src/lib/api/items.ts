@@ -230,11 +230,11 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
   
   // Sort transactions by date in memory (newest first)
   const sortedDocs = snapshot.docs.sort((a, b) => {
-    const dateA = a.data().transaction_date.toDate ? 
-      a.data().transaction_date.toDate() : 
+    const dateA = a.data().transaction_date?.toDate ? 
+      a.data().transaction_date?.toDate() : 
       new Date(a.data().transaction_date);
-    const dateB = b.data().transaction_date.toDate ? 
-      b.data().transaction_date.toDate() : 
+    const dateB = b.data().transaction_date?.toDate ? 
+      b.data().transaction_date?.toDate() : 
       new Date(b.data().transaction_date);
     return dateB.getTime() - dateA.getTime();
   });
