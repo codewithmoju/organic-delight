@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check, Globe, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { SUPPORTED_LANGUAGES } from '../../i18n';
 
 interface LanguageSelectorProps {
