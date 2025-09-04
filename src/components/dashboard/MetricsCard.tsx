@@ -1,6 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { DivideIcon as LucideIcon } from 'lucide-react';
-import { PERFORMANCE_CONFIG } from '../../lib/utils/performance';
 
 interface MetricsCardProps {
   title: string;
@@ -44,30 +43,46 @@ export default function MetricsCard({
     }
   };
 
-  const animationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    transition: { 
-      duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.NORMAL / 1000, 
-      delay, 
-      ease: "easeOut" 
-    },
-    whileHover: { 
-      y: -2, 
-      scale: 1.005,
-      transition: { duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 }
-    }
-  };
+  if (shouldReduceMotion) {
+    return (
+      <div className={`card-dark p-4 sm:p-6 group cursor-pointer border ${colorClasses[color].border}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-gray-400 mb-2 truncate">
+              {title}
+            </p>
+            {isLoading ? (
+              <div className="h-8 sm:h-10 bg-gray-700 rounded animate-pulse" />
+            ) : (
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
+                {value}
+              </p>
+            )}
+          </div>
+          
+          <div className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-gradient-to-br ${colorClasses[color].bg} ${colorClasses[color].text} group-hover:scale-105 transition-all duration-200 flex-shrink-0`}>
+            <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
-      {...animationProps}
-      className={`card-dark p-4 sm:p-6 group cursor-pointer border ${colorClasses[color].border} hover:${colorClasses[color].border}`}
-      style={{
-        willChange: shouldReduceMotion ? 'auto' : 'transform',
-        backfaceVisibility: 'hidden',
-        transform: 'translate3d(0, 0, 0)'
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.3, 
+        delay, 
+        ease: "easeOut" 
       }}
+      whileHover={{ 
+        y: -2, 
+        scale: 1.005,
+        transition: { duration: 0.2 }
+      }}
+      className={`card-dark p-4 sm:p-6 group cursor-pointer border ${colorClasses[color].border} hover:${colorClasses[color].border}`}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
@@ -79,11 +94,11 @@ export default function MetricsCard({
           ) : (
             <motion.p 
               className="text-xl sm:text-2xl lg:text-3xl font-bold text-white"
-              initial={shouldReduceMotion ? {} : { scale: 0.9 }}
-              animate={shouldReduceMotion ? {} : { scale: 1 }}
-              transition={shouldReduceMotion ? {} : { 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ 
                 delay: delay + 0.1, 
-                duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 
+                duration: 0.2 
               }}
             >
               {value}
@@ -93,9 +108,9 @@ export default function MetricsCard({
         
         <motion.div 
           className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-gradient-to-br ${colorClasses[color].bg} ${colorClasses[color].text} group-hover:scale-105 transition-all duration-200 flex-shrink-0`}
-          whileHover={shouldReduceMotion ? {} : { 
+          whileHover={{ 
             rotate: 3,
-            transition: { duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 }
+            transition: { duration: 0.2 }
           }}
         >
           <Icon className="h-6 w-6 sm:h-7 sm:w-7" />

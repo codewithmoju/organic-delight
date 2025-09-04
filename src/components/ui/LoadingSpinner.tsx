@@ -1,5 +1,4 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { PERFORMANCE_CONFIG } from '../../lib/utils/performance';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -42,7 +41,7 @@ export default function LoadingSpinner({
     );
   }
 
-  // Optimized spinner
+  // Simple spinner
   if (variant === 'spinner') {
     return (
       <div className="flex flex-col items-center justify-center space-y-2">
@@ -54,11 +53,6 @@ export default function LoadingSpinner({
             ease: "linear"
           }}
           className={`${sizeClasses[size]} border-2 border-solid rounded-full ${colorClasses[color]}`}
-          style={{
-            willChange: 'transform',
-            backfaceVisibility: 'hidden',
-            transform: 'translate3d(0, 0, 0)'
-          }}
         />
         {text && (
           <motion.p
@@ -74,7 +68,7 @@ export default function LoadingSpinner({
     );
   }
 
-  // Simplified dots loader
+  // Dots loader
   if (variant === 'dots') {
     return (
       <div className="flex flex-col items-center justify-center space-y-2">
@@ -96,10 +90,6 @@ export default function LoadingSpinner({
                 color === 'primary' ? 'bg-primary-500' :
                 color === 'white' ? 'bg-white' : 'bg-gray-400'
               }`}
-              style={{
-                willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden'
-              }}
             />
           ))}
         </div>
@@ -129,10 +119,6 @@ export default function LoadingSpinner({
           color === 'primary' ? 'bg-primary-500' :
           color === 'white' ? 'bg-white' : 'bg-gray-400'
         }`}
-        style={{
-          willChange: 'transform, opacity',
-          backfaceVisibility: 'hidden'
-        }}
       />
       {text && (
         <p className="text-sm text-gray-400 font-medium">

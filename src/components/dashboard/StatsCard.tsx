@@ -1,6 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { PERFORMANCE_CONFIG } from '../../lib/utils/performance';
 
 interface StatsCardProps {
   title: string;
@@ -16,41 +15,63 @@ interface StatsCardProps {
 export default function StatsCard({ title, value, icon, trend, delay = 0 }: StatsCardProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  const animationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    transition: { 
-      duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.NORMAL / 1000, 
-      delay, 
-      ease: "easeOut" 
-    },
-    whileHover: { 
-      y: -2, 
-      scale: 1.005,
-      transition: { duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 }
-    }
-  };
+  if (shouldReduceMotion) {
+    return (
+      <div className="card-dark p-4 sm:p-6 group cursor-pointer">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-xs sm:text-sm font-medium text-gray-400 mb-1 truncate">{title}</p>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
+              {value}
+            </p>
+            {trend && (
+              <div className={`flex items-center mt-1 sm:mt-2 text-xs sm:text-sm font-medium ${
+                trend.value >= 0 ? 'text-success-400' : 'text-error-400'
+              }`}>
+                {trend.value >= 0 ? (
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                ) : (
+                  <TrendingDown className="w-4 h-4 mr-1" />
+                )}
+                <span className="truncate">{Math.abs(trend.value)}% {trend.label}</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 text-primary-400 group-hover:from-primary-500/30 group-hover:to-accent-500/30 transition-all duration-200 flex-shrink-0">
+            {icon}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
-      {...animationProps}
-      className="card-dark p-4 sm:p-6 group cursor-pointer"
-      style={{
-        willChange: shouldReduceMotion ? 'auto' : 'transform',
-        backfaceVisibility: 'hidden',
-        transform: 'translate3d(0, 0, 0)'
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.3, 
+        delay, 
+        ease: "easeOut" 
       }}
+      whileHover={{ 
+        y: -2, 
+        scale: 1.005,
+        transition: { duration: 0.2 }
+      }}
+      className="card-dark p-4 sm:p-6 group cursor-pointer"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-xs sm:text-sm font-medium text-gray-400 mb-1 truncate">{title}</p>
           <motion.p 
             className="text-xl sm:text-2xl lg:text-3xl font-bold text-white"
-            initial={shouldReduceMotion ? {} : { scale: 0.9 }}
-            animate={shouldReduceMotion ? {} : { scale: 1 }}
-            transition={shouldReduceMotion ? {} : { 
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            transition={{ 
               delay: delay + 0.1, 
-              duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 
+              duration: 0.2 
             }}
           >
             {value}
@@ -60,11 +81,11 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
               className={`flex items-center mt-1 sm:mt-2 text-xs sm:text-sm font-medium ${
                 trend.value >= 0 ? 'text-success-400' : 'text-error-400'
               }`}
-              initial={shouldReduceMotion ? {} : { opacity: 0 }}
-              animate={shouldReduceMotion ? {} : { opacity: 1 }}
-              transition={shouldReduceMotion ? {} : { 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ 
                 delay: delay + 0.15, 
-                duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 
+                duration: 0.2 
               }}
             >
               {trend.value >= 0 ? (
@@ -79,9 +100,9 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
         
         <motion.div 
           className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 text-primary-400 group-hover:from-primary-500/30 group-hover:to-accent-500/30 transition-all duration-200 flex-shrink-0"
-          whileHover={shouldReduceMotion ? {} : { 
+          whileHover={{ 
             rotate: 3,
-            transition: { duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST / 1000 }
+            transition: { duration: 0.2 }
           }}
         >
           {icon}
