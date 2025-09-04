@@ -136,6 +136,8 @@ export async function createItem(itemData: {
   category_id: string;
   created_by: string;
 }): Promise<Item> {
+  console.log('Creating item in database:', itemData);
+  
   // Check for duplicate item names within the same category
   const itemsRef = collection(db, 'items');
   const existingQuery = query(
@@ -152,10 +154,12 @@ export async function createItem(itemData: {
   const docRef = await addDoc(collection(db, 'items'), {
     ...itemData,
     name: itemData.name.trim(),
+    is_archived: false,
     created_at: Timestamp.fromDate(new Date()),
     updated_at: Timestamp.fromDate(new Date())
   });
   
+  console.log('Item created with ID:', docRef.id);
   return getItem(docRef.id);
 }
 

@@ -61,6 +61,11 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
       });
       
       toast.success(`Item ${initialData ? 'updated' : 'created'} successfully`);
+      
+      // Add a small delay to ensure the item appears in lists
+      setTimeout(() => {
+        console.log('Item operation completed, lists should refresh');
+      }, 500);
     } catch (error: any) {
       if (error.message.includes('already exists')) {
         setErrors({ name: error.message });

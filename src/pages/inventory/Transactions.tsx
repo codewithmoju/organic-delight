@@ -30,11 +30,13 @@ export default function Transactions() {
 
   async function loadData() {
     try {
+      console.log('Loading transactions and items data...');
       const [transactionsResult, itemsResult] = await Promise.all([
         getTransactions(),
         getItems()
       ]);
       
+      console.log('Items for transactions:', itemsResult.items?.length || itemsResult.length);
       setTransactions(transactionsResult.transactions || transactionsResult);
       setItems(itemsResult.items || itemsResult);
     } catch (error) {

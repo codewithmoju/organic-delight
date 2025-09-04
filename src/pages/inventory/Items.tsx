@@ -64,11 +64,13 @@ export default function Items() {
 
   async function handleSubmit(data: { name: string; description: string; category_id: string; created_by: string }) {
     try {
+      console.log('Creating/updating item:', data);
       if (selectedItem) {
         await updateItem(selectedItem.id, data);
       } else {
         await createItem(data);
       }
+      console.log('Item operation successful, reloading data...');
       await loadData();
       setIsFormOpen(false);
       setSelectedItem(null);

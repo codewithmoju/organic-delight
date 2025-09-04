@@ -171,7 +171,7 @@ export default function TransactionForm({ items, onComplete, onCancel, onSubmit 
           <option value="">Choose an item</option>
           {items.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name} ({item.category?.name}) - Current: {item.current_quantity || 0}
+              {item.name} ({item.category?.name || 'No Category'}) - Stock: {item.current_quantity || 0}
             </option>
           ))}
         </select>
