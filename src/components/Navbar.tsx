@@ -19,7 +19,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     <motion.div 
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky top-0 z-40 w-full flex h-16 shrink-0 items-center gap-x-4 glass-effect border-b border-dark-700/50 px-4 sm:gap-x-6 sm:px-6 lg:px-8"
+      className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 glass-effect border-b border-dark-700/50 px-4 sm:gap-x-6 sm:px-6 lg:px-8"
     >
       <button
         type="button"

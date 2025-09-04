@@ -18,7 +18,7 @@ interface RecentTransactionsProps {
 
 export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
-    <div className="p-4 sm:p-6 w-full">
+    <div className="p-4 sm:p-6">
       <motion.h3 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

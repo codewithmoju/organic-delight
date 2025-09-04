@@ -7,7 +7,6 @@
     @apply text-gray-100 antialiased;
     background: #020617;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    overflow-x: hidden;
   }
 
   * {
@@ -16,11 +15,19 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   /* Ensure proper box-sizing */
   *, *::before, *::after {
     box-sizing: border-box;
+  }
+
+  /* Prevent horizontal scroll on mobile */
+  body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
   }
 }
 
@@ -32,13 +39,11 @@
   }
   
   .card-dark {
-    background: rgba(30, 41, 59, 0.5);
+    background: rgba(30, 41, 59, 0.6);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(51, 65, 85, 0.5);
     border-radius: 0.75rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 100%;
   }
   
   .btn-primary {
@@ -151,17 +156,18 @@
 
   /* Responsive container utilities */
   .container-responsive {
-    width: 100%;
-    max-width: 100%;
+    width: 100vw;
+    max-width: 100vw;
     margin-left: auto;
     margin-right: auto;
     padding-left: 1rem;
     padding-right: 1rem;
+    overflow-x: hidden;
   }
 
   @media (min-width: 640px) {
     .container-responsive {
-      max-width: 640px;
+      max-width: 100%;
       padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
@@ -169,13 +175,13 @@
 
   @media (min-width: 768px) {
     .container-responsive {
-      max-width: 768px;
+      max-width: 100%;
     }
   }
 
   @media (min-width: 1024px) {
     .container-responsive {
-      max-width: 1024px;
+      max-width: 100%;
       padding-left: 2rem;
       padding-right: 2rem;
     }
@@ -183,13 +189,13 @@
 
   @media (min-width: 1280px) {
     .container-responsive {
-      max-width: 1280px;
+      max-width: 100%;
     }
   }
 
   @media (min-width: 1536px) {
     .container-responsive {
-      max-width: 1536px;
+      max-width: 100%;
     }
   }
 
@@ -198,6 +204,7 @@
     display: grid;
     gap: 1rem;
     grid-template-columns: 1fr;
+    width: 100%;
   }
 
   @media (min-width: 640px) {
@@ -217,6 +224,39 @@
   @media (min-width: 1280px) {
     .grid-responsive {
       grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* Layout fixes */
+  .layout-container {
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .sidebar-container {
+    flex-shrink: 0;
+  }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* Mobile layout adjustments */
+  @media (max-width: 1023px) {
+    .main-content {
+      width: 100vw;
+      margin-left: 0;
+    }
+  }
+
+  /* Desktop layout adjustments */
+  @media (min-width: 1024px) {
+    .main-content {
+      margin-left: 0;
+      width: calc(100vw - 18rem);
     }
   }
 }

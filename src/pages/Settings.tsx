@@ -84,7 +84,7 @@ export default function Settings() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Profile Settings */}
         <AnimatedCard delay={0.1}>
-          <div className="p-6 sm:p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             <div className="flex items-center mb-8">
               <div className="p-3 rounded-lg bg-primary-500/20 text-primary-400 mr-4">
                 <User className="w-6 h-6" />
@@ -216,7 +216,7 @@ export default function Settings() {
 
         {/* Password Settings */}
         <AnimatedCard delay={0.2}>
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             <div className="flex items-center mb-8">
               <div className="p-3 rounded-lg bg-accent-500/20 text-accent-400 mr-4">
                 <Lock className="w-6 h-6" />

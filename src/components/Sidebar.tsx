@@ -45,10 +45,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Sidebar */}
       <motion.aside 
         initial={{ x: -300 }}
-        animate={{ x: isOpen || window.innerWidth >= 1024 ? 0 : -300 }}
+        animate={{ 
+          x: typeof window !== 'undefined' && (isOpen || window.innerWidth >= 1024) ? 0 : -300 
+        }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`
-          fixed top-0 left-0 z-50 h-full w-72 glass-effect border-r border-dark-700/50 lg:translate-x-0 lg:static lg:z-auto
+          fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50
+          lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col
         `}
       >
         <div className="flex flex-col h-full">

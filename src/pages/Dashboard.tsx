@@ -84,12 +84,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="w-full max-w-none space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center sm:text-left"
+        className="text-center sm:text-left px-2 sm:px-0"
       >
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">
           Dashboard Overview
@@ -100,7 +100,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 px-2 sm:px-0">
         <StatsCard
           title="Total Items"
           value={summary?.totalItems || 0}
@@ -133,14 +133,14 @@ export default function Dashboard() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
-          className="w-full"
+          className="px-2 sm:px-0"
         >
           <LowStockAlert items={lowStockItems} />
         </motion.div>
       )}
 
       {/* Charts and Recent Activity */}
-      <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:grid-cols-2 px-2 sm:px-0">
         <AnimatedCard delay={0.6}>
           <InventoryChart
             data={summary?.items?.map((item: any) => ({
@@ -160,7 +160,7 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2 sm:px-0"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}

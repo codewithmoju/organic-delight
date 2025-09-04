@@ -19,7 +19,7 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, delay }}
       whileHover={{ y: -4, scale: 1.02 }}
-      className="card-dark p-4 sm:p-6 group cursor-pointer w-full"
+      className="card-dark p-4 sm:p-6 group cursor-pointer"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
