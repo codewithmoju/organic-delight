@@ -117,7 +117,7 @@ export default function Reports() {
       </motion.div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8" data-tour="reports-charts">
         {/* Monthly Transactions */}
         <AnimatedCard delay={0.1}>
           <div className="p-4 sm:p-6">

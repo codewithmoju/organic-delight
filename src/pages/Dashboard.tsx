@@ -7,6 +7,7 @@ import { getItems } from '../lib/api/items';
 import { getRecentTransactions } from '../lib/api/transactions';
 import { getDashboardMetrics, getInventoryTrends } from '../lib/api/dashboard';
 import StatsCard from '../components/dashboard/StatsCard';
+import TourTrigger from '../components/tour/TourTrigger';
 import InventoryChart from '../components/dashboard/InventoryChart';
 import LowStockAlert from '../components/dashboard/LowStockAlert';
 import RecentTransactions from '../components/dashboard/RecentTransactions';
@@ -138,7 +139,7 @@ export default function Dashboard() {
       />
 
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6" data-tour="dashboard-stats">
         <MetricsCard
           title="Total Stock In"
           value={metrics?.totalStockIn || 0}
@@ -250,8 +251,10 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.2 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
       >
+        <TourTrigger variant="card" />
+        
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

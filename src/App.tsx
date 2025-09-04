@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { useEffect } from 'react';
+import TourProvider from './components/tour/TourProvider';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getProfile } from './lib/api/auth';
@@ -44,6 +45,7 @@ function App() {
 
   return (
     <Router>
+      <TourProvider>
       <Toaster 
         position="top-right" 
         toastOptions={{
@@ -74,6 +76,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
+      </TourProvider>
     </Router>
   );
 }

@@ -46,6 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       
       {/* Sidebar */}
       <motion.aside 
+        data-tour="sidebar"
         initial={{ x: -300 }}
         animate={{ 
           x: typeof window !== 'undefined' && (isOpen || window.innerWidth >= 1024) ? 0 : -300 

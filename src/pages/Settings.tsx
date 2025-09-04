@@ -40,6 +40,7 @@ import AnimatedCard from '../components/ui/AnimatedCard';
 import AvatarUpload from '../components/ui/AvatarUpload';
 import CurrencySelector from '../components/ui/CurrencySelector';
 import { usePreferences } from '../lib/hooks/usePreferences';
+import TourTrigger, { RestartTourButton } from '../components/tour/TourTrigger';
 import PreferenceGroup from '../components/settings/PreferenceGroup';
 import PreferenceToggle from '../components/settings/PreferenceToggle';
 import PreferenceSelect from '../components/settings/PreferenceSelect';
@@ -446,6 +447,10 @@ export default function Settings() {
                     transition={{ delay: 0.6 }}
                     className="pt-6"
                   >
+                    <div className="mb-4">
+                      <RestartTourButton className="w-full mb-4" />
+                    </div>
+                    
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}

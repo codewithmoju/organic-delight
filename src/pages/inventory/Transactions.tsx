@@ -204,7 +204,7 @@ export default function Transactions() {
 
       {/* Transactions List */}
       <AnimatedCard delay={0.2}>
-        <div className="p-4 sm:p-6">
+        <div className="p-4 sm:p-6" data-tour="transactions-list">
           <div className="space-y-4">
             <AnimatePresence>
               {filteredTransactions.length === 0 ? (
