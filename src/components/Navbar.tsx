@@ -24,10 +24,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     >
       <button
         type="button"
-        className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-200 lg:hidden transition-colors duration-200"
+        className="-m-2.5 p-3 text-gray-400 hover:text-gray-200 lg:hidden transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-dark-700/50"
         onClick={onMenuClick}
+        aria-label="Open navigation menu"
+        type="button"
       >
-        <span className="sr-only">Open sidebar</span>
         <Menu className="h-6 w-6" />
       </button>
       

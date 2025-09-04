@@ -32,47 +32,89 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/settings', icon: Settings, label: t('navigation.settings') },
   ];
 
+  // Handle escape key to close sidebar on mobile
+  React.useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    // Only add listener on mobile screens
+    if (window.innerWidth < 1024) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose]);
+
+  // Prevent body scroll when mobile sidebar is open
+  React.useEffect(() => {
+    if (window.innerWidth < 1024) {
+      if (isOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'unset';
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay - appears only on screens < 1024px */}
       <AnimatePresence>
         {isOpen && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
             onClick={onClose}
+            aria-hidden="true"
           />
         )}
       </AnimatePresence>
       
-      {/* Sidebar */}
+      {/* Sidebar - responsive behavior with smooth animations */}
       <motion.aside 
         data-tour="sidebar"
-        initial={{ x: -300 }}
+        initial={false}
         animate={{ 
-          x: typeof window !== 'undefined' && (isOpen || window.innerWidth >= 1024) ? 0 : -300 
+          x: isOpen ? 0 : -288 // 288px = w-72 (18rem)
         }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 400, 
+          damping: 40,
+          mass: 0.8
+        }}
         className={`
-          fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50
-          lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col
+          fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50 flex flex-col
+          lg:translate-x-0
         `}
+        role="navigation"
+        aria-label="Main navigation"
+        aria-hidden={!isOpen ? 'true' : 'false'}
       >
         <div className="flex flex-col h-full">
-          {/* Header */}
+          {/* Header with logo and close button */}
           <div className="flex items-center justify-between p-6 border-b border-dark-700/50">
             <Logo size="md" animated />
+            {/* Close button - visible on mobile only, minimum 44px touch target */}
             <button
               onClick={onClose}
-              className="lg:hidden p-2 rounded-lg hover:bg-dark-700/50 transition-colors"
+              className="lg:hidden p-3 rounded-lg hover:bg-dark-700/50 transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Close navigation menu"
+              type="button"
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
           
-          {/* Navigation */}
+          {/* Navigation menu with staggered animations */}
           <nav className="flex-1 p-4 space-y-2">
             {navItems.map((item, index) => (
               <motion.div
@@ -83,14 +125,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               >
                 <NavLink
                   to={item.to}
+                  onClick={onClose} // Close sidebar on mobile when nav item is clicked
                   className={({ isActive }) =>
-                    `group flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                    `group flex items-center px-4 py-3 rounded-xl transition-all duration-200 min-h-[44px] ${
                       isActive
                         ? 'bg-gradient-to-r from-primary-600/20 to-accent-600/20 text-primary-400 border-l-4 border-primary-500'
                         : 'text-gray-300 hover:bg-dark-700/50 hover:text-white'
                     }`
                   }
-                  onClick={() => onClose()}
+                  aria-current={({ isActive }) => isActive ? 'page' : undefined}
                 >
                   <item.icon className="w-5 h-5 mr-3 transition-transform duration-200 group-hover:scale-110" />
                   <span className="font-medium">{item.label}</span>

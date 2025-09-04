@@ -5,15 +5,34 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Default to open on desktop, closed on mobile
+    return typeof window !== 'undefined' && window.innerWidth >= 1024;
+  });
+
+  // Handle window resize to manage sidebar state
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        // Desktop: keep sidebar open
+        setSidebarOpen(true);
+      } else {
+        // Mobile: close sidebar
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      {/* Main content wrapper */}
-      <div className="lg:pl-72">
+      {/* Main content wrapper - responsive margin for sidebar */}
+      <div className={`transition-all duration-300 ${sidebarOpen && window.innerWidth >= 1024 ? 'lg:pl-72' : ''}`}>
         {/* Navbar */}
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         
