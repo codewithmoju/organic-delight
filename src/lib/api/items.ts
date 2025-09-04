@@ -192,7 +192,7 @@ export async function deleteItem(id: string): Promise<void> {
 
 export async function getItemStockLevel(itemId: string): Promise<StockLevel | null> {
   const transactionsRef = collection(db, 'transactions');
-  const q = query(transactionsRef, where('item_id', '==', itemId), orderBy('transaction_date', 'desc'));
+  const q = query(transactionsRef, where('item_id', '==', itemId));
   const snapshot = await getDocs(q);
   
   if (snapshot.empty) {
@@ -210,7 +210,18 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
   let totalQuantityIn = 0;
   let lastTransactionDate = new Date(0);
   
-  snapshot.docs.forEach(doc => {
+  // Sort transactions by date in memory (newest first)
+  const sortedDocs = snapshot.docs.sort((a, b) => {
+    const dateA = a.data().transaction_date.toDate ? 
+      a.data().transaction_date.toDate() : 
+      new Date(a.data().transaction_date);
+    const dateB = b.data().transaction_date.toDate ? 
+      b.data().transaction_date.toDate() : 
+      new Date(b.data().transaction_date);
+    return dateB.getTime() - dateA.getTime();
+  });
+  
+  sortedDocs.forEach(doc => {
     const transaction = doc.data();
     const transactionDate = transaction.transaction_date.toDate ? 
       transaction.transaction_date.toDate() : 
