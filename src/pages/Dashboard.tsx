@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 import { Package, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { getItems } from '../lib/api/items';
@@ -16,7 +15,6 @@ import { Item, Transaction } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const navigate = useNavigate();
   const [summary, setSummary] = useState<any>(null);
   const [lowStockItems, setLowStockItems] = useState<Item[]>([]);
@@ -86,7 +84,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8 h-full">
+    <div className="space-y-8 w-full">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -161,39 +159,36 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-6"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/inventory/items')}
-          onClick={() => navigate('/inventory/items')}
-          className="btn-primary p-4 rounded-xl text-center"
+          className="btn-primary p-6 rounded-xl text-center flex flex-col items-center gap-3"
         >
-          <Package className="w-6 h-6 mx-auto mb-2" />
-          Add New Item
+          <Package className="w-8 h-8" />
+          <span className="text-lg font-semibold">Add New Item</span>
         </motion.button>
         
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/transactions')}
-          onClick={() => navigate('/transactions')}
-          className="btn-secondary p-4 rounded-xl text-center"
+          className="btn-secondary p-6 rounded-xl text-center flex flex-col items-center gap-3"
         >
-          <ArrowUpDown className="w-6 h-6 mx-auto mb-2" />
-          Record Transaction
+          <ArrowUpDown className="w-8 h-8" />
+          <span className="text-lg font-semibold">Record Transaction</span>
         </motion.button>
         
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/reports')}
-          onClick={() => navigate('/reports')}
-          className="btn-secondary p-4 rounded-xl text-center"
+          className="btn-secondary p-6 rounded-xl text-center flex flex-col items-center gap-3"
         >
-          <TrendingUp className="w-6 h-6 mx-auto mb-2" />
-          View Reports
+          <TrendingUp className="w-8 h-8" />
+          <span className="text-lg font-semibold">View Reports</span>
         </motion.button>
       </motion.div>
     </div>

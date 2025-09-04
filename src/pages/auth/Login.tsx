@@ -71,7 +71,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
@@ -120,7 +120,7 @@ export default function Login() {
                 type="email"
                 autoComplete="email"
                 required
-                className={`w-full input-dark py-4 px-4 text-lg ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
+                className={`w-full input-dark input-large ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
                 placeholder="Enter your email"
               />
               {errors.email && (
@@ -150,7 +150,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className={`w-full input-dark py-4 px-4 pr-12 text-lg ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
+                  className={`w-full input-dark input-large pr-12 ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
                   placeholder="Enter your password"
                 />
                 <button

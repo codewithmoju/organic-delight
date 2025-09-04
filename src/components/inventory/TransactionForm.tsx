@@ -65,20 +65,20 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="type" className="block text-base font-medium text-gray-300 mb-3">
           Transaction Type *
         </label>
         <select
           name="type"
           id="type"
           required
-          className="w-full input-dark"
+          className="w-full input-dark input-large"
         >
           <option value="in">Stock In</option>
           <option value="out">Stock Out</option>
@@ -90,7 +90,7 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <label htmlFor="item_id" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="item_id" className="block text-base font-medium text-gray-300 mb-3">
           Item *
         </label>
         <select
@@ -98,7 +98,7 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
           id="item_id"
           required
           onChange={(e) => setSelectedItem(items.find(item => item.id === e.target.value) || null)}
-          className="w-full input-dark"
+          className="w-full input-dark input-large"
         >
           <option value="">Select an item</option>
           {items.map((item) => (
@@ -109,13 +109,13 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
         </select>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <label htmlFor="quantity" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="quantity" className="block text-base font-medium text-gray-300 mb-3">
             Quantity ({selectedItem?.unit || 'units'}) *
           </label>
           <input
@@ -124,7 +124,7 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
             id="quantity"
             min="1"
             required
-            className="w-full input-dark"
+            className="w-full input-dark input-large"
           />
         </motion.div>
 
@@ -133,7 +133,7 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <label htmlFor="cost_per_unit" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="cost_per_unit" className="block text-base font-medium text-gray-300 mb-3">
             Cost per Unit
           </label>
           <input
@@ -142,7 +142,7 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
             id="cost_per_unit"
             min="0"
             step="0.01"
-            className="w-full input-dark"
+            className="w-full input-dark input-large"
             placeholder="0.00"
           />
         </motion.div>
@@ -153,14 +153,14 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <label htmlFor="reference" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="reference" className="block text-base font-medium text-gray-300 mb-3">
           Reference Number
         </label>
         <input
           type="text"
           name="reference"
           id="reference"
-          className="w-full input-dark"
+          className="w-full input-dark input-large"
           placeholder="Enter reference number"
         />
       </motion.div>
@@ -170,14 +170,14 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="notes" className="block text-base font-medium text-gray-300 mb-3">
           Notes
         </label>
         <textarea
           name="notes"
           id="notes"
-          rows={3}
-          className="w-full input-dark"
+          rows={4}
+          className="w-full input-dark input-large"
           placeholder="Enter transaction notes"
         />
       </motion.div>
@@ -186,14 +186,14 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="flex justify-end gap-3 pt-6 border-t border-dark-700/50"
+        className="flex justify-end gap-4 pt-8 border-t border-dark-700/50"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           type="button"
           onClick={onCancel}
-          className="btn-secondary"
+          className="btn-secondary px-8 py-3 text-lg"
         >
           Cancel
         </motion.button>
@@ -203,7 +203,7 @@ export default function TransactionForm({ items, onComplete, onCancel }: Transac
           whileTap={{ scale: 0.95 }}
           type="submit"
           disabled={isSubmitting}
-          className="btn-primary flex items-center gap-2 min-w-[160px]"
+          className="btn-primary flex items-center gap-2 min-w-[180px] px-8 py-3 text-lg"
         >
           {isSubmitting ? (
             <>

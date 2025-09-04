@@ -84,21 +84,21 @@ export default function Settings() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Profile Settings */}
         <AnimatedCard delay={0.1}>
-          <div className="p-6">
-            <div className="flex items-center mb-6">
-              <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400 mr-3">
-                <User className="w-5 h-5" />
+          <div className="p-8">
+            <div className="flex items-center mb-8">
+              <div className="p-3 rounded-lg bg-primary-500/20 text-primary-400 mr-4">
+                <User className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-semibold text-white">Profile Settings</h3>
             </div>
             
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
+            <form onSubmit={handleProfileSubmit} className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="fullName" className="block text-base font-medium text-gray-300 mb-3">
                   Full Name
                 </label>
                 <input
@@ -107,7 +107,7 @@ export default function Settings() {
                   id="fullName"
                   defaultValue={profile?.full_name}
                   required
-                  className="w-full input-dark"
+                  className="w-full input-dark input-large"
                 />
               </motion.div>
               
@@ -116,7 +116,7 @@ export default function Settings() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
                   Email
                 </label>
                 <input
@@ -125,7 +125,7 @@ export default function Settings() {
                   id="email"
                   value={profile?.email}
                   disabled
-                  className="w-full input-dark opacity-50 cursor-not-allowed"
+                  className="w-full input-dark input-large opacity-50 cursor-not-allowed"
                 />
               </motion.div>
               
@@ -134,7 +134,7 @@ export default function Settings() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="company" className="block text-base font-medium text-gray-300 mb-3">
                   Company
                 </label>
                 <input
@@ -142,7 +142,7 @@ export default function Settings() {
                   name="company"
                   id="company"
                   defaultValue={profile?.company || ''}
-                  className="w-full input-dark"
+                  className="w-full input-dark input-large"
                   placeholder="Enter company name"
                 />
               </motion.div>
@@ -152,7 +152,7 @@ export default function Settings() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="phone" className="block text-base font-medium text-gray-300 mb-3">
                   Phone
                 </label>
                 <input
@@ -160,7 +160,7 @@ export default function Settings() {
                   name="phone"
                   id="phone"
                   defaultValue={profile?.phone || ''}
-                  className="w-full input-dark"
+                  className="w-full input-dark input-large"
                   placeholder="Enter phone number"
                 />
               </motion.div>
@@ -170,14 +170,14 @@ export default function Settings() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
               >
-                <label htmlFor="currency" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="currency" className="block text-base font-medium text-gray-300 mb-3">
                   Preferred Currency
                 </label>
                 <select
                   name="currency"
                   id="currency"
                   defaultValue={profile?.preferred_currency || 'USD'}
-                  className="w-full input-dark"
+                  className="w-full input-dark input-large"
                 >
                   <option value="USD">USD ($)</option>
                   <option value="PKR">PKR (₨)</option>
@@ -191,14 +191,14 @@ export default function Settings() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="pt-4"
+                className="pt-6"
               >
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="submit"
                   disabled={isLoading}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg"
                 >
                   {isLoading ? (
                     <>
@@ -216,21 +216,21 @@ export default function Settings() {
 
         {/* Password Settings */}
         <AnimatedCard delay={0.2}>
-          <div className="p-6">
-            <div className="flex items-center mb-6">
-              <div className="p-2 rounded-lg bg-accent-500/20 text-accent-400 mr-3">
-                <Lock className="w-5 h-5" />
+          <div className="p-8">
+            <div className="flex items-center mb-8">
+              <div className="p-3 rounded-lg bg-accent-500/20 text-accent-400 mr-4">
+                <Lock className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-semibold text-white">Change Password</h3>
             </div>
             
-            <form onSubmit={handlePasswordChange} className="space-y-4">
+            <form onSubmit={handlePasswordChange} className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="currentPassword" className="block text-base font-medium text-gray-300 mb-3">
                   Current Password
                 </label>
                 <input
@@ -238,7 +238,7 @@ export default function Settings() {
                   name="currentPassword"
                   id="currentPassword"
                   required
-                  className="w-full input-dark"
+                  className="w-full input-dark input-large"
                 />
               </motion.div>
               
@@ -247,7 +247,7 @@ export default function Settings() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="newPassword" className="block text-base font-medium text-gray-300 mb-3">
                   New Password
                 </label>
                 <input
@@ -255,7 +255,7 @@ export default function Settings() {
                   name="newPassword"
                   id="newPassword"
                   required
-                  className="w-full input-dark"
+                  className="w-full input-dark input-large"
                 />
               </motion.div>
               
@@ -264,7 +264,7 @@ export default function Settings() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="confirmPassword" className="block text-base font-medium text-gray-300 mb-3">
                   Confirm New Password
                 </label>
                 <input
@@ -272,7 +272,7 @@ export default function Settings() {
                   name="confirmPassword"
                   id="confirmPassword"
                   required
-                  className="w-full input-dark"
+                  className="w-full input-dark input-large"
                 />
               </motion.div>
               
@@ -280,14 +280,14 @@ export default function Settings() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="pt-4"
+                className="pt-6"
               >
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="submit"
                   disabled={isLoading}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg"
                 >
                   {isLoading ? (
                     <>

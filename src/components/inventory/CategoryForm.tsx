@@ -22,6 +22,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
       const data = {
         name: formData.get('name') as string,
         description: formData.get('description') as string,
+        created_by: 'current-user'
       };
 
       await onSubmit(data);
@@ -35,13 +36,13 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="name" className="block text-base font-medium text-gray-300 mb-3">
           Category Name *
         </label>
         <input
@@ -50,7 +51,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
           id="name"
           defaultValue={initialData?.name}
           required
-          className="w-full input-dark"
+          className="w-full input-dark input-large"
           placeholder="Enter category name"
         />
       </motion.div>
@@ -60,15 +61,15 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="description" className="block text-base font-medium text-gray-300 mb-3">
           Description
         </label>
         <textarea
           name="description"
           id="description"
-          rows={4}
+          rows={5}
           defaultValue={initialData?.description || ''}
-          className="w-full input-dark"
+          className="w-full input-dark input-large"
           placeholder="Enter category description"
         />
       </motion.div>
@@ -77,14 +78,14 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="flex justify-end gap-3 pt-6 border-t border-dark-700/50"
+        className="flex justify-end gap-4 pt-8 border-t border-dark-700/50"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           type="button"
           onClick={onCancel}
-          className="btn-secondary"
+          className="btn-secondary px-8 py-3 text-lg"
         >
           Cancel
         </motion.button>
@@ -94,7 +95,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
           whileTap={{ scale: 0.95 }}
           type="submit"
           disabled={isSubmitting}
-          className="btn-primary flex items-center gap-2 min-w-[120px]"
+          className="btn-primary flex items-center gap-2 min-w-[140px] px-8 py-3 text-lg"
         >
           {isSubmitting ? (
             <>
