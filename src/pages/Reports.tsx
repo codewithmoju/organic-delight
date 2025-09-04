@@ -7,6 +7,7 @@ import { getItems } from '../lib/api/items';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import { formatCurrency } from '../lib/utils/notifications';
+import FlickerFreeLoader from '../components/ui/FlickerFreeLoader';
 
 export default function Reports() {
   const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
@@ -79,14 +80,6 @@ export default function Reports() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="lg" text="Loading reports..." />
-      </div>
-    );
-  }
-
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -104,6 +97,13 @@ export default function Reports() {
   };
 
   return (
+    <FlickerFreeLoader 
+      isLoading={isLoading} 
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" text="Loading reports" variant="dots" />
+        </div>
+      }>
     <div className="space-y-8">
       {/* Header */}
       <motion.div
@@ -227,5 +227,6 @@ export default function Reports() {
         </div>
       </AnimatedCard>
     </div>
+    </FlickerFreeLoader>
   );
 }

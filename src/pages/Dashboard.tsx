@@ -19,6 +19,8 @@ import AnimatedCard from '../components/ui/AnimatedCard';
 import { Item, Transaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
+import SmoothLoader from '../components/ui/SmoothLoader';
+import FlickerFreeLoader from '../components/ui/FlickerFreeLoader';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -97,14 +99,6 @@ export default function Dashboard() {
     setSelectedPeriod(period);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[60vh]">
-        <LoadingSpinner size="lg" text="Loading dashboard..." />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <motion.div 
@@ -122,6 +116,13 @@ export default function Dashboard() {
   }
 
   return (
+    <FlickerFreeLoader 
+      isLoading={isLoading} 
+      fallback={
+        <div className="flex items-center justify-center h-full min-h-[60vh]">
+          <LoadingSpinner size="lg" text="Loading dashboard" variant="dots" />
+        </div>
+      }>
     <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <motion.div
@@ -301,5 +302,6 @@ export default function Dashboard() {
         </motion.button>
       </motion.div>
     </div>
+    </FlickerFreeLoader>
   );
 }

@@ -8,6 +8,7 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import AnimatedCard from '../ui/AnimatedCard';
 import SearchInput from '../ui/SearchInput';
 import { formatCurrency, formatDate } from '../../lib/utils/notifications';
+import FlickerFreeLoader from '../ui/FlickerFreeLoader';
 
 export default function StockLevelsView() {
   const [stockLevels, setStockLevels] = useState<StockLevel[]>([]);
@@ -68,15 +69,14 @@ export default function StockLevelsView() {
     setFilteredLevels(filtered);
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="lg" text="Loading stock levels..." />
-      </div>
-    );
-  }
-
   return (
+    <FlickerFreeLoader 
+      isLoading={isLoading} 
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" text="Loading stock levels" variant="dots" />
+        </div>
+      }>
     <div className="space-y-6">
       {/* Header */}
       <motion.div
@@ -221,5 +221,6 @@ export default function StockLevelsView() {
         </motion.div>
       )}
     </div>
+    </FlickerFreeLoader>
   );
 }

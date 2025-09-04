@@ -9,6 +9,8 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnimatedCard from '../../components/ui/AnimatedCard';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
+import FlickerFreeLoader from '../../components/ui/FlickerFreeLoader';
+import { PageSkeleton } from '../../components/ui/SkeletonLoader';
 
 interface CategoryWithCount extends Category {
   itemCount?: number;
@@ -82,14 +84,6 @@ export default function Categories() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="lg" text="Loading categories..." />
-      </div>
-    );
-  }
-
   if (isFormOpen) {
     return (
       <motion.div 
@@ -123,6 +117,13 @@ export default function Categories() {
   }
 
   return (
+    <FlickerFreeLoader 
+      isLoading={isLoading} 
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" text="Loading categories" variant="dots" />
+        </div>
+      }>
     <div className="space-y-6">
       {/* Header */}
       <motion.div
@@ -270,5 +271,6 @@ export default function Categories() {
         </motion.div>
       )}
     </div>
+    </FlickerFreeLoader>
   );
 }

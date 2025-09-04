@@ -10,6 +10,8 @@ import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import PerformanceMonitor from './components/ui/PerformanceMonitor';
+import SmoothLoader from './components/ui/SmoothLoader';
+import { PageSkeleton } from './components/ui/SkeletonLoader';
 
 // Lazy load components for better performance
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -25,10 +27,20 @@ const StockLevels = lazy(() => import('./pages/inventory/StockLevels'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Settings = lazy(() => import('./pages/Settings'));
 
-// Loading fallback component
+// Enhanced loading fallback component with flicker prevention
 const PageLoadingFallback = () => (
-  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
-    <LoadingSpinner size="lg" text="Loading..." />
+  <SmoothLoader 
+    isLoading={true} 
+    variant="full-screen" 
+    text="Loading" 
+    showLogo={true}
+  />
+);
+
+// Route-specific loading fallbacks
+const RouteLoadingFallback = ({ text }: { text: string }) => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <LoadingSpinner size="lg" text={text} variant="dots" />
   </div>
 );
 
@@ -100,37 +112,37 @@ function App() {
         
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="/" element={
-            <Suspense fallback={<LoadingSpinner size="lg" text="Loading dashboard..." />}>
+            <Suspense fallback={<RouteLoadingFallback text="Loading dashboard" />}>
               <Dashboard />
             </Suspense>
           } />
           <Route path="/inventory/categories" element={
-            <Suspense fallback={<LoadingSpinner size="lg" text="Loading categories..." />}>
+            <Suspense fallback={<RouteLoadingFallback text="Loading categories" />}>
               <Categories />
             </Suspense>
           } />
           <Route path="/inventory/items" element={
-            <Suspense fallback={<LoadingSpinner size="lg" text="Loading items..." />}>
+            <Suspense fallback={<RouteLoadingFallback text="Loading items" />}>
               <Items />
             </Suspense>
           } />
           <Route path="/transactions" element={
-            <Suspense fallback={<LoadingSpinner size="lg" text="Loading transactions..." />}>
+            <Suspense fallback={<RouteLoadingFallback text="Loading transactions" />}>
               <Transactions />
             </Suspense>
           } />
           <Route path="/stock-levels" element={
-            <Suspense fallback={<LoadingSpinner size="lg" text="Loading stock levels..." />}>
+            <Suspense fallback={<RouteLoadingFallback text="Loading stock levels" />}>
               <StockLevels />
             </Suspense>
           } />
           <Route path="/reports" element={
-            <Suspense fallback={<LoadingSpinner size="lg" text="Loading reports..." />}>
+            <Suspense fallback={<RouteLoadingFallback text="Loading reports" />}>
               <Reports />
             </Suspense>
           } />
           <Route path="/settings" element={
-            <Suspense fallback={<LoadingSpinner size="lg" text="Loading settings..." />}>
+            <Suspense fallback={<RouteLoadingFallback text="Loading settings" />}>
               <Settings />
             </Suspense>
           } />

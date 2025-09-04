@@ -12,6 +12,7 @@ import AnimatedCard from '../../components/ui/AnimatedCard';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
+import FlickerFreeLoader from '../../components/ui/FlickerFreeLoader';
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -107,14 +108,6 @@ export default function Transactions() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <LoadingSpinner size="lg" text="Loading transactions..." />
-      </div>
-    );
-  }
-
   if (isFormOpen) {
     return (
       <motion.div 
@@ -145,6 +138,13 @@ export default function Transactions() {
   }
 
   return (
+    <FlickerFreeLoader 
+      isLoading={isLoading} 
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" text="Loading transactions" variant="dots" />
+        </div>
+      }>
     <div className="space-y-6">
       {/* Header */}
       <motion.div
@@ -325,5 +325,6 @@ export default function Transactions() {
         )}
       </AnimatedCard>
     </div>
+    </FlickerFreeLoader>
   );
 }
