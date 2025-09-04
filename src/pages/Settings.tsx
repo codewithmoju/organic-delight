@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { updateUserProfile } from '../lib/api/auth';
-import { updatePassword } from 'firebase/auth';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AnimatedCard from '../components/ui/AnimatedCard';
@@ -70,6 +70,7 @@ export default function Settings() {
 
     try {
       const formData = new FormData(e.currentTarget);
+      const currentPassword = formData.get('currentPassword') as string;
       const newPassword = formData.get('newPassword') as string;
       const confirmPassword = formData.get('confirmPassword') as string;
 
@@ -80,6 +81,13 @@ export default function Settings() {
       if (!auth.currentUser) {
         throw new Error('No authenticated user');
       }
+
+      // Re-authenticate user before changing password
+      const credential = EmailAuthProvider.credential(
+        auth.currentUser.email!,
+        currentPassword
+      );
+      await reauthenticateWithCredential(auth.currentUser, credential);
 
       await updatePassword(auth.currentUser, newPassword);
 
