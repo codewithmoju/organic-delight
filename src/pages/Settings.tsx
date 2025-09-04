@@ -499,77 +499,229 @@ export default function Settings() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
           >
-            <AnimatedCard delay={0.2}>
-              <div className="p-6 sm:p-8">
-                <div className="flex items-center mb-8">
-                  <div className="p-3 rounded-lg bg-warning-500/20 text-warning-400 mr-4">
-                    <Bell className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">Notification Settings</h3>
-                </div>
+            <div className="space-y-6">
+              {/* Search Preferences */}
+              <PreferenceSearch
+                onSearch={setSearchQuery}
+                placeholder="Search preferences..."
+              />
 
-                <div className="space-y-6">
-                  {[
-                    {
-                      id: 'email_notifications', 
-                      title: 'Email Notifications',
-                      description: 'Receive notifications via email',
-                      icon: Mail,
-                    },
-                    {
-                      id: 'push_notifications',
-                      title: 'Push Notifications',
-                      description: 'Receive push notifications on your device',
-                      icon: Smartphone,
-                    },
-                    {
-                      id: 'low_stock_alerts',
-                      title: 'Low Stock Alerts',
-                      description: 'Get notified when items are running low',
-                      icon: Package,
-                    },
-                    {
-                      id: 'transaction_alerts',
-                      title: 'Transaction Alerts',
-                      description: 'Notifications for new transactions',
-                      icon: ArrowUpDown,
-                    },
-                  ].map((setting, index) => (
-                    <PreferenceToggle
-                      key={setting.id}
-                      label={setting.title}
-                      description={setting.description}
-                      icon={<setting.icon className="w-4 h-4" />}
-                      checked={preferences[setting.id as keyof typeof preferences] as boolean ?? true}
-                      onChange={(checked) => updatePreference(setting.id as any, checked)}
-                    />
-                  ))}
-                </div>
-
-                {/* Help Section */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 }}
-                  className="mt-8 pt-8 border-t border-dark-700/50"
+              {/* Currency & Localization */}
+              {filteredPreferences('Currency & Localization', ['currency', 'language', 'timezone', 'date format']) && (
+                <PreferenceGroup
+                  title="Currency & Localization"
+                  description="Configure your regional preferences"
+                  icon={<Globe className="w-5 h-5" />}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-4">
                     <div>
-                      <h4 className="text-lg font-semibold text-white mb-2">Need Help?</h4>
-                      <p className="text-gray-400 text-sm">Get support or view documentation</p>
+                      <label className="block text-base font-medium text-gray-300 mb-3">
+                        <Globe className="w-4 h-4 inline mr-2" />
+                        Preferred Currency
+                      </label>
+                      <CurrencySelector
+                        selectedCurrency={profile?.preferred_currency || 'USD'}
+                        onCurrencyChange={handleCurrencyChange}
+                        showPopular={true}
+                        className="w-full"
+                      />
                     </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="btn-secondary flex items-center gap-2"
-                    >
-                      <HelpCircle className="w-4 h-4" />
-                      Help Center
-                    </motion.button>
+
+                    <PreferenceSelect
+                      label="Language"
+                      description="Choose your preferred language"
+                      icon={<Languages className="w-4 h-4" />}
+                      value={preferences.language}
+                      options={[
+                        { value: 'en', label: 'English' },
+                        { value: 'es', label: 'Español' },
+                        { value: 'fr', label: 'Français' },
+                        { value: 'de', label: 'Deutsch' },
+                        { value: 'it', label: 'Italiano' },
+                        { value: 'pt', label: 'Português' },
+                        { value: 'zh', label: '中文' },
+                        { value: 'ja', label: '日本語' },
+                      ]}
+                      onChange={(value) => updatePreference('language', value)}
+                    />
+
+                    <PreferenceSelect
+                      label="Date Format"
+                      description="Choose how dates are displayed"
+                      icon={<Clock className="w-4 h-4" />}
+                      value={preferences.date_format}
+                      options={[
+                        { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY (US)' },
+                        { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY (EU)' },
+                        { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD (ISO)' },
+                      ]}
+                      onChange={(value) => updatePreference('date_format', value)}
+                    />
+
+                    <PreferenceSelect
+                      label="Time Format"
+                      description="Choose 12-hour or 24-hour time format"
+                      icon={<Clock className="w-4 h-4" />}
+                      value={preferences.time_format}
+                      options={[
+                        { value: '12h', label: '12-hour (AM/PM)' },
+                        { value: '24h', label: '24-hour' },
+                      ]}
+                      onChange={(value) => updatePreference('time_format', value)}
+                    />
                   </div>
-                </motion.div>
-              </div>
-            </AnimatedCard>
+                </PreferenceGroup>
+              )}
+
+              {/* Appearance */}
+              {filteredPreferences('Appearance', ['theme', 'font size', 'animations', 'contrast']) && (
+                <PreferenceGroup
+                  title="Appearance"
+                  description="Customize the look and feel of the application"
+                  icon={<PaletteIcon className="w-5 h-5" />}
+                >
+                  <PreferenceSelect
+                    label="Theme"
+                    description="Choose your preferred color scheme"
+                    icon={<Monitor className="w-4 h-4" />}
+                    value={preferences.theme}
+                    options={[
+                      { value: 'light', label: '☀️ Light Mode' },
+                      { value: 'dark', label: '🌙 Dark Mode' },
+                      { value: 'system', label: '💻 System Default' },
+                    ]}
+                    onChange={(value) => updatePreference('theme', value)}
+                  />
+
+                  <PreferenceSelect
+                    label="Font Size"
+                    description="Adjust text size for better readability"
+                    icon={<Type className="w-4 h-4" />}
+                    value={preferences.font_size}
+                    options={[
+                      { value: 'small', label: 'Small' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'large', label: 'Large' },
+                    ]}
+                    onChange={(value) => updatePreference('font_size', value)}
+                  />
+
+                  <PreferenceToggle
+                    label="Show Animations"
+                    description="Enable smooth transitions and animations"
+                    icon={<Zap className="w-4 h-4" />}
+                    checked={preferences.show_animations}
+                    onChange={(checked) => updatePreference('show_animations', checked)}
+                  />
+
+                  <PreferenceToggle
+                    label="High Contrast Mode"
+                    description="Increase contrast for better visibility"
+                    icon={<Eye className="w-4 h-4" />}
+                    checked={preferences.high_contrast}
+                    onChange={(checked) => updatePreference('high_contrast', checked)}
+                  />
+
+                  <PreferenceToggle
+                    label="Compact View"
+                    description="Show more content in less space"
+                    icon={<Package className="w-4 h-4" />}
+                    checked={preferences.compact_view}
+                    onChange={(checked) => updatePreference('compact_view', checked)}
+                  />
+                </PreferenceGroup>
+              )}
+
+              {/* Behavior */}
+              {filteredPreferences('Behavior', ['auto save', 'items per page', 'currency display']) && (
+                <PreferenceGroup
+                  title="Behavior"
+                  description="Configure how the application behaves"
+                  icon={<Zap className="w-5 h-5" />}
+                >
+                  <PreferenceToggle
+                    label="Auto-Save"
+                    description="Automatically save changes as you make them"
+                    icon={<Save className="w-4 h-4" />}
+                    checked={preferences.auto_save}
+                    onChange={(checked) => updatePreference('auto_save', checked)}
+                  />
+
+                  <PreferenceSlider
+                    label="Items Per Page"
+                    description="Number of items to show in lists"
+                    icon={<Package className="w-4 h-4" />}
+                    value={preferences.items_per_page}
+                    min={10}
+                    max={100}
+                    step={5}
+                    onChange={(value) => updatePreference('items_per_page', value)}
+                  />
+
+                  <PreferenceSelect
+                    label="Currency Display"
+                    description="How to display currency information"
+                    icon={<Globe className="w-4 h-4" />}
+                    value={preferences.default_currency_display}
+                    options={[
+                      { value: 'symbol', label: 'Symbol only ($)' },
+                      { value: 'code', label: 'Code only (USD)' },
+                      { value: 'both', label: 'Both ($ USD)' },
+                    ]}
+                    onChange={(value) => updatePreference('default_currency_display', value)}
+                  />
+                </PreferenceGroup>
+              )}
+
+              {/* Save Actions */}
+              <AnimatedCard delay={0.4}>
+                <div className="p-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-center sm:text-left">
+                      {hasUnsavedChanges && (
+                        <div className="flex items-center text-warning-400 mb-2">
+                          <AlertCircle className="w-4 h-4 mr-2" />
+                          <span className="text-sm">You have unsaved changes</span>
+                        </div>
+                      )}
+                      {lastSaved && (
+                        <div className="flex items-center text-success-400 text-sm">
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          <span>Last saved: {formatDate(lastSaved)}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowResetDialog(true)}
+                        className="btn-secondary flex items-center gap-2"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Reset to Defaults
+                      </motion.button>
+                      
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={savePreferences}
+                        disabled={preferencesLoading || !hasUnsavedChanges}
+                        className="btn-primary flex items-center gap-2"
+                      >
+                        {preferencesLoading ? (
+                          <LoadingSpinner size="sm" color="white" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        Save All Changes
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              </AnimatedCard>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
