@@ -17,7 +17,21 @@ import {
 import { db } from '../firebase';
 import { Item, StockLevel } from '../types';
 
+// Simple cache for frequently accessed data
+const itemsCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+
+function isCacheValid(timestamp: number): boolean {
+  return Date.now() - timestamp < CACHE_DURATION;
+}
 export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) {
+  const cacheKey = `items-${limitCount || 'all'}-${lastDoc?.id || 'start'}`;
+  const cached = itemsCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
   const itemsRef = collection(db, 'items');
   let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
   
@@ -61,7 +75,12 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
     items.push(item);
   }
   
-  return { items, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
+  const result = { items, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
+  
+  // Cache the result
+  itemsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  
+  return result;
 }
 
 export async function getItemsByCategory(categoryId: string): Promise<Item[]> {

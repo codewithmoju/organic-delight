@@ -11,7 +11,25 @@ import { TimePeriod } from '../../components/dashboard/TimePeriodFilter';
 import { getDateRangeForPeriod } from '../utils/dateFilters';
 import { DashboardMetrics } from '../types';
 
+// Cache for dashboard data to improve loading performance
+const dashboardCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+function getCacheKey(period: TimePeriod): string {
+  return `dashboard-metrics-${period}`;
+}
+
+function isCacheValid(timestamp: number): boolean {
+  return Date.now() - timestamp < CACHE_DURATION;
+}
 export async function getDashboardMetrics(period: TimePeriod): Promise<DashboardMetrics> {
+  const cacheKey = getCacheKey(period);
+  const cached = dashboardCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
   const { start, end } = getDateRangeForPeriod(period);
   
   const transactionsRef = collection(db, 'transactions');
@@ -41,15 +59,27 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
     }
   });
 
-  return {
+  const result = {
     totalStockIn,
     totalStockOut,
     revenueSpentOnStockIn,
     revenueEarnedFromStockOut
   };
+  
+  // Cache the result
+  dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  
+  return result;
 }
 
 export async function getInventoryTrends(period: TimePeriod) {
+  const cacheKey = `inventory-trends-${period}`;
+  const cached = dashboardCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
   const { start, end } = getDateRangeForPeriod(period);
   
   const transactionsRef = collection(db, 'transactions');
@@ -107,10 +137,22 @@ export async function getInventoryTrends(period: TimePeriod) {
     }
   });
 
-  return Object.values(trendData);
+  const result = Object.values(trendData);
+  
+  // Cache the result
+  dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  
+  return result;
 }
 
 export async function getStockLevels() {
+  const cacheKey = 'stock-levels';
+  const cached = dashboardCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
   const itemsRef = collection(db, 'items');
   const itemsSnapshot = await getDocs(itemsRef);
   
@@ -126,5 +168,15 @@ export async function getStockLevels() {
     }
   }
   
-  return stockLevels.sort((a, b) => b.total_value - a.total_value);
+  const result = stockLevels.sort((a, b) => b.total_value - a.total_value);
+  
+  // Cache the result
+  dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  
+  return result;
+}
+
+// Clear cache function for when data is updated
+export function clearDashboardCache() {
+  dashboardCache.clear();
 }

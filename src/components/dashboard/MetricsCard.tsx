@@ -45,7 +45,7 @@ export default function MetricsCard({
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.4, delay, ease: "easeOut" }}
       whileHover={{ y: -4, scale: 1.02 }}
       className={`card-dark p-4 sm:p-6 group cursor-pointer border ${colorClasses[color].border} hover:${colorClasses[color].border}`}
     >
@@ -61,7 +61,7 @@ export default function MetricsCard({
               className="text-xl sm:text-2xl lg:text-3xl font-bold text-white"
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
-              transition={{ delay: delay + 0.2, type: "spring", stiffness: 200 }}
+              transition={{ delay: delay + 0.1, duration: 0.3, ease: "easeOut" }}
             >
               {value}
             </motion.p>
@@ -71,7 +71,7 @@ export default function MetricsCard({
         <motion.div 
           className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-gradient-to-br ${colorClasses[color].bg} ${colorClasses[color].text} group-hover:scale-110 transition-all duration-300 flex-shrink-0`}
           whileHover={{ rotate: 360 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
         >
           <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
         </motion.div>
