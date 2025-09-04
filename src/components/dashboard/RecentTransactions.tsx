@@ -52,19 +52,20 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
               initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
               animate={shouldReduceMotion ? {} : { opacity: 1, x: 0 }}
               transition={shouldReduceMotion ? {} : { 
-                delay: index * 0.1, 
-                duration: 0.3, 
+                delay: index * 0.05, 
+                duration: 0.2, 
                 ease: "easeOut" 
               }}
               whileHover={shouldReduceMotion ? {} : { 
-                scale: 1.02, 
-                x: 4,
-                transition: { duration: 0.2, ease: "easeOut" }
+                scale: 1.01, 
+                x: 2,
+                transition: { duration: 0.15, ease: "easeOut" }
               }}
-              className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-300 w-full"
+              className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-150 w-full"
               style={{
                 willChange: shouldReduceMotion ? 'auto' : 'transform',
-                backfaceVisibility: 'hidden'
+                backfaceVisibility: 'hidden',
+                contain: 'layout style paint'
               }}
             >
               <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">

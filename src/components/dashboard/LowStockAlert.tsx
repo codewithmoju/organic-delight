@@ -15,14 +15,14 @@ export default function LowStockAlert({ items }: LowStockAlertProps) {
   if (items.length === 0) return null;
 
   const alertAnimationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, scale: 0.95 },
+    initial: { opacity: 0, scale: 0.98 },
     animate: { opacity: 1, scale: 1 },
-    transition: { duration: 0.4, ease: "easeOut" }
+    transition: { duration: 0.25, ease: "easeOut" }
   };
 
   const iconAnimationProps = shouldReduceMotion ? {} : {
-    animate: { rotate: [0, -10, 10, -10, 0] },
-    transition: { duration: 2, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }
+    animate: { rotate: [0, -5, 5, -5, 0] },
+    transition: { duration: 1.5, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }
   };
 
   return (

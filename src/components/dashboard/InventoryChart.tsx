@@ -32,9 +32,9 @@ export default function InventoryChart({ data }: InventoryChartProps) {
   };
 
   const chartAnimationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, scale: 0.95 },
+    initial: { opacity: 0, scale: 0.98 },
     animate: { opacity: 1, scale: 1 },
-    transition: { delay: 0.2, duration: 0.4, ease: "easeOut" }
+    transition: { delay: 0.1, duration: 0.25, ease: "easeOut" }
   };
 
   return (
@@ -52,7 +52,8 @@ export default function InventoryChart({ data }: InventoryChartProps) {
         className="h-48 sm:h-64 lg:h-80 xl:h-96"
         style={{
           willChange: shouldReduceMotion ? 'auto' : 'transform, opacity',
-          backfaceVisibility: 'hidden'
+          backfaceVisibility: 'hidden',
+          contain: 'layout style paint'
         }}
       >
         <ResponsiveContainer width="100%" height="100%">

@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { motion, useReducedMotion } from 'framer-motion';
+import { PERFORMANCE_CONFIG } from '../../lib/utils/performance';
 
 interface MetricsChartProps {
   data: Array<{
@@ -35,7 +36,7 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
     return null;
   };
 
-  // Loading skeleton
+  // Optimized loading skeleton
   const LoadingSkeleton = () => (
     <div className="space-y-4">
       <div className="h-6 bg-gray-700 rounded mb-6 w-1/3">
@@ -64,9 +65,9 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
   }
 
   const animationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, scale: 0.95 },
+    initial: { opacity: 0, scale: 0.98 },
     animate: { opacity: 1, scale: 1 },
-    transition: { duration: 0.4, ease: "easeOut" }
+    transition: { duration: PERFORMANCE_CONFIG.ANIMATION_DURATION.NORMAL / 1000 }
   };
 
   return (
@@ -76,13 +77,14 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
       style={{
         willChange: shouldReduceMotion ? 'auto' : 'transform, opacity',
         backfaceVisibility: 'hidden',
-        transform: 'translate3d(0, 0, 0)'
+        transform: 'translate3d(0, 0, 0)',
+        contain: 'layout style paint'
       }}
     >
       <motion.h3 
         initial={shouldReduceMotion ? {} : { opacity: 0 }}
         animate={shouldReduceMotion ? {} : { opacity: 1 }}
-        transition={shouldReduceMotion ? {} : { delay: 0.1, duration: 0.3 }}
+        transition={shouldReduceMotion ? {} : { delay: 0.1, duration: 0.2 }}
         className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center"
       >
         <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
@@ -90,9 +92,9 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
       </motion.h3>
       
       <motion.div 
-        initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.95 }}
+        initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.98 }}
         animate={shouldReduceMotion ? {} : { opacity: 1, scale: 1 }}
-        transition={shouldReduceMotion ? {} : { delay: 0.2, duration: 0.3 }}
+        transition={shouldReduceMotion ? {} : { delay: 0.15, duration: 0.25 }}
         className="h-64 sm:h-80 w-full"
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -144,16 +146,16 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
                 dataKey="revenueIn" 
                 name="Revenue In"
                 stroke="#22c55e" 
-                strokeWidth={3}
-                dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
+                strokeWidth={2}
+                dot={{ fill: '#22c55e', strokeWidth: 2, r: 3 }}
               />
               <Line 
                 type="monotone" 
                 dataKey="revenueOut" 
                 name="Revenue Out"
                 stroke="#3b82f6" 
-                strokeWidth={3}
-                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                strokeWidth={2}
+                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
               />
             </LineChart>
           )}

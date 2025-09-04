@@ -4,6 +4,12 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  esbuild: {
+    // Optimize for faster builds
+    target: 'es2020',
+    minify: true,
+    treeShaking: true
+  },
   build: {
     // Optimize bundle splitting
     rollupOptions: {
@@ -20,7 +26,7 @@ export default defineConfig({
       }
     },
     // Optimize chunk size
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 500,
     // Enable source maps for debugging but optimize for production
     sourcemap: false,
     // Minify for smaller bundle size
@@ -28,28 +34,36 @@ export default defineConfig({
     terserOptions: {
       compress: {
         drop_console: true, // Remove console.log in production
-        drop_debugger: true
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug']
       }
     }
   },
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    exclude: [],
     include: [
       'react',
       'react-dom',
       'react-router-dom',
       'framer-motion',
       'date-fns',
-      'zustand'
+      'zustand',
+      'lucide-react'
     ]
   },
   server: {
     // Optimize dev server
     hmr: {
-      overlay: false // Disable error overlay for better performance
+      overlay: false,
+      port: 24678
     },
     // Mobile testing optimization
     host: true,
-    port: 5173
+    port: 5173,
+    // Faster file watching
+    watch: {
+      usePolling: false,
+      interval: 100
+    }
   }
 })

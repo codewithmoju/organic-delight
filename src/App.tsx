@@ -29,18 +29,29 @@ const Settings = lazy(() => import('./pages/Settings'));
 
 // Enhanced loading fallback component with flicker prevention
 const PageLoadingFallback = () => (
-  <SmoothLoader 
-    isLoading={true} 
-    variant="full-screen" 
-    text="Loading" 
-    showLogo={true}
-  />
+  <div className="fixed inset-0 z-50 bg-dark-900/95 backdrop-blur-sm flex items-center justify-center">
+    <div className="text-center">
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full mx-auto mb-3"
+      />
+      <p className="text-white font-medium">Loading...</p>
+    </div>
+  </div>
 );
 
 // Route-specific loading fallbacks
 const RouteLoadingFallback = ({ text }: { text: string }) => (
   <div className="min-h-[60vh] flex items-center justify-center">
-    <LoadingSpinner size="lg" text={text} variant="dots" />
+    <div className="text-center">
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className="w-6 h-6 border-2 border-primary-500/30 border-t-primary-500 rounded-full mx-auto mb-2"
+      />
+      <p className="text-gray-400 text-sm">{text}</p>
+    </div>
   </div>
 );
 

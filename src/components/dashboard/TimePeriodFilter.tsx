@@ -41,10 +41,10 @@ export default function TimePeriodFilter({
   };
 
   const dropdownAnimationProps = shouldReduceMotion ? {} : {
-    initial: { opacity: 0, scale: 0.95, y: -10 },
+    initial: { opacity: 0, scale: 0.98, y: -5 },
     animate: { opacity: 1, scale: 1, y: 0 },
-    exit: { opacity: 0, scale: 0.95, y: -10 },
-    transition: { duration: 0.2, ease: "easeOut" }
+    exit: { opacity: 0, scale: 0.98, y: -5 },
+    transition: { duration: 0.15, ease: "easeOut" }
   };
 
   return (
@@ -54,13 +54,14 @@ export default function TimePeriodFilter({
         {...buttonAnimationProps}
         onClick={() => setIsOpen(!isOpen)}
         disabled={isLoading}
-        className={`w-full sm:w-auto min-w-[200px] flex items-center justify-between px-4 py-3 rounded-xl bg-dark-700/50 border border-dark-600/50 hover:border-primary-500/50 transition-all duration-300 ${
+        className={`w-full sm:w-auto min-w-[200px] flex items-center justify-between px-4 py-3 rounded-xl bg-dark-700/50 border border-dark-600/50 hover:border-primary-500/50 transition-all duration-150 ${
           isLoading ? 'opacity-50 cursor-not-allowed' : ''
         }`}
         style={{
           willChange: shouldReduceMotion ? 'auto' : 'transform',
           backfaceVisibility: 'hidden',
-          touchAction: 'manipulation'
+          touchAction: 'manipulation',
+          contain: 'layout style paint'
         }}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
