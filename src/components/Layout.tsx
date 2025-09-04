@@ -32,16 +32,21 @@ export default function Layout() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       {/* Main content wrapper - responsive margin for sidebar */}
-      <div className={`transition-all duration-300 ${sidebarOpen && window.innerWidth >= 1024 ? 'lg:pl-72' : ''}`}>
+      <div className={`transition-all duration-300 ease-out ${sidebarOpen && window.innerWidth >= 1024 ? 'lg:pl-72' : ''}`}>
         {/* Navbar */}
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         
-        {/* Main content */}
+        {/* Main content with optimized animations */}
         <motion.main 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
           className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8"
+          style={{
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            transform: 'translate3d(0, 0, 0)'
+          }}
         >
           <div className="max-w-7xl mx-auto">
             <Outlet />

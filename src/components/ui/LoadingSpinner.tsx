@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -13,6 +13,8 @@ export default function LoadingSpinner({
   text,
   variant = 'spinner'
 }: LoadingSpinnerProps) {
+  const shouldReduceMotion = useReducedMotion();
+  
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-8 h-8',
@@ -25,31 +27,43 @@ export default function LoadingSpinner({
     gray: 'border-gray-400 border-t-transparent'
   };
 
-  // Mobile-optimized spinner with hardware acceleration
+  // Skip animations for reduced motion
+  if (shouldReduceMotion) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-3">
+        <div className={`${sizeClasses[size]} border-2 border-solid rounded-full ${colorClasses[color]}`} />
+        {text && (
+          <p className="text-sm text-gray-400 font-medium">
+            {text}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Optimized spinner with proper timing
   if (variant === 'spinner') {
     return (
       <div className="flex flex-col items-center justify-center space-y-3">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ 
-            duration: 1, 
+            duration: 1.5, 
             repeat: Infinity, 
-            ease: "linear",
-            // Mobile optimization: reduce complexity
-            ...(window.innerWidth <= 768 && { duration: 0.8 })
+            ease: "linear"
           }}
-          className={`${sizeClasses[size]} border-2 border-solid rounded-full ${colorClasses[color]} mobile-optimized-spinner`}
+          className={`${sizeClasses[size]} border-2 border-solid rounded-full ${colorClasses[color]}`}
           style={{
-            transform: 'translate3d(0, 0, 0)',
+            willChange: 'transform',
             backfaceVisibility: 'hidden',
-            willChange: 'transform'
+            transform: 'translate3d(0, 0, 0)'
           }}
         />
         {text && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
             className="text-sm text-gray-400 font-medium"
           >
             {text}
@@ -59,7 +73,7 @@ export default function LoadingSpinner({
     );
   }
 
-  // Dots loader for mobile-friendly alternative
+  // Dots loader for better UX
   if (variant === 'dots') {
     return (
       <div className="flex flex-col items-center justify-center space-y-3">
@@ -72,7 +86,7 @@ export default function LoadingSpinner({
                 opacity: [0.5, 1, 0.5]
               }}
               transition={{
-                duration: 0.6,
+                duration: 1.2,
                 repeat: Infinity,
                 delay: index * 0.2,
                 ease: "easeInOut"
@@ -82,7 +96,7 @@ export default function LoadingSpinner({
                 color === 'white' ? 'bg-white' : 'bg-gray-400'
               }`}
               style={{
-                transform: 'translate3d(0, 0, 0)',
+                willChange: 'transform, opacity',
                 backfaceVisibility: 'hidden'
               }}
             />
@@ -92,7 +106,7 @@ export default function LoadingSpinner({
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
             className="text-sm text-gray-400 font-medium"
           >
             {text}
@@ -112,7 +126,7 @@ export default function LoadingSpinner({
             opacity: [0.7, 1, 0.7]
           }}
           transition={{
-            duration: 1.5,
+            duration: 2,
             repeat: Infinity,
             ease: "easeInOut"
           }}
@@ -121,7 +135,7 @@ export default function LoadingSpinner({
             color === 'white' ? 'bg-white' : 'bg-gray-400'
           }`}
           style={{
-            transform: 'translate3d(0, 0, 0)',
+            willChange: 'transform, opacity',
             backfaceVisibility: 'hidden'
           }}
         />
@@ -129,7 +143,7 @@ export default function LoadingSpinner({
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
             className="text-sm text-gray-400 font-medium"
           >
             {text}
@@ -142,10 +156,22 @@ export default function LoadingSpinner({
   // Skeleton loader for content placeholders
   if (variant === 'skeleton') {
     return (
-      <div className="animate-pulse space-y-3">
-        <div className="h-4 bg-gray-700 rounded w-3/4"></div>
-        <div className="h-4 bg-gray-700 rounded w-1/2"></div>
-        <div className="h-4 bg-gray-700 rounded w-5/6"></div>
+      <div className="space-y-3">
+        <motion.div 
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          className="h-4 bg-gray-700 rounded w-3/4"
+        />
+        <motion.div 
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+          className="h-4 bg-gray-700 rounded w-1/2"
+        />
+        <motion.div 
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+          className="h-4 bg-gray-700 rounded w-5/6"
+        />
       </div>
     );
   }
@@ -156,24 +182,22 @@ export default function LoadingSpinner({
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ 
-          duration: 1, 
+          duration: 1.5, 
           repeat: Infinity, 
-          ease: "linear",
-          // Mobile optimization
-          ...(window.innerWidth <= 768 && { duration: 0.8 })
+          ease: "linear"
         }}
         className={`${sizeClasses[size]} border-2 border-solid rounded-full ${colorClasses[color]}`}
         style={{
-          transform: 'translate3d(0, 0, 0)',
+          willChange: 'transform',
           backfaceVisibility: 'hidden',
-          willChange: 'transform'
+          transform: 'translate3d(0, 0, 0)'
         }}
       />
       {text && (
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
           className="text-sm text-gray-400 font-medium"
         >
           {text}

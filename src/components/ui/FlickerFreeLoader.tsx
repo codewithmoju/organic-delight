@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 interface FlickerFreeLoaderProps {
@@ -13,12 +13,13 @@ export default function FlickerFreeLoader({
   isLoading,
   children,
   fallback,
-  minLoadTime = 300,
+  minLoadTime = 500,
   className = ''
 }: FlickerFreeLoaderProps) {
   const [showContent, setShowContent] = useState(false);
   const [loadStartTime] = useState(Date.now());
   const [isReady, setIsReady] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (!isLoading) {
@@ -28,7 +29,8 @@ export default function FlickerFreeLoader({
       // Ensure minimum loading time to prevent flickering
       setTimeout(() => {
         setShowContent(true);
-        setIsReady(true);
+        // Add small delay before marking as ready to ensure smooth transition
+        setTimeout(() => setIsReady(true), 50);
       }, remainingTime);
     } else {
       setShowContent(false);
@@ -36,7 +38,19 @@ export default function FlickerFreeLoader({
     }
   }, [isLoading, loadStartTime, minLoadTime]);
 
-  // Always render children container to prevent layout shifts
+  const contentAnimationProps = shouldReduceMotion ? {} : {
+    initial: { opacity: 0 },
+    animate: { opacity: showContent && isReady ? 1 : 0 },
+    transition: { duration: 0.4, ease: "easeOut" }
+  };
+
+  const loadingAnimationProps = shouldReduceMotion ? {} : {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.3, ease: "easeOut" }
+  };
+
   return (
     <div 
       className={`relative ${className}`}
@@ -47,30 +61,22 @@ export default function FlickerFreeLoader({
       }}
     >
       {/* Always render children but control visibility */}
-      <div 
-        className={`transition-opacity duration-300 ${
-          showContent && isReady ? 'opacity-100' : 'opacity-0'
-        }`}
+      <motion.div 
+        {...contentAnimationProps}
         style={{
           transform: 'translate3d(0, 0, 0)',
           backfaceVisibility: 'hidden'
         }}
       >
         {children}
-      </div>
+      </motion.div>
 
-      {/* Loading overlay */}
+      {/* Loading overlay with smooth transitions */}
       <AnimatePresence mode="wait">
         {(isLoading || !showContent) && (
           <motion.div
             key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ 
-              duration: window.innerWidth <= 768 ? 0.15 : 0.2,
-              ease: "easeOut"
-            }}
+            {...loadingAnimationProps}
             className="absolute inset-0 flex items-center justify-center bg-dark-900/95 backdrop-blur-sm z-10"
             style={{
               transform: 'translate3d(0, 0, 0)',
@@ -80,17 +86,17 @@ export default function FlickerFreeLoader({
             {fallback || (
               <div className="text-center">
                 <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: window.innerWidth <= 768 ? 1 : 1.5,
+                  animate={shouldReduceMotion ? {} : { rotate: 360 }}
+                  transition={shouldReduceMotion ? {} : {
+                    duration: 1.5,
                     repeat: Infinity,
                     ease: "linear"
                   }}
                   className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full mx-auto mb-3"
                   style={{
-                    transform: 'translate3d(0, 0, 0)',
+                    willChange: shouldReduceMotion ? 'auto' : 'transform',
                     backfaceVisibility: 'hidden',
-                    willChange: 'transform'
+                    transform: 'translate3d(0, 0, 0)'
                   }}
                 />
                 <p className="text-gray-400 text-sm font-medium">Loading...</p>
@@ -104,7 +110,7 @@ export default function FlickerFreeLoader({
 }
 
 // Hook for managing loading states without flickering
-export function useFlickerFreeLoading(initialLoading = true, minLoadTime = 300) {
+export function useFlickerFreeLoading(initialLoading = true, minLoadTime = 500) {
   const [isLoading, setIsLoading] = useState(initialLoading);
   const [isContentReady, setIsContentReady] = useState(false);
   const [loadStartTime] = useState(Date.now());
@@ -116,7 +122,7 @@ export function useFlickerFreeLoading(initialLoading = true, minLoadTime = 300) 
       
       setTimeout(() => {
         setIsLoading(false);
-        setIsContentReady(true);
+        setTimeout(() => setIsContentReady(true), 50);
       }, remainingTime);
     } else {
       setIsLoading(true);
