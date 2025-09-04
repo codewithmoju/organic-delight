@@ -1,16 +1,38 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { 
+  User, 
+  Lock, 
+  Bell, 
+  Palette, 
+  Globe, 
+  Shield, 
+  Download, 
+  Moon, 
+  Sun, 
+  Monitor,
+  Smartphone,
+  Mail,
+  MapPin,
+  Phone,
+  Building,
+  Languages,
+  HelpCircle
+} from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import { updateUserProfile } from '../lib/api/auth';
 import { updatePassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AnimatedCard from '../components/ui/AnimatedCard';
-import { User, Lock, Bell, Palette } from 'lucide-react';
+import AvatarUpload from '../components/ui/AvatarUpload';
+import CurrencySelector from '../components/ui/CurrencySelector';
+import { SUPPORTED_CURRENCIES } from '../lib/types';
 
 export default function Settings() {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'notifications'>('profile');
   const profile = useAuthStore((state) => state.profile);
   const setProfile = useAuthStore((state) => state.setProfile);
 
@@ -24,7 +46,8 @@ export default function Settings() {
         full_name: formData.get('fullName') as string,
         company: formData.get('company') as string,
         phone: formData.get('phone') as string,
-        preferred_currency: formData.get('currency') as string,
+        address: formData.get('address') as string,
+        preferred_currency: profile?.preferred_currency || 'USD',
       };
 
       await updateUserProfile(profile?.id, updates);

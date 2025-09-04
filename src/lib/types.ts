@@ -61,6 +61,15 @@ export interface Profile {
   role?: 'admin' | 'manager' | 'user';
   company?: string;
   phone?: string;
+  avatar_url?: string;
+  address?: string;
+  language?: string;
+  theme?: 'light' | 'dark' | 'system';
+  notifications_enabled?: boolean;
+  email_notifications?: boolean;
+  push_notifications?: boolean;
+  two_factor_enabled?: boolean;
+  timezone?: string;
 }
 
 export interface DashboardMetrics {
@@ -71,16 +80,26 @@ export interface DashboardMetrics {
 }
 
 export const SUPPORTED_CURRENCIES = [
-  { code: 'USD', symbol: '$' },
-  { code: 'PKR', symbol: '₨' },
-  { code: 'EUR', symbol: '€' },
-  { code: 'GBP', symbol: '£' },
-  { code: 'JPY', symbol: '¥' },
-  { code: 'CAD', symbol: 'C$' },
-  { code: 'AUD', symbol: 'A$' },
-  { code: 'CHF', symbol: 'CHF' },
-  { code: 'CNY', symbol: '¥' },
-  { code: 'INR', symbol: '₹' },
+  { code: 'USD', symbol: '$', name: 'US Dollar', flag: '🇺🇸' },
+  { code: 'EUR', symbol: '€', name: 'Euro', flag: '🇪🇺' },
+  { code: 'GBP', symbol: '£', name: 'British Pound', flag: '🇬🇧' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen', flag: '🇯🇵' },
+  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar', flag: '🇨🇦' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar', flag: '🇦🇺' },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', flag: '🇨🇭' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', flag: '🇨🇳' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee', flag: '🇮🇳' },
+  { code: 'PKR', symbol: '₨', name: 'Pakistani Rupee', flag: '🇵🇰' },
+  { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar', flag: '🇸🇬' },
+  { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar', flag: '🇭🇰' },
+  { code: 'SEK', symbol: 'kr', name: 'Swedish Krona', flag: '🇸🇪' },
+  { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone', flag: '🇳🇴' },
+  { code: 'DKK', symbol: 'kr', name: 'Danish Krone', flag: '🇩🇰' },
+  { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar', flag: '🇳🇿' },
+  { code: 'MXN', symbol: '$', name: 'Mexican Peso', flag: '🇲🇽' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', flag: '🇧🇷' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand', flag: '🇿🇦' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean Won', flag: '🇰🇷' },
 ];
 
 export const SUPPORTED_UNITS = [
