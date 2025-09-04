@@ -3,32 +3,63 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Category } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import { AlertCircle } from 'lucide-react';
 
 interface CategoryFormProps {
   initialData?: Partial<Category>;
-  onSubmit: (data: Partial<Category>) => Promise<void>;
+  onSubmit: (data: { name: string; description: string; created_by: string }) => Promise<void>;
   onCancel: () => void;
 }
 
 export default function CategoryForm({ initialData, onSubmit, onCancel }: CategoryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; description?: string }>({});
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setErrors({});
     setIsSubmitting(true);
 
     try {
       const formData = new FormData(e.currentTarget);
-      const data = {
-        name: formData.get('name') as string,
-        description: formData.get('description') as string,
-        created_by: 'current-user'
-      };
+      const name = (formData.get('name') as string).trim();
+      const description = (formData.get('description') as string).trim();
 
-      await onSubmit(data);
-      toast.success('Category saved successfully');
-    } catch (error) {
-      toast.error('Failed to save category');
+      // Validation
+      const newErrors: typeof errors = {};
+      
+      if (!name) {
+        newErrors.name = 'Category name is required';
+      } else if (name.length < 2) {
+        newErrors.name = 'Category name must be at least 2 characters';
+      } else if (name.length > 50) {
+        newErrors.name = 'Category name must be 50 characters or less';
+      }
+      
+      if (!description) {
+        newErrors.description = 'Description is required';
+      } else if (description.length < 5) {
+        newErrors.description = 'Description must be at least 5 characters';
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
+
+      await onSubmit({
+        name,
+        description,
+        created_by: 'current-user'
+      });
+      
+      toast.success(`Category ${initialData ? 'updated' : 'created'} successfully`);
+    } catch (error: any) {
+      if (error.message.includes('already exists')) {
+        setErrors({ name: error.message });
+      } else {
+        toast.error(`Failed to ${initialData ? 'update' : 'create'} category`);
+      }
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -51,9 +82,22 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
           id="name"
           defaultValue={initialData?.name}
           required
-          className="w-full input-dark input-large"
-          placeholder="Enter category name"
+          maxLength={50}
+          className={`w-full input-dark input-large ${
+            errors.name ? 'ring-error-500 border-error-500' : ''
+          }`}
+          placeholder="Enter category name (e.g., Electronics, Clothing)"
         />
+        {errors.name && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-2 flex items-center text-sm text-error-400"
+          >
+            <AlertCircle className="h-4 w-4 mr-1" />
+            {errors.name}
+          </motion.div>
+        )}
       </motion.div>
 
       <motion.div
@@ -62,16 +106,30 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
         transition={{ delay: 0.2 }}
       >
         <label htmlFor="description" className="block text-base font-medium text-gray-300 mb-3">
-          Description
+          Description *
         </label>
         <textarea
           name="description"
           id="description"
           rows={4}
           defaultValue={initialData?.description || ''}
-          className="w-full input-dark input-large"
-          placeholder="Enter category description"
+          required
+          maxLength={500}
+          className={`w-full input-dark input-large resize-none ${
+            errors.description ? 'ring-error-500 border-error-500' : ''
+          }`}
+          placeholder="Describe what types of items belong in this category..."
         />
+        {errors.description && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-2 flex items-center text-sm text-error-400"
+          >
+            <AlertCircle className="h-4 w-4 mr-1" />
+            {errors.description}
+          </motion.div>
+        )}
       </motion.div>
 
       <motion.div
@@ -100,10 +158,10 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
           {isSubmitting ? (
             <>
               <LoadingSpinner size="sm" color="white" />
-              Saving...
+              {initialData ? 'Updating...' : 'Creating...'}
             </>
           ) : (
-            'Save Category'
+            `${initialData ? 'Update' : 'Create'} Category`
           )}
         </motion.button>
       </motion.div>

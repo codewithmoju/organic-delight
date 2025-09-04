@@ -17,7 +17,7 @@ import { Transaction } from '../types';
 
 export async function getTransactions(limitCount?: number, lastDoc?: DocumentSnapshot) {
   const transactionsRef = collection(db, 'transactions');
-  let q = query(transactionsRef, orderBy('created_at', 'desc'));
+  let q = query(transactionsRef, orderBy('transaction_date', 'desc'));
   
   if (limitCount) {
     q = query(q, limit(limitCount));
@@ -33,11 +33,19 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
   for (const docSnapshot of snapshot.docs) {
     const transaction = { id: docSnapshot.id, ...docSnapshot.data() } as Transaction;
     
-    // Get item data if item_id exists
+    // Get item data
     if (transaction.item_id) {
       const itemDoc = await getDoc(doc(db, 'items', transaction.item_id));
       if (itemDoc.exists()) {
         transaction.item = { id: itemDoc.id, ...itemDoc.data() };
+        
+        // Get category for the item
+        if (transaction.item.category_id) {
+          const categoryDoc = await getDoc(doc(db, 'categories', transaction.item.category_id));
+          if (categoryDoc.exists()) {
+            transaction.item.category = { id: categoryDoc.id, ...categoryDoc.data() };
+          }
+        }
       }
     }
     
@@ -47,36 +55,18 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
   return { transactions, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
 }
 
-export async function getRecentTransactions(limitCount: number = 5) {
-  const transactionsRef = collection(db, 'transactions');
-  const q = query(transactionsRef, orderBy('created_at', 'desc'), limit(limitCount));
-  const snapshot = await getDocs(q);
-  
-  const transactions = [];
-  for (const docSnapshot of snapshot.docs) {
-    const transaction = { id: docSnapshot.id, ...docSnapshot.data() } as Transaction;
-    
-    // Get item data if item_id exists
-    if (transaction.item_id) {
-      const itemDoc = await getDoc(doc(db, 'items', transaction.item_id));
-      if (itemDoc.exists()) {
-        transaction.item = { id: itemDoc.id, ...itemDoc.data() };
-      }
-    }
-    
-    transactions.push(transaction);
-  }
-  
-  return transactions;
+export async function getRecentTransactions(limitCount: number = 5): Promise<Transaction[]> {
+  const result = await getTransactions(limitCount);
+  return result.transactions;
 }
 
-export async function getTransactionsByDateRange(startDate: Date, endDate: Date) {
+export async function getTransactionsByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef, 
-    where('created_at', '>=', Timestamp.fromDate(startDate)),
-    where('created_at', '<=', Timestamp.fromDate(endDate)),
-    orderBy('created_at', 'desc')
+    where('transaction_date', '>=', Timestamp.fromDate(startDate)),
+    where('transaction_date', '<=', Timestamp.fromDate(endDate)),
+    orderBy('transaction_date', 'desc')
   );
   const snapshot = await getDocs(q);
   
@@ -84,6 +74,7 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
   for (const docSnapshot of snapshot.docs) {
     const transaction = { id: docSnapshot.id, ...docSnapshot.data() } as Transaction;
     
+    // Get item data
     if (transaction.item_id) {
       const itemDoc = await getDoc(doc(db, 'items', transaction.item_id));
       if (itemDoc.exists()) {
@@ -97,25 +88,76 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
   return transactions;
 }
 
-export async function createTransaction(transaction: Omit<Transaction, 'id'>) {
+export async function createTransaction(transactionData: {
+  item_id: string;
+  type: 'stock_in' | 'stock_out';
+  quantity: number;
+  unit_price: number;
+  transaction_date: Date;
+  supplier_customer: string;
+  reference_number?: string;
+  notes?: string;
+  created_by: string;
+}): Promise<Transaction> {
+  // Calculate total value
+  const total_value = transactionData.quantity * transactionData.unit_price;
+  
+  // Validate stock out doesn't exceed available quantity
+  if (transactionData.type === 'stock_out') {
+    const stockLevel = await import('./items').then(m => m.getItemStockLevel(transactionData.item_id));
+    if (stockLevel && transactionData.quantity > stockLevel.current_quantity) {
+      throw new Error(`Insufficient stock. Available: ${stockLevel.current_quantity}`);
+    }
+  }
+
   const docRef = await addDoc(collection(db, 'transactions'), {
-    ...transaction,
+    ...transactionData,
+    total_value,
+    transaction_date: Timestamp.fromDate(transactionData.transaction_date),
     created_at: new Date(),
   });
   
-  return {
+  const newTransaction = {
     id: docRef.id,
-    ...transaction
-  } as Transaction;
+    ...transactionData,
+    total_value,
+    transaction_date: Timestamp.fromDate(transactionData.transaction_date),
+    created_at: new Date() as any
+  };
+  
+  // Get item data for the response
+  const itemDoc = await getDoc(doc(db, 'items', transactionData.item_id));
+  if (itemDoc.exists()) {
+    newTransaction.item = { id: itemDoc.id, ...itemDoc.data() };
+  }
+  
+  return newTransaction;
 }
 
-export async function getTransactionsByItem(itemId: string) {
+export async function getTransactionsByItem(itemId: string): Promise<Transaction[]> {
   const transactionsRef = collection(db, 'transactions');
-  const q = query(transactionsRef, where('item_id', '==', itemId), orderBy('created_at', 'desc'));
+  const q = query(transactionsRef, where('item_id', '==', itemId), orderBy('transaction_date', 'desc'));
   const snapshot = await getDocs(q);
   
   return snapshot.docs.map(docSnapshot => ({
     id: docSnapshot.id,
     ...docSnapshot.data()
+  })) as Transaction[];
+}
+
+export async function getTransactionsForPeriod(startDate: Date, endDate: Date): Promise<Transaction[]> {
+  const transactionsRef = collection(db, 'transactions');
+  const q = query(
+    transactionsRef,
+    where('transaction_date', '>=', Timestamp.fromDate(startDate)),
+    where('transaction_date', '<=', Timestamp.fromDate(endDate)),
+    orderBy('transaction_date', 'desc')
+  );
+  
+  const snapshot = await getDocs(q);
+  
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
   })) as Transaction[];
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Package, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Package, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { getItems } from '../lib/api/items';
 import { getRecentTransactions } from '../lib/api/transactions';
@@ -255,11 +255,11 @@ export default function Dashboard() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/inventory/items')}
+          onClick={() => navigate('/inventory/categories')}
           className="btn-primary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
         >
-          <Package className="w-6 h-6 sm:w-8 sm:h-8" />
-          <span className="text-base sm:text-lg font-semibold">Add New Item</span>
+          <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8" />
+          <span className="text-base sm:text-lg font-semibold">Manage Categories</span>
         </motion.button>
         
         <motion.button
@@ -275,11 +275,11 @@ export default function Dashboard() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/reports')}
+          onClick={() => navigate('/stock-levels')}
           className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px] sm:col-span-2 lg:col-span-1"
         >
-          <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8" />
-          <span className="text-base sm:text-lg font-semibold">View Reports</span>
+          <Layers className="w-6 h-6 sm:w-8 sm:h-8" />
+          <span className="text-base sm:text-lg font-semibold">View Stock Levels</span>
         </motion.button>
       </motion.div>
     </div>

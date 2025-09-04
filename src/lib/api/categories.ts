@@ -13,18 +13,28 @@ import {
 import { db } from '../firebase';
 import { Category } from '../types';
 
-export async function getCategories() {
+export async function getCategories(): Promise<Category[]> {
   const categoriesRef = collection(db, 'categories');
   const q = query(categoriesRef, orderBy('name'));
   const snapshot = await getDocs(q);
   
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  })) as Category[];
+  const categories = [];
+  for (const docSnapshot of snapshot.docs) {
+    const category = { id: docSnapshot.id, ...docSnapshot.data() } as Category;
+    
+    // Get item count for this category
+    const itemsRef = collection(db, 'items');
+    const itemsQuery = query(itemsRef, where('category_id', '==', category.id));
+    const itemsSnapshot = await getDocs(itemsQuery);
+    category.item_count = itemsSnapshot.size;
+    
+    categories.push(category);
+  }
+  
+  return categories;
 }
 
-export async function getCategoryById(id: string) {
+export async function getCategoryById(id: string): Promise<Category> {
   const docRef = doc(db, 'categories', id);
   const docSnap = await getDoc(docRef);
   
@@ -35,51 +45,80 @@ export async function getCategoryById(id: string) {
   return { id: docSnap.id, ...docSnap.data() } as Category;
 }
 
-export async function getCategoryItemCount(categoryId: string) {
-  const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where('category_id', '==', categoryId));
-  const snapshot = await getDocs(q);
-  return snapshot.size;
-}
+export async function createCategory(categoryData: {
+  name: string;
+  description: string;
+  created_by: string;
+}): Promise<Category> {
+  // Check for duplicate category names
+  const categoriesRef = collection(db, 'categories');
+  const existingQuery = query(categoriesRef, where('name', '==', categoryData.name.trim()));
+  const existingSnapshot = await getDocs(existingQuery);
+  
+  if (!existingSnapshot.empty) {
+    throw new Error('A category with this name already exists');
+  }
 
-export async function createCategory(category: Omit<Category, 'id'>) {
   const docRef = await addDoc(collection(db, 'categories'), {
-    ...category,
+    ...categoryData,
+    name: categoryData.name.trim(),
     created_at: new Date(),
     updated_at: new Date()
   });
   
   return {
     id: docRef.id,
-    ...category
-  } as Category;
+    ...categoryData,
+    name: categoryData.name.trim(),
+    created_at: new Date() as any,
+    updated_at: new Date() as any
+  };
 }
 
-export async function updateCategory(id: string, category: Partial<Category>) {
-  const docRef = doc(db, 'categories', id);
-  await updateDoc(docRef, {
-    ...category,
-    updated_at: new Date()
-  });
-  
-  return {
-    id,
-    ...category
-  } as Category;
-}
-
-export async function deleteCategory(id: string, reassignToId?: string) {
-  // If reassigning items, update them first
-  if (reassignToId) {
-    const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('category_id', '==', id));
-    const snapshot = await getDocs(q);
+export async function updateCategory(id: string, categoryData: {
+  name?: string;
+  description?: string;
+}): Promise<Category> {
+  // Check for duplicate category names if name is being updated
+  if (categoryData.name) {
+    const categoriesRef = collection(db, 'categories');
+    const existingQuery = query(categoriesRef, where('name', '==', categoryData.name.trim()));
+    const existingSnapshot = await getDocs(existingQuery);
     
-    const updatePromises = snapshot.docs.map(doc => 
-      updateDoc(doc.ref, { category_id: reassignToId, updated_at: new Date() })
-    );
-    await Promise.all(updatePromises);
+    // Check if any existing category has this name (excluding current category)
+    const duplicateExists = existingSnapshot.docs.some(doc => doc.id !== id);
+    if (duplicateExists) {
+      throw new Error('A category with this name already exists');
+    }
+  }
+
+  const docRef = doc(db, 'categories', id);
+  const updateData = {
+    ...categoryData,
+    ...(categoryData.name && { name: categoryData.name.trim() }),
+    updated_at: new Date()
+  };
+  
+  await updateDoc(docRef, updateData);
+  return getCategoryById(id);
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  // Check if category has items
+  const itemsRef = collection(db, 'items');
+  const itemsQuery = query(itemsRef, where('category_id', '==', id));
+  const itemsSnapshot = await getDocs(itemsQuery);
+  
+  if (!itemsSnapshot.empty) {
+    throw new Error('Cannot delete category that contains items. Please move or delete all items first.');
   }
   
   await deleteDoc(doc(db, 'categories', id));
+}
+
+export async function getCategoryItemCount(categoryId: string): Promise<number> {
+  const itemsRef = collection(db, 'items');
+  const q = query(itemsRef, where('category_id', '==', categoryId));
+  const snapshot = await getDocs(q);
+  return snapshot.size;
 }

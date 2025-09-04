@@ -14,7 +14,7 @@ import {
   DocumentSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Item } from '../types';
+import { Item, StockLevel } from '../types';
 
 export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) {
   const itemsRef = collection(db, 'items');
@@ -33,19 +33,215 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
   const items = [];
   for (const docSnapshot of snapshot.docs) {
     const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
+    
+    // Get category data
     if (item.category_id) {
       const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
       if (categoryDoc.exists()) {
         item.category = { id: categoryDoc.id, ...categoryDoc.data() };
       }
     }
+    
+    // Get stock level data
+    const stockData = await getItemStockLevel(item.id);
+    if (stockData) {
+      item.current_quantity = stockData.current_quantity;
+      item.average_unit_cost = stockData.average_unit_cost;
+      item.last_transaction_date = stockData.last_transaction_date;
+      item.total_value = stockData.total_value;
+    }
+    
     items.push(item);
   }
   
   return { items, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
 }
 
-export async function searchItems(searchQuery: string, categoryId?: string) {
+export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
+  const itemsRef = collection(db, 'items');
+  const q = query(itemsRef, where('category_id', '==', categoryId), orderBy('name'));
+  const snapshot = await getDocs(q);
+  
+  const items = [];
+  for (const docSnapshot of snapshot.docs) {
+    const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
+    
+    // Get stock level data
+    const stockData = await getItemStockLevel(item.id);
+    if (stockData) {
+      item.current_quantity = stockData.current_quantity;
+      item.average_unit_cost = stockData.average_unit_cost;
+      item.last_transaction_date = stockData.last_transaction_date;
+      item.total_value = stockData.total_value;
+    }
+    
+    items.push(item);
+  }
+  
+  return items;
+}
+
+export async function getItem(id: string): Promise<Item> {
+  const docRef = doc(db, 'items', id);
+  const docSnap = await getDoc(docRef);
+  
+  if (!docSnap.exists()) {
+    throw new Error('Item not found');
+  }
+  
+  const item = { id: docSnap.id, ...docSnap.data() } as Item;
+  
+  // Get category data
+  if (item.category_id) {
+    const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
+    if (categoryDoc.exists()) {
+      item.category = { id: categoryDoc.id, ...categoryDoc.data() };
+    }
+  }
+  
+  // Get stock level data
+  const stockData = await getItemStockLevel(item.id);
+  if (stockData) {
+    item.current_quantity = stockData.current_quantity;
+    item.average_unit_cost = stockData.average_unit_cost;
+    item.last_transaction_date = stockData.last_transaction_date;
+    item.total_value = stockData.total_value;
+  }
+  
+  return item;
+}
+
+export async function createItem(itemData: {
+  name: string;
+  description: string;
+  category_id: string;
+  created_by: string;
+}): Promise<Item> {
+  // Check for duplicate item names within the same category
+  const itemsRef = collection(db, 'items');
+  const existingQuery = query(
+    itemsRef, 
+    where('category_id', '==', itemData.category_id),
+    where('name', '==', itemData.name.trim())
+  );
+  const existingSnapshot = await getDocs(existingQuery);
+  
+  if (!existingSnapshot.empty) {
+    throw new Error('An item with this name already exists in this category');
+  }
+
+  const docRef = await addDoc(collection(db, 'items'), {
+    ...itemData,
+    name: itemData.name.trim(),
+    created_at: new Date(),
+    updated_at: new Date()
+  });
+  
+  return getItem(docRef.id);
+}
+
+export async function updateItem(id: string, itemData: {
+  name?: string;
+  description?: string;
+  category_id?: string;
+}): Promise<Item> {
+  // Check for duplicate item names if name or category is being updated
+  if (itemData.name || itemData.category_id) {
+    const currentItem = await getItem(id);
+    const newName = itemData.name?.trim() || currentItem.name;
+    const newCategoryId = itemData.category_id || currentItem.category_id;
+    
+    const itemsRef = collection(db, 'items');
+    const existingQuery = query(
+      itemsRef, 
+      where('category_id', '==', newCategoryId),
+      where('name', '==', newName)
+    );
+    const existingSnapshot = await getDocs(existingQuery);
+    
+    // Check if any existing item has this name in this category (excluding current item)
+    const duplicateExists = existingSnapshot.docs.some(doc => doc.id !== id);
+    if (duplicateExists) {
+      throw new Error('An item with this name already exists in this category');
+    }
+  }
+
+  const docRef = doc(db, 'items', id);
+  const updateData = {
+    ...itemData,
+    ...(itemData.name && { name: itemData.name.trim() }),
+    updated_at: new Date()
+  };
+  
+  await updateDoc(docRef, updateData);
+  return getItem(id);
+}
+
+export async function deleteItem(id: string): Promise<void> {
+  // Check if item has transactions
+  const transactionsRef = collection(db, 'transactions');
+  const transactionsQuery = query(transactionsRef, where('item_id', '==', id));
+  const transactionsSnapshot = await getDocs(transactionsQuery);
+  
+  if (!transactionsSnapshot.empty) {
+    throw new Error('Cannot delete item that has transaction history. Archive the item instead.');
+  }
+  
+  await deleteDoc(doc(db, 'items', id));
+}
+
+export async function getItemStockLevel(itemId: string): Promise<StockLevel | null> {
+  const transactionsRef = collection(db, 'transactions');
+  const q = query(transactionsRef, where('item_id', '==', itemId), orderBy('transaction_date', 'desc'));
+  const snapshot = await getDocs(q);
+  
+  if (snapshot.empty) {
+    return {
+      item_id: itemId,
+      current_quantity: 0,
+      average_unit_cost: 0,
+      last_transaction_date: new Date() as any,
+      total_value: 0
+    };
+  }
+  
+  let currentQuantity = 0;
+  let totalCost = 0;
+  let totalQuantityIn = 0;
+  let lastTransactionDate = new Date(0);
+  
+  snapshot.docs.forEach(doc => {
+    const transaction = doc.data();
+    const transactionDate = transaction.transaction_date.toDate ? 
+      transaction.transaction_date.toDate() : 
+      new Date(transaction.transaction_date);
+    
+    if (transactionDate > lastTransactionDate) {
+      lastTransactionDate = transactionDate;
+    }
+    
+    if (transaction.type === 'stock_in') {
+      currentQuantity += transaction.quantity;
+      totalCost += transaction.total_value;
+      totalQuantityIn += transaction.quantity;
+    } else {
+      currentQuantity -= transaction.quantity;
+    }
+  });
+  
+  const averageUnitCost = totalQuantityIn > 0 ? totalCost / totalQuantityIn : 0;
+  const totalValue = currentQuantity * averageUnitCost;
+  
+  return {
+    item_id: itemId,
+    current_quantity: Math.max(0, currentQuantity),
+    average_unit_cost: averageUnitCost,
+    last_transaction_date: lastTransactionDate as any,
+    total_value: totalValue
+  };
+}
+
+export async function searchItems(searchQuery: string, categoryId?: string): Promise<Item[]> {
   const itemsRef = collection(db, 'items');
   let q = query(itemsRef, orderBy('name'));
   
@@ -60,87 +256,31 @@ export async function searchItems(searchQuery: string, categoryId?: string) {
     const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
     
     // Client-side filtering for search
-    if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !item.description?.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !item.sku?.toLowerCase().includes(searchQuery.toLowerCase())) {
+    if (searchQuery && 
+        !item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !item.description?.toLowerCase().includes(searchQuery.toLowerCase())) {
       continue;
     }
     
+    // Get category data
     if (item.category_id) {
       const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
       if (categoryDoc.exists()) {
         item.category = { id: categoryDoc.id, ...categoryDoc.data() };
       }
     }
+    
+    // Get stock level data
+    const stockData = await getItemStockLevel(item.id);
+    if (stockData) {
+      item.current_quantity = stockData.current_quantity;
+      item.average_unit_cost = stockData.average_unit_cost;
+      item.last_transaction_date = stockData.last_transaction_date;
+      item.total_value = stockData.total_value;
+    }
+    
     items.push(item);
   }
   
   return items;
-}
-
-export async function getItem(id: string) {
-  const docRef = doc(db, 'items', id);
-  const docSnap = await getDoc(docRef);
-  
-  if (!docSnap.exists()) {
-    throw new Error('Item not found');
-  }
-  
-  const item = { id: docSnap.id, ...docSnap.data() } as Item;
-  if (item.category_id) {
-    const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
-    if (categoryDoc.exists()) {
-      item.category = { id: categoryDoc.id, ...categoryDoc.data() };
-    }
-  }
-  
-  return item;
-}
-
-export async function getLowStockItems() {
-  const itemsRef = collection(db, 'items');
-  const snapshot = await getDocs(itemsRef);
-  
-  const items = [];
-  for (const docSnapshot of snapshot.docs) {
-    const item = { id: docSnapshot.id, ...docSnapshot.data() } as Item;
-    if (item.quantity <= item.reorder_point) {
-      if (item.category_id) {
-        const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
-        if (categoryDoc.exists()) {
-          item.category = { id: categoryDoc.id, ...categoryDoc.data() };
-        }
-      }
-      items.push(item);
-    }
-  }
-  
-  return items;
-}
-
-export async function createItem(item: Omit<Item, 'id'>) {
-  const docRef = await addDoc(collection(db, 'items'), {
-    ...item,
-    created_at: new Date(),
-    updated_at: new Date()
-  });
-  return getItem(docRef.id);
-}
-
-export async function updateItem(id: string, item: Partial<Item>) {
-  const docRef = doc(db, 'items', id);
-  await updateDoc(docRef, {
-    ...item,
-    updated_at: new Date()
-  });
-  return getItem(id);
-}
-
-export async function deleteItem(id: string) {
-  await deleteDoc(doc(db, 'items', id));
-}
-
-export async function bulkUpdateItems(updates: Array<{ id: string; data: Partial<Item> }>) {
-  const promises = updates.map(({ id, data }) => updateItem(id, data));
-  return Promise.all(promises);
 }

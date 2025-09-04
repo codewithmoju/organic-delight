@@ -3,44 +3,53 @@ import { Timestamp } from 'firebase/firestore';
 export interface Item {
   id: string;
   name: string;
-  description: string | null;
-  category_id: string | null;
-  quantity: number;
-  unit: 'kg' | 'g' | 'lbs' | 'oz' | 'pieces' | 'units';
-  currency: string;
-  unit_price: number;
-  reorder_point: number;
+  description: string;
+  category_id: string;
   created_at: Timestamp;
   updated_at: Timestamp;
   created_by: string;
   category?: Category;
-  sku?: string;
-  barcode?: string;
-  supplier?: string;
-  location?: string;
+  // Stock tracking fields (calculated from transactions)
+  current_quantity?: number;
+  average_unit_cost?: number;
+  last_transaction_date?: Timestamp;
+  total_value?: number;
 }
 
 export interface Category {
   id: string;
   name: string;
-  description: string | null;
+  description: string;
   created_at: Timestamp;
   updated_at: Timestamp;
   created_by: string;
   color?: string;
+  item_count?: number;
 }
 
 export interface Transaction {
   id: string;
   item_id: string;
-  quantity_changed: number;
-  type: 'in' | 'out';
-  notes: string | null;
+  type: 'stock_in' | 'stock_out';
+  quantity: number;
+  unit_price: number;
+  total_value: number; // quantity × unit_price
+  transaction_date: Timestamp;
+  supplier_customer: string; // Supplier for stock_in, Customer for stock_out
+  reference_number?: string;
+  notes?: string;
   created_at: Timestamp;
   created_by: string;
   item?: Item;
-  reference?: string;
-  cost_per_unit?: number;
+}
+
+export interface StockLevel {
+  item_id: string;
+  current_quantity: number;
+  average_unit_cost: number;
+  last_transaction_date: Timestamp;
+  total_value: number;
+  item?: Item;
 }
 
 export interface Profile {
@@ -55,35 +64,11 @@ export interface Profile {
   phone?: string;
 }
 
-export interface Notification {
-  id: string;
-  message: string;
-  type: 'low_stock' | 'system';
-  is_read: boolean;
-  created_at: Timestamp;
-  user_id: string;
-}
-
-export interface ImportResult {
-  success: number;
-  failed: number;
-  errors: string[];
-}
-
 export interface DashboardMetrics {
   totalStockIn: number;
   totalStockOut: number;
   revenueSpentOnStockIn: number;
   revenueEarnedFromStockOut: number;
-}
-
-export interface ExportOptions {
-  format: 'csv' | 'json' | 'xlsx';
-  includeTransactions: boolean;
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
 }
 
 export const SUPPORTED_CURRENCIES = [

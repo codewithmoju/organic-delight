@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard';
 import Items from './pages/inventory/Items';
 import Categories from './pages/inventory/Categories';
 import Transactions from './pages/inventory/Transactions';
+import StockLevels from './pages/inventory/StockLevels';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 
@@ -61,9 +62,10 @@ function App() {
         
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/inventory/items" element={<Items />} />
           <Route path="/inventory/categories" element={<Categories />} />
+          <Route path="/inventory/items" element={<Items />} />
           <Route path="/transactions" element={<Transactions />} />
+          <Route path="/stock-levels" element={<StockLevels />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
         </Route>

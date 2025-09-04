@@ -9,13 +9,7 @@ import {
 import { db } from '../firebase';
 import { TimePeriod } from '../../components/dashboard/TimePeriodFilter';
 import { getDateRangeForPeriod } from '../utils/dateFilters';
-
-export interface DashboardMetrics {
-  totalStockIn: number;
-  totalStockOut: number;
-  revenueSpentOnStockIn: number;
-  revenueEarnedFromStockOut: number;
-}
+import { DashboardMetrics } from '../types';
 
 export async function getDashboardMetrics(period: TimePeriod): Promise<DashboardMetrics> {
   const { start, end } = getDateRangeForPeriod(period);
@@ -23,9 +17,9 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
-    where('created_at', '>=', Timestamp.fromDate(start)),
-    where('created_at', '<=', Timestamp.fromDate(end)),
-    orderBy('created_at', 'desc')
+    where('transaction_date', '>=', Timestamp.fromDate(start)),
+    where('transaction_date', '<=', Timestamp.fromDate(end)),
+    orderBy('transaction_date', 'desc')
   );
   
   const snapshot = await getDocs(q);
@@ -37,16 +31,13 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
 
   snapshot.docs.forEach(doc => {
     const transaction = doc.data();
-    const quantity = Math.abs(transaction.quantity_changed);
-    const costPerUnit = transaction.cost_per_unit || 0;
-    const revenue = quantity * costPerUnit;
-
-    if (transaction.type === 'in') {
-      totalStockIn += quantity;
-      revenueSpentOnStockIn += revenue;
-    } else if (transaction.type === 'out') {
-      totalStockOut += quantity;
-      revenueEarnedFromStockOut += revenue;
+    
+    if (transaction.type === 'stock_in') {
+      totalStockIn += transaction.quantity;
+      revenueSpentOnStockIn += transaction.total_value;
+    } else if (transaction.type === 'stock_out') {
+      totalStockOut += transaction.quantity;
+      revenueEarnedFromStockOut += transaction.total_value;
     }
   });
 
@@ -58,35 +49,27 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
   };
 }
 
-export async function getTransactionsForPeriod(period: TimePeriod) {
+export async function getInventoryTrends(period: TimePeriod) {
   const { start, end } = getDateRangeForPeriod(period);
   
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
-    where('created_at', '>=', Timestamp.fromDate(start)),
-    where('created_at', '<=', Timestamp.fromDate(end)),
-    orderBy('created_at', 'desc')
+    where('transaction_date', '>=', Timestamp.fromDate(start)),
+    where('transaction_date', '<=', Timestamp.fromDate(end)),
+    orderBy('transaction_date', 'desc')
   );
   
   const snapshot = await getDocs(q);
   
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-}
-
-export async function getInventoryTrends(period: TimePeriod) {
-  const transactions = await getTransactionsForPeriod(period);
-  
   // Group transactions by time intervals for trend analysis
   const trendData: { [key: string]: any } = {};
   
-  transactions.forEach(transaction => {
-    const date = new Date(
-      transaction.created_at.toDate ? transaction.created_at.toDate() : transaction.created_at
-    );
+  snapshot.docs.forEach(doc => {
+    const transaction = doc.data();
+    const date = transaction.transaction_date.toDate ? 
+      transaction.transaction_date.toDate() : 
+      new Date(transaction.transaction_date);
     
     let key: string;
     
@@ -115,17 +98,33 @@ export async function getInventoryTrends(period: TimePeriod) {
       };
     }
 
-    const quantity = Math.abs(transaction.quantity_changed);
-    const revenue = quantity * (transaction.cost_per_unit || 0);
-
-    if (transaction.type === 'in') {
-      trendData[key].stockIn += quantity;
-      trendData[key].revenueIn += revenue;
+    if (transaction.type === 'stock_in') {
+      trendData[key].stockIn += transaction.quantity;
+      trendData[key].revenueIn += transaction.total_value;
     } else {
-      trendData[key].stockOut += quantity;
-      trendData[key].revenueOut += revenue;
+      trendData[key].stockOut += transaction.quantity;
+      trendData[key].revenueOut += transaction.total_value;
     }
   });
 
   return Object.values(trendData);
+}
+
+export async function getStockLevels() {
+  const itemsRef = collection(db, 'items');
+  const itemsSnapshot = await getDocs(itemsRef);
+  
+  const stockLevels = [];
+  
+  for (const itemDoc of itemsSnapshot.docs) {
+    const item = { id: itemDoc.id, ...itemDoc.data() };
+    const stockLevel = await import('./items').then(m => m.getItemStockLevel(item.id));
+    
+    if (stockLevel) {
+      stockLevel.item = item;
+      stockLevels.push(stockLevel);
+    }
+  }
+  
+  return stockLevels.sort((a, b) => b.total_value - a.total_value);
 }

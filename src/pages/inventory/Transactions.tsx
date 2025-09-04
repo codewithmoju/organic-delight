@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { Plus, ArrowUpRight, ArrowDownLeft, Calendar, Filter, Package, DollarSign } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownLeft, Calendar, Filter, Package, DollarSign, User } from 'lucide-react';
 import { toast } from 'sonner';
-import { getTransactions } from '../../lib/api/transactions';
+import { getTransactions, createTransaction } from '../../lib/api/transactions';
 import { getItems } from '../../lib/api/items';
 import { Transaction, Item } from '../../lib/types';
 import TransactionForm from '../../components/inventory/TransactionForm';
@@ -17,7 +17,7 @@ export default function Transactions() {
   const [items, setItems] = useState<Item[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'stock_in' | 'stock_out'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
 
   useEffect(() => {
@@ -71,12 +71,31 @@ export default function Transactions() {
       }
       
       filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.created_at.toDate ? t.created_at.toDate() : t.created_at);
+        const transactionDate = new Date(t.transaction_date.toDate ? t.transaction_date.toDate() : t.transaction_date);
         return transactionDate >= startDate;
       });
     }
 
     setFilteredTransactions(filtered);
+  }
+
+  async function handleTransactionSubmit(data: {
+    item_id: string;
+    type: 'stock_in' | 'stock_out';
+    quantity: number;
+    unit_price: number;
+    transaction_date: Date;
+    supplier_customer: string;
+    reference_number?: string;
+    notes?: string;
+    created_by: string;
+  }) {
+    try {
+      await createTransaction(data);
+      await loadData();
+    } catch (error) {
+      throw error;
+    }
   }
 
   if (isLoading) {
@@ -92,7 +111,7 @@ export default function Transactions() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl mx-auto"
+        className="max-w-4xl mx-auto"
       >
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gradient">New Transaction</h1>
@@ -103,6 +122,7 @@ export default function Transactions() {
           <div className="p-6">
             <TransactionForm
               items={items}
+              onSubmit={handleTransactionSubmit}
               onComplete={() => {
                 setIsFormOpen(false);
                 loadData();
@@ -126,7 +146,7 @@ export default function Transactions() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Transactions</h1>
           <p className="text-gray-400 mt-1 text-sm sm:text-base">
-            Track all inventory movements and changes
+            Record and track all inventory movements
           </p>
         </div>
         
@@ -156,8 +176,8 @@ export default function Transactions() {
                 className="w-full input-dark"
               >
                 <option value="all">All Transactions</option>
-                <option value="in">Stock In</option>
-                <option value="out">Stock Out</option>
+                <option value="stock_in">Stock In</option>
+                <option value="stock_out">Stock Out</option>
               </select>
             </div>
             
@@ -183,7 +203,7 @@ export default function Transactions() {
       {/* Transactions List */}
       <AnimatedCard delay={0.2}>
         <div className="p-4 sm:p-6">
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-4">
             <AnimatePresence>
               {filteredTransactions.length === 0 ? (
                 <motion.div
@@ -221,50 +241,54 @@ export default function Transactions() {
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.05 }}
                     whileHover={{ scale: 1.02, x: 4 }}
-                    className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-200 w-full"
+                    className="flex items-center justify-between p-4 sm:p-6 rounded-xl bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-200"
                   >
-                    <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
-                      <div className={`p-3 rounded-xl ${
-                        transaction.type === 'in' 
+                    <div className="flex items-center space-x-4 flex-1 min-w-0">
+                      <div className={`p-3 rounded-xl flex-shrink-0 ${
+                        transaction.type === 'stock_in' 
                           ? 'bg-success-500/20 text-success-400' 
                           : 'bg-error-500/20 text-error-400'
-                      } flex-shrink-0`}>
-                        {transaction.type === 'in' ? (
-                          <ArrowUpRight className="w-5 h-5" />
+                      }`}>
+                        {transaction.type === 'stock_in' ? (
+                          <ArrowUpRight className="w-6 h-6" />
                         ) : (
-                          <ArrowDownLeft className="w-5 h-5" />
+                          <ArrowDownLeft className="w-6 h-6" />
                         )}
                       </div>
                       
                       <div className="min-w-0 flex-1">
-                        <h4 className="text-white font-semibold text-sm sm:text-base truncate">
+                        <h4 className="text-white font-semibold text-lg truncate">
                           {transaction.item?.name || 'Unknown Item'}
                         </h4>
-                        <div className="flex items-center text-xs sm:text-sm text-gray-400 mt-1">
+                        <div className="flex items-center text-sm text-gray-400 mt-1">
                           <Calendar className="w-4 h-4 mr-1" />
                           {format(
-                            new Date(transaction.created_at.toDate ? transaction.created_at.toDate() : transaction.created_at), 
+                            new Date(transaction.transaction_date.toDate ? transaction.transaction_date.toDate() : transaction.transaction_date), 
                             'MMM d, yyyy HH:mm'
                           )}
+                        </div>
+                        <div className="flex items-center text-sm text-gray-400 mt-1">
+                          <User className="w-4 h-4 mr-1" />
+                          {transaction.supplier_customer}
                         </div>
                       </div>
                     </div>
                     
                     <div className="text-right flex-shrink-0">
-                      <div className={`text-lg font-bold ${
-                        transaction.type === 'in' ? 'text-success-400' : 'text-error-400'
-                      } text-sm sm:text-lg`}>
-                        {transaction.type === 'in' ? '+' : '-'}{Math.abs(transaction.quantity_changed)}
+                      <div className={`text-xl font-bold ${
+                        transaction.type === 'stock_in' ? 'text-success-400' : 'text-error-400'
+                      }`}>
+                        {transaction.type === 'stock_in' ? '+' : '-'}{transaction.quantity}
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-400">
-                        {transaction.item?.unit || 'units'}
+                      <div className="text-sm text-gray-400">
+                        @ {formatCurrency(transaction.unit_price)}
                       </div>
-                      {transaction.cost_per_unit && (
-                        <div className="text-xs sm:text-sm text-primary-400 mt-1">
-                          {formatCurrency(
-                            Math.abs(transaction.quantity_changed) * transaction.cost_per_unit,
-                            transaction.item?.currency || 'USD'
-                          )}
+                      <div className="text-lg font-semibold text-primary-400 mt-1">
+                        {formatCurrency(transaction.total_value)}
+                      </div>
+                      {transaction.reference_number && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Ref: {transaction.reference_number}
                         </div>
                       )}
                     </div>

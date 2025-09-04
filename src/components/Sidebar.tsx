@@ -8,7 +8,8 @@ import {
   BarChart3, 
   Settings,
   FolderOpen,
-  X
+  X,
+  Layers
 } from 'lucide-react';
 import Logo from './ui/Logo';
 
@@ -20,9 +21,10 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/inventory/items', icon: Package, label: 'Items' },
     { to: '/inventory/categories', icon: FolderOpen, label: 'Categories' },
+    { to: '/inventory/items', icon: Package, label: 'Items' },
     { to: '/transactions', icon: ArrowUpDown, label: 'Transactions' },
+    { to: '/stock-levels', icon: Layers, label: 'Stock Levels' },
     { to: '/reports', icon: BarChart3, label: 'Reports' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
