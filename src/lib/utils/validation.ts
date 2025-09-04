@@ -35,3 +35,35 @@ export function validateSKU(sku: string): string | null {
   if (sku.length > 50) return 'SKU must be 50 characters or less';
   return null;
 }
+
+export function validatePhone(phone: string): string | null {
+  if (!phone) return 'Phone number is required';
+  if (!/^\d{10,15}$/.test(phone.replace(/\D/g, ''))) return 'Please enter a valid phone number';
+  return null;
+}
+
+export function validateUsername(username: string): string | null {
+  if (!username) return 'Username is required';
+  if (username.length < 3) return 'Username must be at least 3 characters';
+  if (username.length > 20) return 'Username must be 20 characters or less';
+  if (!/^[a-zA-Z0-9_-]+$/.test(username)) return 'Username can only contain letters, numbers, hyphens, and underscores';
+  return null;
+}
+
+export function validateAge(dateOfBirth: string): string | null {
+  if (!dateOfBirth) return 'Date of birth is required';
+  
+  const birthDate = new Date(dateOfBirth);
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  if (age < 13) return 'You must be at least 13 years old to register';
+  if (age > 120) return 'Please enter a valid date of birth';
+  
+  return null;
+}
