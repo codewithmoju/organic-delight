@@ -2,6 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile Performance Optimizations */
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.15s !important;
+  }
+  
+  /* Optimize transforms for mobile */
+  .card-dark {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* Reduce blur effects on mobile for better performance */
+  .glass-effect {
+    backdrop-filter: blur(8px);
+  }
+  
+  /* Optimize grid layouts for mobile */
+  .grid {
+    contain: layout style;
+  }
+}
+
+/* GPU Acceleration for all animated elements */
+.animate-spin,
+.animate-pulse,
+.animate-bounce,
+[class*="animate-"] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
+}
+
+/* Mobile-optimized animations */
+@media (max-width: 768px) {
+  .animate-spin {
+    animation: mobile-spin 1s linear infinite;
+  }
+  
+  .animate-pulse {
+    animation: mobile-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes mobile-spin {
+  from { transform: translate3d(0, 0, 0) rotate(0deg); }
+  to { transform: translate3d(0, 0, 0) rotate(360deg); }
+}
+
+@keyframes mobile-pulse {
+  0%, 100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  50% { opacity: 0.5; transform: translate3d(0, 0, 0) scale(1); }
+}
+
 /* RTL Support */
 [dir="rtl"] {
   direction: rtl;
@@ -215,6 +273,8 @@
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
   
   .card-dark {
@@ -223,6 +283,9 @@
     border: 1px solid rgba(51, 65, 85, 0.5);
     border-radius: 0.75rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    contain: layout style paint;
   }
   
   .btn-primary {
@@ -231,7 +294,9 @@
     font-weight: 600;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
-    transition: all 0.2s;
+    transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                box-shadow 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                background 0.15s ease-out;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     border: none;
     cursor: pointer;
@@ -240,25 +305,30 @@
     justify-content: center;
     min-height: 44px;
     white-space: nowrap;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   @media (max-width: 640px) {
     .btn-primary {
       padding: 0.875rem 1.25rem;
       font-size: 0.875rem;
+      min-height: 48px;
+      touch-action: manipulation;
     }
   }
   
   .btn-primary:hover {
     background: linear-gradient(to right, #1d4ed8, #1e40af);
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-    transform: translateY(-1px);
+    transform: translate3d(0, -1px, 0);
   }
   
   .btn-primary:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
+    transform: translate3d(0, 0, 0);
   }
   
   .btn-secondary {
@@ -267,7 +337,9 @@
     font-weight: 600;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
-    transition: all 0.2s;
+    transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                background 0.15s ease-out,
+                box-shadow 0.15s ease-out;
     border: 1px solid #475569;
     cursor: pointer;
     display: inline-flex;
@@ -275,18 +347,23 @@
     justify-content: center;
     min-height: 44px;
     white-space: nowrap;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   @media (max-width: 640px) {
     .btn-secondary {
       padding: 0.875rem 1.25rem;
       font-size: 0.875rem;
+      min-height: 48px;
+      touch-action: manipulation;
     }
   }
   
   .btn-secondary:hover {
     background: rgba(71, 85, 105, 0.9);
-    transform: translateY(-1px);
+    transform: translate3d(0, -1px, 0);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
   
@@ -295,12 +372,16 @@
     border: 1px solid #475569;
     color: #f3f4f6;
     border-radius: 0.75rem;
-    transition: all 0.2s;
+    transition: border-color 0.15s ease-out,
+                box-shadow 0.15s ease-out,
+                background 0.15s ease-out;
     padding: 1rem 1.25rem;
     font-size: 1rem;
     line-height: 1.5;
     width: 100%;
     max-width: 100%;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
   
   .input-dark::placeholder {
@@ -324,6 +405,7 @@
     .input-large {
       padding: 1rem 1.25rem;
       font-size: 1rem;
+      touch-action: manipulation;
     }
   }
   
@@ -331,8 +413,11 @@
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
+    transform: translate3d(0, 0, 0);
+    will-change: background-position;
   }
 
+  /* Mobile-optimized container utilities */
   /* Responsive container utilities */
   .container-responsive {
     width: 100vw;
@@ -342,6 +427,7 @@
     padding-left: 1rem;
     padding-right: 1rem;
     overflow-x: hidden;
+    contain: layout style;
   }
 
   @media (min-width: 640px) {
@@ -384,6 +470,7 @@
     gap: 1rem;
     grid-template-columns: 1fr;
     width: 100%;
+    contain: layout style;
   }
 
   @media (min-width: 640px) {
@@ -411,16 +498,45 @@
     display: flex;
     min-height: 100vh;
     overflow-x: hidden;
+    contain: layout style;
   }
 
   .sidebar-container {
     flex-shrink: 0;
+    contain: layout style paint;
   }
 
   .main-content {
     flex: 1;
     min-width: 0;
     overflow-x: hidden;
+    contain: layout style;
+  }
+
+  /* Mobile-specific optimizations */
+  @media (max-width: 768px) {
+    .main-content {
+      width: 100vw;
+      margin-left: 0;
+      contain: layout style paint;
+    }
+    
+    /* Optimize touch interactions */
+    button, a, [role="button"] {
+      touch-action: manipulation;
+      min-height: 48px;
+      min-width: 48px;
+    }
+    
+    /* Reduce complexity on mobile */
+    .card-dark {
+      backdrop-filter: blur(2px);
+    }
+    
+    /* Optimize grid layouts */
+    .grid {
+      contain: layout style;
+    }
   }
 
   /* Mobile layout adjustments */
@@ -436,6 +552,21 @@
     .main-content {
       margin-left: 0;
       width: calc(100vw - 18rem);
+    }
+  }
+  
+  /* Performance-optimized sidebar */
+  .sidebar-optimized {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    contain: layout style paint;
+    will-change: transform;
+  }
+  
+  /* Mobile-optimized animations */
+  @media (max-width: 768px) {
+    .sidebar-optimized {
+      transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
   }
 }
