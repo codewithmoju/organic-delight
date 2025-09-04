@@ -1,3 +1,53 @@
+      target: '[data-tour="items-grid"]',
+      position: 'top',
+      spotlight: true,
+    },
+    {
+      id: 'transactions',
+      title: t('tour.transactions.title'),
+      content: t('tour.transactions.content'),
+      route: '/transactions',
+      target: '[data-tour="transactions-list"]',
+      position: 'top',
+      spotlight: true,
+      interactive: true,
+    },
+    {
+      id: 'stock-levels',
+      title: t('tour.stockLevels.title'),
+      content: t('tour.stockLevels.content'),
+      route: '/stock-levels',
+      target: '[data-tour="stock-levels-grid"]',
+      position: 'top',
+      spotlight: true,
+    },
+    {
+      id: 'reports',
+      title: t('tour.reports.title'),
+      content: t('tour.reports.content'),
+      route: '/reports',
+      target: '[data-tour="reports-charts"]',
+      position: 'top',
+      spotlight: true,
+    },
+    {
+      id: 'settings',
+      title: t('tour.settings.title'),
+      content: t('tour.settings.content'),
+      route: '/settings',
+      target: '[data-tour="settings-tabs"]',
+      position: 'bottom',
+      spotlight: true,
+    },
+    {
+      id: 'completion',
+      title: t('tour.completion.title'),
+      content: t('tour.completion.content'),
+      position: 'center',
+      spotlight: false,
+    },
+  ];
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, ArrowRight, Play, SkipForward, CheckCircle } from 'lucide-react';
@@ -41,6 +91,13 @@ export const useTour = () => {
   return context;
 };
 
+interface TourProviderProps {
+  children: React.ReactNode;
+}
+
+export default function TourProvider({ children }: TourProviderProps) {
+  const { t } = useTranslation();
+  
   // Generate tour steps with translations
   const tourSteps: TourStep[] = [
     {
@@ -131,12 +188,6 @@ export const useTour = () => {
     },
   ];
 
-interface TourProviderProps {
-  children: React.ReactNode;
-}
-
-export default function TourProvider({ children }: TourProviderProps) {
-  const { t } = useTranslation();
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -304,139 +355,90 @@ export default function TourProvider({ children }: TourProviderProps) {
                   })(),
                 }}
               >
-                <div className="w-full h-full rounded-xl border-4 border-primary-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] bg-white/5 backdrop-blur-[1px] animate-pulse" />
-              </motion.div>
-            )}
-
-            {/* Tour Tooltip */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="fixed z-[10000] max-w-sm w-full mx-4"
-              style={
-                currentStepData.target && currentStepData.position !== 'center'
-                  ? getTooltipPosition(currentStepData.target, currentStepData.position || 'top')
-                  : {
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                    }
-              }
-            >
-              <div className="glass-effect p-6 rounded-2xl border border-primary-500/30 shadow-2xl">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-white mb-2">
-                      {currentStepData.title}
-                    </h3>
-                    <p className="text-gray-300 text-sm leading-relaxed">
-                      {currentStepData.content}
-                    </p>
-                  </div>
-                  <button
-                    onClick={skipTour}
-                    className="ml-4 p-1 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Interactive Content */}
-                {currentStepData.interactive && currentStepData.interactiveContent && (
-                  <div className="mb-4 p-4 bg-dark-800/50 rounded-xl border border-dark-700/50">
-                    {currentStepData.interactiveContent}
-                  </div>
-                )}
-
-                {/* Progress Indicator */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex space-x-2">
-                    {Array.from({ length: totalSteps }).map((_, index) => (
-                      <div
-                        key={index}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          index === currentStep
-                            ? 'bg-primary-500 scale-125'
-                            : index < currentStep
-                            ? 'bg-success-500'
-                            : 'bg-gray-600'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-400">
-                    {currentStep + 1} of {totalSteps}
-                  </span>
-                </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex items-center justify-between">
-                  <div className="flex space-x-2">
-                    {currentStep > 0 && (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={prevStep}
-                        className="btn-secondary flex items-center gap-2 px-4 py-2 text-sm"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        {t('tour.controls.previous')}
-                      </motion.button>
-                    )}
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={skipTour}
-                      className="text-gray-400 hover:text-white text-sm px-3 py-2 transition-colors"
-                    >
-                      <SkipForward className="w-4 h-4 inline mr-1" />
                       {t('tour.controls.skip')}
                     </motion.button>
                   </div>
 
                   <motion.button
+  
                     whileHover={{ scale: 1.05 }}
+  // Generate tour steps with translations
                     whileTap={{ scale: 0.95 }}
+  const tourSteps: TourStep[] = [
                     onClick={nextStep}
+    {
                     className="btn-primary flex items-center gap-2 px-4 py-2 text-sm"
+      id: 'welcome',
                   >
+      title: t('tour.welcome.title'),
                     {currentStep === totalSteps - 1 ? (
+      content: t('tour.welcome.content'),
                       <>
+      position: 'center',
                         <CheckCircle className="w-4 h-4" />
+      spotlight: false,
                         {t('tour.controls.finish')}
+    },
                       </>
+    {
                     ) : (
+      id: 'dashboard',
                       <>
+      title: t('tour.dashboard.title'),
                         {t('tour.controls.next')}
+      content: t('tour.dashboard.content'),
                         <ArrowRight className="w-4 h-4" />
+      route: '/',
                       </>
+      target: '[data-tour="dashboard-stats"]',
                     )}
+      position: 'bottom',
                   </motion.button>
+      spotlight: true,
                 </div>
+    },
               </div>
+    {
 
+      id: 'sidebar',
               {/* Arrow Pointer */}
+      title: t('tour.sidebar.title'),
               {currentStepData.target && currentStepData.position !== 'center' && (
+      content: t('tour.sidebar.content'),
                 <div
+      target: '[data-tour="sidebar"]',
                   className={`absolute w-0 h-0 ${
+      position: 'right',
                     currentStepData.position === 'top'
+      spotlight: true,
                       ? 'border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-primary-500/30 top-full left-1/2 transform -translate-x-1/2'
+    },
                       : currentStepData.position === 'bottom'
+    {
                       ? 'border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-primary-500/30 bottom-full left-1/2 transform -translate-x-1/2'
+      id: 'categories',
                       : currentStepData.position === 'left'
+      title: t('tour.categories.title'),
                       ? 'border-t-8 border-b-8 border-l-8 border-t-transparent border-b-transparent border-l-primary-500/30 right-full top-1/2 transform -translate-y-1/2'
+      content: t('tour.categories.content'),
                       : 'border-t-8 border-b-8 border-r-8 border-t-transparent border-b-transparent border-r-primary-500/30 left-full top-1/2 transform -translate-y-1/2'
+      route: '/inventory/categories',
                   }`}
+      target: '[data-tour="categories-grid"]',
                 />
+      position: 'top',
               )}
+      spotlight: true,
             </motion.div>
+    },
           </>
+    {
         )}
+      id: 'items',
       </AnimatePresence>
+      title: t('tour.items.title'),
     </TourContext.Provider>
+      content: t('tour.items.content'),
   );
+      route: '/inventory/items',
 }
