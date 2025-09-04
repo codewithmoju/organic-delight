@@ -1,9 +1,53 @@
 // Performance optimization utilities
 
+// Global performance settings
+export const PERFORMANCE_CONFIG = {
+  ANIMATION_DURATION: {
+    FAST: 150,
+    NORMAL: 200,
+    SLOW: 300
+  },
+  DEBOUNCE_DELAY: {
+    SEARCH: 150,
+    RESIZE: 100,
+    SCROLL: 50
+  },
+  CACHE_DURATION: 30000, // 30 seconds
+  MAX_CONCURRENT_ANIMATIONS: 3
+};
+
+// Animation queue to prevent too many concurrent animations
+class AnimationQueue {
+  private queue: (() => void)[] = [];
+  private running = 0;
+  private maxConcurrent = PERFORMANCE_CONFIG.MAX_CONCURRENT_ANIMATIONS;
+
+  add(animation: () => void) {
+    this.queue.push(animation);
+    this.process();
+  }
+
+  private process() {
+    if (this.running >= this.maxConcurrent || this.queue.length === 0) return;
+    
+    const animation = this.queue.shift();
+    if (animation) {
+      this.running++;
+      animation();
+      setTimeout(() => {
+        this.running--;
+        this.process();
+      }, PERFORMANCE_CONFIG.ANIMATION_DURATION.FAST);
+    }
+  }
+}
+
+export const animationQueue = new AnimationQueue();
+
 // Debounced function for expensive operations
 export function createOptimizedDebounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number,
+  wait: number = PERFORMANCE_CONFIG.DEBOUNCE_DELAY.SEARCH,
   immediate?: boolean
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
@@ -28,7 +72,7 @@ export function createOptimizedDebounce<T extends (...args: any[]) => any>(
 // Throttled function for scroll/resize events
 export function createOptimizedThrottle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number = PERFORMANCE_CONFIG.DEBOUNCE_DELAY.SCROLL
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
   
