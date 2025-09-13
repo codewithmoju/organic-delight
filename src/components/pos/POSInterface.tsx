@@ -3,13 +3,15 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useReactToPrint } from 'react-to-print';
 import { Printer, Receipt, RotateCcw, Settings, TrendingUp } from 'lucide-react';
-import BarcodeScanner from './BarcodeScanner';
+import EnhancedBarcodeScanner from './EnhancedBarcodeScanner';
 import ShoppingCart from './ShoppingCart';
-import ProductSearch from './ProductSearch';
+import EnhancedProductSearch from './EnhancedProductSearch';
 import PaymentModal from './PaymentModal';
-import ReceiptGenerator from './ReceiptGenerator';
+import EnhancedReceiptGenerator from './EnhancedReceiptGenerator';
+import ExternalPrinterIntegration from './ExternalPrinterIntegration';
 import { CartItem, BarcodeProduct, POSTransaction, POSSettings } from '../../lib/types';
 import { getProductByBarcode, createPOSTransaction, getPOSSettings } from '../../lib/api/pos';
+import { getItemByBarcode, getItemByProductId } from '../../lib/api/enhancedItems';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { useAuthStore } from '../../lib/store';
 import LoadingSpinner from '../ui/LoadingSpinner';
@@ -72,7 +74,26 @@ export default function POSInterface() {
 
   const handleBarcodeScan = async (barcode: string) => {
     try {
-      const product = await getProductByBarcode(barcode);
+      // Try to find product by barcode first
+      let product = await getProductByBarcode(barcode);
+      
+      // If not found by barcode, try by product ID/SKU
+      if (!product) {
+        const item = await getItemByBarcode(barcode) || await getItemByProductId(barcode);
+        if (item) {
+          // Get current stock level
+          const stockLevel = await import('../../lib/api/items').then(m => m.getItemStockLevel(item.id));
+          
+          product = {
+            id: item.id,
+            name: item.name,
+            barcode: item.barcode || barcode,
+            price: item.unit_price || 0,
+            stock: stockLevel?.current_quantity || 0,
+            category: item.category?.name
+          };
+        }
+      }
       
       if (!product) {
         toast.error(`Product not found for barcode: ${barcode}`);
@@ -243,14 +264,14 @@ export default function POSInterface() {
         {/* Left Column - Scanner and Search */}
         <div className="xl:col-span-2 space-y-6">
           {/* Barcode Scanner */}
-          <BarcodeScanner
+          <EnhancedBarcodeScanner
             onScan={handleBarcodeScan}
             isActive={isScannerActive}
             onToggle={() => setIsScannerActive(!isScannerActive)}
           />
           
           {/* Product Search */}
-          <ProductSearch onAddToCart={addToCart} />
+          <EnhancedProductSearch onAddToCart={addToCart} />
         </div>
 
         {/* Right Column - Shopping Cart */}
@@ -281,6 +302,15 @@ export default function POSInterface() {
         </div>
       </div>
 
+      {/* External Printer Integration */}
+      {completedTransaction && (
+        <ExternalPrinterIntegration
+          transaction={completedTransaction}
+          settings={settings}
+          onPrintComplete={() => toast.success('Receipt printed successfully')}
+        />
+      )}
+
       {/* Payment Modal */}
       <PaymentModal
         isOpen={isPaymentModalOpen}
@@ -296,10 +326,11 @@ export default function POSInterface() {
       {/* Hidden Receipt for Printing */}
       <div className="hidden">
         {completedTransaction && (
-          <ReceiptGenerator
+          <EnhancedReceiptGenerator
             ref={receiptRef}
             transaction={completedTransaction}
             settings={settings}
+            variant="standard"
           />
         )}
       </div>

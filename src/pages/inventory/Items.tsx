@@ -4,8 +4,9 @@ import { Plus, Pencil, Trash2, Package, Calendar, DollarSign } from 'lucide-reac
 import { toast } from 'sonner';
 import { getItems, createItem, updateItem, deleteItem } from '../../lib/api/items';
 import { getCategories } from '../../lib/api/categories';
+import { createItemWithInitialStock } from '../../lib/api/enhancedItems';
 import { Item, Category } from '../../lib/types';
-import ItemForm from '../../components/inventory/ItemForm';
+import MultiStepItemForm from '../../components/inventory/MultiStepItemForm';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnimatedCard from '../../components/ui/AnimatedCard';
 import SearchInput from '../../components/ui/SearchInput';
@@ -24,7 +25,7 @@ export default function Items() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  const [showPOSFields, setShowPOSFields] = useState(false);
+  const [useMultiStepForm, setUseMultiStepForm] = useState(true);
 
   const pagination = usePagination({
     data: filteredItems,
@@ -72,11 +73,24 @@ export default function Items() {
     setFilteredItems(filtered);
   }
 
-  async function handleSubmit(data: { name: string; description: string; category_id: string; created_by: string }) {
+  async function handleSubmit(data: { 
+    name: string; 
+    description: string; 
+    category_id: string; 
+    unit_price?: number;
+    barcode?: string;
+    sku?: string;
+    supplier?: string;
+    location?: string;
+    reorder_point?: number;
+    created_by: string;
+  }, initialStock?: number) {
     try {
       console.log('Creating/updating item:', data);
       if (selectedItem) {
         await updateItem(selectedItem.id, data);
+      } else if (useMultiStepForm && initialStock !== undefined) {
+        await createItemWithInitialStock(data as any, initialStock);
       } else {
         await createItem(data);
       }
@@ -84,7 +98,6 @@ export default function Items() {
       await loadData();
       setIsFormOpen(false);
       setSelectedItem(null);
-      setShowPOSFields(false);
     } catch (error) {
       throw error;
     }
@@ -117,34 +130,30 @@ export default function Items() {
           <p className="text-gray-400 mt-2">
             {selectedItem ? 'Update item information' : 'Create a new inventory item'}
           </p>
-          
-          {/* POS Fields Toggle */}
-          <div className="mt-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={showPOSFields}
-                onChange={(e) => setShowPOSFields(e.target.checked)}
-                className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800 mr-3"
-              />
-              <span className="text-gray-300">Enable POS integration (barcode & pricing)</span>
-            </label>
-          </div>
         </div>
         
         <AnimatedCard>
           <div className="p-6">
-            <ItemForm
-              initialData={selectedItem || undefined}
-              categories={categories}
-              showPOSFields={showPOSFields}
-              onSubmit={handleSubmit}
-              onCancel={() => {
-                setIsFormOpen(false);
-                setSelectedItem(null);
-                setShowPOSFields(false);
-              }}
-            />
+            {selectedItem ? (
+              <ItemForm
+                initialData={selectedItem}
+                categories={categories}
+                onSubmit={(data) => handleSubmit(data)}
+                onCancel={() => {
+                  setIsFormOpen(false);
+                  setSelectedItem(null);
+                }}
+              />
+            ) : (
+              <MultiStepItemForm
+                categories={categories}
+                onSubmit={(data) => handleSubmit(data, data.total_stock)}
+                onCancel={() => {
+                  setIsFormOpen(false);
+                  setSelectedItem(null);
+                }}
+              />
+            )}
           </div>
         </AnimatedCard>
       </motion.div>

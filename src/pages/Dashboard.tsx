@@ -340,38 +340,28 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.3, duration: 0.4 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             <TourTrigger variant="card" />
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/inventory/categories')}
+              onClick={() => navigate('/inventory/items')}
               className="btn-primary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
             >
-              <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8" />
-              <span className="text-base sm:text-lg font-semibold">Manage Categories</span>
+              <Package className="w-6 h-6 sm:w-8 sm:h-8" />
+              <span className="text-base sm:text-lg font-semibold">Add New Product</span>
             </motion.button>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/transactions')}
-              className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px]"
-            >
-              <ArrowUpDown className="w-6 h-6 sm:w-8 sm:h-8" />
-              <span className="text-base sm:text-lg font-semibold">Record Transaction</span>
-            </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/stock-levels')}
+              onClick={() => navigate('/pos')}
               className="btn-secondary p-4 sm:p-6 rounded-xl text-center flex flex-col items-center gap-2 sm:gap-3 min-h-[120px] sm:min-h-[140px] sm:col-span-2 lg:col-span-1"
             >
-              <Layers className="w-6 h-6 sm:w-8 sm:h-8" />
-              <span className="text-base sm:text-lg font-semibold">View Stock Levels</span>
+              <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8" />
+              <span className="text-base sm:text-lg font-semibold">Point of Sale</span>
             </motion.button>
           </motion.div>
         </div>

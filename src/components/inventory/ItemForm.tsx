@@ -10,10 +10,9 @@ interface ItemFormProps {
   categories: Category[];
   onSubmit: (data: { name: string; description: string; category_id: string; created_by: string }) => Promise<void>;
   onCancel: () => void;
-  showPOSFields?: boolean;
 }
 
-export default function ItemForm({ initialData, categories, onSubmit, onCancel, showPOSFields = false }: ItemFormProps) {
+export default function ItemForm({ initialData, categories, onSubmit, onCancel }: ItemFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; description?: string; category_id?: string }>({});
 
@@ -159,54 +158,10 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel, 
         )}
       </motion.div>
 
-      {/* POS Fields */}
-      {showPOSFields && (
-        <>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-          >
-            <label htmlFor="barcode" className="block text-base font-medium text-gray-300 mb-3">
-              Barcode (Optional)
-            </label>
-            <input
-              type="text"
-              name="barcode"
-              id="barcode"
-              defaultValue={initialData?.barcode || ''}
-              maxLength={50}
-              className="w-full input-dark input-large"
-              placeholder="Enter product barcode for POS scanning"
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <label htmlFor="unit_price" className="block text-base font-medium text-gray-300 mb-3">
-              Unit Price
-            </label>
-            <input
-              type="number"
-              name="unit_price"
-              id="unit_price"
-              step="0.01"
-              min="0"
-              defaultValue={initialData?.unit_price || ''}
-              className="w-full input-dark input-large"
-              placeholder="Enter selling price per unit"
-            />
-          </motion.div>
-        </>
-      )}
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: showPOSFields ? 0.5 : 0.3 }}
+        transition={{ delay: 0.3 }}
       >
         <label htmlFor="description" className="block text-base font-medium text-gray-300 mb-3">
           Description *
@@ -243,15 +198,14 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel, 
       >
         <h4 className="text-lg font-semibold text-white mb-3">📋 Important Note</h4>
         <p className="text-gray-300 text-sm leading-relaxed">
-          Stock quantities {!showPOSFields && 'and pricing'} will be managed through the <strong>Transactions</strong> section. 
-          This form defines the basic item information{showPOSFields ? ', pricing, and POS integration' : ' and category assignment'}.
+          This form is for editing existing items. For new products with pricing and stock, use the "Add New Product" workflow.
         </p>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: showPOSFields ? 0.6 : 0.4 }}
+        transition={{ delay: 0.5 }}
         className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-6 sm:pt-8 border-t border-dark-700/50"
       >
         <motion.button

@@ -153,6 +153,12 @@ export async function createItem(itemData: {
   name: string;
   description: string;
   category_id: string;
+  unit_price?: number;
+  barcode?: string;
+  sku?: string;
+  supplier?: string;
+  location?: string;
+  reorder_point?: number;
   created_by: string;
 }): Promise<Item> {
   console.log('Creating item in database:', itemData);
@@ -173,8 +179,12 @@ export async function createItem(itemData: {
   const docRef = await addDoc(collection(db, 'items'), {
     ...itemData,
     name: itemData.name.trim(),
-    barcode: itemData.barcode || null,
     unit_price: itemData.unit_price || 0,
+    barcode: itemData.barcode || null,
+    sku: itemData.sku || null,
+    supplier: itemData.supplier || null,
+    location: itemData.location || null,
+    reorder_point: itemData.reorder_point || 10,
     is_archived: false,
     created_at: Timestamp.fromDate(new Date()),
     updated_at: Timestamp.fromDate(new Date())
@@ -188,6 +198,12 @@ export async function updateItem(id: string, itemData: {
   name?: string;
   description?: string;
   category_id?: string;
+  unit_price?: number;
+  barcode?: string;
+  sku?: string;
+  supplier?: string;
+  location?: string;
+  reorder_point?: number;
 }): Promise<Item> {
   // Check for duplicate item names if name or category is being updated
   if (itemData.name || itemData.category_id) {

@@ -5,8 +5,9 @@ import { Plus, ArrowUpRight, ArrowDownLeft, Calendar, Filter, Package, DollarSig
 import { toast } from 'sonner';
 import { getTransactions, createTransaction } from '../../lib/api/transactions';
 import { getItems } from '../../lib/api/items';
+import { getCategories } from '../../lib/api/categories';
 import { Transaction, Item } from '../../lib/types';
-import TransactionForm from '../../components/inventory/TransactionForm';
+import EnhancedTransactionForm from '../../components/pos/EnhancedTransactionForm';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import AnimatedCard from '../../components/ui/AnimatedCard';
 import { formatCurrency } from '../../lib/utils/notifications';
@@ -18,6 +19,7 @@ export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [filterType, setFilterType] = useState<'all' | 'stock_in' | 'stock_out'>('all');
@@ -39,14 +41,16 @@ export default function Transactions() {
   async function loadData() {
     try {
       console.log('Loading transactions and items data...');
-      const [transactionsResult, itemsResult] = await Promise.all([
+      const [transactionsResult, itemsResult, categoriesResult] = await Promise.all([
         getTransactions(),
-        getItems()
+        getItems(),
+        getCategories()
       ]);
       
       console.log('Items for transactions:', itemsResult.items?.length || itemsResult.length);
       setTransactions(transactionsResult.transactions || transactionsResult);
       setItems(itemsResult.items || itemsResult);
+      setCategories(categoriesResult);
     } catch (error) {
       toast.error('Failed to load transactions');
       console.error(error);
@@ -122,8 +126,9 @@ export default function Transactions() {
         
         <AnimatedCard>
           <div className="p-6">
-            <TransactionForm
+            <EnhancedTransactionForm
               items={items}
+              categories={categories}
               onSubmit={handleTransactionSubmit}
               onComplete={() => {
                 setIsFormOpen(false);
