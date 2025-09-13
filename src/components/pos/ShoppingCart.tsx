@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart as CartIcon, Plus, Minus, Trash2, Package, DollarSign, Calculator } from 'lucide-react';
 import { CartItem } from '../../lib/types';
-import { formatCurrency } from '../../lib/utils/notifications';
+import { useCurrency } from '../../lib/hooks/useCurrency';
 
 interface ShoppingCartProps {
   items: CartItem[];
@@ -27,6 +27,7 @@ export default function ShoppingCart({
   taxRate,
   className = ''
 }: ShoppingCartProps) {
+  const { formatCurrency } = useCurrency();
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (

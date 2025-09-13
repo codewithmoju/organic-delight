@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { format } from 'date-fns';
 import { POSTransaction, POSSettings } from '../../lib/types';
-import { formatCurrency } from '../../lib/utils/notifications';
+import { formatCurrencyWithCode } from '../../lib/utils/currency';
 
 interface ReceiptGeneratorProps {
   transaction: POSTransaction;
@@ -11,6 +11,8 @@ interface ReceiptGeneratorProps {
 
 const ReceiptGenerator = forwardRef<HTMLDivElement, ReceiptGeneratorProps>(
   ({ transaction, settings, className = '' }, ref) => {
+    const formatCurrency = (amount: number) => formatCurrencyWithCode(amount, settings.currency);
+
     return (
       <div 
         ref={ref} 

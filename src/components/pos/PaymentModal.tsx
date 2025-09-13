@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CreditCard, Banknote, Smartphone, Calculator, Receipt, Printer } from 'lucide-react';
 import { CartItem, POSSettings } from '../../lib/types';
-import { formatCurrency } from '../../lib/utils/notifications';
+import { useCurrency } from '../../lib/hooks/useCurrency';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
 interface PaymentModalProps {
@@ -32,6 +32,7 @@ export default function PaymentModal({
   settings,
   onPaymentComplete
 }: PaymentModalProps) {
+  const { formatCurrency } = useCurrency();
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'digital'>('cash');
   const [paymentAmount, setPaymentAmount] = useState(total);
   const [customerName, setCustomerName] = useState('');

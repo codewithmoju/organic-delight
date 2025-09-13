@@ -12,6 +12,7 @@ import ContextualLoader from '../components/ui/ContextualLoader';
 
 export default function Reports() {
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrency();
   const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
   const [topItems, setTopItems] = useState<any[]>([]);
   const [categoryDistribution, setCategoryDistribution] = useState<any[]>([]);

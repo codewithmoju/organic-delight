@@ -18,9 +18,27 @@ export function checkLowStockNotifications(items: Item[]): string[] {
 
 import { formatCurrencyWithCode } from './currency';
 import { useAuthStore } from '../store';
+import { getPOSSettings } from '../api/pos';
 
-export function formatCurrency(amount: number, currency?: string): string {
+export async function formatCurrency(amount: number, currency?: string): Promise<string> {
   // Get user's preferred currency if not specified
+  if (!currency) {
+    try {
+      // Try to get currency from POS settings first
+      const posSettings = await getPOSSettings();
+      currency = posSettings.currency;
+    } catch (error) {
+      // Fallback to user profile currency
+      const profile = useAuthStore.getState().profile;
+      currency = profile?.preferred_currency || 'USD';
+    }
+  }
+  
+  return formatCurrencyWithCode(amount, currency);
+}
+
+// Synchronous version for immediate use
+export function formatCurrencySync(amount: number, currency?: string): string {
   if (!currency) {
     const profile = useAuthStore.getState().profile;
     currency = profile?.preferred_currency || 'USD';

@@ -25,6 +25,7 @@ import { useMemo } from 'react';
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);

@@ -9,6 +9,7 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import AnimatedCard from '../ui/AnimatedCard';
 
 export default function SalesReports() {
+  const { formatCurrency } = useCurrency();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<POSTransaction[]>([]);

@@ -13,6 +13,8 @@ interface StatsCardProps {
 }
 
 export default function StatsCard({ title, value, icon, trend, delay = 0 }: StatsCardProps) {
+  const { formatCurrency } = useCurrency();
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}

@@ -10,11 +10,12 @@ import PaymentModal from './PaymentModal';
 import ReceiptGenerator from './ReceiptGenerator';
 import { CartItem, BarcodeProduct, POSTransaction, POSSettings } from '../../lib/types';
 import { getProductByBarcode, createPOSTransaction, getPOSSettings } from '../../lib/api/pos';
-import { formatCurrency } from '../../lib/utils/notifications';
+import { useCurrency } from '../../lib/hooks/useCurrency';
 import { useAuthStore } from '../../lib/store';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
 export default function POSInterface() {
+  const { formatCurrency } = useCurrency();
   const profile = useAuthStore((state) => state.profile);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isScannerActive, setIsScannerActive] = useState(false);
