@@ -146,15 +146,10 @@ export async function getProductByBarcode(barcode: string): Promise<BarcodeProdu
 // Get current stock level for an item
 async function getItemCurrentStock(itemId: string): Promise<number> {
   const transactionsRef = collection(db, 'transactions');
-  const q = query(transactionsRef, where('item_id', '==', itemId));
+      // Return default settings if user not authenticated
+      return getDefaultPOSSettings();
   const snapshot = await getDocs(q);
   
-  let currentStock = 0;
-  snapshot.docs.forEach(doc => {
-    const transaction = doc.data();
-    if (transaction.type === 'stock_in') {
-      currentStock += transaction.quantity;
-    } else {
       currentStock -= transaction.quantity;
     }
   });
@@ -214,14 +209,32 @@ export async function getPOSSettings(): Promise<POSSettings> {
       auto_print_receipt: true,
       barcode_scanner_enabled: true,
       thermal_printer_enabled: false
-    };
-    
-    // Save default settings
-    await updateDoc(doc(db, 'pos_settings', 'default'), defaultSettings);
+    try {
+      const settingsRef = doc(db, 'pos_settings', user.uid);
+      const settingsSnap = await getDoc(settingsRef);
+      
+      if (settingsSnap.exists()) {
+        return { id: settingsSnap.id, ...settingsSnap.data() } as POSSettings;
+      } else {
+        // Create default settings if none exist
+        const defaultSettings = getDefaultPOSSettings();
+        try {
+          await setDoc(settingsRef, defaultSettings);
+          return { id: user.uid, ...defaultSettings };
+        } catch (writeError) {
+          console.warn('Could not save POS settings to database, using defaults:', writeError);
+          return { id: user.uid, ...defaultSettings };
+        }
+      }
+    } catch (firestoreError) {
+      console.warn('Could not access POS settings from database, using defaults:', firestoreError);
+      // Return default settings if Firestore access fails
+      return { id: user.uid, ...getDefaultPOSSettings() };
     return defaultSettings;
   } catch (error) {
-    console.error('Error fetching POS settings:', error);
-    throw error;
+    console.warn('Error loading POS settings, using defaults:', error);
+    // Return default settings as fallback
+    return getDefaultPOSSettings();
   }
 }
 
