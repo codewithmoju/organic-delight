@@ -54,9 +54,7 @@ export default function POSInterface() {
             lineSpacing: 1
           }
         };
-        setPosSettings(defaultSettings);
-      console.error('Error loading POS settings:', error);
-      toast.error('Failed to load POS settings');
+      setSettings(defaultSettings);
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +87,7 @@ export default function POSInterface() {
       
       addToCart(product, 1);
       toast.success(`Added ${product.name} to cart`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Barcode scan error:', error);
       toast.error('Failed to process barcode');
     }
@@ -104,20 +102,17 @@ export default function POSInterface() {
       if (newQuantity <= product.stock) {
         updateCartItemQuantity(cartItems[existingItemIndex].id, newQuantity);
       } else {
-        toast.warning(`Only ${product.stock} units available`);
+      const defaultSettings: POSSettings = {
       }
-    } else {
-      // Add new item to cart
-      const cartItem: CartItem = {
+        store_name: 'StockSuite Store',
+        store_phone: '',
+        store_address: '',
+        tax_rate: 0,
         id: generateCartItemId(),
-        item_id: product.id,
-        name: product.name,
-        barcode: product.barcode,
-        unit_price: product.price,
-        quantity: Math.min(quantity, product.stock),
-        line_total: product.price * Math.min(quantity, product.stock),
-        available_stock: product.stock,
-        category: product.category
+        receipt_footer_message: 'Thank you for your business!',
+        barcode_scanner_enabled: true,
+        auto_print_receipt: false,
+        thermal_printer_enabled: false
       };
       
       setCartItems(prev => [...prev, cartItem]);
