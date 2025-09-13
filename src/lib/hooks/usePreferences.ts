@@ -100,9 +100,6 @@ export function usePreferences() {
         }
         
         return newPreferences;
-        }
-        
-        return newPreferences;
       });
     }
   }, [profile]);
@@ -140,11 +137,6 @@ export function usePreferences() {
         return prev;
       }
       
-      // Don't update if value is the same
-      if (prev[key] === value) {
-        return prev;
-      }
-      
       const newPreferences = { ...prev, [key]: value };
       setHasUnsavedChanges(true);
       
@@ -160,15 +152,6 @@ export function usePreferences() {
   // Bulk update preferences
   const updatePreferences = useCallback((updates: Partial<PreferenceSettings>) => {
     setPreferences(prev => {
-      // Check if any values are actually different
-      const hasChanges = Object.keys(updates).some(
-        key => prev[key as keyof PreferenceSettings] !== updates[key as keyof PreferenceSettings]
-      );
-      
-      if (!hasChanges) {
-        return prev; // No changes, return same reference
-      }
-      
       // Check if any values are actually different
       const hasChanges = Object.keys(updates).some(
         key => prev[key as keyof PreferenceSettings] !== updates[key as keyof PreferenceSettings]
