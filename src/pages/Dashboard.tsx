@@ -19,14 +19,12 @@ import OptimizedAnimatedCard from '../components/ui/OptimizedAnimatedCard';
 import { Item, Transaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
-import { useCurrency } from '../lib/hooks/useCurrency';
 import ContextualLoader from '../components/ui/ContextualLoader';
 import FullScreenLoader from '../components/ui/FullScreenLoader';
 import { useMemo } from 'react';
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);

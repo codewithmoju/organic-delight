@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { Plus, ArrowUpRight, ArrowDownLeft, Calendar, Filter, Package, DollarSign, User } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCurrency } from '../../lib/hooks/useCurrency';
 import { getTransactions, createTransaction } from '../../lib/api/transactions';
 import { getItems } from '../../lib/api/items';
 import { Transaction, Item } from '../../lib/types';
@@ -16,7 +15,6 @@ import PaginationControls from '../../components/ui/PaginationControls';
 import ContextualLoader from '../../components/ui/ContextualLoader';
 
 export default function Transactions() {
-  const { formatCurrency } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);

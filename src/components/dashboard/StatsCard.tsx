@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { useCurrency } from '../../lib/hooks/useCurrency';
 
 interface StatsCardProps {
   title: string;
@@ -14,8 +13,6 @@ interface StatsCardProps {
 }
 
 export default function StatsCard({ title, value, icon, trend, delay = 0 }: StatsCardProps) {
-  const { formatCurrency } = useCurrency();
-  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}

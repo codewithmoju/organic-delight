@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { DivideIcon as LucideIcon } from 'lucide-react';
-import { useCurrency } from '../../lib/hooks/useCurrency';
 
 interface MetricsCardProps {
   title: string;
@@ -19,8 +18,6 @@ export default function MetricsCard({
   delay = 0,
   isLoading = false 
 }: MetricsCardProps) {
-  const { formatCurrency } = useCurrency();
-  
   const colorClasses = {
     primary: {
       bg: 'from-primary-500/20 to-primary-600/20',

@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { Item } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { AlertCircle, Calculator, TrendingUp, TrendingDown } from 'lucide-react';
-import { useCurrency } from '../../lib/hooks/useCurrency';
 import { formatCurrency } from '../../lib/utils/notifications';
 
 interface TransactionFormProps {
@@ -25,7 +24,6 @@ interface TransactionFormProps {
 }
 
 export default function TransactionForm({ items, onComplete, onCancel, onSubmit }: TransactionFormProps) {
-  const { formatCurrency } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [transactionType, setTransactionType] = useState<'stock_in' | 'stock_out'>('stock_in');

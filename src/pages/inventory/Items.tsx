@@ -13,10 +13,8 @@ import { formatCurrency, formatDate } from '../../lib/utils/notifications';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
 import ContextualLoader from '../../components/ui/ContextualLoader';
-import { useCurrency } from '../../lib/hooks/useCurrency';
 
 export default function Items() {
-  const { formatCurrency } = useCurrency();
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

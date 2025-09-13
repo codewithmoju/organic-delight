@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Save, Store, Phone, MapPin, Percent, DollarSign, Printer, Camera, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { getPOSSettings, updatePOSSettings } from '../../lib/api/pos';
-import { POSSettings as POSSettingsType, SUPPORTED_CURRENCIES } from '../../lib/types';
+import { POSSettings as POSSettingsType } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import AnimatedCard from '../ui/AnimatedCard';
 
@@ -40,7 +40,7 @@ export default function POSSettings() {
       toast.success('POS settings saved successfully');
     } catch (error) {
       console.error('Error saving POS settings:', error);
-      toast.error('Settings saved locally due to database permissions. Contact administrator to sync with database.');
+      toast.error('Failed to save POS settings');
     } finally {
       setIsSaving(false);
     }
@@ -187,11 +187,11 @@ export default function POSSettings() {
                   className="w-full input-dark input-large"
                   required
                 >
-                  {SUPPORTED_CURRENCIES.map((currency) => (
-                    <option key={currency.code} value={currency.code}>
-                      {currency.flag} {currency.code} - {currency.name}
-                    </option>
-                  ))}
+                  <option value="USD">USD - US Dollar</option>
+                  <option value="EUR">EUR - Euro</option>
+                  <option value="GBP">GBP - British Pound</option>
+                  <option value="CAD">CAD - Canadian Dollar</option>
+                  <option value="AUD">AUD - Australian Dollar</option>
                 </select>
               </div>
             </div>

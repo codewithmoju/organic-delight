@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Package, Plus, Minus, Barcode } from 'lucide-react';
+import { Search, Package, Plus, Barcode } from 'lucide-react';
 import { searchProducts } from '../../lib/api/pos';
 import { BarcodeProduct } from '../../lib/types';
-import { useCurrency } from '../../lib/hooks/useCurrency';
+import { formatCurrency } from '../../lib/utils/notifications';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
 interface ProductSearchProps {
@@ -12,7 +12,6 @@ interface ProductSearchProps {
 }
 
 export default function ProductSearch({ onAddToCart, className = '' }: ProductSearchProps) {
-  const { formatCurrency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<BarcodeProduct[]>([]);
   const [isSearching, setIsSearching] = useState(false);

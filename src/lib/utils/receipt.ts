@@ -71,7 +71,6 @@ function centerText(text: string, width: number): string {
 
 export function generateReceiptHTML(data: ReceiptData): string {
   const { transaction, settings } = data;
-  const formatCurrency = (amount: number) => formatCurrencyWithCode(amount, settings.currency);
   
   return `
     <!DOCTYPE html>

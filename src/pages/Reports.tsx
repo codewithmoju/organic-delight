@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { useCurrency } from '../lib/hooks/useCurrency';
 import { getTransactions } from '../lib/api/transactions';
 import { getItems } from '../lib/api/items';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -13,7 +12,6 @@ import ContextualLoader from '../components/ui/ContextualLoader';
 
 export default function Reports() {
   const { t } = useTranslation();
-  const { formatCurrency } = useCurrency();
   const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
   const [topItems, setTopItems] = useState<any[]>([]);
   const [categoryDistribution, setCategoryDistribution] = useState<any[]>([]);

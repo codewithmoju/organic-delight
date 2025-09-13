@@ -15,7 +15,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { POSTransaction, POSTransactionItem, CartItem, BarcodeProduct, POSSettings, SalesReport } from '../types';
-import { useAuthStore } from '../store';
 
 // POS Transaction Management
 export async function createPOSTransaction(transactionData: {
@@ -219,22 +218,23 @@ export async function getPOSSettings(): Promise<POSSettings> {
       return settingsDoc.data() as POSSettings;
     }
     
-    // Check localStorage for saved settings
-    const localSettings = localStorage.getItem('pos_settings');
-    if (localSettings) {
-      return JSON.parse(localSettings);
-    }
+    // Return default settings
+    const defaultSettings: POSSettings = {
+      store_name: 'StockSuite Store',
+      store_address: '123 Business St, City, State 12345',
+      store_phone: '(555) 123-4567',
+      tax_rate: 0.08, // 8% tax
+      currency: 'USD',
+      receipt_footer_message: 'Thank you for your business!',
+      auto_print_receipt: true,
+      barcode_scanner_enabled: true,
+      thermal_printer_enabled: false
+    };
     
-    return getDefaultPOSSettings();
+    return defaultSettings;
   } catch (error) {
-    console.warn('Error loading POS settings from Firestore, checking localStorage:', error);
-    
-    // Try to load from localStorage as fallback
-    const localSettings = localStorage.getItem('pos_settings');
-    if (localSettings) {
-      return JSON.parse(localSettings);
-    }
-    
+    console.warn('Error loading POS settings, using defaults:', error);
+    // Return default settings as fallback
     return getDefaultPOSSettings();
   }
 }
