@@ -38,26 +38,26 @@ export default function POSInterface() {
   const loadPOSSettings = async () => {
     try {
       const posSettings = await getPOSSettings();
-        console.warn('Using default POS settings due to error:', error);
-        // Don't show error to user, just use defaults
-        const defaultSettings = {
-          id: 'default',
-          storeName: 'StockSuite Store',
-          storeAddress: '',
-          taxRate: 0,
-          currency: 'USD',
-          receiptFooter: 'Thank you for your business!',
-          enableBarcode: true,
-          enableThermalPrinter: false,
-          printerSettings: {
-            width: 48,
-            fontSize: 12,
-            lineSpacing: 1
-          }
-        };
-        setPosSettings(defaultSettings);
-      console.error('Error loading POS settings:', error);
-      toast.error('Failed to load POS settings');
+       setSettings(posSettings);
+    } catch (error: any) {
+      console.warn('Using default POS settings due to error:', error);
+      // Don't show error to user, just use defaults
+      const defaultSettings = {
+        id: 'default',
+        store_name: 'StockSuite Store',
+        store_address: '',
+        tax_rate: 0,
+        currency: 'USD',
+        receipt_footer: 'Thank you for your business!',
+        enable_barcode: true,
+        enable_thermal_printer: false,
+        printer_settings: {
+          width: 48,
+          fontSize: 12,
+          lineSpacing: 1
+        }
+      };
+      setSettings(defaultSettings);
     } finally {
       setIsLoading(false);
     }
