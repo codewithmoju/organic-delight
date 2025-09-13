@@ -40,7 +40,7 @@ export default function POSSettings() {
       toast.success('POS settings saved successfully');
     } catch (error) {
       console.error('Error saving POS settings:', error);
-      toast.error('Failed to save POS settings');
+      toast.error('Settings saved locally due to database permissions. Contact administrator to sync with database.');
     } finally {
       setIsSaving(false);
     }

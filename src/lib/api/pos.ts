@@ -219,23 +219,22 @@ export async function getPOSSettings(): Promise<POSSettings> {
       return settingsDoc.data() as POSSettings;
     }
     
-    // Return default settings
-    const defaultSettings: POSSettings = {
-      store_name: 'StockSuite Store',
-      store_address: '123 Business St, City, State 12345',
-      store_phone: '(555) 123-4567',
-      tax_rate: 0.08, // 8% tax
-      currency: 'USD',
-      receipt_footer_message: 'Thank you for your business!',
-      auto_print_receipt: true,
-      barcode_scanner_enabled: true,
-      thermal_printer_enabled: false
-    };
+    // Check localStorage for saved settings
+    const localSettings = localStorage.getItem('pos_settings');
+    if (localSettings) {
+      return JSON.parse(localSettings);
+    }
     
-    return defaultSettings;
+    return getDefaultPOSSettings();
   } catch (error) {
-    console.warn('Error loading POS settings, using defaults:', error);
-    // Return default settings as fallback
+    console.warn('Error loading POS settings from Firestore, checking localStorage:', error);
+    
+    // Try to load from localStorage as fallback
+    const localSettings = localStorage.getItem('pos_settings');
+    if (localSettings) {
+      return JSON.parse(localSettings);
+    }
+    
     return getDefaultPOSSettings();
   }
 }
