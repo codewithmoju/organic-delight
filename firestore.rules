@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner() {
+      return request.auth.uid == resource.data.user_id;
+    }
+    
+    // Profile rules
+    match /profiles/{userId} {
+      allow read, create, update: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Items rules
+    match /items/{itemId} {
+      allow read, create, update, delete: if isAuthenticated();
+    }
+    
+    // Categories rules
+    match /categories/{categoryId} {
+      allow read, create, update, delete: if isAuthenticated();
+    }
+    
+    // Transactions rules
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated();
+      // Only allow creation if the referenced item exists
+      allow create: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/items/$(request.resource.data.item_id));
+      // Transactions should never be updated or deleted
+      allow update, delete: if false;
+    }
+
+    // POS Settings rules - Global store settings
+    match /pos_settings/{settingsId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false; // Prevent accidental deletion of POS settings
+    }
+
+    // POS Transactions rules
+    match /pos_transactions/{transactionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated(); // Allow status updates (cancelled, refunded)
+      allow delete: if false; // Never delete POS transactions for audit trail
+    }
+
+    // User Settings rules (individual user preferences)
+    match /settings/{userId} {
+      // Allow read and write if the authenticated user owns the document
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}
