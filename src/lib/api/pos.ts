@@ -255,15 +255,82 @@ export async function getDailySalesReport(date: Date): Promise<SalesReport> {
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
   
-  const transactionsRef = collection(db, 'pos_transactions');
-  const q = query(
-    transactionsRef,
-    where('created_at', '>=', Timestamp.fromDate(startOfDay)),
-    where('created_at', '<=', Timestamp.fromDate(endOfDay)),
-    where('status', '==', 'completed')
-  );
-  
-  const snapshot = await getDocs(q);
+  try {
+    const transactionsRef = collection(db, 'pos_transactions');
+    const q = query(
+      transactionsRef,
+      where('status', '==', 'completed'),
+      where('created_at', '>=', Timestamp.fromDate(startOfDay)),
+      where('created_at', '<=', Timestamp.fromDate(endOfDay)),
+      orderBy('created_at', 'desc')
+    );
+    
+    const snapshot = await getDocs(q);
+    
+    let totalSales = 0;
+    let totalTransactions = 0;
+    const itemSales: { [key: string]: { quantity: number; revenue: number } } = {};
+    const paymentMethods: { [key: string]: { count: number; amount: number } } = {};
+    
+    snapshot.docs.forEach(doc => {
+      const transaction = doc.data() as POSTransaction;
+      totalSales += transaction.total_amount;
+      totalTransactions++;
+      
+      // Track payment methods
+      if (!paymentMethods[transaction.payment_method]) {
+        paymentMethods[transaction.payment_method] = { count: 0, amount: 0 };
+      }
+      paymentMethods[transaction.payment_method].count++;
+      paymentMethods[transaction.payment_method].amount += transaction.total_amount;
+      
+      // Track item sales
+      transaction.items.forEach(item => {
+        if (!itemSales[item.item_name]) {
+          itemSales[item.item_name] = { quantity: 0, revenue: 0 };
+        }
+        itemSales[item.item_name].quantity += item.quantity;
+        itemSales[item.item_name].revenue += item.line_total;
+      });
+    });
+    
+    const topSellingItems = Object.entries(itemSales)
+      .map(([name, data]) => ({
+        item_name: name,
+        quantity_sold: data.quantity,
+        revenue: data.revenue
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+    
+    const paymentMethodsArray = Object.entries(paymentMethods)
+      .map(([method, data]) => ({
+        method,
+        count: data.count,
+        amount: data.amount
+      }));
+    
+    return {
+      date,
+      total_sales: totalSales,
+      total_transactions: totalTransactions,
+      average_transaction: totalTransactions > 0 ? totalSales / totalTransactions : 0,
+      top_selling_items: topSellingItems,
+      payment_methods: paymentMethodsArray
+    };
+  } catch (error) {
+    console.warn('Error fetching sales report, returning empty data:', error);
+    // Return empty report data if query fails
+    return {
+      date,
+      total_sales: 0,
+      total_transactions: 0,
+      average_transaction: 0,
+      top_selling_items: [],
+      payment_methods: []
+    };
+  }
+}
   
   let totalSales = 0;
   let totalTransactions = 0;

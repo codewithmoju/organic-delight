@@ -57,6 +57,7 @@ export interface Profile {
   email: string;
   preferred_currency: string;
   created_at: Date;
+  theme: 'light' | 'dark' | 'system';
   updated_at: Date;
   role?: 'admin' | 'manager' | 'user';
   company?: string;

@@ -21,6 +21,7 @@ export interface PreferenceSettings {
 const DEFAULT_PREFERENCES: PreferenceSettings = {
   preferred_currency: 'USD',
   language: 'en',
+  theme: 'system',
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   notifications_enabled: true,
   email_notifications: true,
@@ -31,6 +32,17 @@ const DEFAULT_PREFERENCES: PreferenceSettings = {
   auto_save: true,
   default_currency_display: 'symbol',
 };
+
+// Helper function to compare preference objects
+function preferencesEqual(a: Partial<PreferenceSettings>, b: Partial<PreferenceSettings>): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const key of keys) {
+    if (a[key as keyof PreferenceSettings] !== b[key as keyof PreferenceSettings]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 export function usePreferences() {
   const profile = useAuthStore((state) => state.profile);
@@ -53,7 +65,14 @@ export function usePreferences() {
         push_notifications: profile.push_notifications ?? DEFAULT_PREFERENCES.push_notifications,
       };
       
-      setPreferences(prev => ({ ...prev, ...profilePreferences }));
+      // Only update if preferences have actually changed
+      setPreferences(prev => {
+        const newPreferences = { ...prev, ...profilePreferences };
+        if (preferencesEqual(prev, newPreferences)) {
+          return prev; // Return same reference to prevent re-render
+        }
+        return newPreferences;
+      });
     }
   }, [profile]);
 
