@@ -37,6 +37,27 @@ export default function POSInterface() {
   const loadPOSSettings = async () => {
     try {
       const posSettings = await getPOSSettings();
+      setSettings(posSettings);
+    } catch (error) {
+      console.error('Error loading POS settings:', error);
+      // Don't show error to user, just use defaults
+      const defaultSettings = {
+        id: 'default',
+        store_name: 'StockSuite Store',
+        store_address: '',
+        store_phone: '',
+        tax_rate: 0,
+        currency: 'USD',
+        receipt_footer_message: 'Thank you for your business!',
+        barcode_scanner_enabled: true,
+        thermal_printer_enabled: false,
+        auto_print_receipt: false
+      };
+      setSettings(defaultSettings);
+    } finally {
+      setIsLoading(false);
+    }
+  };
         console.warn('Using default POS settings due to error:', error);
         // Don't show error to user, just use defaults
         const defaultSettings = {
