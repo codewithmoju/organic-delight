@@ -173,6 +173,8 @@ export async function createItem(itemData: {
   const docRef = await addDoc(collection(db, 'items'), {
     ...itemData,
     name: itemData.name.trim(),
+    barcode: itemData.barcode || null,
+    unit_price: itemData.unit_price || 0,
     is_archived: false,
     created_at: Timestamp.fromDate(new Date()),
     updated_at: Timestamp.fromDate(new Date())

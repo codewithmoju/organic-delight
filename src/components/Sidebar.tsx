@@ -9,7 +9,8 @@ import {
   Settings,
   FolderOpen,
   X,
-  Layers
+  Layers,
+  ShoppingCart
 } from 'lucide-react';
 import Logo from './ui/Logo';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: t('navigation.dashboard') },
+    { to: '/pos', icon: ShoppingCart, label: 'Point of Sale' },
     { to: '/inventory/categories', icon: FolderOpen, label: t('navigation.categories') },
     { to: '/inventory/items', icon: Package, label: t('navigation.items') },
     { to: '/transactions', icon: ArrowUpDown, label: t('navigation.transactions') },

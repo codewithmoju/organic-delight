@@ -17,6 +17,7 @@ const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const MultiStepRegister = lazy(() => import('./pages/auth/MultiStepRegister'));
 const EmailVerification = lazy(() => import('./pages/auth/EmailVerification'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const POS = lazy(() => import('./pages/POS'));
 const Items = lazy(() => import('./pages/inventory/Items'));
 const Categories = lazy(() => import('./pages/inventory/Categories'));
 const Transactions = lazy(() => import('./pages/inventory/Transactions'));
@@ -100,6 +101,11 @@ function App() {
           <Route path="/" element={
             <Suspense fallback={<LoadingFallback text="Loading dashboard" />}>
               <Dashboard />
+            </Suspense>
+          } />
+          <Route path="/pos" element={
+            <Suspense fallback={<LoadingFallback text="Loading POS system" />}>
+              <POS />
             </Suspense>
           } />
           <Route path="/inventory/categories" element={

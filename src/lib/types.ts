@@ -129,3 +129,94 @@ export const CATEGORY_COLORS = [
   '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
   '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'
 ];
+
+// POS System Types
+export interface POSTransaction {
+  id: string;
+  transaction_number: string;
+  items: POSTransactionItem[];
+  subtotal: number;
+  tax_amount: number;
+  discount_amount: number;
+  total_amount: number;
+  payment_method: 'cash' | 'card' | 'digital';
+  payment_amount: number;
+  change_amount: number;
+  cashier_id: string;
+  customer_name?: string;
+  customer_phone?: string;
+  created_at: Date;
+  status: 'completed' | 'cancelled' | 'refunded';
+  receipt_printed: boolean;
+  notes?: string;
+}
+
+export interface POSTransactionItem {
+  id: string;
+  item_id: string;
+  item_name: string;
+  barcode?: string;
+  unit_price: number;
+  quantity: number;
+  line_total: number;
+  discount_amount?: number;
+  tax_rate?: number;
+}
+
+export interface CartItem {
+  id: string;
+  item_id: string;
+  name: string;
+  barcode?: string;
+  unit_price: number;
+  quantity: number;
+  line_total: number;
+  available_stock: number;
+  category?: string;
+}
+
+export interface BarcodeProduct {
+  id: string;
+  name: string;
+  barcode: string;
+  price: number;
+  stock: number;
+  category?: string;
+}
+
+export interface POSSettings {
+  store_name: string;
+  store_address: string;
+  store_phone: string;
+  tax_rate: number;
+  currency: string;
+  receipt_footer_message: string;
+  auto_print_receipt: boolean;
+  barcode_scanner_enabled: boolean;
+  thermal_printer_enabled: boolean;
+}
+
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  type: 'cash' | 'card' | 'digital';
+  enabled: boolean;
+  icon: string;
+}
+
+export interface SalesReport {
+  date: Date;
+  total_sales: number;
+  total_transactions: number;
+  average_transaction: number;
+  top_selling_items: Array<{
+    item_name: string;
+    quantity_sold: number;
+    revenue: number;
+  }>;
+  payment_methods: Array<{
+    method: string;
+    count: number;
+    amount: number;
+  }>;
+}

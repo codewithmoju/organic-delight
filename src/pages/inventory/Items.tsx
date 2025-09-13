@@ -24,6 +24,8 @@ export default function Items() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
+  const [showPOSFields, setShowPOSFields] = useState(false);
+
   const pagination = usePagination({
     data: filteredItems,
     defaultItemsPerPage: 20
@@ -82,6 +84,7 @@ export default function Items() {
       await loadData();
       setIsFormOpen(false);
       setSelectedItem(null);
+      setShowPOSFields(false);
     } catch (error) {
       throw error;
     }
@@ -114,6 +117,19 @@ export default function Items() {
           <p className="text-gray-400 mt-2">
             {selectedItem ? 'Update item information' : 'Create a new inventory item'}
           </p>
+          
+          {/* POS Fields Toggle */}
+          <div className="mt-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={showPOSFields}
+                onChange={(e) => setShowPOSFields(e.target.checked)}
+                className="w-4 h-4 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800 mr-3"
+              />
+              <span className="text-gray-300">Enable POS integration (barcode & pricing)</span>
+            </label>
+          </div>
         </div>
         
         <AnimatedCard>
@@ -121,10 +137,12 @@ export default function Items() {
             <ItemForm
               initialData={selectedItem || undefined}
               categories={categories}
+              showPOSFields={showPOSFields}
               onSubmit={handleSubmit}
               onCancel={() => {
                 setIsFormOpen(false);
                 setSelectedItem(null);
+                setShowPOSFields(false);
               }}
             />
           </div>
