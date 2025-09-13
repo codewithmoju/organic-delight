@@ -164,7 +164,7 @@ async function getItemCurrentStock(itemId: string): Promise<number> {
 }
 
 // Search products for manual entry
-export async function searchProducts(query: string): Promise<BarcodeProduct[]> {
+export async function searchProducts(searchQuery: string): Promise<BarcodeProduct[]> {
   const itemsRef = collection(db, 'items');
   const q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
   const snapshot = await getDocs(q);
@@ -175,9 +175,9 @@ export async function searchProducts(query: string): Promise<BarcodeProduct[]> {
     const itemData = itemDoc.data();
     
     // Client-side filtering
-    if (itemData.name.toLowerCase().includes(query.toLowerCase()) ||
-        itemData.description?.toLowerCase().includes(query.toLowerCase()) ||
-        itemData.barcode?.includes(query)) {
+    if (itemData.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        itemData.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        itemData.barcode?.includes(searchQuery)) {
       
       const currentStock = await getItemCurrentStock(itemDoc.id);
       
@@ -219,7 +219,19 @@ export async function getPOSSettings(): Promise<POSSettings> {
     }
     
     // Return default settings
-    return getDefaultPOSSettings();
+    const defaultSettings: POSSettings = {
+      store_name: 'StockSuite Store',
+      store_address: '123 Business St, City, State 12345',
+      store_phone: '(555) 123-4567',
+      tax_rate: 0.08, // 8% tax
+      currency: 'USD',
+      receipt_footer_message: 'Thank you for your business!',
+      auto_print_receipt: true,
+      barcode_scanner_enabled: true,
+      thermal_printer_enabled: false
+    };
+    
+    return defaultSettings;
   } catch (error) {
     console.warn('Error loading POS settings, using defaults:', error);
     // Return default settings as fallback
