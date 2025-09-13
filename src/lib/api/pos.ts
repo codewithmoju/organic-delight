@@ -5,6 +5,7 @@ import {
   getDoc,
   addDoc,
   updateDoc,
+  setDoc,
   query,
   where,
   orderBy,
@@ -240,10 +241,10 @@ export async function getPOSSettings(): Promise<POSSettings> {
 }
 
 export async function updatePOSSettings(settings: Partial<POSSettings>): Promise<void> {
-  await updateDoc(doc(db, 'pos_settings', 'default'), {
+  await setDoc(doc(db, 'pos_settings', 'default'), {
     ...settings,
     updated_at: Timestamp.fromDate(new Date())
-  });
+  }, { merge: true });
 }
 
 // Sales Reporting
