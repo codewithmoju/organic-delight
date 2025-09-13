@@ -37,7 +37,13 @@ export async function signIn(email: string, password: string) {
 export async function getProfile(user: User) {
   const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
   if (profileDoc.exists()) {
-    return profileDoc.data();
+    const data = profileDoc.data();
+    // Convert Firestore Timestamps to JavaScript Date objects for consistency
+    return {
+      ...data,
+      created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
+      updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at
+    };
   }
   
   // Create profile if it doesn't exist
