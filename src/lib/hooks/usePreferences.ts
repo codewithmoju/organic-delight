@@ -4,6 +4,44 @@ import { updateUserProfile } from '../api/auth';
 import { toast } from 'sonner';
 import { debounce } from '../utils/debounce';
 
+// Deep comparison utility for preference objects
+function deepEqual(obj1: any, obj2: any): boolean {
+  if (obj1 === obj2) return true;
+  if (obj1 == null || obj2 == null) return false;
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false;
+  
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  
+  if (keys1.length !== keys2.length) return false;
+  
+  for (const key of keys1) {
+    if (!keys2.includes(key)) return false;
+    if (!deepEqual(obj1[key], obj2[key])) return false;
+  }
+  
+  return true;
+}
+
+// Deep comparison utility for preference objects
+function deepEqual(obj1: any, obj2: any): boolean {
+  if (obj1 === obj2) return true;
+  if (obj1 == null || obj2 == null) return false;
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false;
+  
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  
+  if (keys1.length !== keys2.length) return false;
+  
+  for (const key of keys1) {
+    if (!keys2.includes(key)) return false;
+    if (!deepEqual(obj1[key], obj2[key])) return false;
+  }
+  
+  return true;
+}
+
 export interface PreferenceSettings {
   preferred_currency: string;
   language: string;
@@ -53,12 +91,18 @@ export function usePreferences() {
       };
       
       setPreferences(prev => {
+        // Create new preferences object with profile data
         const newPreferences = { ...prev, ...profilePreferences };
-        // Only update if preferences have actually changed
-        const hasChanged = Object.keys(profilePreferences).some(
-          key => prev[key as keyof PreferenceSettings] !== profilePreferences[key as keyof PreferenceSettings]
-        );
-        return hasChanged ? newPreferences : prev;
+        
+        // Only update if there are actual changes using deep comparison
+        if (deepEqual(prev, newPreferences)) {
+          return prev; // Return same reference to prevent re-render
+        }
+        
+        return newPreferences;
+        }
+        
+        return newPreferences;
       });
     }
   }, [profile]);
@@ -91,6 +135,16 @@ export function usePreferences() {
     value: PreferenceSettings[K]
   ) => {
     setPreferences(prev => {
+      // Don't update if value is the same
+      if (prev[key] === value) {
+        return prev;
+      }
+      
+      // Don't update if value is the same
+      if (prev[key] === value) {
+        return prev;
+      }
+      
       const newPreferences = { ...prev, [key]: value };
       setHasUnsavedChanges(true);
       
@@ -106,6 +160,24 @@ export function usePreferences() {
   // Bulk update preferences
   const updatePreferences = useCallback((updates: Partial<PreferenceSettings>) => {
     setPreferences(prev => {
+      // Check if any values are actually different
+      const hasChanges = Object.keys(updates).some(
+        key => prev[key as keyof PreferenceSettings] !== updates[key as keyof PreferenceSettings]
+      );
+      
+      if (!hasChanges) {
+        return prev; // No changes, return same reference
+      }
+      
+      // Check if any values are actually different
+      const hasChanges = Object.keys(updates).some(
+        key => prev[key as keyof PreferenceSettings] !== updates[key as keyof PreferenceSettings]
+      );
+      
+      if (!hasChanges) {
+        return prev; // No changes, return same reference
+      }
+      
       const newPreferences = { ...prev, ...updates };
       setHasUnsavedChanges(true);
       
