@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, TrendingUp, TrendingDown, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCurrency } from '../../lib/hooks/useCurrency';
 import { getStockLevels } from '../../lib/api/dashboard';
 import { StockLevel } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';

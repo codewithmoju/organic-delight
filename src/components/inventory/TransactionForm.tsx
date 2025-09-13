@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Item } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { AlertCircle, Calculator, TrendingUp, TrendingDown } from 'lucide-react';
+import { useCurrency } from '../../lib/hooks/useCurrency';
 import { formatCurrency } from '../../lib/utils/notifications';
 
 interface TransactionFormProps {

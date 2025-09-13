@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Calendar, DollarSign, TrendingUp, Users, Package, CreditCard } from 'lucide-react';
 import { getDailySalesReport, getPOSTransactions } from '../../lib/api/pos';
 import { SalesReport, POSTransaction } from '../../lib/types';
+import { useCurrency } from '../../lib/hooks/useCurrency';
 import { formatCurrency } from '../../lib/utils/notifications';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import AnimatedCard from '../ui/AnimatedCard';
