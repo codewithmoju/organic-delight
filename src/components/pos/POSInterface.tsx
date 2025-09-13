@@ -58,28 +58,6 @@ export default function POSInterface() {
       setIsLoading(false);
     }
   };
-        console.warn('Using default POS settings due to error:', error);
-        // Don't show error to user, just use defaults
-        const defaultSettings = {
-          id: 'default',
-          storeName: 'StockSuite Store',
-          storeAddress: '',
-          taxRate: 0,
-          currency: 'USD',
-          receiptFooter: 'Thank you for your business!',
-          enableBarcode: true,
-          enableThermalPrinter: false,
-          printerSettings: {
-            width: 48,
-            fontSize: 12,
-            lineSpacing: 1
-          }
-        };
-      setSettings(defaultSettings);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handlePrint = useReactToPrint({
     content: () => receiptRef.current,
@@ -126,6 +104,19 @@ export default function POSInterface() {
         toast.warning(`Only ${product.stock} items available in stock`);
         return;
       }
+    } else {
+      // Add new item to cart
+      const newCartItem: CartItem = {
+        id: generateCartItemId(),
+        item_id: product.id,
+        name: product.name,
+        quantity,
+        unit_price: product.price,
+        line_total: product.price * quantity,
+        sku: product.sku,
+        barcode: product.barcode
+      };
+      setCartItems(prev => [...prev, newCartItem]);
     }
   };
 
