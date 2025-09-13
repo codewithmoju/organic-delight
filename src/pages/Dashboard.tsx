@@ -19,6 +19,7 @@ import OptimizedAnimatedCard from '../components/ui/OptimizedAnimatedCard';
 import { Item, Transaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
+import { useCurrency } from '../lib/hooks/useCurrency';
 import ContextualLoader from '../components/ui/ContextualLoader';
 import FullScreenLoader from '../components/ui/FullScreenLoader';
 import { useMemo } from 'react';
