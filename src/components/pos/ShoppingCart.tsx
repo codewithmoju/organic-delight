@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart as CartIcon, Plus, Minus, Trash2, Package, DollarSign, Calculator } from 'lucide-react';
 import { CartItem } from '../../lib/types';
 import { useCurrency } from '../../lib/hooks/useCurrency';
-import { useCurrency } from '../../lib/hooks/useCurrency';
 
 interface ShoppingCartProps {
   items: CartItem[];
