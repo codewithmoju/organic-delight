@@ -68,6 +68,9 @@ export interface Profile {
   notifications_enabled?: boolean;
   email_notifications?: boolean;
   push_notifications?: boolean;
+  low_stock_alerts?: boolean;
+  transaction_alerts?: boolean;
+  marketing_emails?: boolean;
   two_factor_enabled?: boolean;
   timezone?: string;
 }
