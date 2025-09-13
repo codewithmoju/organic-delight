@@ -15,6 +15,7 @@ import PaginationControls from '../../components/ui/PaginationControls';
 import ContextualLoader from '../../components/ui/ContextualLoader';
 
 export default function Items() {
+  const { formatCurrency } = useCurrency();
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

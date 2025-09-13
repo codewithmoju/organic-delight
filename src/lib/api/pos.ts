@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { POSTransaction, POSTransactionItem, CartItem, BarcodeProduct, POSSettings, SalesReport } from '../types';
+import { useAuthStore } from '../store';
 
 // POS Transaction Management
 export async function createPOSTransaction(transactionData: {

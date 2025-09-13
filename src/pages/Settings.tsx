@@ -132,7 +132,17 @@ export default function Settings() {
 
   async function handleCurrencyChange(currency: string) {
     try {
+      // Update both user profile and POS settings for consistency
       await updateUserProfile(profile?.id, { preferred_currency: currency });
+      
+      // Also update POS settings to maintain consistency
+      try {
+        const currentPOSSettings = await getPOSSettings();
+        await updatePOSSettings({ ...currentPOSSettings, currency });
+      } catch (error) {
+        console.warn('Could not update POS currency setting:', error);
+      }
+      
       setProfile({ ...profile, preferred_currency: currency });
       toast.success('Currency updated successfully');
     } catch (error) {

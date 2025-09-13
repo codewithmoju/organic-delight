@@ -15,6 +15,7 @@ import PaginationControls from '../../components/ui/PaginationControls';
 import ContextualLoader from '../../components/ui/ContextualLoader';
 
 export default function Transactions() {
+  const { formatCurrency } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);

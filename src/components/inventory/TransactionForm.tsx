@@ -24,6 +24,7 @@ interface TransactionFormProps {
 }
 
 export default function TransactionForm({ items, onComplete, onCancel, onSubmit }: TransactionFormProps) {
+  const { formatCurrency } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [transactionType, setTransactionType] = useState<'stock_in' | 'stock_out'>('stock_in');
