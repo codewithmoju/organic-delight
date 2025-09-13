@@ -46,14 +46,20 @@ export function usePreferences() {
       const profilePreferences: Partial<PreferenceSettings> = {
         preferred_currency: profile.preferred_currency || DEFAULT_PREFERENCES.preferred_currency,
         language: profile.language || DEFAULT_PREFERENCES.language,
-        theme: profile.theme || DEFAULT_PREFERENCES.theme,
         timezone: profile.timezone || DEFAULT_PREFERENCES.timezone,
         notifications_enabled: profile.notifications_enabled ?? DEFAULT_PREFERENCES.notifications_enabled,
         email_notifications: profile.email_notifications ?? DEFAULT_PREFERENCES.email_notifications,
         push_notifications: profile.push_notifications ?? DEFAULT_PREFERENCES.push_notifications,
       };
       
-      setPreferences(prev => ({ ...prev, ...profilePreferences }));
+      setPreferences(prev => {
+        const newPreferences = { ...prev, ...profilePreferences };
+        // Only update if preferences have actually changed
+        const hasChanged = Object.keys(profilePreferences).some(
+          key => prev[key as keyof PreferenceSettings] !== profilePreferences[key as keyof PreferenceSettings]
+        );
+        return hasChanged ? newPreferences : prev;
+      });
     }
   }, [profile]);
 
