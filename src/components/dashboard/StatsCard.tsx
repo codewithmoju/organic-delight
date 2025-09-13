@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useCurrency } from '../../lib/hooks/useCurrency';
 
 interface StatsCardProps {
   title: string;
