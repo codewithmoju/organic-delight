@@ -102,20 +102,9 @@ export default function POSInterface() {
       if (newQuantity <= product.stock) {
         updateCartItemQuantity(cartItems[existingItemIndex].id, newQuantity);
       } else {
-      const defaultSettings: POSSettings = {
+        toast.warning(`Only ${product.stock} items available in stock`);
+        return;
       }
-        store_name: 'StockSuite Store',
-        store_phone: '',
-        store_address: '',
-        tax_rate: 0,
-        id: generateCartItemId(),
-        receipt_footer_message: 'Thank you for your business!',
-        barcode_scanner_enabled: true,
-        auto_print_receipt: false,
-        thermal_printer_enabled: false
-      };
-      
-      setCartItems(prev => [...prev, cartItem]);
     }
   };
 
