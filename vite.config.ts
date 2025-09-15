@@ -4,7 +4,15 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    global: 'globalThis',
+  },
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    // Optimize for mobile
+    target: 'es2015',
+    cssCodeSplit: true,
     // Optimize bundle splitting
     rollupOptions: {
       output: {
@@ -15,7 +23,8 @@ export default defineConfig({
           'ui-vendor': ['framer-motion', 'lucide-react'],
           'chart-vendor': ['recharts'],
           'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          'utils-vendor': ['date-fns', 'zustand', 'sonner']
+          'utils-vendor': ['date-fns', 'zustand', 'sonner'],
+          'capacitor-vendor': ['@capacitor/core', '@capacitor/camera', '@capacitor/device']
         }
       }
     },
@@ -45,11 +54,13 @@ export default defineConfig({
   },
   server: {
     // Optimize dev server
+    host: '0.0.0.0', // Allow external connections for mobile testing
+    port: 5173,
     hmr: {
-      overlay: false // Disable error overlay for better performance
+      overlay: false, // Disable error overlay for better performance
+      port: 5173
     },
-    // Mobile testing optimization
-    host: true,
-    port: 5173
+    // HTTPS for mobile testing (required for some features)
+    https: false
   }
 })

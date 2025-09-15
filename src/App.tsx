@@ -1,12 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { useEffect, Suspense, lazy } from 'react';
+import { useEffect, Suspense, lazy, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import TourProvider from './components/tour/TourProvider';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getProfile } from './lib/api/auth';
 import { useAuthStore } from './lib/store';
 import Layout from './components/Layout';
+import MobileOptimizedLayout from './components/mobile/MobileOptimizedLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
@@ -34,6 +36,25 @@ const LoadingFallback = ({ text }: { text: string }) => (
 
 function App() {
   const { setUser, setProfile } = useAuthStore();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Detect if running on mobile
+    const checkMobile = () => {
+      const isMobileDevice = Capacitor.isNativePlatform() || window.innerWidth <= 768;
+      setIsMobile(isMobileDevice);
+      
+      // Add platform classes to body
+      if (Capacitor.isNativePlatform()) {
+        document.body.classList.add('capacitor-native');
+        document.body.classList.add(Capacitor.getPlatform());
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     // Listen for authentication state changes
@@ -97,7 +118,7 @@ function App() {
           </Suspense>
         } />
         
-        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route element={<ProtectedRoute>{isMobile ? <MobileOptimizedLayout /> : <Layout />}</ProtectedRoute>}>
           <Route path="/" element={
             <Suspense fallback={<LoadingFallback text="Loading dashboard" />}>
               <Dashboard />
