@@ -18,14 +18,14 @@ interface RegistrationData {
   phone: string;
   countryCode: string;
   dateOfBirth: string;
-  
+
   // Step 2 - Account Security
   username: string;
   password: string;
   confirmPassword: string;
   securityQuestion: string;
   securityAnswer: string;
-  
+
   // Step 3 - Additional Details
   profilePicture?: File;
   street: string;
@@ -141,13 +141,13 @@ export default function MultiStepRegister() {
         // Basic Information validation
         if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
         if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-        
+
         const emailError = validateEmail(formData.email);
         if (emailError) newErrors.email = emailError;
-        
+
         const phoneError = validatePhone(formData.phone);
         if (phoneError) newErrors.phone = phoneError;
-        
+
         if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
         else {
           const birthDate = new Date(formData.dateOfBirth);
@@ -162,14 +162,14 @@ export default function MultiStepRegister() {
         const usernameError = validateUsername(formData.username);
         if (usernameError) newErrors.username = usernameError;
         else if (isUsernameAvailable === false) newErrors.username = 'Username is already taken';
-        
+
         const passwordError = validatePassword(formData.password);
         if (passwordError) newErrors.password = passwordError;
-        
+
         if (formData.password !== formData.confirmPassword) {
           newErrors.confirmPassword = 'Passwords do not match';
         }
-        
+
         if (!formData.securityQuestion) newErrors.securityQuestion = 'Please select a security question';
         if (!formData.securityAnswer.trim()) newErrors.securityAnswer = 'Security answer is required';
         break;
@@ -208,7 +208,7 @@ export default function MultiStepRegister() {
     try {
       // Create user account
       const { user } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      
+
       // Create user profile
       await setDoc(doc(db, 'profiles', user.uid), {
         id: user.uid,
@@ -237,12 +237,12 @@ export default function MultiStepRegister() {
 
       // Send verification email
       await sendEmailVerification(user);
-      
+
       toast.success('Registration successful! Please check your email to verify your account.');
-      
+
       // Redirect to verification page or login
       window.location.href = '/login?message=verify-email';
-      
+
     } catch (error: any) {
       console.error('Registration error:', error);
       if (error.code === 'auth/email-already-in-use') {
@@ -293,7 +293,7 @@ export default function MultiStepRegister() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
@@ -303,7 +303,7 @@ export default function MultiStepRegister() {
           {/* Header */}
           <div className="text-center mb-8">
             <Logo size="lg" animated />
-            <motion.h2 
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -311,7 +311,7 @@ export default function MultiStepRegister() {
             >
               Create Your Account
             </motion.h2>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -327,11 +327,10 @@ export default function MultiStepRegister() {
               {[1, 2, 3].map((step) => (
                 <div
                   key={step}
-                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
-                    step <= currentStep
+                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${step <= currentStep
                       ? 'border-primary-500 bg-primary-500 text-white'
                       : 'border-gray-600 text-gray-400'
-                  }`}
+                    }`}
                 >
                   {step < currentStep ? <Check className="w-5 h-5" /> : step}
                 </div>
@@ -433,7 +432,7 @@ export default function MultiStepRegister() {
                       value={formData.phone}
                       onChange={(e) => updateFormData('phone', e.target.value)}
                       className={`flex-1 input-dark input-large ${errors.phone ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Enter your phone number"
+                      placeholder="Enter your phone number (e.g., +92 300 1234567)"
                     />
                   </div>
                   {errors.phone && (
@@ -526,15 +525,14 @@ export default function MultiStepRegister() {
                       )}
                     </button>
                   </div>
-                  
+
                   {formData.password && (
                     <div className="mt-3">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm text-gray-400">Password Strength:</span>
-                        <span className={`text-sm font-medium ${
-                          passwordStrength < 50 ? 'text-red-400' : 
-                          passwordStrength < 75 ? 'text-yellow-400' : 'text-green-400'
-                        }`}>
+                        <span className={`text-sm font-medium ${passwordStrength < 50 ? 'text-red-400' :
+                            passwordStrength < 75 ? 'text-yellow-400' : 'text-green-400'
+                          }`}>
                           {getPasswordStrengthText()}
                         </span>
                       </div>
@@ -546,7 +544,7 @@ export default function MultiStepRegister() {
                       </div>
                     </div>
                   )}
-                  
+
                   {errors.password && (
                     <p className="mt-2 text-sm text-error-400">{errors.password}</p>
                   )}
@@ -823,9 +821,8 @@ export default function MultiStepRegister() {
               type="button"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className={`btn-secondary flex items-center gap-2 ${
-                currentStep === 1 ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`btn-secondary flex items-center gap-2 ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
             >
               <ArrowLeft className="w-4 h-4" />
               Previous
@@ -864,7 +861,7 @@ export default function MultiStepRegister() {
           </div>
 
           {/* Login Link */}
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9 }}

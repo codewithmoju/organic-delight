@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Category } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { AlertCircle } from 'lucide-react';
+import { useAuthStore } from '../../lib/store';
 
 interface CategoryFormProps {
   initialData?: Partial<Category>;
@@ -27,7 +28,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
 
       // Validation
       const newErrors: typeof errors = {};
-      
+
       if (!name) {
         newErrors.name = 'Category name is required';
       } else if (name.length < 2) {
@@ -35,7 +36,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
       } else if (name.length > 50) {
         newErrors.name = 'Category name must be 50 characters or less';
       }
-      
+
       if (!description) {
         newErrors.description = 'Description is required';
       } else if (description.length < 5) {
@@ -47,12 +48,14 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
         return;
       }
 
+      const user = useAuthStore.getState().user;
+
       await onSubmit({
         name,
         description,
-        created_by: 'current-user'
+        created_by: user?.uid || 'unknown'
       });
-      
+
       toast.success(`Category ${initialData ? 'updated' : 'created'} successfully`);
     } catch (error: any) {
       if (error.message.includes('already exists')) {
@@ -83,13 +86,12 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
           defaultValue={initialData?.name}
           required
           maxLength={50}
-          className={`w-full input-dark input-large ${
-            errors.name ? 'ring-error-500 border-error-500' : ''
-          }`}
+          className={`w-full input-dark input-large ${errors.name ? 'ring-error-500 border-error-500' : ''
+            }`}
           placeholder="Enter category name (e.g., Electronics, Clothing)"
         />
         {errors.name && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mt-2 flex items-center text-sm text-error-400"
@@ -115,13 +117,12 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
           defaultValue={initialData?.description || ''}
           required
           maxLength={500}
-          className={`w-full input-dark input-large resize-none ${
-            errors.description ? 'ring-error-500 border-error-500' : ''
-          }`}
+          className={`w-full input-dark input-large resize-none ${errors.description ? 'ring-error-500 border-error-500' : ''
+            }`}
           placeholder="Describe what types of items belong in this category..."
         />
         {errors.description && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mt-2 flex items-center text-sm text-error-400"
@@ -147,7 +148,7 @@ export default function CategoryForm({ initialData, onSubmit, onCancel }: Catego
         >
           Cancel
         </motion.button>
-        
+
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

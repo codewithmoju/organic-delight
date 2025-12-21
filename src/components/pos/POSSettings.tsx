@@ -51,7 +51,7 @@ export default function POSSettings() {
     value: POSSettingsType[K]
   ) => {
     if (!settings) return;
-    
+
     setSettings(prev => prev ? { ...prev, [key]: value } : null);
     setHasChanges(true);
   };
@@ -121,7 +121,7 @@ export default function POSSettings() {
                   value={settings.store_phone}
                   onChange={(e) => updateSetting('store_phone', e.target.value)}
                   className="w-full input-dark input-large"
-                  placeholder="Enter store phone number"
+                  placeholder="Enter store phone number (e.g., +92 300 1234567)"
                   required
                 />
               </div>
@@ -309,9 +309,8 @@ export default function POSSettings() {
             whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={!hasChanges || isSaving}
-            className={`btn-primary flex items-center gap-2 px-8 py-3 ${
-              !hasChanges ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`btn-primary flex items-center gap-2 px-8 py-3 ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             {isSaving ? (
               <>

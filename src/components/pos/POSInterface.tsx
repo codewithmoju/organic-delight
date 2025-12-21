@@ -2,18 +2,22 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useReactToPrint } from 'react-to-print';
-import { Printer, Receipt, RotateCcw, Settings, TrendingUp } from 'lucide-react';
+import { Printer, Receipt, RotateCcw, Settings, FileText, CreditCard, Building2, User, Keyboard } from 'lucide-react';
 import EnhancedBarcodeScanner from './EnhancedBarcodeScanner';
 import ShoppingCart from './ShoppingCart';
 import EnhancedProductSearch from './EnhancedProductSearch';
 import PaymentModal from './PaymentModal';
 import EnhancedReceiptGenerator from './EnhancedReceiptGenerator';
 import ExternalPrinterIntegration from './ExternalPrinterIntegration';
-import { CartItem, BarcodeProduct, POSTransaction, POSSettings } from '../../lib/types';
+import VendorListModal from '../vendors/VendorListModal';
+import CustomerSelector from '../customers/CustomerSelector';
+import { CartItem, BarcodeProduct, POSTransaction, POSSettings, BillType, Customer } from '../../lib/types';
 import { getProductByBarcode, createPOSTransaction, getPOSSettings } from '../../lib/api/pos';
 import { getItemByBarcode, getItemByProductId } from '../../lib/api/enhancedItems';
+import { updateCustomerBalanceForSale } from '../../lib/api/customers';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { useAuthStore } from '../../lib/store';
+import { usePOSShortcuts, POS_SHORTCUTS } from '../../hooks/useKeyboardShortcuts';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
 export default function POSInterface() {
@@ -24,13 +28,42 @@ export default function POSInterface() {
   const [completedTransaction, setCompletedTransaction] = useState<POSTransaction | null>(null);
   const [settings, setSettings] = useState<POSSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
+  // NEW: Dual billing mode & Credit sale state
+  const [billType, setBillType] = useState<BillType>('regular');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isCreditSale, setIsCreditSale] = useState(false);
+  const [isVendorModalOpen, setIsVendorModalOpen] = useState(false);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Discount state
+  const [profitDiscount, setProfitDiscount] = useState(0);
+  const [priceDiscount, setPriceDiscount] = useState(0);
+
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  // Calculate totals
+  // Calculate totals with discounts
   const subtotal = cartItems.reduce((sum, item) => sum + item.line_total, 0);
-  const taxAmount = subtotal * (settings?.tax_rate || 0.08);
-  const total = subtotal + taxAmount;
+  const discountAmount = profitDiscount + priceDiscount;
+  const discountedSubtotal = subtotal - discountAmount;
+  const taxAmount = discountedSubtotal * (settings?.tax_rate || 0.08);
+  const total = discountedSubtotal + taxAmount;
+
+  // Keyboard shortcuts
+  usePOSShortcuts({
+    onNewTransaction: startNewTransaction,
+    onProcessPayment: () => cartItems.length > 0 && setIsPaymentModalOpen(true),
+    onToggleBillType: () => setBillType(prev => prev === 'regular' ? 'dummy' : 'regular'),
+    onOpenVendors: () => setIsVendorModalOpen(true),
+    onOpenCustomers: () => setIsCustomerModalOpen(true),
+    onCloseModal: () => {
+      setIsPaymentModalOpen(false);
+      setIsVendorModalOpen(false);
+      setIsCustomerModalOpen(false);
+      setShowShortcuts(false);
+    }
+  });
 
   useEffect(() => {
     loadPOSSettings();
@@ -62,13 +95,10 @@ export default function POSInterface() {
   };
 
   const handlePrint = useReactToPrint({
-    content: () => receiptRef.current,
+    contentRef: receiptRef,
     documentTitle: `Receipt-${completedTransaction?.transaction_number}`,
     onAfterPrint: () => {
       toast.success('Receipt printed successfully');
-    },
-    onPrintError: () => {
-      toast.error('Failed to print receipt');
     }
   });
 
@@ -76,35 +106,37 @@ export default function POSInterface() {
     try {
       // Try to find product by barcode first
       let product = await getProductByBarcode(barcode);
-      
+
       // If not found by barcode, try by product ID/SKU
       if (!product) {
         const item = await getItemByBarcode(barcode) || await getItemByProductId(barcode);
         if (item) {
           // Get current stock level
           const stockLevel = await import('../../lib/api/items').then(m => m.getItemStockLevel(item.id));
-          
+          // Cast to any to access EnhancedItem properties that may not be on base Item type
+          const enhancedItem = item as any;
+
           product = {
             id: item.id,
             name: item.name,
-            barcode: item.barcode || barcode,
-            price: item.unit_price || 0,
+            barcode: enhancedItem.barcode || barcode,
+            price: enhancedItem.unit_price || enhancedItem.last_sale_rate || 0,
             stock: stockLevel?.current_quantity || 0,
             category: item.category?.name
           };
         }
       }
-      
+
       if (!product) {
         toast.error(`Product not found for barcode: ${barcode}`);
         return;
       }
-      
+
       if (product.stock === 0) {
         toast.error(`${product.name} is out of stock`);
         return;
       }
-      
+
       addToCart(product, 1);
       toast.success(`Added ${product.name} to cart`);
     } catch (error: any) {
@@ -115,7 +147,7 @@ export default function POSInterface() {
 
   const addToCart = (product: BarcodeProduct, quantity: number) => {
     const existingItemIndex = cartItems.findIndex(item => item.item_id === product.id);
-    
+
     if (existingItemIndex >= 0) {
       // Update existing item quantity
       const newQuantity = cartItems[existingItemIndex].quantity + quantity;
@@ -134,16 +166,18 @@ export default function POSInterface() {
         quantity,
         unit_price: product.price,
         line_total: product.price * quantity,
+        available_stock: product.stock,
         sku: product.sku,
-        barcode: product.barcode
+        barcode: product.barcode,
+        category: product.category
       };
       setCartItems(prev => [...prev, newCartItem]);
     }
   };
 
   const updateCartItemQuantity = (cartItemId: string, quantity: number) => {
-    setCartItems(prev => prev.map(item => 
-      item.id === cartItemId 
+    setCartItems(prev => prev.map(item =>
+      item.id === cartItemId
         ? { ...item, quantity, line_total: item.unit_price * quantity }
         : item
     ));
@@ -166,24 +200,75 @@ export default function POSInterface() {
     change_amount: number;
     customer_name?: string;
     customer_phone?: string;
+    profit_discount: number;
+    price_discount: number;
   }) => {
+    const totalDiscount = paymentData.profit_discount + paymentData.price_discount;
+    const netTotal = Math.max(0, total - totalDiscount);
     try {
+      // For dummy bills, don't affect inventory
+      if (billType === 'dummy') {
+        const dummyTransaction: POSTransaction = {
+          id: `dummy-${Date.now()}`,
+          transaction_number: `QUO${Date.now().toString().slice(-8)}`,
+          items: cartItems.map(item => ({
+            id: item.id,
+            item_id: item.item_id,
+            item_name: item.name,
+            barcode: item.barcode,
+            unit_price: item.unit_price,
+            quantity: item.quantity,
+            line_total: item.line_total
+          })),
+          subtotal,
+          tax_amount: taxAmount,
+          discount_amount: totalDiscount + discountAmount,
+          total_amount: netTotal,
+          payment_method: paymentData.payment_method,
+          payment_amount: 0,
+          change_amount: 0,
+          cashier_id: profile?.id || 'unknown',
+          customer_name: selectedCustomer?.name || paymentData.customer_name,
+          customer_phone: selectedCustomer?.phone || paymentData.customer_phone,
+          created_at: new Date(),
+          status: 'completed',
+          receipt_printed: false,
+          notes: 'QUOTATION - No inventory affected'
+        };
+
+        setCompletedTransaction(dummyTransaction);
+        setCartItems([]);
+        setIsPaymentModalOpen(false);
+        toast.success('Quotation created successfully!');
+        return;
+      }
+
+      // Regular bill processing
       const transaction = await createPOSTransaction({
         items: cartItems,
-        subtotal,
+        subtotal: discountedSubtotal,
         tax_amount: taxAmount,
-        discount_amount: 0,
-        total_amount: total,
+        discount_amount: totalDiscount + discountAmount,
+        total_amount: netTotal,
         cashier_id: profile?.id || 'unknown',
+        customer_name: selectedCustomer?.name || paymentData.customer_name,
+        customer_phone: selectedCustomer?.phone || paymentData.customer_phone,
         ...paymentData
       });
-      
+
+      // Update customer balance for credit sales
+      if (isCreditSale && selectedCustomer) {
+        await updateCustomerBalanceForSale(selectedCustomer.id, netTotal);
+        toast.info(`Credit added to ${selectedCustomer.name}'s account`);
+      }
+
       setCompletedTransaction(transaction);
       setCartItems([]);
       setIsPaymentModalOpen(false);
-      
+      resetBillState();
+
       toast.success('Transaction completed successfully!');
-      
+
       // Auto-print if enabled
       if (settings?.auto_print_receipt) {
         setTimeout(() => {
@@ -196,10 +281,19 @@ export default function POSInterface() {
     }
   };
 
-  const startNewTransaction = () => {
+  const resetBillState = () => {
+    setBillType('regular');
+    setSelectedCustomer(null);
+    setIsCreditSale(false);
+    setProfitDiscount(0);
+    setPriceDiscount(0);
+  };
+
+  function startNewTransaction() {
     setCompletedTransaction(null);
     setCartItems([]);
-  };
+    resetBillState();
+  }
 
   const generateCartItemId = () => {
     return Math.random().toString(36).substr(2, 9);
@@ -225,16 +319,53 @@ export default function POSInterface() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header with Bill Type Toggle */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Point of Sale</h1>
-          <p className="text-gray-400 mt-1">
-            {settings.store_name} - Professional Retail System
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Point of Sale</h1>
+            {/* Bill Type Badge */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setBillType(prev => prev === 'regular' ? 'dummy' : 'regular')}
+              className={`px-3 py-1 rounded-full text-sm font-semibold transition-all ${billType === 'dummy'
+                ? 'bg-warning-500/20 text-warning-400 border border-warning-500/50'
+                : 'bg-success-500/20 text-success-400 border border-success-500/50'
+                }`}
+            >
+              {billType === 'dummy' ? '📋 QUOTATION' : '🧾 REGULAR BILL'}
+            </motion.button>
+          </div>
+          <p className="text-gray-400 mt-1 flex items-center gap-2">
+            {settings.store_name} • <span className="text-xs">Press F8 to toggle bill type</span>
           </p>
         </div>
-        
-        <div className="flex items-center space-x-3">
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Keyboard Shortcuts */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowShortcuts(!showShortcuts)}
+            className="p-2 rounded-lg bg-dark-700/50 text-gray-400 hover:text-white"
+            title="Keyboard Shortcuts"
+          >
+            <Keyboard className="w-5 h-5" />
+          </motion.button>
+
+          {/* Vendor List (F12) */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsVendorModalOpen(true)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Building2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Vendors</span>
+            <span className="text-xs text-gray-500">F12</span>
+          </motion.button>
+
           {completedTransaction && (
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -243,10 +374,10 @@ export default function POSInterface() {
               className="btn-secondary flex items-center gap-2"
             >
               <Printer className="w-4 h-4" />
-              Print Receipt
+              Print
             </motion.button>
           )}
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -254,10 +385,62 @@ export default function POSInterface() {
             className="btn-primary flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
-            New Transaction
+            <span className="hidden sm:inline">New Transaction</span>
+            <span className="sm:hidden">New</span>
           </motion.button>
         </div>
       </div>
+
+      {/* Bill Type Warning for Dummy */}
+      {billType === 'dummy' && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-xl bg-warning-500/10 border border-warning-500/30 flex items-center gap-3"
+        >
+          <FileText className="w-6 h-6 text-warning-400" />
+          <div>
+            <p className="text-warning-400 font-semibold">Quotation Mode Active</p>
+            <p className="text-warning-300/70 text-sm">This bill will NOT affect inventory or financial records. Use for price inquiries only.</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Credit Sale / Customer Selection */}
+      {billType === 'regular' && (
+        <div className="flex flex-wrap items-center gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setIsCreditSale(!isCreditSale);
+              if (!isCreditSale) setIsCustomerModalOpen(true);
+              else setSelectedCustomer(null);
+            }}
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all ${isCreditSale
+              ? 'bg-accent-500/20 text-accent-400 border border-accent-500/50'
+              : 'bg-dark-700/50 text-gray-400 border border-dark-600/50 hover:border-accent-500/30'
+              }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            {isCreditSale ? 'Credit Sale (Udhaar)' : 'Enable Credit Sale'}
+          </motion.button>
+
+          {selectedCustomer && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent-500/10 border border-accent-500/30">
+              <User className="w-4 h-4 text-accent-400" />
+              <span className="text-white font-medium">{selectedCustomer.name}</span>
+              <span className="text-accent-400 text-sm">({formatCurrency(selectedCustomer.outstanding_balance)} due)</span>
+              <button
+                onClick={() => setIsCustomerModalOpen(true)}
+                className="text-xs text-gray-400 hover:text-white"
+              >
+                Change
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main POS Interface */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -269,7 +452,7 @@ export default function POSInterface() {
             isActive={isScannerActive}
             onToggle={() => setIsScannerActive(!isScannerActive)}
           />
-          
+
           {/* Product Search */}
           <EnhancedProductSearch onAddToCart={addToCart} />
         </div>
@@ -286,7 +469,7 @@ export default function POSInterface() {
             total={total}
             taxRate={settings.tax_rate}
           />
-          
+
           {/* Checkout Button */}
           {cartItems.length > 0 && (
             <motion.button
@@ -316,12 +499,59 @@ export default function POSInterface() {
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         cartItems={cartItems}
-        subtotal={subtotal}
+        subtotal={discountedSubtotal}
         taxAmount={taxAmount}
         total={total}
         settings={settings}
         onPaymentComplete={handlePaymentComplete}
       />
+
+      {/* Vendor List Modal (F12) */}
+      <VendorListModal
+        isOpen={isVendorModalOpen}
+        onClose={() => setIsVendorModalOpen(false)}
+        mode="view"
+      />
+
+      {/* Customer Selector Modal */}
+      <CustomerSelector
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
+        onSelectCustomer={(customer) => {
+          setSelectedCustomer(customer);
+          setIsCreditSale(true);
+        }}
+      />
+
+      {/* Keyboard Shortcuts Help */}
+      {showShortcuts && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowShortcuts(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="bg-dark-800 rounded-2xl border border-dark-700/50 p-6 max-w-md"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Keyboard className="w-5 h-5 text-primary-400" />
+              Keyboard Shortcuts
+            </h3>
+            <div className="space-y-2">
+              {POS_SHORTCUTS.map(shortcut => (
+                <div key={shortcut.key} className="flex items-center justify-between py-2 border-b border-dark-700/30">
+                  <span className="text-gray-400">{shortcut.description}</span>
+                  <span className="px-2 py-1 rounded bg-dark-700 text-primary-400 font-mono text-sm">{shortcut.key}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Hidden Receipt for Printing */}
       <div className="hidden">
@@ -350,14 +580,14 @@ export default function POSInterface() {
             <div className="p-3 rounded-full bg-success-500/20 text-success-400 w-fit mx-auto mb-4">
               <Receipt className="w-8 h-8" />
             </div>
-            
+
             <h3 className="text-xl font-semibold text-white mb-2">
               Transaction Complete!
             </h3>
             <p className="text-gray-400 mb-4">
               Transaction #{completedTransaction.transaction_number}
             </p>
-            
+
             <div className="bg-dark-900/50 rounded-lg p-4 mb-6">
               <div className="text-2xl font-bold text-success-400 mb-1">
                 {formatCurrency(completedTransaction.total_amount)}
@@ -368,7 +598,7 @@ export default function POSInterface() {
                 </div>
               )}
             </div>
-            
+
             <div className="flex gap-3">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -379,7 +609,7 @@ export default function POSInterface() {
                 <Printer className="w-4 h-4" />
                 Print Receipt
               </motion.button>
-              
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

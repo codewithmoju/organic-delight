@@ -1,4 +1,4 @@
-import { 
+import {
   collection,
   doc,
   getDocs,
@@ -27,77 +27,95 @@ function isCacheValid(timestamp: number): boolean {
 export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) {
   const cacheKey = `items-${limitCount || 'all'}-${lastDoc?.id || 'start'}`;
   const cached = itemsCache.get(cacheKey);
-  
+
   if (cached && isCacheValid(cached.timestamp)) {
     return cached.data;
   }
 
-  const itemsRef = collection(db, 'items');
-  let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
-  
-  if (limitCount) {
-    q = query(q, limit(limitCount));
-  }
-  
-  if (lastDoc) {
-    q = query(q, startAfter(lastDoc));
-  }
-  
-  const snapshot = await getDocs(q);
-  
-  const items = [];
-  for (const docSnapshot of snapshot.docs) {
-    const itemData = docSnapshot.data();
-    const item = { 
-      id: docSnapshot.id, 
-      ...itemData,
-      created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
-      updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
-    } as Item;
-    
-    // Get category data
-    if (item.category_id) {
-      const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
-      if (categoryDoc.exists()) {
-        item.category = { id: categoryDoc.id, ...categoryDoc.data() };
+  try {
+    const itemsRef = collection(db, 'items');
+    // Simplified query to avoid index requirement
+    let q = query(itemsRef, orderBy('name'));
+
+    if (limitCount) {
+      q = query(q, limit(limitCount));
+    }
+
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+
+    const snapshot = await getDocs(q);
+
+    const items = [];
+    for (const docSnapshot of snapshot.docs) {
+      const itemData = docSnapshot.data();
+      // Client-side filtering
+      if (itemData.is_archived) continue;
+
+      const item = {
+        id: docSnapshot.id,
+        ...itemData,
+        created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
+        updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
+      } as Item;
+
+      // Get category data
+      if (item.category_id) {
+        const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
+        if (categoryDoc.exists()) {
+          const catData = categoryDoc.data();
+          item.category = {
+            id: categoryDoc.id,
+            ...catData,
+            created_at: catData.created_at?.toDate ? catData.created_at.toDate() : new Date(),
+            updated_at: catData.updated_at?.toDate ? catData.updated_at.toDate() : new Date()
+          } as any;
+        }
       }
+
+      // Get stock level data
+      const stockData = await getItemStockLevel(item.id);
+      if (stockData) {
+        item.current_quantity = stockData.current_quantity;
+        item.average_unit_cost = stockData.average_unit_cost;
+        item.last_transaction_date = stockData.last_transaction_date;
+        item.total_value = stockData.total_value;
+      }
+
+      items.push(item);
     }
-    
-    // Get stock level data
-    const stockData = await getItemStockLevel(item.id);
-    if (stockData) {
-      item.current_quantity = stockData.current_quantity;
-      item.average_unit_cost = stockData.average_unit_cost;
-      item.last_transaction_date = stockData.last_transaction_date;
-      item.total_value = stockData.total_value;
+
+    const result = { items, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
+
+    // Cache the result
+    itemsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+    return result;
+  } catch (error: any) {
+    console.error('Firestore getItems error:', error);
+    if (error.message?.includes('index')) {
+      console.info('To fix this index error, visit: https://console.firebase.google.com/project/organic-delight-inventory-db/firestore/indexes');
     }
-    
-    items.push(item);
+    throw error;
   }
-  
-  const result = { items, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
-  
-  // Cache the result
-  itemsCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  
-  return result;
 }
 
 export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
   const itemsRef = collection(db, 'items');
   const q = query(itemsRef, where('category_id', '==', categoryId), where('is_archived', '!=', true), orderBy('name'));
   const snapshot = await getDocs(q);
-  
+
   const items = [];
   for (const docSnapshot of snapshot.docs) {
     const itemData = docSnapshot.data();
-    const item = { 
-      id: docSnapshot.id, 
+    const item = {
+      id: docSnapshot.id,
       ...itemData,
       created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
       updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
     } as Item;
-    
+
     // Get stock level data
     const stockData = await getItemStockLevel(item.id);
     if (stockData) {
@@ -106,37 +124,43 @@ export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
       item.last_transaction_date = stockData.last_transaction_date;
       item.total_value = stockData.total_value;
     }
-    
+
     items.push(item);
   }
-  
+
   return items;
 }
 
 export async function getItem(id: string): Promise<Item> {
   const docRef = doc(db, 'items', id);
   const docSnap = await getDoc(docRef);
-  
+
   if (!docSnap.exists()) {
     throw new Error('Item not found');
   }
-  
+
   const itemData = docSnap.data();
-  const item = { 
-    id: docSnap.id, 
+  const item = {
+    id: docSnap.id,
     ...itemData,
     created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
     updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
   } as Item;
-  
+
   // Get category data
   if (item.category_id) {
     const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
     if (categoryDoc.exists()) {
-      item.category = { id: categoryDoc.id, ...categoryDoc.data() };
+      const catData = categoryDoc.data();
+      item.category = {
+        id: categoryDoc.id,
+        ...catData,
+        created_at: catData.created_at?.toDate ? catData.created_at.toDate() : new Date(),
+        updated_at: catData.updated_at?.toDate ? catData.updated_at.toDate() : new Date()
+      } as any;
     }
   }
-  
+
   // Get stock level data
   const stockData = await getItemStockLevel(item.id);
   if (stockData) {
@@ -145,7 +169,7 @@ export async function getItem(id: string): Promise<Item> {
     item.last_transaction_date = stockData.last_transaction_date;
     item.total_value = stockData.total_value;
   }
-  
+
   return item;
 }
 
@@ -162,16 +186,16 @@ export async function createItem(itemData: {
   created_by: string;
 }): Promise<Item> {
   console.log('Creating item in database:', itemData);
-  
+
   // Check for duplicate item names within the same category
   const itemsRef = collection(db, 'items');
   const existingQuery = query(
-    itemsRef, 
+    itemsRef,
     where('category_id', '==', itemData.category_id),
     where('name', '==', itemData.name.trim())
   );
   const existingSnapshot = await getDocs(existingQuery);
-  
+
   if (!existingSnapshot.empty) {
     throw new Error('An item with this name already exists in this category');
   }
@@ -189,7 +213,7 @@ export async function createItem(itemData: {
     created_at: Timestamp.fromDate(new Date()),
     updated_at: Timestamp.fromDate(new Date())
   });
-  
+
   console.log('Item created with ID:', docRef.id);
   return getItem(docRef.id);
 }
@@ -210,15 +234,15 @@ export async function updateItem(id: string, itemData: {
     const currentItem = await getItem(id);
     const newName = itemData.name?.trim() || currentItem.name;
     const newCategoryId = itemData.category_id || currentItem.category_id;
-    
+
     const itemsRef = collection(db, 'items');
     const existingQuery = query(
-      itemsRef, 
+      itemsRef,
       where('category_id', '==', newCategoryId),
       where('name', '==', newName)
     );
     const existingSnapshot = await getDocs(existingQuery);
-    
+
     // Check if any existing item has this name in this category (excluding current item)
     const duplicateExists = existingSnapshot.docs.some(doc => doc.id !== id);
     if (duplicateExists) {
@@ -232,7 +256,7 @@ export async function updateItem(id: string, itemData: {
     ...(itemData.name && { name: itemData.name.trim() }),
     updated_at: Timestamp.fromDate(new Date())
   };
-  
+
   await updateDoc(docRef, updateData);
   return getItem(id);
 }
@@ -242,7 +266,7 @@ export async function deleteItem(id: string): Promise<void> {
   const transactionsRef = collection(db, 'transactions');
   const transactionsQuery = query(transactionsRef, where('item_id', '==', id));
   const transactionsSnapshot = await getDocs(transactionsQuery);
-  
+
   if (!transactionsSnapshot.empty) {
     // Archive the item instead of deleting it
     const docRef = doc(db, 'items', id);
@@ -252,7 +276,7 @@ export async function deleteItem(id: string): Promise<void> {
     });
     return;
   }
-  
+
   await deleteDoc(doc(db, 'items', id));
 }
 
@@ -260,7 +284,7 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
   const transactionsRef = collection(db, 'transactions');
   const q = query(transactionsRef, where('item_id', '==', itemId));
   const snapshot = await getDocs(q);
-  
+
   if (snapshot.empty) {
     return {
       item_id: itemId,
@@ -270,33 +294,33 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
       total_value: 0
     };
   }
-  
+
   let currentQuantity = 0;
   let totalCost = 0;
   let totalQuantityIn = 0;
   let lastTransactionDate = new Date(0);
-  
+
   // Sort transactions by date in memory (newest first)
   const sortedDocs = snapshot.docs.sort((a, b) => {
-    const dateA = a.data().transaction_date?.toDate ? 
-      a.data().transaction_date?.toDate() : 
+    const dateA = a.data().transaction_date?.toDate ?
+      a.data().transaction_date?.toDate() :
       new Date(a.data().transaction_date);
-    const dateB = b.data().transaction_date?.toDate ? 
-      b.data().transaction_date?.toDate() : 
+    const dateB = b.data().transaction_date?.toDate ?
+      b.data().transaction_date?.toDate() :
       new Date(b.data().transaction_date);
     return dateB.getTime() - dateA.getTime();
   });
-  
+
   sortedDocs.forEach(doc => {
     const transaction = doc.data();
-    const transactionDate = transaction.transaction_date?.toDate ? 
-      transaction.transaction_date.toDate() : 
+    const transactionDate = transaction.transaction_date?.toDate ?
+      transaction.transaction_date.toDate() :
       new Date(transaction.transaction_date || Date.now());
-    
+
     if (transactionDate > lastTransactionDate) {
       lastTransactionDate = transactionDate;
     }
-    
+
     if (transaction.type === 'stock_in') {
       currentQuantity += transaction.quantity;
       totalCost += transaction.total_value;
@@ -305,10 +329,10 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
       currentQuantity -= transaction.quantity;
     }
   });
-  
+
   const averageUnitCost = totalQuantityIn > 0 ? totalCost / totalQuantityIn : 0;
   const totalValue = currentQuantity * averageUnitCost;
-  
+
   return {
     item_id: itemId,
     current_quantity: Math.max(0, currentQuantity),
@@ -321,38 +345,44 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
 export async function searchItems(searchQuery: string, categoryId?: string): Promise<Item[]> {
   const itemsRef = collection(db, 'items');
   let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
-  
+
   if (categoryId) {
     q = query(itemsRef, where('category_id', '==', categoryId), where('is_archived', '!=', true), orderBy('name'));
   }
-  
+
   const snapshot = await getDocs(q);
-  
+
   const items = [];
   for (const docSnapshot of snapshot.docs) {
     const itemData = docSnapshot.data();
-    const item = { 
-      id: docSnapshot.id, 
+    const item = {
+      id: docSnapshot.id,
       ...itemData,
       created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
       updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
     } as Item;
-    
+
     // Client-side filtering for search
-    if (searchQuery && 
-        !item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !item.description?.toLowerCase().includes(searchQuery.toLowerCase())) {
+    if (searchQuery &&
+      !item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !item.description?.toLowerCase().includes(searchQuery.toLowerCase())) {
       continue;
     }
-    
+
     // Get category data
     if (item.category_id) {
       const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
       if (categoryDoc.exists()) {
-        item.category = { id: categoryDoc.id, ...categoryDoc.data() };
+        const catData = categoryDoc.data();
+        item.category = {
+          id: categoryDoc.id,
+          ...catData,
+          created_at: catData.created_at?.toDate ? catData.created_at.toDate() : new Date(),
+          updated_at: catData.updated_at?.toDate ? catData.updated_at.toDate() : new Date()
+        } as any;
       }
     }
-    
+
     // Get stock level data
     const stockData = await getItemStockLevel(item.id);
     if (stockData) {
@@ -361,9 +391,9 @@ export async function searchItems(searchQuery: string, categoryId?: string): Pro
       item.last_transaction_date = stockData.last_transaction_date;
       item.total_value = stockData.total_value;
     }
-    
+
     items.push(item);
   }
-  
+
   return items;
 }

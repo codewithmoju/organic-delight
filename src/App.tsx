@@ -9,6 +9,7 @@ import { useAuthStore } from './lib/store';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingSpinner from './components/ui/LoadingSpinner';
+import OfflineIndicator from './components/ui/OfflineIndicator';
 
 // Lazy load components for better performance
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -21,9 +22,13 @@ const POS = lazy(() => import('./pages/POS'));
 const Items = lazy(() => import('./pages/inventory/Items'));
 const Categories = lazy(() => import('./pages/inventory/Categories'));
 const Transactions = lazy(() => import('./pages/inventory/Transactions'));
-const StockLevels = lazy(() => import('./pages/inventory/StockLevels'));
-const Reports = lazy(() => import('./pages/Reports'));
+const Vendors = lazy(() => import('./pages/vendors/Vendors'));
+const Customers = lazy(() => import('./pages/customers/Customers'));
+const Expenses = lazy(() => import('./pages/expenses/Expenses'));
 const Settings = lazy(() => import('./pages/Settings'));
+const ValuationPage = lazy(() => import('./pages/inventory/ValuationPage'));
+const PerformancePage = lazy(() => import('./pages/reports/PerformancePage'));
+const VendorLedgerPage = lazy(() => import('./pages/vendors/VendorLedgerPage'));
 
 // Simple loading fallback
 const LoadingFallback = ({ text }: { text: string }) => (
@@ -33,7 +38,7 @@ const LoadingFallback = ({ text }: { text: string }) => (
 );
 
 function App() {
-  const { setUser, setProfile } = useAuthStore();
+  const { setUser, setProfile, setInitialized } = useAuthStore();
 
   useEffect(() => {
     // Listen for authentication state changes
@@ -49,97 +54,120 @@ function App() {
       } else {
         setProfile(null);
       }
+      // Mark auth as initialized after first check
+      setInitialized(true);
     });
 
     return () => unsubscribe();
-  }, [setUser, setProfile]);
+  }, [setUser, setProfile, setInitialized]);
 
   return (
     <Router>
       <TourProvider>
-      <Toaster 
-        position="top-right" 
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: 'white',
-            color: '#374151',
-            border: '1px solid #e5e7eb',
-            borderRadius: '0.75rem',
-            fontSize: '0.875rem',
-          },
-        }}
-      />
-      <Routes>
-        <Route path="/login" element={
-          <Suspense fallback={<LoadingFallback text="Loading login" />}>
-            <Login />
-          </Suspense>
-        } />
-        <Route path="/register" element={
-          <Suspense fallback={<LoadingFallback text="Loading register" />}>
-            <Register />
-          </Suspense>
-        } />
-        <Route path="/register-multi" element={
-          <Suspense fallback={<LoadingFallback text="Loading register" />}>
-            <MultiStepRegister />
-          </Suspense>
-        } />
-        <Route path="/forgot-password" element={
-          <Suspense fallback={<LoadingFallback text="Loading password reset" />}>
-            <ForgotPassword />
-          </Suspense>
-        } />
-        <Route path="/verify-email" element={
-          <Suspense fallback={<LoadingFallback text="Loading verification" />}>
-            <EmailVerification />
-          </Suspense>
-        } />
-        
-        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route path="/" element={
-            <Suspense fallback={<LoadingFallback text="Loading dashboard" />}>
-              <Dashboard />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: 'white',
+              color: '#374151',
+              border: '1px solid #e5e7eb',
+              borderRadius: '0.75rem',
+              fontSize: '0.875rem',
+            },
+          }}
+        />
+        <OfflineIndicator />
+        <Routes>
+          <Route path="/login" element={
+            <Suspense fallback={<LoadingFallback text="Loading login" />}>
+              <Login />
             </Suspense>
           } />
-          <Route path="/pos" element={
-            <Suspense fallback={<LoadingFallback text="Loading POS system" />}>
-              <POS />
+          <Route path="/register" element={
+            <Suspense fallback={<LoadingFallback text="Loading register" />}>
+              <Register />
             </Suspense>
           } />
-          <Route path="/inventory/categories" element={
-            <Suspense fallback={<LoadingFallback text="Loading categories" />}>
-              <Categories />
+          <Route path="/register-multi" element={
+            <Suspense fallback={<LoadingFallback text="Loading register" />}>
+              <MultiStepRegister />
             </Suspense>
           } />
-          <Route path="/inventory/items" element={
-            <Suspense fallback={<LoadingFallback text="Loading items" />}>
-              <Items />
+          <Route path="/forgot-password" element={
+            <Suspense fallback={<LoadingFallback text="Loading password reset" />}>
+              <ForgotPassword />
             </Suspense>
           } />
-          <Route path="/transactions" element={
-            <Suspense fallback={<LoadingFallback text="Loading transactions" />}>
-              <Transactions />
+          <Route path="/verify-email" element={
+            <Suspense fallback={<LoadingFallback text="Loading verification" />}>
+              <EmailVerification />
             </Suspense>
           } />
-          <Route path="/stock-levels" element={
-            <Suspense fallback={<LoadingFallback text="Loading stock levels" />}>
-              <StockLevels />
-            </Suspense>
-          } />
-          <Route path="/reports" element={
-            <Suspense fallback={<LoadingFallback text="Loading reports" />}>
-              <Reports />
-            </Suspense>
-          } />
-          <Route path="/settings" element={
-            <Suspense fallback={<LoadingFallback text="Loading settings" />}>
-              <Settings />
-            </Suspense>
-          } />
-        </Route>
-      </Routes>
+
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="/" element={
+              <Suspense fallback={<LoadingFallback text="Loading dashboard" />}>
+                <Dashboard />
+              </Suspense>
+            } />
+            <Route path="/pos" element={
+              <Suspense fallback={<LoadingFallback text="Loading POS system" />}>
+                <POS />
+              </Suspense>
+            } />
+            <Route path="/inventory/categories" element={
+              <Suspense fallback={<LoadingFallback text="Loading categories" />}>
+                <Categories />
+              </Suspense>
+            } />
+            <Route path="/inventory/items" element={
+              <Suspense fallback={<LoadingFallback text="Loading items" />}>
+                <Items />
+              </Suspense>
+            } />
+            <Route path="/vendors" element={
+              <Suspense fallback={<LoadingFallback text="Loading vendors" />}>
+                <Vendors />
+              </Suspense>
+            } />
+            <Route path="/vendors/:id/ledger" element={
+              <Suspense fallback={<LoadingFallback text="Loading ledger" />}>
+                <VendorLedgerPage />
+              </Suspense>
+            } />
+            <Route path="/customers" element={
+              <Suspense fallback={<LoadingFallback text="Loading customers" />}>
+                <Customers />
+              </Suspense>
+            } />
+            <Route path="/expenses" element={
+              <Suspense fallback={<LoadingFallback text="Loading expenses" />}>
+                <Expenses />
+              </Suspense>
+            } />
+            <Route path="/transactions" element={
+              <Suspense fallback={<LoadingFallback text="Loading transactions" />}>
+                <Transactions />
+              </Suspense>
+            } />
+            <Route path="/reports/performance" element={
+              <Suspense fallback={<LoadingFallback text="Loading performance analytics" />}>
+                <PerformancePage />
+              </Suspense>
+            } />
+            <Route path="/inventory/valuation" element={
+              <Suspense fallback={<LoadingFallback text="Calculating valuation" />}>
+                <ValuationPage />
+              </Suspense>
+            } />
+            <Route path="/settings" element={
+              <Suspense fallback={<LoadingFallback text="Loading settings" />}>
+                <Settings />
+              </Suspense>
+            } />
+          </Route>
+        </Routes>
       </TourProvider>
     </Router>
   );

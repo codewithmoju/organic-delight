@@ -2,7 +2,7 @@ import { Item } from '../types';
 
 export function checkLowStockNotifications(items: Item[]): string[] {
   const notifications: string[] = [];
-  
+
   items.forEach(item => {
     if (item.quantity <= item.reorder_point) {
       if (item.quantity === 0) {
@@ -12,7 +12,7 @@ export function checkLowStockNotifications(items: Item[]): string[] {
       }
     }
   });
-  
+
   return notifications;
 }
 
@@ -23,9 +23,9 @@ export function formatCurrency(amount: number, currency?: string): string {
   // Get user's preferred currency if not specified
   if (!currency) {
     const profile = useAuthStore.getState().profile;
-    currency = profile?.preferred_currency || 'USD';
+    currency = profile?.preferred_currency || 'PKR';
   }
-  
+
   return formatCurrencyWithCode(amount, currency);
 }
 
@@ -53,7 +53,7 @@ export function getInventoryStats(items: Item[]) {
   const totalValue = calculateInventoryValue(items);
   const lowStockItems = items.filter(item => item.quantity <= item.reorder_point);
   const outOfStockItems = items.filter(item => item.quantity === 0);
-  
+
   return {
     totalItems,
     totalValue,

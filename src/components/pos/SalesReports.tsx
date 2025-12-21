@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Calendar, DollarSign, TrendingUp, Users, Package, CreditCard } from 'lucide-react';
+import { Calendar, DollarSign, TrendingUp, Users, Package } from 'lucide-react';
 import { getDailySalesReport, getPOSTransactions } from '../../lib/api/pos';
 import { SalesReport, POSTransaction } from '../../lib/types';
-import { formatCurrency } from '../../lib/utils/notifications';
+import { formatCurrency, formatDate } from '../../lib/utils/notifications';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import AnimatedCard from '../ui/AnimatedCard';
+import { voidTransaction } from '../../lib/api/returns';
+import { useAuthStore } from '../../lib/store';
+import { X, Receipt, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function SalesReports() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<POSTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTransaction, setSelectedTransaction] = useState<POSTransaction | null>(null);
+  const profile = useAuthStore(state => state.profile);
+  const isAdmin = profile?.role === 'admin';
 
   const CHART_COLORS = ['#3b82f6', '#d946ef', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -26,7 +33,7 @@ export default function SalesReports() {
       // Load transactions first (simpler query)
       const transactions = await getPOSTransactions(10);
       setRecentTransactions(transactions);
-      
+
       // Try to load sales report, but don't fail if index is missing
       try {
         const report = await getDailySalesReport(new Date(selectedDate));
@@ -51,6 +58,25 @@ export default function SalesReports() {
       setRecentTransactions([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVoid = async (transactionId: string) => {
+    if (!isAdmin) {
+      toast.error('Only admins can void transactions');
+      return;
+    }
+
+    const reason = window.prompt('Enter reason for voiding this transaction:');
+    if (!reason) return;
+
+    try {
+      await voidTransaction(transactionId, reason, profile?.id || 'unknown');
+      toast.success('Transaction voided successfully');
+      setSelectedTransaction(null);
+      loadReportData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to void transaction');
     }
   };
 
@@ -107,7 +133,7 @@ export default function SalesReports() {
             Analyze your Point of Sale performance and trends
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3">
           <Calendar className="w-5 h-5 text-gray-400" />
           <input
@@ -195,14 +221,14 @@ export default function SalesReports() {
               <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
               Top Selling Items
             </h3>
-            
+
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={salesReport?.top_selling_items || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                  <XAxis 
-                    dataKey="item_name" 
-                    stroke="#9CA3AF" 
+                  <XAxis
+                    dataKey="item_name"
+                    stroke="#9CA3AF"
                     fontSize={10}
                     angle={-45}
                     textAnchor="end"
@@ -224,7 +250,7 @@ export default function SalesReports() {
               <div className="w-2 h-6 bg-gradient-to-b from-success-500 to-warning-500 rounded-full mr-3" />
               Payment Methods
             </h3>
-            
+
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -237,7 +263,7 @@ export default function SalesReports() {
                     dataKey="amount"
                     label={({ method, percent }) => `${method} ${(percent * 100).toFixed(0)}%`}
                   >
-                    {(salesReport?.payment_methods || []).map((entry, index) => (
+                    {(salesReport?.payment_methods || []).map((_, index) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
                   </Pie>
@@ -256,7 +282,7 @@ export default function SalesReports() {
             <div className="w-2 h-6 bg-gradient-to-b from-warning-500 to-error-500 rounded-full mr-3" />
             Recent Transactions
           </h3>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -272,10 +298,11 @@ export default function SalesReports() {
                 {recentTransactions.map((transaction, index) => (
                   <motion.tr
                     key={transaction.id}
+                    onClick={() => setSelectedTransaction(transaction)}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="border-b border-dark-700/30 hover:bg-dark-700/30 transition-colors"
+                    className="border-b border-dark-700/30 hover:bg-dark-700/30 transition-colors cursor-pointer"
                   >
                     <td className="py-3 px-4 text-white font-medium">
                       {transaction.transaction_number}
@@ -287,13 +314,12 @@ export default function SalesReports() {
                       {transaction.items.reduce((sum, item) => sum + item.quantity, 0)} items
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        transaction.payment_method === 'cash' 
-                          ? 'bg-success-500/20 text-success-400'
-                          : transaction.payment_method === 'card'
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${transaction.payment_method === 'cash'
+                        ? 'bg-success-500/20 text-success-400'
+                        : transaction.payment_method === 'card'
                           ? 'bg-primary-500/20 text-primary-400'
                           : 'bg-accent-500/20 text-accent-400'
-                      }`}>
+                        }`}>
                         {transaction.payment_method}
                       </span>
                     </td>
@@ -307,6 +333,112 @@ export default function SalesReports() {
           </div>
         </div>
       </AnimatedCard>
+
+      {/* Transaction Detail Modal */}
+      <AnimatePresence>
+        {selectedTransaction && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-2xl bg-dark-800 rounded-2xl border border-dark-700/50 shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 border-b border-dark-700/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400">
+                    <Receipt className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Transaction Details</h3>
+                    <p className="text-sm text-gray-400">#{selectedTransaction.transaction_number}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedTransaction(null)}
+                  className="p-2 rounded-lg hover:bg-dark-700 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start text-sm">
+                    <div>
+                      <p className="text-gray-400">Date & Time</p>
+                      <p className="text-white font-medium">{formatDate(selectedTransaction.created_at)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Status</p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase ${selectedTransaction.status === 'completed' ? 'bg-success-500/20 text-success-400' :
+                        (selectedTransaction.status as string) === 'voided' ? 'bg-error-500/20 text-error-400' :
+                          'bg-warning-500/20 text-warning-400'
+                        }`}>
+                        {selectedTransaction.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-dark-700 pt-4">
+                    <h4 className="text-white font-semibold mb-3">Items</h4>
+                    <div className="space-y-2">
+                      {selectedTransaction.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-dark-900/40 p-3 rounded-lg border border-dark-700/30">
+                          <div>
+                            <p className="text-white font-medium">{item.item_name}</p>
+                            <p className="text-xs text-gray-400">{item.quantity} x {formatCurrency(item.unit_price)}</p>
+                          </div>
+                          <p className="text-primary-400 font-bold">{formatCurrency(item.line_total)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-dark-700 pt-4 space-y-2">
+                    <div className="flex justify-between text-gray-400">
+                      <span>Subtotal</span>
+                      <span>{formatCurrency(selectedTransaction.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-400">
+                      <span>Tax</span>
+                      <span>{formatCurrency(selectedTransaction.tax_amount)}</span>
+                    </div>
+                    {selectedTransaction.discount_amount > 0 && (
+                      <div className="flex justify-between text-error-400">
+                        <span>Discount</span>
+                        <span>-{formatCurrency(selectedTransaction.discount_amount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xl font-bold text-white pt-2">
+                      <span>Total</span>
+                      <span className="text-primary-400">{formatCurrency(selectedTransaction.total_amount)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-dark-900/50 flex gap-3">
+                <button
+                  onClick={() => setSelectedTransaction(null)}
+                  className="btn-secondary flex-1"
+                >
+                  Close
+                </button>
+                {selectedTransaction.status === 'completed' && isAdmin && (
+                  <button
+                    onClick={() => handleVoid(selectedTransaction.id)}
+                    className="btn-primary bg-error-600 hover:bg-error-700 border-error-600 flex items-center justify-center gap-2 flex-1"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Void Transaction
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -7,8 +7,10 @@ import { Item, Category, Transaction } from './types';
 interface AuthState {
   user: any | null;
   profile: any | null;
+  isInitialized: boolean;
   setUser: (user: any) => void;
   setProfile: (profile: any) => void;
+  setInitialized: (initialized: boolean) => void;
   signOut: () => Promise<void>;
 }
 
@@ -35,14 +37,16 @@ interface InventoryState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-  user: null,
-  profile: null,
-  setUser: (user) => set({ user }),
-  setProfile: (profile) => set({ profile }),
-  signOut: async () => {
-    await firebaseSignOut(auth);
-    set({ user: null, profile: null });
-  },
+      user: null,
+      profile: null,
+      isInitialized: false,
+      setUser: (user) => set({ user }),
+      setProfile: (profile) => set({ profile }),
+      setInitialized: (isInitialized) => set({ isInitialized }),
+      signOut: async () => {
+        await firebaseSignOut(auth);
+        set({ user: null, profile: null });
+      },
     }),
     {
       name: 'auth-storage',
@@ -76,7 +80,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   removeCategory: (id) => set((state) => ({
     categories: state.categories.filter(cat => cat.id !== id)
   })),
-  addTransaction: (transaction) => set((state) => ({ 
-    transactions: [transaction, ...state.transactions] 
+  addTransaction: (transaction) => set((state) => ({
+    transactions: [transaction, ...state.transactions]
   })),
 }));

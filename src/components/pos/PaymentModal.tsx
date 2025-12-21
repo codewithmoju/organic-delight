@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CreditCard, Banknote, Smartphone, Calculator, Receipt, Printer } from 'lucide-react';
+import { X, CreditCard, Banknote, Smartphone, Calculator, Receipt, Printer, DollarSign } from 'lucide-react';
 import { CartItem, POSSettings } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils/notifications';
 import LoadingSpinner from '../ui/LoadingSpinner';
@@ -19,6 +19,8 @@ interface PaymentModalProps {
     change_amount: number;
     customer_name?: string;
     customer_phone?: string;
+    profit_discount: number;
+    price_discount: number;
   }) => Promise<void>;
 }
 
@@ -39,14 +41,19 @@ export default function PaymentModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
 
-  const changeAmount = paymentMethod === 'cash' ? Math.max(0, paymentAmount - total) : 0;
-  const isPaymentValid = paymentAmount >= total;
+  // Discount States
+  const [profitDiscount, setProfitDiscount] = useState(0);
+  const [priceDiscount, setPriceDiscount] = useState(0);
+
+  const discountedTotal = Math.max(0, total - profitDiscount - priceDiscount);
+  const changeAmount = paymentMethod === 'cash' ? Math.max(0, paymentAmount - discountedTotal) : 0;
+  const isPaymentValid = paymentAmount >= discountedTotal;
 
   useEffect(() => {
     if (paymentMethod !== 'cash') {
-      setPaymentAmount(total);
+      setPaymentAmount(discountedTotal);
     }
-  }, [paymentMethod, total]);
+  }, [paymentMethod, discountedTotal]);
 
   const handlePayment = async () => {
     if (!isPaymentValid) return;
@@ -58,7 +65,9 @@ export default function PaymentModal({
         payment_amount: paymentAmount,
         change_amount: changeAmount,
         customer_name: customerName.trim() || undefined,
-        customer_phone: customerPhone.trim() || undefined
+        customer_phone: customerPhone.trim() || undefined,
+        profit_discount: profitDiscount,
+        price_discount: priceDiscount
       });
     } catch (error) {
       console.error('Payment processing error:', error);
@@ -68,10 +77,10 @@ export default function PaymentModal({
   };
 
   const quickAmountButtons = [
-    { label: 'Exact', amount: total },
-    { label: '+$5', amount: total + 5 },
-    { label: '+$10', amount: total + 10 },
-    { label: '+$20', amount: total + 20 },
+    { label: 'Exact', amount: discountedTotal },
+    { label: '+$5', amount: discountedTotal + 5 },
+    { label: '+$10', amount: discountedTotal + 10 },
+    { label: '+$20', amount: discountedTotal + 20 },
   ];
 
   if (!isOpen) return null;
@@ -144,39 +153,36 @@ export default function PaymentModal({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setPaymentMethod('cash')}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                    paymentMethod === 'cash'
-                      ? 'border-success-500 bg-success-500/10 text-success-400'
-                      : 'border-dark-600 bg-dark-700/30 text-gray-400 hover:border-success-500/50'
-                  }`}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${paymentMethod === 'cash'
+                    ? 'border-success-500 bg-success-500/10 text-success-400'
+                    : 'border-dark-600 bg-dark-700/30 text-gray-400 hover:border-success-500/50'
+                    }`}
                 >
                   <Banknote className="w-6 h-6 mx-auto mb-2" />
                   <div className="font-semibold">Cash</div>
                 </motion.button>
-                
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setPaymentMethod('card')}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                    paymentMethod === 'card'
-                      ? 'border-primary-500 bg-primary-500/10 text-primary-400'
-                      : 'border-dark-600 bg-dark-700/30 text-gray-400 hover:border-primary-500/50'
-                  }`}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${paymentMethod === 'card'
+                    ? 'border-primary-500 bg-primary-500/10 text-primary-400'
+                    : 'border-dark-600 bg-dark-700/30 text-gray-400 hover:border-primary-500/50'
+                    }`}
                 >
                   <CreditCard className="w-6 h-6 mx-auto mb-2" />
                   <div className="font-semibold">Card</div>
                 </motion.button>
-                
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setPaymentMethod('digital')}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                    paymentMethod === 'digital'
-                      ? 'border-accent-500 bg-accent-500/10 text-accent-400'
-                      : 'border-dark-600 bg-dark-700/30 text-gray-400 hover:border-accent-500/50'
-                  }`}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${paymentMethod === 'digital'
+                    ? 'border-accent-500 bg-accent-500/10 text-accent-400'
+                    : 'border-dark-600 bg-dark-700/30 text-gray-400 hover:border-accent-500/50'
+                    }`}
                 >
                   <Smartphone className="w-6 h-6 mx-auto mb-2" />
                   <div className="font-semibold">Digital</div>
@@ -203,9 +209,8 @@ export default function PaymentModal({
                       min={total}
                       value={paymentAmount}
                       onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
-                      className={`w-full input-dark input-large pr-12 ${
-                        !isPaymentValid ? 'ring-error-500 border-error-500' : ''
-                      }`}
+                      className={`w-full input-dark input-large pr-12 ${!isPaymentValid ? 'ring-error-500 border-error-500' : ''
+                        }`}
                       placeholder="Enter amount received"
                     />
                     <motion.button
@@ -217,12 +222,42 @@ export default function PaymentModal({
                       <Calculator className="w-5 h-5 text-gray-400 hover:text-white" />
                     </motion.button>
                   </div>
-                  
+
                   {!isPaymentValid && (
                     <p className="mt-2 text-sm text-error-400">
-                      Amount must be at least {formatCurrency(total)}
+                      Amount must be at least {formatCurrency(discountedTotal)}
                     </p>
                   )}
+                </div>
+
+                {/* Discounts Section */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-dark-900/50 border border-dark-700/50">
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Profit Discount</label>
+                    <div className="relative">
+                      <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-400" />
+                      <input
+                        type="number"
+                        className="input-dark w-full pl-10"
+                        placeholder="0.00"
+                        value={profitDiscount || ''}
+                        onChange={e => setProfitDiscount(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Price Discount</label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-400" />
+                      <input
+                        type="number"
+                        className="input-dark w-full pl-10"
+                        placeholder="0.00"
+                        value={priceDiscount || ''}
+                        onChange={e => setPriceDiscount(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Quick Amount Buttons */}
@@ -268,7 +303,7 @@ export default function PaymentModal({
                   placeholder="Enter customer name"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Phone Number (Optional)
@@ -278,7 +313,7 @@ export default function PaymentModal({
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   className="w-full input-dark"
-                  placeholder="Enter phone number"
+                  placeholder="Enter phone number (e.g., +92 300 1234567)"
                 />
               </div>
             </div>
@@ -293,7 +328,7 @@ export default function PaymentModal({
               >
                 Cancel
               </motion.button>
-              
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../lib/store';
 import Logo from './ui/Logo';
 import LanguageSelector from './ui/LanguageSelector';
+import { getLowStockItems } from '../lib/api/lowStock';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -16,12 +17,30 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const [lowStockCount, setLowStockCount] = useState(0);
+
+  // Load low stock alerts for the badge
+  useEffect(() => {
+    const checkStock = async () => {
+      try {
+        const items = await getLowStockItems();
+        setLowStockCount(items.length);
+      } catch (error) {
+        console.error('Stock check failed:', error);
+      }
+    };
+
+    checkStock();
+    // Re-check every 5 minutes
+    const interval = setInterval(checkStock, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Click outside functionality to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
-        dropdownRef.current && 
+        dropdownRef.current &&
         buttonRef.current &&
         !dropdownRef.current.contains(event.target as Node) &&
         !buttonRef.current.contains(event.target as Node)
@@ -32,14 +51,14 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
     // Add event listener when dropdown is open
     if (showUserMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside as any);
+      document.addEventListener('touchstart', handleClickOutside as any);
     }
 
     // Cleanup event listeners
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside as any);
+      document.removeEventListener('touchstart', handleClickOutside as any);
     };
   }, [showUserMenu]);
 
@@ -81,31 +100,51 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       >
         <Menu className="h-6 w-6" />
       </button>
-      
+
       {/* Mobile logo */}
-      <div className="lg:hidden">
+      <div className="lg:hidden flex items-center gap-2">
         <Logo size="sm" />
+        {profile?.business_logo && (
+          <img
+            src={profile.business_logo}
+            alt={profile.business_name || 'Business'}
+            className="h-8 w-8 object-contain rounded"
+          />
+        )}
+        {profile?.business_name && (
+          <span className="text-sm font-semibold text-white truncate max-w-[120px]">
+            {profile.business_name}
+          </span>
+        )}
       </div>
-      
+
       {/* Right side content */}
       <div className="flex flex-1 gap-x-2 sm:gap-x-4 self-stretch items-center justify-end">
         <div className="flex items-center gap-x-4 lg:gap-x-6">
           {/* Language selector - hidden on small screens */}
           <LanguageSelector variant="compact" showSearch={false} className="hidden sm:block" />
-          
+
           {/* Notifications button */}
           <button
             type="button"
+            onClick={() => navigate('/inventory/alerts')}
             className="relative -m-2.5 p-2.5 text-gray-400 hover:text-gray-200 transition-colors duration-200 rounded-lg hover:bg-dark-700/50"
             aria-label="View notifications"
           >
             <Bell className="h-6 w-6" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-accent-500 rounded-full" />
+            {lowStockCount > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-error-500 text-[10px] font-bold text-white items-center justify-center">
+                  {lowStockCount}
+                </span>
+              </span>
+            )}
           </button>
-          
+
           {/* Divider */}
           <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-dark-700" />
-          
+
           {/* Profile dropdown */}
           <div className="relative">
             <button
@@ -126,14 +165,13 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               <span className="hidden sm:block text-sm font-semibold leading-6 text-gray-200 truncate max-w-[120px]">
                 {profile?.full_name || 'User'}
               </span>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                showUserMenu ? 'rotate-180' : ''
-              }`} />
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''
+                }`} />
             </button>
-            
+
             {/* Dropdown menu with smooth animations */}
             {showUserMenu && (
-              <div 
+              <div
                 ref={dropdownRef}
                 className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl glass-effect border border-dark-700/50 shadow-dark-lg transform opacity-100 scale-100 transition-all duration-200"
                 role="menu"
@@ -170,7 +208,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     <Settings className="mr-3 h-4 w-4" />
                     Edit Profile
                   </button>
-                  
+
                   <button
                     onClick={() => handleMenuItemClick(() => navigate('/settings'))}
                     className="flex w-full items-center px-4 py-3 text-sm text-gray-300 hover:bg-dark-700/50 hover:text-white transition-colors duration-150"
@@ -179,9 +217,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     <User className="mr-3 h-4 w-4" />
                     Account Settings
                   </button>
-                  
+
                   <div className="border-t border-dark-700/50 my-2"></div>
-                  
+
                   <button
                     onClick={() => handleMenuItemClick(signOut)}
                     className="flex w-full items-center px-4 py-3 text-sm text-gray-300 hover:bg-dark-700/50 hover:text-red-400 transition-colors duration-150"

@@ -1,0 +1,16 @@
+export const BUSINESS_TYPES = [
+    { value: 'electronics', label: 'Electronics Store', icon: '📱' },
+    { value: 'grocery', label: 'Grocery Store', icon: '🛒' },
+    { value: 'clothing', label: 'Clothing & Fashion', icon: '👕' },
+    { value: 'pharmacy', label: 'Pharmacy', icon: '💊' },
+    { value: 'hardware', label: 'Hardware Store', icon: '🔧' },
+    { value: 'books', label: 'Bookstore', icon: '📚' },
+    { value: 'cosmetics', label: 'Cosmetics & Beauty', icon: '💄' },
+    { value: 'furniture', label: 'Furniture', icon: '🛋️' },
+    { value: 'sports', label: 'Sports & Fitness', icon: '⚽' },
+    { value: 'toys', label: 'Toys & Games', icon: '🎮' },
+    { value: 'automotive', label: 'Automotive Parts', icon: '🚗' },
+    { value: 'jewelry', label: 'Jewelry', icon: '💎' },
+    { value: 'general', label: 'General Store', icon: '🏪' },
+    { value: 'other', label: 'Other', icon: '🏬' },
+];

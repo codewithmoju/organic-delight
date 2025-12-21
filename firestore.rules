@@ -6,54 +6,134 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    function isOwner() {
-      return request.auth.uid == resource.data.user_id;
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
     
     // Profile rules
     match /profiles/{userId} {
-      allow read, create, update: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
     }
     
     // Items rules
     match /items/{itemId} {
-      allow read, create, update, delete: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        // Non-admins can update other fields but NOT the pricing fields
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['unit_price', 'sale_rate', 'purchase_rate'])
+      );
     }
     
     // Categories rules
     match /categories/{categoryId} {
-      allow read, create, update, delete: if isAuthenticated();
-    }
-    
-    // Transactions rules
-    match /transactions/{transactionId} {
-      allow read: if isAuthenticated();
-      // Only allow creation if the referenced item exists
-      allow create: if isAuthenticated() && 
-        exists(/databases/$(database)/documents/items/$(request.resource.data.item_id));
-      // Transactions should never be updated or deleted
-      allow update, delete: if false;
-    }
-
-    // POS Settings rules - Global store settings
-    match /pos_settings/{settingsId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
-      allow delete: if false; // Prevent accidental deletion of POS settings
+      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+    }
+    
+    // Transactions rules (Stock in/out)
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/items/$(request.resource.data.item_id));
+      allow update, delete: if isAuthenticated(); // Allow authenticated users to manage transactions
+    }
+
+    // POS Settings rules
+    match /pos_settings/{settingsId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated(); // Allow any authenticated user
+      allow delete: if isAuthenticated();
     }
 
     // POS Transactions rules
     match /pos_transactions/{transactionId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update: if isAuthenticated(); // Allow status updates (cancelled, refunded)
-      allow delete: if false; // Never delete POS transactions for audit trail
+      allow update: if isAuthenticated(); // For status changes
+      allow delete: if isAuthenticated(); // Allow deletion
     }
 
-    // User Settings rules (individual user preferences)
+    // User Settings rules
     match /settings/{userId} {
-      // Allow read and write if the authenticated user owns the document
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
+    }
+
+    // Vendor rules
+    match /vendors/{vendorId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+    }
+
+    // Vendor Payments rules
+    match /vendor_payments/{paymentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated(); // Allow management of payments
+    }
+
+    // Purchase rules
+    match /purchases/{purchaseId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated(); 
+      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+    }
+
+    // Customer rules
+    match /customers/{customerId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+    }
+
+    // Customer Payments rules
+    match /customer_payments/{paymentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated(); // Allow management of payments
+    }
+
+    // Expense rules
+    match /expenses/{expenseId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+    }
+
+    // POS Returns rules
+    match /pos_returns/{returnId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated(); // Allow management of returns
+    }
+
+    // Sales rules (if exists)
+    match /sales/{saleId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Stock Adjustments rules (if exists)
+    match /stock_adjustments/{adjustmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated();
     }
   }
 }

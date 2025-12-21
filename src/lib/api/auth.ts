@@ -1,4 +1,4 @@
-import { 
+import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
@@ -11,15 +11,15 @@ import { auth, db } from '../firebase';
 export async function signUp(email: string, password: string, fullName: string) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(user, { displayName: fullName });
-  
+
   // Send email verification
   await sendEmailVerification(user);
-  
+
   await setDoc(doc(db, 'profiles', user.uid), {
     id: user.uid,
     email,
     full_name: fullName,
-    preferred_currency: 'USD',
+    preferred_currency: 'PKR',
     role: 'user',
     created_at: new Date(),
     updated_at: new Date()
@@ -45,18 +45,18 @@ export async function getProfile(user: User) {
       updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at
     };
   }
-  
+
   // Create profile if it doesn't exist
   const newProfile = {
     id: user.uid,
     email: user.email,
     full_name: user.displayName || 'User',
-    preferred_currency: 'USD',
+    preferred_currency: 'PKR',
     role: 'user',
     created_at: new Date(),
     updated_at: new Date()
   };
-  
+
   await setDoc(doc(db, 'profiles', user.uid), newProfile);
   return newProfile;
 }
@@ -75,6 +75,18 @@ export async function updateUserProfile(userId: string, data: Partial<{
   push_notifications: boolean;
   two_factor_enabled: boolean;
   timezone: string;
+  business_name: string;
+  business_type: string;
+  business_tagline: string;
+  business_logo: string;
+  business_address: string;
+  business_city: string;
+  business_country: string;
+  business_phone: string;
+  business_email: string;
+  tax_number: string;
+  receipt_header: string;
+  receipt_footer: string;
 }>) {
   const userRef = doc(db, 'profiles', userId);
   await updateDoc(userRef, {

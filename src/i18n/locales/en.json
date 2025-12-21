@@ -133,7 +133,7 @@
       "description": "Description",
       "descriptionRequired": "Description is required",
       "descriptionMinLength": "Description must be at least 5 characters",
-      "namePlaceholder": "Enter category name (e.g., Electronics, Clothing)",
+      "namePlaceholder": "Enter category name (e.g., Smartphones, Laptops, Audio)",
       "descriptionPlaceholder": "Describe what types of items belong in this category...",
       "cancel": "Cancel",
       "create": "Create Category",
@@ -427,7 +427,7 @@
     },
     "categories": {
       "title": "Organize with Categories",
-      "content": "Create and manage categories to keep your inventory organized. Think Electronics, Clothing, Food, etc."
+      "content": "Create and manage categories to keep your inventory organized. Think Smartphones, Laptops, Audio Equipment, etc."
     },
     "items": {
       "title": "Manage Your Items",

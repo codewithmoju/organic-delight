@@ -22,10 +22,13 @@ import { useTranslation } from 'react-i18next';
 import ContextualLoader from '../components/ui/ContextualLoader';
 import FullScreenLoader from '../components/ui/FullScreenLoader';
 import { useMemo } from 'react';
+import { useAuthStore } from '../lib/store';
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const profile = useAuthStore(state => state.profile);
+  const businessName = profile?.business_name || t('dashboard.title');
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -60,12 +63,12 @@ export default function Dashboard() {
       setLoadingStage('Calculating metrics...');
 
       const items = itemsResult.items || [];
-      
+
       // Calculate summary data
       const totalValue = items.reduce((acc, item) => acc + (item.quantity * item.unit_price), 0);
       const lowStock = items.filter(item => item.quantity <= item.reorder_point);
       const outOfStock = items.filter(item => item.quantity === 0);
-      
+
       setSummary({
         totalItems: items.length,
         totalValue: totalValue,
@@ -78,7 +81,7 @@ export default function Dashboard() {
       setError(null);
       setLoadingProgress(80);
       setLoadingStage('Preparing dashboard...');
-      
+
       // Load metrics data
       await loadMetricsData();
       setLoadingProgress(100);
@@ -101,7 +104,7 @@ export default function Dashboard() {
         getDashboardMetrics(selectedPeriod),
         getInventoryTrends(selectedPeriod)
       ]);
-      
+
       setMetrics(metricsData);
       setChartData(trendsData);
     } catch (error) {
@@ -150,7 +153,7 @@ export default function Dashboard() {
             {loadingProgress}%
           </div>
         </div>
-        
+
         {/* Progress bar */}
         <div className="mt-3 w-full bg-dark-700 rounded-full h-1">
           <motion.div
@@ -163,10 +166,10 @@ export default function Dashboard() {
       </div>
     </motion.div>
   );
-  
+
   if (error) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center justify-center h-full min-h-[60vh]"
@@ -188,14 +191,14 @@ export default function Dashboard() {
         progress={loadingProgress}
         variant="progress"
       />
-      
+
       {/* Contextual loader for metrics updates */}
       <ContextualLoader
         isLoading={isMetricsLoading}
         context="dashboard"
         variant="overlay"
       />
-      
+
       {/* Main content */}
       <div className="space-y-6 sm:space-y-8">
         <div className="space-y-6 sm:space-y-8">
@@ -208,13 +211,13 @@ export default function Dashboard() {
           >
             <div className="text-center sm:text-left">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">
-                {t('dashboard.title')}
+                Welcome to {businessName}
               </h1>
               <p className="text-gray-400 text-base sm:text-lg">
-                {t('dashboard.subtitle')}
+                {profile?.business_tagline || t('dashboard.subtitle')}
               </p>
             </div>
-            
+
             {/* Time Period Dropdown */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -313,7 +316,7 @@ export default function Dashboard() {
               title="Stock Movement Trends"
               isLoading={isMetricsLoading}
             />
-            
+
             <MetricsChart
               data={chartData}
               type="line"
@@ -329,7 +332,7 @@ export default function Dashboard() {
                 data={memoizedChartData}
               />
             </OptimizedAnimatedCard>
-            
+
             <OptimizedAnimatedCard delay={1.1}>
               <RecentTransactions transactions={transactions} />
             </OptimizedAnimatedCard>
@@ -343,7 +346,7 @@ export default function Dashboard() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             <TourTrigger variant="card" />
-            
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -353,7 +356,7 @@ export default function Dashboard() {
               <Package className="w-6 h-6 sm:w-8 sm:h-8" />
               <span className="text-base sm:text-lg font-semibold">Add New Product</span>
             </motion.button>
-            
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

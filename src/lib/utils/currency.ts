@@ -44,13 +44,13 @@ export function getCurrencyFlag(currencyCode: string): string {
 }
 
 export function formatCurrencyWithCode(
-  amount: number, 
-  currencyCode: string = 'USD',
+  amount: number,
+  currencyCode: string = 'PKR',
   showCode: boolean = false
 ): string {
   const currency = SUPPORTED_CURRENCIES.find(c => c.code === currencyCode);
   const symbol = currency?.symbol || currencyCode;
-  
+
   // Special formatting for different currencies
   const formatOptions: Intl.NumberFormatOptions = {
     minimumFractionDigits: 2,
@@ -64,11 +64,11 @@ export function formatCurrencyWithCode(
   }
 
   const formattedAmount = new Intl.NumberFormat('en-US', formatOptions).format(amount);
-  
+
   if (showCode) {
     return `${symbol}${formattedAmount} ${currencyCode}`;
   }
-  
+
   return `${symbol}${formattedAmount}`;
 }
 
@@ -78,10 +78,10 @@ export function convertCurrency(
   toCurrency: string
 ): number {
   if (fromCurrency === toCurrency) return amount;
-  
+
   const fromRate = MOCK_EXCHANGE_RATES[fromCurrency] || 1;
   const toRate = MOCK_EXCHANGE_RATES[toCurrency] || 1;
-  
+
   // Convert to USD first, then to target currency
   const usdAmount = amount / fromRate;
   return usdAmount * toRate;
@@ -98,7 +98,7 @@ export async function fetchExchangeRates(): Promise<CurrencyRate> {
 }
 
 export function getPopularCurrencies(): string[] {
-  return ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
+  return ['PKR', 'USD', 'EUR', 'GBP', 'SAR', 'AED'];
 }
 
 export function searchCurrencies(query: string): typeof SUPPORTED_CURRENCIES {

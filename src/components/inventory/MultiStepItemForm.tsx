@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Category } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { AlertCircle } from 'lucide-react';
+import { useAuthStore } from '../../lib/store';
 
 interface MultiStepItemFormProps {
   categories: Category[];
@@ -41,7 +42,9 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  
+  const profile = useAuthStore(state => state.profile);
+  const isAdmin = profile?.role === 'admin';
+
   const [formData, setFormData] = useState<ItemFormData>({
     category_id: '',
     name: '',
@@ -88,7 +91,7 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
         } else if (formData.name.length > 100) {
           newErrors.name = 'Product name must be 100 characters or less';
         }
-        
+
         if (!formData.description.trim()) {
           newErrors.description = 'Product description is required';
         } else if (formData.description.length < 5) {
@@ -112,7 +115,7 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
         if (!formData.total_stock || formData.total_stock < 0) {
           newErrors.total_stock = 'Stock quantity must be 0 or greater';
         }
-        
+
         if (!formData.reorder_point || formData.reorder_point < 0) {
           newErrors.reorder_point = 'Reorder point must be 0 or greater';
         }
@@ -154,7 +157,7 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
         reorder_point: formData.reorder_point,
         created_by: 'current-user'
       });
-      
+
       toast.success('Product created successfully');
     } catch (error: any) {
       toast.error('Failed to create product');
@@ -171,17 +174,16 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
       {/* Progress Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gradient mb-4">Add New Product</h1>
-        
+
         {/* Progress Bar */}
         <div className="flex justify-between items-center mb-4">
           {[1, 2, 3, 4, 5].map((step) => (
             <div
               key={step}
-              className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
-                step <= currentStep
+              className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${step <= currentStep
                   ? 'border-primary-500 bg-primary-500 text-white'
                   : 'border-gray-600 text-gray-400'
-              }`}
+                }`}
             >
               {step < currentStep ? <Check className="w-5 h-5" /> : step}
             </div>
@@ -195,15 +197,15 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
             transition={{ duration: 0.3 }}
           />
         </div>
-        
+
         <div className="mt-4 text-center">
           <p className="text-gray-400">
             Step {currentStep} of 5: {
               currentStep === 1 ? 'Select Category' :
-              currentStep === 2 ? 'Product Information' :
-              currentStep === 3 ? 'Set Price' :
-              currentStep === 4 ? 'Product ID' :
-              'Stock & Attributes'
+                currentStep === 2 ? 'Product Information' :
+                  currentStep === 3 ? 'Set Price' :
+                    currentStep === 4 ? 'Product ID' :
+                      'Stock & Attributes'
             }
           </p>
         </div>
@@ -233,11 +235,10 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => updateFormData('category_id', category.id)}
-                    className={`p-6 rounded-xl border-2 transition-all duration-200 text-left ${
-                      formData.category_id === category.id
+                    className={`p-6 rounded-xl border-2 transition-all duration-200 text-left ${formData.category_id === category.id
                         ? 'border-primary-500 bg-primary-500/10 text-primary-400'
                         : 'border-dark-600 bg-dark-700/30 text-gray-400 hover:border-primary-500/50'
-                    }`}
+                      }`}
                   >
                     <h4 className="font-semibold text-lg mb-2">{category.name}</h4>
                     <p className="text-sm opacity-75">{category.description}</p>
@@ -282,9 +283,8 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
                   type="text"
                   value={formData.name}
                   onChange={(e) => updateFormData('name', e.target.value)}
-                  className={`w-full input-dark input-large ${
-                    errors.name ? 'ring-error-500 border-error-500' : ''
-                  }`}
+                  className={`w-full input-dark input-large ${errors.name ? 'ring-error-500 border-error-500' : ''
+                    }`}
                   placeholder="Enter product name (e.g., iPhone 15 Pro, Nike Air Max)"
                   maxLength={100}
                 />
@@ -304,9 +304,8 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
                   value={formData.description}
                   onChange={(e) => updateFormData('description', e.target.value)}
                   rows={4}
-                  className={`w-full input-dark input-large resize-none ${
-                    errors.description ? 'ring-error-500 border-error-500' : ''
-                  }`}
+                  className={`w-full input-dark input-large resize-none ${errors.description ? 'ring-error-500 border-error-500' : ''
+                    }`}
                   placeholder="Describe the product features, specifications, or any relevant details..."
                   maxLength={500}
                 />
@@ -347,13 +346,18 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
                     type="number"
                     step="0.01"
                     min="0.01"
+                    disabled={!isAdmin}
                     value={formData.unit_price || ''}
                     onChange={(e) => updateFormData('unit_price', parseFloat(e.target.value) || 0)}
-                    className={`w-full input-dark input-large pl-12 text-center text-2xl font-bold ${
-                      errors.unit_price ? 'ring-error-500 border-error-500' : ''
-                    }`}
+                    className={`w-full input-dark input-large pl-12 text-center text-2xl font-bold ${errors.unit_price ? 'ring-error-500 border-error-500' : ''
+                      } ${!isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
                     placeholder="0.00"
                   />
+                  {!isAdmin && (
+                    <div className="mt-2 text-xs text-warning-400 text-center">
+                      Admin privileges required to edit unit price
+                    </div>
+                  )}
                 </div>
                 {errors.unit_price && (
                   <div className="mt-2 flex items-center text-sm text-error-400 justify-center">
@@ -361,7 +365,7 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
                     {errors.unit_price}
                   </div>
                 )}
-                
+
                 {formData.unit_price > 0 && (
                   <div className="mt-4 text-center">
                     <div className="text-success-400 font-semibold text-lg">
@@ -399,9 +403,8 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
                       type="text"
                       value={formData.product_id}
                       onChange={(e) => updateFormData('product_id', e.target.value)}
-                      className={`flex-1 input-dark input-large text-center font-mono ${
-                        errors.product_id ? 'ring-error-500 border-error-500' : ''
-                      }`}
+                      className={`flex-1 input-dark input-large text-center font-mono ${errors.product_id ? 'ring-error-500 border-error-500' : ''
+                        }`}
                       placeholder="Enter or generate ID"
                     />
                     <motion.button
@@ -464,9 +467,8 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
                     step="1"
                     value={formData.total_stock || ''}
                     onChange={(e) => updateFormData('total_stock', parseInt(e.target.value) || 0)}
-                    className={`w-full input-dark input-large ${
-                      errors.total_stock ? 'ring-error-500 border-error-500' : ''
-                    }`}
+                    className={`w-full input-dark input-large ${errors.total_stock ? 'ring-error-500 border-error-500' : ''
+                      }`}
                     placeholder="Enter initial stock quantity"
                   />
                   {errors.total_stock && (
@@ -487,9 +489,8 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
                     step="1"
                     value={formData.reorder_point || ''}
                     onChange={(e) => updateFormData('reorder_point', parseInt(e.target.value) || 0)}
-                    className={`w-full input-dark input-large ${
-                      errors.reorder_point ? 'ring-error-500 border-error-500' : ''
-                    }`}
+                    className={`w-full input-dark input-large ${errors.reorder_point ? 'ring-error-500 border-error-500' : ''
+                      }`}
                     placeholder="Minimum stock level"
                   />
                   {errors.reorder_point && (
@@ -584,9 +585,8 @@ export default function MultiStepItemForm({ categories, onSubmit, onCancel }: Mu
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className={`btn-secondary flex items-center gap-2 ${
-              currentStep === 1 ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`btn-secondary flex items-center gap-2 ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             <ArrowLeft className="w-4 h-4" />
             Previous

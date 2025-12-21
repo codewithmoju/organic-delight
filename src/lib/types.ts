@@ -13,6 +13,7 @@ export interface Item {
   average_unit_cost?: number;
   last_transaction_date?: Date;
   total_value?: number;
+  low_stock_threshold?: number;
 }
 
 export interface Category {
@@ -70,6 +71,20 @@ export interface Profile {
   push_notifications?: boolean;
   two_factor_enabled?: boolean;
   timezone?: string;
+
+  // Business Personalization Fields
+  business_name?: string;
+  business_type?: string;          // Electronics, Grocery, Clothing, etc.
+  business_tagline?: string;
+  business_logo?: string;          // Base64 encoded image
+  business_address?: string;
+  business_city?: string;
+  business_country?: string;
+  business_phone?: string;
+  business_email?: string;
+  tax_number?: string;             // GST/Tax ID
+  receipt_header?: string;         // Custom header message for receipts
+  receipt_footer?: string;         // Custom footer message for receipts
 }
 
 export interface DashboardMetrics {
@@ -146,9 +161,12 @@ export interface POSTransaction {
   customer_name?: string;
   customer_phone?: string;
   created_at: Date;
-  status: 'completed' | 'cancelled' | 'refunded';
+  status: 'completed' | 'cancelled' | 'refunded' | 'voided';
   receipt_printed: boolean;
   notes?: string;
+  void_reason?: string;
+  voided_at?: Date;
+  voided_by?: string;
 }
 
 export interface POSTransactionItem {
@@ -160,6 +178,7 @@ export interface POSTransactionItem {
   quantity: number;
   line_total: number;
   discount_amount?: number;
+  purchase_rate?: number;
   tax_rate?: number;
 }
 
@@ -168,6 +187,7 @@ export interface CartItem {
   item_id: string;
   name: string;
   barcode?: string;
+  sku?: string;
   unit_price: number;
   quantity: number;
   line_total: number;
@@ -179,6 +199,7 @@ export interface BarcodeProduct {
   id: string;
   name: string;
   barcode: string;
+  sku?: string;
   price: number;
   stock: number;
   category?: string;
@@ -219,4 +240,251 @@ export interface SalesReport {
     count: number;
     amount: number;
   }>;
+}
+
+// ============================================
+// VENDOR MANAGEMENT TYPES
+// ============================================
+
+export interface Vendor {
+  id: string;
+  name: string;
+  company: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  gst_number?: string;
+  outstanding_balance: number; // Amount owed to vendor
+  total_purchases: number;
+  created_at: Date;
+  updated_at: Date;
+  created_by: string;
+  is_active: boolean;
+}
+
+export interface VendorPayment {
+  id: string;
+  vendor_id: string;
+  amount: number;
+  payment_method: 'cash' | 'bank_transfer' | 'cheque';
+  reference_number?: string;
+  notes?: string;
+  payment_date: Date;
+  created_at: Date;
+  created_by: string;
+}
+
+// ============================================
+// PURCHASE MANAGEMENT TYPES
+// ============================================
+
+export interface Purchase {
+  id: string;
+  purchase_number: string;
+  bill_number?: string; // Vendor's bill number
+  vendor_id: string;
+  vendor_name: string;
+  items: PurchaseItem[];
+  subtotal: number;
+  tax_amount: number;
+  discount_amount: number;
+  total_amount: number;
+  payment_status: 'paid' | 'partial' | 'unpaid';
+  paid_amount: number;
+  pending_amount: number;
+  purchase_date: Date;
+  created_at: Date;
+  created_by: string;
+  notes?: string;
+}
+
+export interface PurchaseItem {
+  id: string;
+  item_id: string;
+  item_name: string;
+  barcode?: string;
+  quantity: number;
+  purchase_rate: number; // Cost price from vendor
+  sale_rate: number;     // Selling price
+  expiry_date?: Date;
+  shelf_location?: string;
+  line_total: number;
+}
+
+// ============================================
+// CUSTOMER CREDIT (UDHAAR) TYPES
+// ============================================
+
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  outstanding_balance: number; // Amount customer owes (no limit)
+  total_purchases: number;
+  created_at: Date;
+  updated_at: Date;
+  created_by: string;
+  is_active: boolean;
+}
+
+export interface CustomerPayment {
+  id: string;
+  customer_id: string;
+  amount: number;
+  payment_method: 'cash' | 'bank_transfer' | 'digital';
+  reference_number?: string;
+  notes?: string;
+  payment_date: Date;
+  created_at: Date;
+  created_by: string;
+}
+
+// ============================================
+// ENHANCED ITEM TYPES
+// ============================================
+
+export interface ItemLocation {
+  shelf: string;
+  rack?: string;
+  bin?: string;
+}
+
+export interface EnhancedItem extends Item {
+  location?: ItemLocation;
+
+  // Retail identifiers
+  sku?: string;                    // Unique product code (e.g., PROD-123456-A7F3)
+  barcode?: string;                // For POS scanning (EAN-13, UPC, etc.)
+
+  // Dual pricing system
+  purchase_rate?: number;          // Last cost from vendor
+  sale_rate?: number;              // Current selling price
+  unit_price?: number;             // Deprecated: use sale_rate instead
+
+  // Legacy fields (for backward compatibility)
+  last_purchase_rate?: number;     // Deprecated: use purchase_rate
+  last_sale_rate?: number;         // Deprecated: use sale_rate
+  custom_barcode?: string;         // Deprecated: use barcode
+
+  // Stock management
+  reorder_point?: number;          // Minimum stock level before reorder
+  quantity?: number;               // Current stock quantity (calculated)
+}
+
+// ============================================
+// EXPENSE TRACKING TYPES
+// ============================================
+
+export interface Expense {
+  id: string;
+  category: ExpenseCategory;
+  description: string;
+  amount: number;
+  expense_date: Date;
+  payment_method: 'cash' | 'bank_transfer' | 'digital';
+  reference_number?: string;
+  notes?: string;
+  created_at: Date;
+  created_by: string;
+}
+
+export type ExpenseCategory =
+  | 'rent'
+  | 'utilities'
+  | 'salaries'
+  | 'supplies'
+  | 'maintenance'
+  | 'transport'
+  | 'marketing'
+  | 'taxes'
+  | 'miscellaneous';
+
+export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string; icon: string }[] = [
+  { value: 'rent', label: 'Rent', icon: '🏠' },
+  { value: 'utilities', label: 'Utilities (Electric/Gas/Water)', icon: '💡' },
+  { value: 'salaries', label: 'Salaries & Wages', icon: '👥' },
+  { value: 'supplies', label: 'Office Supplies', icon: '📦' },
+  { value: 'maintenance', label: 'Maintenance & Repairs', icon: '🔧' },
+  { value: 'transport', label: 'Transport & Delivery', icon: '🚚' },
+  { value: 'marketing', label: 'Marketing & Advertising', icon: '📢' },
+  { value: 'taxes', label: 'Taxes & Fees', icon: '💰' },
+  { value: 'miscellaneous', label: 'Miscellaneous', icon: '📝' },
+];
+
+// ============================================
+// ENHANCED POS TRANSACTION TYPES
+// ============================================
+
+export type BillType = 'regular' | 'dummy';
+
+export interface EnhancedPOSTransaction extends POSTransaction {
+  bill_type: BillType;
+  customer_id?: string;
+  is_credit_sale: boolean;
+  profit_discount: number;  // Discount calculated from profit margin
+  price_discount: number;   // Direct discount from sale price
+  original_profit: number;  // For profit margin tracking
+  cost_of_goods: number;    // Total cost price of items
+}
+
+export interface ReturnItem {
+  pos_item_id: string;
+  item_id: string;
+  item_name: string;
+  quantity_to_return: number;
+  unit_price: number;
+  refund_amount: number;
+}
+
+export interface POSReturn {
+  id: string;
+  return_number: string;
+  original_transaction_id: string;
+  original_transaction_number: string;
+  items: ReturnItem[];
+  total_refund: number;
+  refund_method: 'cash' | 'store_credit';
+  reason: string;
+  created_at: Date;
+  created_by: string;
+}
+
+// ============================================
+// DAILY OPERATIONS REPORT TYPES
+// ============================================
+
+export interface DailyOperationsReport {
+  date: Date;
+  cash_sales: number;
+  credit_sales: number;
+  card_sales: number;
+  digital_sales: number;
+  total_sales: number;
+  total_discounts: number;
+  total_returns: number;
+  total_expenses: number;
+  total_purchases: number;
+  vendor_payments: number;
+  customer_collections: number;
+  cash_on_hand: number;
+  gross_profit: number;
+  net_profit: number;
+  transactions_count: number;
+  returns_count: number;
+  average_transaction_value: number;
+}
+
+// ============================================
+// KEYBOARD SHORTCUT TYPES
+// ============================================
+
+export interface KeyboardShortcut {
+  key: string;
+  ctrlKey?: boolean;
+  altKey?: boolean;
+  shiftKey?: boolean;
+  description: string;
+  action: () => void;
 }
