@@ -142,6 +142,30 @@ export async function deactivateVendor(vendorId: string): Promise<void> {
     });
 }
 
+/**
+ * Delete a vendor (hard delete)
+ * Will fail if vendor has outstanding balance
+ */
+export async function deleteVendor(vendorId: string): Promise<void> {
+    const vendorRef = doc(db, 'vendors', vendorId);
+    const vendorDoc = await getDoc(vendorRef);
+
+    if (!vendorDoc.exists()) {
+        throw new Error('Vendor not found');
+    }
+
+    const vendorData = vendorDoc.data();
+
+    // Prevent deletion if there's an outstanding balance
+    if (vendorData.outstanding_balance && vendorData.outstanding_balance !== 0) {
+        throw new Error('Cannot delete vendor with outstanding balance. Please clear the balance first.');
+    }
+
+    // Import deleteDoc dynamically to avoid circular issues
+    const { deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(vendorRef);
+}
+
 // ============================================
 // VENDOR LEDGER & PAYMENT OPERATIONS
 // ============================================
