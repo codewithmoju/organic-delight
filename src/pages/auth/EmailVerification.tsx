@@ -9,8 +9,10 @@ import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Logo from '../../components/ui/Logo';
+import { useTranslation } from 'react-i18next';
 
 export default function EmailVerification() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'expired'>('loading');
   const [isResending, setIsResending] = useState(false);
@@ -41,7 +43,7 @@ export default function EmailVerification() {
   const verifyEmail = async () => {
     try {
       await applyActionCode(auth, oobCode!);
-      
+
       // Update user profile to mark email as verified
       if (auth.currentUser) {
         await updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
@@ -49,12 +51,12 @@ export default function EmailVerification() {
           updated_at: new Date()
         });
       }
-      
+
       setStatus('success');
-      toast.success('Email verified successfully!');
+      toast.success(t('auth.verifyEmail.toast.verified'));
     } catch (error: any) {
       console.error('Email verification error:', error);
-      
+
       if (error.code === 'auth/expired-action-code') {
         setStatus('expired');
       } else if (error.code === 'auth/invalid-action-code') {
@@ -71,12 +73,12 @@ export default function EmailVerification() {
     setIsResending(true);
     try {
       await sendEmailVerification(auth.currentUser);
-      toast.success('Verification email sent! Please check your inbox.');
+      toast.success(t('auth.verifyEmail.toast.sent'));
       setCanResend(false);
       setCountdown(60); // 60 second cooldown
     } catch (error: any) {
       console.error('Resend verification error:', error);
-      toast.error('Failed to send verification email. Please try again.');
+      toast.error(t('auth.verifyEmail.toast.failed'));
     } finally {
       setIsResending(false);
     }
@@ -99,28 +101,28 @@ export default function EmailVerification() {
   const getStatusTitle = () => {
     switch (status) {
       case 'loading':
-        return 'Verifying your email...';
+        return t('auth.verifyEmail.verifying');
       case 'success':
-        return 'Email Verified!';
+        return t('auth.verifyEmail.verified');
       case 'expired':
-        return 'Verification Link Expired';
+        return t('auth.verifyEmail.expired');
       case 'error':
-        return 'Verification Failed';
+        return t('auth.verifyEmail.failed');
       default:
-        return 'Email Verification';
+        return t('auth.verifyEmail.title');
     }
   };
 
   const getStatusMessage = () => {
     switch (status) {
       case 'loading':
-        return 'Please wait while we verify your email address.';
+        return t('auth.verifyEmail.messages.loading');
       case 'success':
-        return 'Your email has been successfully verified. You can now access all features of your account.';
+        return t('auth.verifyEmail.messages.success');
       case 'expired':
-        return 'The verification link has expired. Please request a new verification email.';
+        return t('auth.verifyEmail.messages.expired');
       case 'error':
-        return 'We couldn\'t verify your email address. The link may be invalid or already used.';
+        return t('auth.verifyEmail.messages.error');
       default:
         return '';
     }
@@ -134,7 +136,7 @@ export default function EmailVerification() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
@@ -142,8 +144,8 @@ export default function EmailVerification() {
       >
         <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
           <div className="text-center">
-            <Logo size="lg" animated />
-            
+            <Logo size="lg" />
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -153,7 +155,7 @@ export default function EmailVerification() {
               {getStatusIcon()}
             </motion.div>
 
-            <motion.h2 
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -162,7 +164,7 @@ export default function EmailVerification() {
               {getStatusTitle()}
             </motion.h2>
 
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
@@ -183,7 +185,7 @@ export default function EmailVerification() {
                   to="/login"
                   className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
                 >
-                  Continue to Login
+                  {t('auth.verifyEmail.buttons.continueLogin')}
                 </Link>
               )}
 
@@ -198,12 +200,12 @@ export default function EmailVerification() {
                   {isResending ? (
                     <>
                       <LoadingSpinner size="sm" color="white" />
-                      Sending...
+                      {t('auth.verifyEmail.buttons.sending')}
                     </>
                   ) : (
                     <>
                       <RefreshCw className="h-4 w-4" />
-                      {canResend ? 'Resend Verification Email' : `Resend in ${countdown}s`}
+                      {canResend ? t('auth.verifyEmail.buttons.resend') : t('auth.verifyEmail.buttons.resendIn', { seconds: countdown })}
                     </>
                   )}
                 </motion.button>
@@ -214,7 +216,7 @@ export default function EmailVerification() {
                 className="btn-secondary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to Login
+                {t('auth.verifyEmail.buttons.backLogin')}
               </Link>
             </motion.div>
 
@@ -226,9 +228,9 @@ export default function EmailVerification() {
                 transition={{ delay: 0.6 }}
                 className="mt-8 p-4 bg-dark-800/50 rounded-xl border border-dark-700/50"
               >
-                <h4 className="text-white font-semibold mb-2">Need Help?</h4>
+                <h4 className="text-white font-semibold mb-2">{t('auth.verifyEmail.help.title')}</h4>
                 <p className="text-gray-400 text-sm">
-                  If you continue to have issues with email verification, please contact our support team.
+                  {t('auth.verifyEmail.help.text')}
                 </p>
               </motion.div>
             )}

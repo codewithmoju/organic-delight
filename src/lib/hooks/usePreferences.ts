@@ -19,7 +19,7 @@ export interface PreferenceSettings {
 }
 
 const DEFAULT_PREFERENCES: PreferenceSettings = {
-  preferred_currency: 'USD',
+  preferred_currency: 'PKR',
   language: 'en',
   theme: 'system',
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -64,7 +64,7 @@ export function usePreferences() {
         email_notifications: profile.email_notifications ?? DEFAULT_PREFERENCES.email_notifications,
         push_notifications: profile.push_notifications ?? DEFAULT_PREFERENCES.push_notifications,
       };
-      
+
       // Only update if preferences have actually changed
       setPreferences(prev => {
         const newPreferences = { ...prev, ...profilePreferences };
@@ -106,12 +106,12 @@ export function usePreferences() {
     setPreferences(prev => {
       const newPreferences = { ...prev, [key]: value };
       setHasUnsavedChanges(true);
-      
+
       // Auto-save if enabled
       if (newPreferences.auto_save) {
         debouncedSave({ [key]: value });
       }
-      
+
       return newPreferences;
     });
   }, [debouncedSave]);
@@ -121,11 +121,11 @@ export function usePreferences() {
     setPreferences(prev => {
       const newPreferences = { ...prev, ...updates };
       setHasUnsavedChanges(true);
-      
+
       if (newPreferences.auto_save) {
         debouncedSave(updates);
       }
-      
+
       return newPreferences;
     });
   }, [debouncedSave]);

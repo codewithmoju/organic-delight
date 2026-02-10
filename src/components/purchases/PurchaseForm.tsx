@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, ArrowLeft, CheckCircle2, ShoppingBag, Calendar, Receipt, Hash } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, CheckCircle2, ShoppingBag, Calendar, Receipt } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Vendor, Category } from '../../lib/types';
 import { getCategories } from '../../lib/api/categories';
 import { createPurchase } from '../../lib/api/purchases';
@@ -13,6 +14,8 @@ import VendorSelector from './VendorSelector';
 import PurchaseItemBuilder, { PurchaseItemData } from './PurchaseItemBuilder';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
+
+
 interface PurchaseFormProps {
     isOpen: boolean;
     onClose: () => void;
@@ -20,6 +23,7 @@ interface PurchaseFormProps {
 }
 
 export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFormProps) {
+    const { t } = useTranslation();
     const profile = useAuthStore(state => state.profile);
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +55,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
             setCategories(cats);
         } catch (error) {
             console.error('Error loading categories:', error);
-            toast.error('Failed to load categories');
+            toast.error(t('purchases.messages.loadError'));
         }
     };
 
@@ -76,11 +80,11 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
 
     const handleNext = () => {
         if (currentStep === 1 && !selectedVendor) {
-            toast.error('Please select a vendor');
+            toast.error(t('purchases.messages.selectVendor'));
             return;
         }
         if (currentStep === 2 && purchaseItems.length === 0) {
-            toast.error('Please add at least one item');
+            toast.error(t('purchases.messages.addItems'));
             return;
         }
         setCurrentStep(prev => Math.min(prev + 1, 3));
@@ -92,11 +96,11 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
 
     const handleSubmit = async () => {
         if (!selectedVendor) {
-            toast.error('Please select a vendor');
+            toast.error(t('purchases.messages.selectVendor'));
             return;
         }
         if (purchaseItems.length === 0) {
-            toast.error('Please add items to the purchase');
+            toast.error(t('purchases.messages.addItems'));
             return;
         }
 
@@ -115,6 +119,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                             barcode: item.barcode,
                             purchase_rate: item.purchase_rate,
                             sale_rate: item.sale_rate,
+                            unit_price: item.sale_rate,
                             reorder_point: 10,
                             created_by: profile?.id || 'unknown'
                         });
@@ -157,12 +162,12 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                 notes
             });
 
-            toast.success('Purchase created successfully!');
+            toast.success(t('purchases.messages.success'));
             onSuccess?.();
             onClose();
         } catch (error: any) {
             console.error('Purchase error:', error);
-            toast.error(error.message || 'Failed to create purchase');
+            toast.error(error.message || t('purchases.messages.error'));
         } finally {
             setIsSubmitting(false);
         }
@@ -182,12 +187,12 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-dark-700">
                         <div>
-                            <h2 className="text-2xl font-bold text-gradient">New Purchase</h2>
+                            <h2 className="text-2xl font-bold text-gradient">{t('purchases.newPurchase')}</h2>
                             <p className="text-sm text-gray-400 mt-1">
-                                Step {currentStep} of 3: {
-                                    currentStep === 1 ? 'Select Vendor' :
-                                        currentStep === 2 ? 'Add Items' :
-                                            'Review & Complete'
+                                {t('purchases.step', { current: currentStep, total: 3 })}: {
+                                    currentStep === 1 ? t('purchases.selectVendor') :
+                                        currentStep === 2 ? t('purchases.addItems') :
+                                            t('purchases.reviewComplete')
                                 }
                             </p>
                         </div>
@@ -269,12 +274,12 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                     className="space-y-6"
                                 >
                                     <div className="bg-dark-800 rounded-lg p-6 border border-dark-700">
-                                        <h3 className="text-lg font-semibold text-white mb-4">Purchase Details</h3>
+                                        <h3 className="text-lg font-semibold text-white mb-4">{t('purchases.purchaseDetails')}</h3>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                    Purchase Date *
+                                                    {t('purchases.purchaseDate')}
                                                 </label>
                                                 <div className="relative">
                                                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -289,7 +294,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
 
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                    Bill Number (Optional)
+                                                    {t('purchases.billNumberOptional')}
                                                 </label>
                                                 <div className="relative">
                                                     <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -297,7 +302,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                                         type="text"
                                                         value={billNumber}
                                                         onChange={(e) => setBillNumber(e.target.value)}
-                                                        placeholder="Vendor's invoice number"
+                                                        placeholder={t('purchases.vendorInvoiceNumber')}
                                                         className="w-full input-dark pl-10"
                                                     />
                                                 </div>
@@ -306,7 +311,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
 
                                         <div className="mt-4">
                                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                Payment Status
+                                                {t('purchases.paymentStatus')}
                                             </label>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {(['paid', 'partial', 'unpaid'] as const).map((status) => (
@@ -318,7 +323,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                                             : 'border-dark-600 text-gray-400 hover:border-dark-500'
                                                             }`}
                                                     >
-                                                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                                                        {t(`purchases.${status}`)}
                                                     </button>
                                                 ))}
                                             </div>
@@ -327,7 +332,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                         {paymentStatus === 'partial' && (
                                             <div className="mt-4">
                                                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                    Paid Amount
+                                                    {t('purchases.paidAmount')}
                                                 </label>
                                                 <input
                                                     type="number"
@@ -342,38 +347,38 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
 
                                         <div className="mt-4">
                                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                Notes (Optional)
+                                                {t('purchases.notesOptional')}
                                             </label>
                                             <textarea
                                                 value={notes}
                                                 onChange={(e) => setNotes(e.target.value)}
                                                 rows={3}
                                                 className="w-full input-dark resize-none"
-                                                placeholder="Add any additional notes..."
+                                                placeholder={t('purchases.addNotes')}
                                             />
                                         </div>
                                     </div>
 
                                     {/* Summary Card */}
                                     <div className="bg-primary-500/10 border border-primary-500/30 rounded-lg p-6">
-                                        <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+                                        <h3 className="text-lg font-semibold text-white mb-4">{t('purchases.orderSummary')}</h3>
 
                                         <div className="space-y-2 text-sm">
                                             <div className="flex justify-between">
-                                                <span className="text-gray-400">Vendor:</span>
+                                                <span className="text-gray-400">{t('vendors.title')}:</span>
                                                 <span className="text-white font-medium">{selectedVendor?.name}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-gray-400">Items:</span>
+                                                <span className="text-gray-400">{t('pos.terminal.items')}:</span>
                                                 <span className="text-white">{purchaseItems.length}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-gray-400">Total Units:</span>
+                                                <span className="text-gray-400">{t('purchases.totalUnits')}:</span>
                                                 <span className="text-white">{purchaseItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
                                             </div>
                                             <div className="border-t border-primary-500/30 pt-2 mt-2">
                                                 <div className="flex justify-between text-lg">
-                                                    <span className="text-gray-300 font-semibold">Total Amount:</span>
+                                                    <span className="text-gray-300 font-semibold">{t('purchases.totalAmount')}:</span>
                                                     <span className="text-primary-400 font-bold">{formatCurrency(calculateTotal())}</span>
                                                 </div>
                                             </div>
@@ -391,7 +396,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                             className="btn-secondary flex items-center gap-2"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            {currentStep === 1 ? 'Cancel' : 'Back'}
+                            {currentStep === 1 ? t('common.cancel') : t('common.back')}
                         </button>
 
                         {currentStep < 3 ? (
@@ -399,7 +404,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                 onClick={handleNext}
                                 className="btn-primary flex items-center gap-2"
                             >
-                                Next
+                                {t('common.next')}
                                 <ArrowRight className="w-4 h-4" />
                             </button>
                         ) : (
@@ -411,12 +416,12 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                 {isSubmitting ? (
                                     <>
                                         <LoadingSpinner size="sm" color="white" />
-                                        Creating...
+                                        {t('purchases.creating')}
                                     </>
                                 ) : (
                                     <>
                                         <ShoppingBag className="w-4 h-4" />
-                                        Complete Purchase
+                                        {t('purchases.completePurchase')}
                                     </>
                                 )}
                             </button>

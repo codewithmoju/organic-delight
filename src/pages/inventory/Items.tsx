@@ -1,22 +1,25 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Pencil, Trash2, Package, Calendar, LayoutGrid, List, AlertTriangle, Settings } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, Calendar, LayoutGrid, List, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { getItems, createItem, updateItem, deleteItem } from '../../lib/api/items';
+import { useTranslation } from 'react-i18next';
+import { getItems, createItem, updateItem, deleteItem, reconcileAllItemsStock } from '../../lib/api/items';
 import { getCategories } from '../../lib/api/categories';
 import { createItemWithInitialStock } from '../../lib/api/enhancedItems';
-import { updateLowStockThreshold } from '../../lib/api/lowStock';
+
 import { Category, EnhancedItem } from '../../lib/types';
-import MultiStepItemForm from '../../components/inventory/MultiStepItemForm';
+import QuickItemForm from '../../components/inventory/QuickItemForm';
 import ItemForm from '../../components/inventory/ItemForm';
 import AnimatedCard from '../../components/ui/AnimatedCard';
 import SearchInput from '../../components/ui/SearchInput';
 import { formatCurrency, formatDate } from '../../lib/utils/notifications';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
-import ContextualLoader from '../../components/ui/ContextualLoader';
+import { PageSkeleton, TableSkeleton } from '../../components/ui/SkeletonLoader';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function Items() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<EnhancedItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<EnhancedItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -27,10 +30,13 @@ export default function Items() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'analysis'>('grid');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-  const [editingThreshold, setEditingThreshold] = useState<string | null>(null);
-  const [newThresholdValue, setNewThresholdValue] = useState<number>(10);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const [useMultiStepForm] = useState(true);
+  // Inline editing state for price
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+  const [editingPriceValue, setEditingPriceValue] = useState<number>(0);
+
+
 
   const pagination = usePagination({
     data: filteredItems,
@@ -85,14 +91,18 @@ export default function Items() {
     setFilteredItems(filtered);
   }
 
-  const handleUpdateThreshold = async (itemId: string) => {
+
+
+  const handleInlinePriceUpdate = async (itemId: string) => {
+    const previousItems = [...items];
+    setItems(prevItems => prevItems.map(item => item.id === itemId ? { ...item, unit_price: editingPriceValue } : item));
+    setEditingPriceId(null);
+    toast.success(t('items.messages.priceUpdated', 'Price updated!'));
     try {
-      await updateLowStockThreshold(itemId, newThresholdValue);
-      toast.success('Threshold updated');
-      setEditingThreshold(null);
-      await loadData();
-    } catch (error) {
-      toast.error('Failed to update threshold');
+      await updateItem(itemId, { unit_price: editingPriceValue });
+    } catch (error: any) {
+      setItems(previousItems);
+      toast.error(t('items.messages.priceError', 'Failed to update price.'));
     }
   };
 
@@ -100,6 +110,7 @@ export default function Items() {
     name: string;
     description: string;
     category_id: string;
+    unit?: string;
     unit_price?: number;
     barcode?: string;
     sku?: string;
@@ -108,33 +119,99 @@ export default function Items() {
     reorder_point?: number;
     created_by: string;
   }, initialStock?: number) {
+    // --- Optimistic UI: Update state immediately ---
+    const previousItems = [...items];
+    const tempId = `temp-${Date.now()}`;
+    const categoryData = categories.find(c => c.id === data.category_id);
+
+    const optimisticItem: EnhancedItem = {
+      id: selectedItem?.id || tempId,
+      name: data.name,
+      description: data.description,
+      category_id: data.category_id,
+      category: categoryData,
+      unit: data.unit || 'pcs',
+      unit_price: data.unit_price || 0,
+      barcode: data.barcode,
+      sku: data.sku,
+      reorder_point: data.reorder_point || 10,
+      current_quantity: initialStock ?? selectedItem?.current_quantity ?? 0,
+      average_unit_cost: selectedItem?.average_unit_cost || 0,
+      total_value: selectedItem?.total_value || 0,
+      created_at: selectedItem?.created_at || new Date(),
+      updated_at: new Date(),
+      created_by: data.created_by,
+    };
+
+    if (selectedItem) {
+      // Update existing item in state
+      setItems(prevItems => prevItems.map(item => item.id === selectedItem.id ? { ...item, ...optimisticItem } : item));
+      toast.success(t('items.messages.updateSuccess', 'Item updated!'));
+    } else {
+      // Add new item to state
+      setItems(prevItems => [optimisticItem, ...prevItems]);
+      toast.success(t('items.messages.createSuccess', 'Item created!'));
+    }
+    setIsFormOpen(false);
+    setSelectedItem(null);
+
+    // --- Perform the actual API call in the background ---
     try {
-      console.log('Creating/updating item:', data);
+      let createdItem;
       if (selectedItem) {
         await updateItem(selectedItem.id, data);
-      } else if (useMultiStepForm && initialStock !== undefined) {
-        await createItemWithInitialStock(data as any, initialStock);
+      } else if (initialStock !== undefined) {
+        createdItem = await createItemWithInitialStock(data as any, initialStock);
       } else {
-        await createItem(data);
+        createdItem = await createItem(data);
       }
-      console.log('Item operation successful, reloading data...');
-      await loadData();
-      setIsFormOpen(false);
-      setSelectedItem(null);
-    } catch (error) {
+
+      // Update the temporary item with the real ID after successful creation
+      if (createdItem && !selectedItem) {
+        setItems(prevItems => prevItems.map(item => item.id === tempId ? { ...item, id: createdItem.id } : item));
+      }
+      // Reload data in the background to sync with server (e.g., for stock levels)
+      loadData();
+    } catch (error: any) {
+      // --- Rollback: Revert to previous state on error ---
+      setItems(previousItems);
+      toast.error(error.message || t('items.messages.error', 'Operation failed. Changes reverted.'));
       throw error;
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to delete this item? Items with transaction history will be archived instead of permanently deleted.')) return;
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
+  const handleDeleteClick = (id: string) => {
+    setItemToDelete(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteConfirmOpen(false);
+    setItemToDelete(null);
+  };
+
+  async function confirmDelete() {
+    if (!itemToDelete) return;
+
+    const id = itemToDelete;
+    setIsDeleteConfirmOpen(false);
+    setItemToDelete(null);
+
+    // --- Optimistic UI: Remove item from state immediately ---
+    const previousItems = [...items];
+    setItems(prevItems => prevItems.filter(item => item.id !== id));
+    toast.success(t('items.messages.deleteSuccess'));
+
+    // --- Perform the actual API call in the background ---
     try {
       await deleteItem(id);
-      await loadData();
-      toast.success('Item processed successfully');
     } catch (error: any) {
-      toast.error('Failed to process item');
+      // --- Rollback: Revert to previous state on error ---
+      setItems(previousItems);
+      toast.error(t('items.messages.deleteError') + ': ' + (error.message || 'Unknown error'));
       console.error(error);
     }
   }
@@ -144,19 +221,34 @@ export default function Items() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-6xl mx-auto"
       >
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gradient">
-            {selectedItem ? 'Edit Item' : 'Add New Item'}
-          </h1>
-          <p className="text-gray-400 mt-2">
-            {selectedItem ? 'Update item information' : 'Create a new inventory item'}
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400">
+              {selectedItem ? t('items.editItem') : t('items.addItem')}
+            </h1>
+            <p className="text-muted-foreground mt-2 text-lg">
+              {selectedItem ? t('items.updateItem') : t('items.createItem')}
+            </p>
+          </div>
+          <button
+            onClick={() => { setIsFormOpen(false); setSelectedItem(null); }}
+            className="p-3 bg-secondary/50 rounded-full hover:bg-secondary transition-colors"
+            title="Close"
+          >
+            <Plus className="w-6 h-6 rotate-45 text-muted-foreground" />
+          </button>
         </div>
 
-        <AnimatedCard>
-          <div className="p-6">
+        <div className="card-theme p-8 rounded-[2.5rem] shadow-2xl backdrop-blur-xl border border-white/20 dark:border-white/10 relative" style={{ contain: 'none' }}>
+          {/* Decorative Background Elements - Clipped */}
+          <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -ml-16 -mb-16" />
+          </div>
+
+          <div className="relative z-10">
             {selectedItem ? (
               <ItemForm
                 initialData={selectedItem}
@@ -168,9 +260,9 @@ export default function Items() {
                 }}
               />
             ) : (
-              <MultiStepItemForm
+              <QuickItemForm
                 categories={categories}
-                onSubmit={(data: any) => handleSubmit(data, data.total_stock)}
+                onSubmit={(data: any) => handleSubmit(data, data.initial_stock)}
                 onCancel={() => {
                   setIsFormOpen(false);
                   setSelectedItem(null);
@@ -178,19 +270,13 @@ export default function Items() {
               />
             )}
           </div>
-        </AnimatedCard>
+        </div>
       </motion.div>
     );
   }
 
   return (
     <div className="relative">
-      <ContextualLoader
-        isLoading={isLoading}
-        context="items"
-        variant="overlay"
-      />
-
       <div className="space-y-6">
         {/* Page Header */}
         <motion.div
@@ -199,9 +285,9 @@ export default function Items() {
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-3xl font-bold text-gradient">Inventory Manager</h1>
+            <h1 className="text-3xl font-bold text-gradient">{t('navigation.inventoryManager')}</h1>
             <p className="text-gray-400 text-sm mt-1">
-              Unified view for item management, stock analysis, and low-stock alerts.
+              {t('items.subtitle')}
             </p>
           </div>
 
@@ -215,229 +301,200 @@ export default function Items() {
             className="btn-primary flex items-center justify-center gap-2"
           >
             <Plus className="w-5 h-5" />
-            Add New Item
+            {t('items.addItem')}
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={async () => {
+              setIsSyncing(true);
+              const toastId = toast.loading('Syncing stock levels...');
+              try {
+                const result = await reconcileAllItemsStock();
+                toast.success(`Synced ${result.updated} items successfully!`, { id: toastId });
+                loadData();
+              } catch (error) {
+                toast.error('Failed to sync stock levels', { id: toastId });
+              } finally {
+                setIsSyncing(false);
+              }
+            }}
+            disabled={isSyncing}
+            className="flex items-center justify-center gap-2 p-3 bg-secondary/50 rounded-2xl hover:bg-secondary transition-colors text-muted-foreground border border-border/50"
+            title="Reconcile stock levels with transaction history"
+          >
+            <Calendar className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span className="text-sm font-semibold hidden sm:inline">Sync Stock</span>
           </motion.button>
         </motion.div>
 
-        {/* Filters and View Controls */}
-        <AnimatedCard delay={0.1}>
-          <div className="p-4 sm:p-6 space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-              <div className="lg:col-span-2">
-                <SearchInput
-                  placeholder="Search by name, SKU, or barcode..."
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  className="w-full"
-                />
-              </div>
+        {/* Filters and View Controls - Redesigned */}
+        <div className="card-theme p-2 rounded-[2rem] sticky top-4 z-30 shadow-xl backdrop-blur-md border border-white/20 bg-white/50 dark:bg-black/50">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-2">
+            <div className="w-full lg:w-1/3 relative">
+              <SearchInput
+                placeholder={t('items.searchPlaceholder')}
+                value={searchQuery}
+                onChange={setSearchQuery}
+                className="w-full h-12 bg-white/80 dark:bg-dark-800/80 border-0 rounded-2xl shadow-sm focus:ring-2 focus:ring-primary-500/50"
+              />
+            </div>
 
-              <div>
+            <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 px-2 lg:px-0 scrollbar-hide">
+              {/* Category Filter */}
+              <div className="relative min-w-[200px]">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full input-dark"
+                  className="w-full h-12 pl-4 pr-10 appearance-none bg-white/80 dark:bg-dark-800/80 rounded-2xl border-0 shadow-sm focus:ring-2 focus:ring-primary-500/50 text-sm font-medium cursor-pointer"
                 >
-                  <option value="">All Categories</option>
+                  <option value="">{t('items.allCategories')}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                  <List className="w-4 h-4" />
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex bg-dark-900 rounded-xl p-1 border border-dark-700/50">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                    title="Grid View"
-                  >
-                    <LayoutGrid className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('analysis')}
-                    className={`p-2 rounded-lg transition-all ${viewMode === 'analysis' ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                    title="Stock Analysis View"
-                  >
-                    <List className="w-5 h-5" />
-                  </button>
-                </div>
+              <div className="h-8 w-px bg-border/50 mx-2 hidden lg:block" />
 
+              {/* View Toggles */}
+              <div className="flex bg-white/80 dark:bg-dark-800/80 rounded-2xl p-1 shadow-sm border border-white/10">
                 <button
-                  onClick={() => setShowLowStockOnly(!showLowStockOnly)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${showLowStockOnly ? 'bg-error-500/20 border-error-500 text-error-400' : 'bg-dark-900 border-dark-700/50 text-gray-400 hover:text-white'}`}
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2.5 rounded-xl transition-all duration-300 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-md scale-105' : 'text-muted-foreground hover:bg-secondary/50'}`}
+                  title="Grid View"
                 >
-                  <AlertTriangle className="w-4 h-4" />
-                  <span className="text-sm font-medium whitespace-nowrap">Low Stock</span>
+                  <LayoutGrid className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('analysis')}
+                  className={`p-2.5 rounded-xl transition-all duration-300 ${viewMode === 'analysis' ? 'bg-primary text-primary-foreground shadow-md scale-105' : 'text-muted-foreground hover:bg-secondary/50'}`}
+                  title="List View"
+                >
+                  <List className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Low Stock Toggle */}
+              <button
+                onClick={() => setShowLowStockOnly(!showLowStockOnly)}
+                className={`flex items-center gap-2 px-4 h-12 rounded-2xl transition-all duration-300 shadow-sm border ${showLowStockOnly ? 'bg-warning-500/10 border-warning-500 text-warning-600 dark:text-warning-400' : 'bg-white/80 dark:bg-dark-800/80 border-transparent text-muted-foreground hover:bg-secondary/50'}`}
+              >
+                <AlertTriangle className={`w-5 h-5 ${showLowStockOnly ? 'animate-pulse' : ''}`} />
+                <span className="text-sm font-semibold whitespace-nowrap">{t('common.lowStock')}</span>
+              </button>
             </div>
           </div>
-        </AnimatedCard>
+        </div>
 
         {/* View Content */}
-        {viewMode === 'grid' ? (
+        {isLoading ? (
+          viewMode === 'grid' ? <PageSkeleton /> : <TableSkeleton rows={8} />
+        ) : viewMode === 'grid' ? (
           <motion.div
             layout
             data-tour="items-grid"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           >
             <AnimatePresence>
               {pagination.paginatedData.map((item: any, index) => (
                 <motion.div
                   key={item.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -8, scale: 1.03 }}
-                  className="card-dark p-4 sm:p-6 group cursor-pointer relative overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                  className="card-theme p-6 rounded-[2.5rem] group cursor-pointer relative overflow-hidden flex flex-col justify-between h-full border border-border/50 hover:border-primary/30 hover:shadow-2xl transition-all duration-300"
+                  onClick={() => {
+                    setSelectedItem(item);
+                    setIsFormOpen(true);
+                  }}
                 >
-                  {/* Background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {/* Decorative Background Gradient */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none group-hover:bg-primary/10 transition-colors" />
 
-                  {/* Stock status indicator */}
-                  <div className={`absolute top-4 right-4 w-3 h-3 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)] ${(item.current_quantity || 0) === 0
-                    ? 'bg-error-500 shadow-error-500/50'
-                    : (item.current_quantity || 0) <= (item.low_stock_threshold || 10)
-                      ? 'bg-warning-500 shadow-warning-500/50'
-                      : 'bg-success-500 shadow-success-500/50'
-                    }`} />
+                  {/* Stock Status Badge (Absolute Top Right) */}
+                  <div className={`absolute top-5 right-5 z-20`}>
+                    <span className={`flex h-3 w-3 relative`}>
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(item.current_quantity || 0) === 0 ? 'bg-error-400' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'bg-warning-400' : 'bg-success-400'}`}></span>
+                      <span className={`relative inline-flex rounded-full h-3 w-3 ${(item.current_quantity || 0) === 0 ? 'bg-error-500' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'bg-warning-500' : 'bg-success-500'}`}></span>
+                    </span>
+                  </div>
 
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base sm:text-lg font-semibold text-white group-hover:text-primary-300 transition-colors duration-200 truncate">
-                          {item.name}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-400 mt-1 truncate">
-                          {item.category?.name || 'Uncategorized'}
-                        </p>
-                      </div>
+
+                  <div className="relative z-10 mb-6">
+                    <div className="flex flex-col gap-1 pr-8">
+                      <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-200 truncate leading-tight">
+                        {item.name}
+                      </h3>
+                      <p className="text-sm font-medium text-muted-foreground truncate bg-secondary/30 self-start px-2 py-0.5 rounded-lg border border-border/50">
+                        {item.category?.name || t('items.uncategorized')}
+                      </p>
                     </div>
 
-                    <p className="text-gray-300 text-sm mb-4 line-clamp-2">
-                      {item.description}
+                    <p className="text-muted-foreground/80 text-sm mt-4 line-clamp-2 h-10 leading-relaxed">
+                      {item.description || "No description provided."}
                     </p>
+                  </div>
 
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400 text-sm">Current Stock</span>
-                        <div className="flex items-center gap-2">
-                          <span className={`font-semibold ${(item.current_quantity || 0) === 0
-                            ? 'text-error-400'
-                            : (item.current_quantity || 0) <= (item.low_stock_threshold || 10)
-                              ? 'text-warning-400'
-                              : 'text-success-400'
-                            }`}>
+                  <div className="space-y-4 relative z-10">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-secondary/30 rounded-2xl p-3 border border-border/50">
+                        <span className="text-xs text-muted-foreground block mb-1 font-medium tracking-wide uppercase">{t('items.currentStock')}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-lg font-bold ${(item.current_quantity || 0) === 0 ? 'text-error-500' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'text-warning-500' : 'text-success-500'}`}>
                             {item.current_quantity || 0}
                           </span>
+                          <span className="text-xs text-muted-foreground font-medium">{item.unit || 'pcs'}</span>
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400 text-sm">Sale Price</span>
-                        <span className="text-white font-semibold">
-                          {formatCurrency(item.unit_price || item.last_sale_rate || 0)}
+                      <div className="bg-secondary/30 rounded-2xl p-3 border border-border/50">
+                        <span className="text-xs text-muted-foreground block mb-1 font-medium tracking-wide uppercase">{t('items.salePrice')}</span>
+                        <span className="text-lg font-bold text-foreground">
+                          {formatCurrency(item.unit_price || item.sale_rate || item.last_sale_rate || 0)}
                         </span>
                       </div>
+                    </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400 text-sm">Avg. Cost</span>
-                        <span className="text-gray-300 font-medium">
-                          {formatCurrency(item.average_unit_cost || 0)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-dark-700/50 pt-2">
-                        <span className="text-gray-400 text-xs">Total Position</span>
-                        <span className="text-primary-400 font-bold">
-                          {formatCurrency(item.total_value || 0)}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-2">
-                        <div className="text-[10px] text-gray-500">
-                          SKU ID: <span className="text-gray-400">{item.sku || 'N/A'}</span>
-                        </div>
-                        {item.barcode && (
-                          <div className="text-[10px] text-gray-500 text-right">
-                            Tag: <span className="text-gray-400">{item.barcode}</span>
-                          </div>
-                        )}
-                      </div>
-
+                    {/* Quick SKU/Tag Info */}
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
+                      <span className="font-mono bg-secondary/50 px-1.5 py-0.5 rounded border border-border/30">ID: {item.sku || 'N/A'}</span>
                       {item.last_transaction_date && (
-                        <div className="pt-1">
-                          <div className="flex items-center text-[10px] text-gray-500">
-                            <Calendar className="w-2.5 h-2.5 mr-1" />
-                            Active: {formatDate(item.last_transaction_date)}
-                          </div>
-                        </div>
+                        <span className="flex items-center gap-1 opacity-70">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(item.last_transaction_date)}
+                        </span>
                       )}
                     </div>
 
-                    {/* Quick Threshold Edit */}
-                    <div className={`mt-3 p-2 rounded-lg bg-dark-900/50 border border-dark-700/30 transition-all ${editingThreshold === item.id ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden group-hover:h-auto group-hover:opacity-100'}`}>
-                      {editingThreshold === item.id ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            value={newThresholdValue}
-                            onChange={(e) => setNewThresholdValue(parseInt(e.target.value))}
-                            className="input-dark py-1 px-2 text-xs flex-1"
-                            autoFocus
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleUpdateThreshold(item.id); }}
-                            className="bg-primary-500 text-white p-1 rounded hover:bg-primary-600 transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingThreshold(item.id);
-                            setNewThresholdValue(item.low_stock_threshold || 10);
-                          }}
-                          className="w-full flex items-center justify-between text-[10px] text-gray-400 hover:text-white"
-                        >
-                          <span className="flex items-center gap-1">
-                            <Settings className="w-3 h-3" />
-                            Threshold: {item.low_stock_threshold || 10}
-                          </span>
-                          <span className="text-primary-400 hover:underline">Edit</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-end gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    {/* Hover Actions */}
+                    <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedItem(item);
                           setIsFormOpen(true);
                         }}
-                        className="p-2 rounded-lg bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 transition-colors duration-200"
+                        className="h-9 w-9 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90"
                         title="Edit Details"
                       >
                         <Pencil className="h-4 w-4" />
                       </motion.button>
-
                       <motion.button
                         whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                        className="p-2 rounded-lg bg-error-500/20 text-error-400 hover:bg-error-500/30 transition-colors duration-200"
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(item.id); }}
+                        className="h-9 w-9 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center hover:bg-destructive/90"
                         title="Delete Product"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -449,64 +506,92 @@ export default function Items() {
             </AnimatePresence>
           </motion.div>
         ) : (
-          <AnimatedCard>
+          <div className="card-theme rounded-[2.5rem] overflow-hidden border border-border/50 shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-dark-900 border-b border-dark-700/50">
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Product Info</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Stock</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Avg. Cost</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Selling</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Valuation</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Status</th>
+                  <tr className="bg-secondary/30 border-b border-white/10 dark:border-white/5">
+                    <th className="px-6 py-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('items.table.productInfo')}</th>
+                    <th className="px-6 py-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('items.table.category')}</th>
+                    <th className="px-6 py-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">{t('items.table.stock')}</th>
+                    <th className="px-6 py-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">{t('items.table.avgCost')}</th>
+                    <th className="px-6 py-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">{t('items.table.selling')}</th>
+                    <th className="px-6 py-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">{t('items.table.valuation')}</th>
+                    <th className="px-6 py-5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">{t('items.table.status')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-dark-700/30">
+                <tbody className="divide-y divide-border/30">
                   {pagination.paginatedData.map((item: any) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-dark-700/20 transition-colors cursor-pointer group"
+                      className="hover:bg-secondary/20 transition-colors cursor-pointer group"
                       onClick={() => {
                         setSelectedItem(item);
                         setIsFormOpen(true);
                       }}
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         <div className="flex flex-col">
-                          <span className="text-white font-medium group-hover:text-primary-400 transition-colors">{item.name}</span>
-                          <span className="text-[10px] text-gray-500 uppercase tracking-tight">SKU: {item.sku || 'N/A'}</span>
+                          <span className="text-foreground font-semibold group-hover:text-primary transition-colors text-base">{item.name}</span>
+                          <span className="text-xs text-muted-foreground uppercase tracking-tight font-mono mt-0.5">SKU: {item.sku || 'N/A'}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-400 text-sm">{item.category?.name || 'Uncategorized'}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`text-lg font-bold ${(item.current_quantity || 0) <= (item.low_stock_threshold || 10)
-                          ? 'text-warning-400'
-                          : 'text-white'
-                          }`}>
-                          {item.current_quantity || 0}
+                      <td className="px-6 py-5">
+                        <span className="text-sm text-foreground/80 bg-secondary/30 px-2 py-1 rounded-md border border-border/50">
+                          {item.category?.name || 'Uncategorized'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right text-gray-300 font-medium">
+                      <td className="px-6 py-5 text-center">
+                        <span className={`text-base font-bold ${(item.current_quantity || 0) <= (item.low_stock_threshold || 10)
+                          ? 'text-warning-500'
+                          : 'text-foreground'
+                          }`}>
+                          {item.current_quantity || 0} <span className="text-xs text-muted-foreground font-normal ml-1">{item.unit || 'pcs'}</span>
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-right text-muted-foreground font-medium">
                         {formatCurrency(item.average_unit_cost || 0)}
                       </td>
-                      <td className="px-6 py-4 text-right text-white font-semibold">
-                        {formatCurrency(item.unit_price || item.last_sale_rate || 0)}
+                      <td
+                        className="px-6 py-5 text-right"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingPriceId(item.id);
+                          setEditingPriceValue(item.unit_price || 0);
+                        }}
+                      >
+                        {editingPriceId === item.id ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editingPriceValue}
+                            onChange={(e) => setEditingPriceValue(parseFloat(e.target.value) || 0)}
+                            onBlur={() => handleInlinePriceUpdate(item.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleInlinePriceUpdate(item.id);
+                              if (e.key === 'Escape') setEditingPriceId(null);
+                            }}
+                            className="input-dark w-24 text-right py-1 px-2 text-sm bg-white dark:bg-black border border-primary ring-2 ring-primary/20 rounded-md"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="text-foreground font-bold cursor-pointer hover:text-primary transition-colors">
+                            {formatCurrency(item.unit_price || item.last_sale_rate || 0)}
+                          </span>
+                        )}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <span className="text-primary-400 font-bold">{formatCurrency(item.total_value || 0)}</span>
+                      <td className="px-6 py-5 text-right">
+                        <span className="text-primary font-bold">{formatCurrency(item.total_value || 0)}</span>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className={`inline-flex px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${(item.current_quantity || 0) === 0
-                          ? 'bg-error-500/10 text-error-400'
+                      <td className="px-6 py-5 text-center">
+                        <div className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${(item.current_quantity || 0) === 0
+                          ? 'bg-error-500/10 text-error-600 border-error-200 dark:text-error-400 dark:border-error-900'
                           : (item.current_quantity || 0) <= (item.low_stock_threshold || 10)
-                            ? 'bg-warning-500/10 text-warning-400'
-                            : 'bg-success-500/10 text-success-400'
+                            ? 'bg-warning-500/10 text-warning-600 border-warning-200 dark:text-warning-400 dark:border-warning-900'
+                            : 'bg-success-500/10 text-success-600 border-success-200 dark:text-success-400 dark:border-success-900'
                           }`}>
-                          {(item.current_quantity || 0) === 0 ? 'Out of Stock' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'Low Stock' : 'Good'}
+                          {(item.current_quantity || 0) === 0 ? t('items.status.outOfStock') : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? t('items.status.lowStock') : t('items.status.good')}
                         </div>
                       </td>
                     </tr>
@@ -514,7 +599,7 @@ export default function Items() {
                 </tbody>
               </table>
             </div>
-          </AnimatedCard>
+          </div>
         )}
 
         {/* Pagination */}
@@ -543,11 +628,11 @@ export default function Items() {
             className="text-center py-12 sm:py-16 px-4"
           >
             <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-400 mb-2">No items found</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-400 mb-2">{t('items.noItems')}</h3>
             <p className="text-gray-500 mb-6 text-sm sm:text-base">
               {searchQuery || selectedCategory
-                ? 'Try adjusting your search or filter criteria'
-                : 'Get started by adding your first item'
+                ? t('items.noItemsDescription')
+                : t('items.noItemsEmpty')
               }
             </p>
             {!searchQuery && !selectedCategory && (
@@ -558,12 +643,22 @@ export default function Items() {
                 className="btn-primary"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Your First Item
+                {t('items.addFirstItem')}
               </motion.button>
             )}
           </motion.div>
         )}
       </div>
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        title={t('items.messages.deleteTitle', 'Delete Item')}
+        message={t('items.messages.deleteConfirm', 'Are you sure you want to delete this item? Items with transaction history will be archived instead of permanently deleted.')}
+        confirmText={t('common.delete', 'Delete')}
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </div>
   );
 }

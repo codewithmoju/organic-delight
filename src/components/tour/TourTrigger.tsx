@@ -1,5 +1,6 @@
 import React from 'react';
 import { Play, RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTour } from './TourProvider';
 
 interface TourTriggerProps {
@@ -8,6 +9,7 @@ interface TourTriggerProps {
 }
 
 export default function TourTrigger({ variant = 'button', className = '' }: TourTriggerProps) {
+  const { t } = useTranslation();
   const { startTour } = useTour();
 
   if (variant === 'card') {
@@ -17,8 +19,8 @@ export default function TourTrigger({ variant = 'button', className = '' }: Tour
         onClick={startTour}
       >
         <Play className="w-6 h-6 sm:w-8 sm:h-8" />
-        <span className="text-base sm:text-lg font-semibold">Take the App Tour</span>
-        <span className="text-xs sm:text-sm text-gray-400">Learn how to use StockSuite in just 2 minutes</span>
+        <span className="text-base sm:text-lg font-semibold">{t('tour.takeTour', 'Take the App Tour')}</span>
+        <span className="text-xs sm:text-sm text-gray-400">{t('tour.tourDesc', 'Learn how to use StockSuite in just 2 minutes')}</span>
       </div>
     );
   }
@@ -29,12 +31,13 @@ export default function TourTrigger({ variant = 'button', className = '' }: Tour
       className={`btn-primary flex items-center gap-2 ${className}`}
     >
       <Play className="w-4 h-4" />
-      Start Tour
+      {t('tour.startTour', 'Start Tour')}
     </button>
   );
 }
 
 export function RestartTourButton({ className = '' }: { className?: string }) {
+  const { t } = useTranslation();
   const { startTour } = useTour();
 
   return (
@@ -43,7 +46,7 @@ export function RestartTourButton({ className = '' }: { className?: string }) {
       className={`btn-secondary flex items-center gap-2 ${className}`}
     >
       <RotateCcw className="w-4 h-4" />
-      Restart Tour
+      {t('tour.restartTour', 'Restart Tour')}
     </button>
   );
 }

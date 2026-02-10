@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -24,6 +25,8 @@ export default function PaginationControls({
   totalItems,
   className = ''
 }: PaginationControlsProps) {
+  const { t } = useTranslation();
+
   // Generate page numbers to show
   const getPageNumbers = () => {
     const delta = 2;
@@ -57,9 +60,9 @@ export default function PaginationControls({
     <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}>
       {/* Results Info */}
       <div className="text-sm text-gray-400">
-        Showing <span className="font-medium text-white">{startIndex}</span> to{' '}
-        <span className="font-medium text-white">{endIndex}</span> of{' '}
-        <span className="font-medium text-white">{totalItems}</span> results
+        {t('common.pagination.showing', 'Showing')} <span className="font-medium text-white">{startIndex}</span> {t('common.pagination.to', 'to')}{' '}
+        <span className="font-medium text-white">{endIndex}</span> {t('common.pagination.of', 'of')}{' '}
+        <span className="font-medium text-white">{totalItems}</span> {t('common.pagination.results', 'results')}
       </div>
 
       {/* Pagination Controls */}
@@ -70,12 +73,11 @@ export default function PaginationControls({
           whileTap={{ scale: 0.95 }}
           onClick={() => onPageChange(1)}
           disabled={!hasPrevPage}
-          className={`p-2 rounded-lg transition-all duration-200 ${
-            !hasPrevPage
+          className={`p-2 rounded-lg transition-all duration-200 ${!hasPrevPage
               ? 'bg-gray-600/30 text-gray-500 cursor-not-allowed'
               : 'bg-dark-600/50 text-gray-300 hover:bg-dark-600/70 hover:text-white'
-          }`}
-          aria-label="Go to first page"
+            }`}
+          aria-label={t('common.pagination.firstPage', 'Go to first page')}
         >
           <ChevronsLeft className="w-4 h-4" />
         </motion.button>
@@ -86,12 +88,11 @@ export default function PaginationControls({
           whileTap={{ scale: 0.95 }}
           onClick={() => onPageChange(currentPage - 1)}
           disabled={!hasPrevPage}
-          className={`p-2 rounded-lg transition-all duration-200 ${
-            !hasPrevPage
+          className={`p-2 rounded-lg transition-all duration-200 ${!hasPrevPage
               ? 'bg-gray-600/30 text-gray-500 cursor-not-allowed'
               : 'bg-dark-600/50 text-gray-300 hover:bg-dark-600/70 hover:text-white'
-          }`}
-          aria-label="Go to previous page"
+            }`}
+          aria-label={t('common.pagination.prevPage', 'Go to previous page')}
         >
           <ChevronLeft className="w-4 h-4" />
         </motion.button>
@@ -105,14 +106,13 @@ export default function PaginationControls({
               whileTap={pageNum !== '...' ? { scale: 0.95 } : {}}
               onClick={() => typeof pageNum === 'number' ? onPageChange(pageNum) : undefined}
               disabled={pageNum === '...'}
-              className={`min-w-[40px] h-10 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                pageNum === currentPage
+              className={`min-w-[40px] h-10 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${pageNum === currentPage
                   ? 'bg-primary-600 text-white shadow-glow'
                   : pageNum === '...'
-                  ? 'text-gray-500 cursor-default'
-                  : 'bg-dark-600/50 text-gray-300 hover:bg-dark-600/70 hover:text-white'
-              }`}
-              aria-label={pageNum === '...' ? undefined : `Go to page ${pageNum}`}
+                    ? 'text-gray-500 cursor-default'
+                    : 'bg-dark-600/50 text-gray-300 hover:bg-dark-600/70 hover:text-white'
+                }`}
+              aria-label={pageNum === '...' ? undefined : t('common.pagination.page', { page: pageNum })}
               aria-current={pageNum === currentPage ? 'page' : undefined}
             >
               {pageNum}
@@ -126,12 +126,11 @@ export default function PaginationControls({
           whileTap={{ scale: 0.95 }}
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!hasNextPage}
-          className={`p-2 rounded-lg transition-all duration-200 ${
-            !hasNextPage
+          className={`p-2 rounded-lg transition-all duration-200 ${!hasNextPage
               ? 'bg-gray-600/30 text-gray-500 cursor-not-allowed'
               : 'bg-dark-600/50 text-gray-300 hover:bg-dark-600/70 hover:text-white'
-          }`}
-          aria-label="Go to next page"
+            }`}
+          aria-label={t('common.pagination.nextPage', 'Go to next page')}
         >
           <ChevronRight className="w-4 h-4" />
         </motion.button>
@@ -142,12 +141,11 @@ export default function PaginationControls({
           whileTap={{ scale: 0.95 }}
           onClick={() => onPageChange(totalPages)}
           disabled={!hasNextPage}
-          className={`p-2 rounded-lg transition-all duration-200 ${
-            !hasNextPage
+          className={`p-2 rounded-lg transition-all duration-200 ${!hasNextPage
               ? 'bg-gray-600/30 text-gray-500 cursor-not-allowed'
               : 'bg-dark-600/50 text-gray-300 hover:bg-dark-600/70 hover:text-white'
-          }`}
-          aria-label="Go to last page"
+            }`}
+          aria-label={t('common.pagination.lastPage', 'Go to last page')}
         >
           <ChevronsRight className="w-4 h-4" />
         </motion.button>

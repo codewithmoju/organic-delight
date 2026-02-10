@@ -12,9 +12,9 @@ export default function InventoryChart({ data }: InventoryChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="glass-effect p-3 rounded-lg border border-dark-600/50">
-          <p className="text-gray-200 font-medium">{label}</p>
-          <p className="text-primary-400">
+        <div className="glass-effect p-3 rounded-lg border border-border">
+          <p className="text-foreground font-medium">{label}</p>
+          <p className="text-primary">
             Quantity: {payload[0].value}
           </p>
         </div>
@@ -25,16 +25,16 @@ export default function InventoryChart({ data }: InventoryChartProps) {
 
   return (
     <div className="p-4 sm:p-6">
-      <motion.h3 
+      <motion.h3
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center"
+        className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6 flex items-center"
       >
-        <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
+        <div className="w-2 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3" />
         Inventory Levels
       </motion.h3>
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2 }}
@@ -42,25 +42,25 @@ export default function InventoryChart({ data }: InventoryChartProps) {
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-            <XAxis 
-              dataKey="name" 
-              stroke="#9CA3AF" 
+            <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" opacity={0.5} />
+            <XAxis
+              dataKey="name"
+              stroke="rgb(var(--foreground-muted))"
               fontSize={10}
-              tick={{ fill: '#9CA3AF' }}
+              tick={{ fill: 'rgb(var(--foreground-muted))' }}
               interval={0}
               angle={-45}
               textAnchor="end"
               height={60}
             />
-            <YAxis 
-              stroke="#9CA3AF" 
+            <YAxis
+              stroke="rgb(var(--foreground-muted))"
               fontSize={10}
-              tick={{ fill: '#9CA3AF' }}
+              tick={{ fill: 'rgb(var(--foreground-muted))' }}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar 
-              dataKey="quantity" 
+            <Bar
+              dataKey="quantity"
               fill="url(#colorGradient)"
               radius={[4, 4, 0, 0]}
             />

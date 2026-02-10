@@ -6,9 +6,9 @@ interface LogoProps {
   className?: string;
 }
 
-export default function Logo({ 
-  size = 'md', 
-  showText = true, 
+export default function Logo({
+  size = 'md',
+  showText = true,
   className = ''
 }: LogoProps) {
   const sizeClasses = {
@@ -27,7 +27,6 @@ export default function Logo({
     <div className={`flex items-center ${className}`}>
       <div className="relative">
         <Package className={`${sizeClasses[size]} text-primary-500`} />
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-500 rounded-full border-2 border-dark-900" />
       </div>
       {showText && (
         <span className={`ml-3 ${textSizeClasses[size]} font-bold text-gradient`}>

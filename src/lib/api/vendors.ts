@@ -157,8 +157,28 @@ export async function deleteVendor(vendorId: string): Promise<void> {
     const vendorData = vendorDoc.data();
 
     // Prevent deletion if there's an outstanding balance
-    if (vendorData.outstanding_balance && vendorData.outstanding_balance !== 0) {
-        throw new Error('Cannot delete vendor with outstanding balance. Please clear the balance first.');
+    // Prevent deletion if there's an outstanding balance
+    // Double check with actual ledger validation because stored balance might be out of sync
+    if (vendorData.outstanding_balance && Math.abs(vendorData.outstanding_balance) > 1) {
+        // Dynamic import to avoid circular dependency (purchases.ts imports vendors.ts)
+        const { getPurchasesByVendor } = await import('./purchases');
+
+        // Calculate real balance from transactions to be sure
+        const [payments, purchases] = await Promise.all([
+            getVendorLedger(vendorId),
+            getPurchasesByVendor(vendorId)
+        ]);
+
+        const totalPurchases = purchases.reduce((sum: number, p: any) => sum + (p.total_amount || 0), 0);
+        const totalPayments = payments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+        const realBalance = totalPurchases - totalPayments;
+
+        // Allow some float precision error
+        if (Math.abs(realBalance) > 1) {
+            throw new Error(`Cannot delete vendor with outstanding balance (${realBalance.toFixed(2)}). Please clear the balance first.`);
+        }
+
+        // If real balance is 0 but stored balance was wrong, we proceed with deletion
     }
 
     // Import deleteDoc dynamically to avoid circular issues

@@ -14,6 +14,7 @@ import zhTranslations from './locales/zh.json';
 import jaTranslations from './locales/ja.json';
 import arTranslations from './locales/ar.json';
 import hiTranslations from './locales/hi.json';
+import urTranslations from './locales/ur.json';
 
 // Language configuration
 export const SUPPORTED_LANGUAGES = [
@@ -27,6 +28,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵', rtl: false },
   { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', rtl: true },
   { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', rtl: false },
+  { code: 'ur', name: 'Urdu', nativeName: 'اردو', flag: '🇵🇰', rtl: true },
 ];
 
 // Translation resources
@@ -41,6 +43,7 @@ const resources = {
   ja: { translation: jaTranslations },
   ar: { translation: arTranslations },
   hi: { translation: hiTranslations },
+  ur: { translation: urTranslations },
 };
 
 // Initialize i18next
@@ -52,7 +55,7 @@ i18n
     resources,
     fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development',
-    
+
     // Language detection options
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
@@ -76,17 +79,15 @@ i18n
 
 // Update document attributes when language changes
 i18n.on('languageChanged', (lng) => {
-  const language = SUPPORTED_LANGUAGES.find(lang => lang.code === lng);
-  
   // Update document language
   document.documentElement.lang = lng;
-  
-  // Update document direction for RTL languages
-  document.documentElement.dir = language?.rtl ? 'rtl' : 'ltr';
-  
+
+  // Force LTR layout as per user request, even for RTL languages like Urdu
+  document.documentElement.dir = 'ltr';
+
   // Update document title if needed
   document.title = i18n.t('app.title', 'StockSuite - Professional Inventory Management');
-  
+
   // Update meta description
   const metaDescription = document.querySelector('meta[name="description"]');
   if (metaDescription) {

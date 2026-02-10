@@ -1,89 +1,92 @@
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
-
-interface Transaction {
-  id: string;
-  quantity_changed: number;
-  type: 'in' | 'out';
-  created_at: any;
-  item: {
-    name: string;
-  };
-}
+import { ShoppingBag } from 'lucide-react';
+import { POSTransaction } from '../../lib/types';
+import { formatCurrency } from '../../lib/utils/notifications';
 
 interface RecentTransactionsProps {
-  transactions: Transaction[];
+  transactions: POSTransaction[];
 }
 
 export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
-    <div className="p-4 sm:p-6">
-      <motion.h3 
+    <div className="card-theme p-4 sm:p-6 rounded-[2.5rem]">
+      <motion.h3
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center"
+        className="text-lg font-bold text-foreground mb-6"
       >
-        <Clock className="w-5 h-5 mr-3 text-primary-400" />
-        Recent Transactions
+        Recent Orders
       </motion.h3>
-      
-      <div className="space-y-2 sm:space-y-3">
+
+      <div className="overflow-hidden">
         {transactions.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-6 sm:py-8 text-gray-400"
-          >
-            No recent transactions
-          </motion.div>
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+              <ShoppingBag className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <p className="text-foreground font-medium">No recent orders</p>
+            <p className="text-sm text-muted-foreground max-w-[200px]">New sales will appear here</p>
+          </div>
         ) : (
-          transactions.map((transaction, index) => (
-            <motion.div
-              key={transaction.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02, x: 4 }}
-              className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-dark-800/30 border border-dark-700/30 hover:border-primary-500/30 transition-all duration-200 w-full"
-            >
-              <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                <div className={`p-2 rounded-lg ${
-                  transaction.type === 'in' 
-                    ? 'bg-success-500/20 text-success-400' 
-                    : 'bg-error-500/20 text-error-400'
-                }`}>
-                  {transaction.type === 'in' ? (
-                    <ArrowUpRight className="w-4 h-4" />
-                  ) : (
-                    <ArrowDownLeft className="w-4 h-4" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-gray-200 font-medium text-sm sm:text-base truncate">
-                    {transaction.item?.name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {format(
-                      transaction.created_at || new Date(), 
-                      'MMM d, HH:mm'
-                    )}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="text-right flex-shrink-0">
-                <span className={`font-semibold ${
-                  transaction.type === 'in' ? 'text-success-400' : 'text-error-400'
-                } text-sm sm:text-base`}>
-                  {transaction.type === 'in' ? '+' : '-'}{Math.abs(transaction.quantity_changed)}
-                </span>
-                <p className="text-xs text-gray-500">
-                  {transaction.type === 'in' ? 'Stock In' : 'Stock Out'}
-                </p>
-              </div>
-            </motion.div>
-          ))
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-muted-foreground uppercase bg-secondary/50 rounded-2xl">
+              <tr>
+                <th className="px-4 py-3 rounded-l-2xl">Order #</th>
+                <th className="px-4 py-3">Items</th>
+                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 rounded-r-2xl">Customer</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {transactions.map((transaction, index) => (
+                <motion.tr
+                  key={transaction.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="group hover:bg-secondary/30 transition-colors"
+                >
+                  <td className="px-4 py-3 font-medium text-foreground">
+                    #{transaction.transaction_number.slice(-6)}
+                  </td>
+                  <td className="px-4 py-3 text-foreground">
+                    <div className="flex flex-col">
+                      <span className="font-medium truncate max-w-[150px]">
+                        {transaction.items[0]?.item_name || 'Unknown Item'}
+                      </span>
+                      {transaction.items.length > 1 && (
+                        <span className="text-xs text-muted-foreground">
+                          + {transaction.items.length - 1} more
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {format(new Date(transaction.created_at), 'MMM d, HH:mm')}
+                  </td>
+                  <td className="px-4 py-3 font-bold text-primary-500">
+                    {formatCurrency(transaction.total_amount)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${transaction.status === 'completed'
+                      ? 'bg-success-500/10 text-success-500'
+                      : transaction.status === 'cancelled'
+                        ? 'bg-error-500/10 text-error-500'
+                        : 'bg-warning-500/10 text-warning-500'
+                      }`}>
+                      {transaction.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-foreground">
+                    {transaction.customer_name || 'Walk-in Customer'}
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

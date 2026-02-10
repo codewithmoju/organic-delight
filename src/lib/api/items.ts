@@ -12,7 +12,8 @@ import {
   limit,
   startAfter,
   DocumentSnapshot,
-  Timestamp
+  Timestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Item, StockLevel } from '../types';
@@ -20,6 +21,10 @@ import { Item, StockLevel } from '../types';
 // Simple cache for frequently accessed data
 const itemsCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+
+export function invalidateItemsCache() {
+  itemsCache.clear();
+}
 
 function isCacheValid(timestamp: number): boolean {
   return Date.now() - timestamp < CACHE_DURATION;
@@ -34,8 +39,7 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
 
   try {
     const itemsRef = collection(db, 'items');
-    // Simplified query to avoid index requirement
-    let q = query(itemsRef, orderBy('name'));
+    let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
 
     if (limitCount) {
       q = query(q, limit(limitCount));
@@ -47,44 +51,42 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
 
     const snapshot = await getDocs(q);
 
-    const items = [];
-    for (const docSnapshot of snapshot.docs) {
-      const itemData = docSnapshot.data();
-      // Client-side filtering
-      if (itemData.is_archived) continue;
-
-      const item = {
-        id: docSnapshot.id,
-        ...itemData,
-        created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
-        updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
+    const items = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Map persistent stock fields
+        current_quantity: data.current_quantity ?? 0,
+        average_unit_cost: data.average_unit_cost ?? 0,
+        total_value: (data.current_quantity ?? 0) * (data.average_unit_cost ?? 0),
+        created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now()),
+        updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : new Date(data.updated_at || Date.now())
       } as Item;
+    });
 
-      // Get category data
-      if (item.category_id) {
-        const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
-        if (categoryDoc.exists()) {
-          const catData = categoryDoc.data();
-          item.category = {
-            id: categoryDoc.id,
-            ...catData,
-            created_at: catData.created_at?.toDate ? catData.created_at.toDate() : new Date(),
-            updated_at: catData.updated_at?.toDate ? catData.updated_at.toDate() : new Date()
-          } as any;
-        }
+    // Solve N+1 for categories
+    const categoryIds = [...new Set(items.map(item => item.category_id).filter(Boolean))];
+    const categories: Record<string, any> = {};
+
+    if (categoryIds.length > 0) {
+      for (let i = 0; i < categoryIds.length; i += 30) {
+        const chunk = categoryIds.slice(i, i + 30);
+        const categoriesRef = collection(db, 'categories');
+        const catQuery = query(categoriesRef, where('__name__', 'in', chunk));
+        const catSnapshot = await getDocs(catQuery);
+        catSnapshot.forEach(catDoc => {
+          categories[catDoc.id] = { id: catDoc.id, ...catDoc.data() };
+        });
       }
-
-      // Get stock level data
-      const stockData = await getItemStockLevel(item.id);
-      if (stockData) {
-        item.current_quantity = stockData.current_quantity;
-        item.average_unit_cost = stockData.average_unit_cost;
-        item.last_transaction_date = stockData.last_transaction_date;
-        item.total_value = stockData.total_value;
-      }
-
-      items.push(item);
     }
+
+    // Attach categories to items
+    items.forEach(item => {
+      if (item.category_id && categories[item.category_id]) {
+        item.category = categories[item.category_id];
+      }
+    });
 
     const result = { items, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
 
@@ -106,27 +108,18 @@ export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
   const q = query(itemsRef, where('category_id', '==', categoryId), where('is_archived', '!=', true), orderBy('name'));
   const snapshot = await getDocs(q);
 
-  const items = [];
-  for (const docSnapshot of snapshot.docs) {
+  const items = snapshot.docs.map(docSnapshot => {
     const itemData = docSnapshot.data();
-    const item = {
+    return {
       id: docSnapshot.id,
       ...itemData,
+      current_quantity: itemData.current_quantity ?? 0,
+      average_unit_cost: itemData.average_unit_cost ?? 0,
+      total_value: (itemData.current_quantity ?? 0) * (itemData.average_unit_cost ?? 0),
       created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
       updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
     } as Item;
-
-    // Get stock level data
-    const stockData = await getItemStockLevel(item.id);
-    if (stockData) {
-      item.current_quantity = stockData.current_quantity;
-      item.average_unit_cost = stockData.average_unit_cost;
-      item.last_transaction_date = stockData.last_transaction_date;
-      item.total_value = stockData.total_value;
-    }
-
-    items.push(item);
-  }
+  });
 
   return items;
 }
@@ -177,12 +170,15 @@ export async function createItem(itemData: {
   name: string;
   description: string;
   category_id: string;
+  unit?: string;
   unit_price?: number;
   barcode?: string;
   sku?: string;
   supplier?: string;
   location?: string;
   reorder_point?: number;
+  purchase_rate?: number;
+  sale_rate?: number;
   created_by: string;
 }): Promise<Item> {
   console.log('Creating item in database:', itemData);
@@ -203,18 +199,23 @@ export async function createItem(itemData: {
   const docRef = await addDoc(collection(db, 'items'), {
     ...itemData,
     name: itemData.name.trim(),
-    unit_price: itemData.unit_price || 0,
+    unit: itemData.unit || 'pcs',
+    unit_price: itemData.unit_price || itemData.sale_rate || 0,
     barcode: itemData.barcode || null,
     sku: itemData.sku || null,
     supplier: itemData.supplier || null,
     location: itemData.location || null,
     reorder_point: itemData.reorder_point || 10,
+    purchase_rate: itemData.purchase_rate || 0,
+    sale_rate: itemData.sale_rate || 0,
     is_archived: false,
     created_at: Timestamp.fromDate(new Date()),
     updated_at: Timestamp.fromDate(new Date())
   });
 
   console.log('Item created with ID:', docRef.id);
+  // Invalidate cache
+  itemsCache.clear();
   return getItem(docRef.id);
 }
 
@@ -222,12 +223,15 @@ export async function updateItem(id: string, itemData: {
   name?: string;
   description?: string;
   category_id?: string;
+  unit?: string;
   unit_price?: number;
   barcode?: string;
   sku?: string;
   supplier?: string;
   location?: string;
   reorder_point?: number;
+  purchase_rate?: number;
+  sale_rate?: number;
 }): Promise<Item> {
   // Check for duplicate item names if name or category is being updated
   if (itemData.name || itemData.category_id) {
@@ -258,6 +262,8 @@ export async function updateItem(id: string, itemData: {
   };
 
   await updateDoc(docRef, updateData);
+  // Invalidate cache
+  itemsCache.clear();
   return getItem(id);
 }
 
@@ -274,10 +280,14 @@ export async function deleteItem(id: string): Promise<void> {
       is_archived: true,
       updated_at: Timestamp.fromDate(new Date())
     });
+    // Invalidate cache
+    itemsCache.clear();
     return;
   }
 
   await deleteDoc(doc(db, 'items', id));
+  // Invalidate cache
+  itemsCache.clear();
 }
 
 export async function getItemStockLevel(itemId: string): Promise<StockLevel | null> {
@@ -352,48 +362,97 @@ export async function searchItems(searchQuery: string, categoryId?: string): Pro
 
   const snapshot = await getDocs(q);
 
-  const items = [];
-  for (const docSnapshot of snapshot.docs) {
+  let items = snapshot.docs.map(docSnapshot => {
     const itemData = docSnapshot.data();
-    const item = {
+    return {
       id: docSnapshot.id,
       ...itemData,
+      current_quantity: itemData.current_quantity ?? 0,
+      average_unit_cost: itemData.average_unit_cost ?? 0,
+      total_value: (itemData.current_quantity ?? 0) * (itemData.average_unit_cost ?? 0),
       created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
       updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
     } as Item;
+  });
 
-    // Client-side filtering for search
-    if (searchQuery &&
-      !item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !item.description?.toLowerCase().includes(searchQuery.toLowerCase())) {
-      continue;
+  // Client-side filtering for search (Firestore search is limited)
+  if (searchQuery) {
+    const term = searchQuery.toLowerCase();
+    items = items.filter(item =>
+      item.name.toLowerCase().includes(term) ||
+      item.description?.toLowerCase().includes(term)
+    );
+  }
+
+  // Solve N+1 for categories
+  const categoryIds = [...new Set(items.map(item => item.category_id).filter(Boolean))];
+  const categories: Record<string, any> = {};
+
+  if (categoryIds.length > 0) {
+    for (let i = 0; i < categoryIds.length; i += 30) {
+      const chunk = categoryIds.slice(i, i + 30);
+      const categoriesRef = collection(db, 'categories');
+      const catQuery = query(categoriesRef, where('__name__', 'in', chunk));
+      const catSnapshot = await getDocs(catQuery);
+      catSnapshot.forEach(catDoc => {
+        categories[catDoc.id] = { id: catDoc.id, ...catDoc.data() };
+      });
     }
+  }
 
-    // Get category data
-    if (item.category_id) {
-      const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
-      if (categoryDoc.exists()) {
-        const catData = categoryDoc.data();
-        item.category = {
-          id: categoryDoc.id,
-          ...catData,
-          created_at: catData.created_at?.toDate ? catData.created_at.toDate() : new Date(),
-          updated_at: catData.updated_at?.toDate ? catData.updated_at.toDate() : new Date()
-        } as any;
+  items.forEach(item => {
+    if (item.category_id && categories[item.category_id]) {
+      item.category = categories[item.category_id];
+    }
+  });
+
+  return items;
+}
+export async function reconcileAllItemsStock(): Promise<{ updated: number; failed: number }> {
+  try {
+    const itemsRef = collection(db, 'items');
+    const snapshot = await getDocs(itemsRef);
+    let updatedCount = 0;
+    let failedCount = 0;
+
+    // Process items in batches of 500 (Firestore limit)
+    const batches = [];
+    let currentBatch = writeBatch(db);
+    let countInBatch = 0;
+
+    for (const itemDoc of snapshot.docs) {
+      try {
+        const stockLevel = await getItemStockLevel(itemDoc.id);
+        if (stockLevel) {
+          currentBatch.update(doc(db, 'items', itemDoc.id), {
+            current_quantity: stockLevel.current_quantity,
+            average_unit_cost: stockLevel.average_unit_cost,
+            updated_at: Timestamp.fromDate(new Date())
+          });
+          countInBatch++;
+          updatedCount++;
+
+          if (countInBatch === 500) {
+            batches.push(currentBatch.commit());
+            currentBatch = writeBatch(db);
+            countInBatch = 0;
+          }
+        }
+      } catch (e) {
+        console.error(`Failed to reconcile item ${itemDoc.id}:`, e);
+        failedCount++;
       }
     }
 
-    // Get stock level data
-    const stockData = await getItemStockLevel(item.id);
-    if (stockData) {
-      item.current_quantity = stockData.current_quantity;
-      item.average_unit_cost = stockData.average_unit_cost;
-      item.last_transaction_date = stockData.last_transaction_date;
-      item.total_value = stockData.total_value;
+    if (countInBatch > 0) {
+      batches.push(currentBatch.commit());
     }
 
-    items.push(item);
+    await Promise.all(batches);
+    invalidateItemsCache();
+    return { updated: updatedCount, failed: failedCount };
+  } catch (error) {
+    console.error('Error in reconcileAllItemsStock:', error);
+    throw error;
   }
-
-  return items;
 }

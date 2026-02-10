@@ -8,7 +8,10 @@ import { auth } from '../../lib/firebase';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Logo from '../../components/ui/Logo';
 
+import { useTranslation } from 'react-i18next';
+
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'request' | 'reset' | 'success'>('request');
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -36,54 +39,54 @@ export default function ForgotPassword() {
     try {
       if (mode === 'request') {
         if (!email) {
-          setError('Email is required');
+          setError(t('auth.forgotPassword.errors.emailRequired'));
           return;
         }
 
         if (!/\S+@\S+\.\S+/.test(email)) {
-          setError('Please enter a valid email address');
+          setError(t('auth.forgotPassword.errors.validEmail'));
           return;
         }
 
         await sendPasswordResetEmail(auth, email);
         setMode('success');
-        toast.success('Password reset instructions sent to your email');
+        toast.success(t('auth.forgotPassword.success.sentTo'));
       } else if (mode === 'reset') {
         if (!newPassword) {
-          setError('New password is required');
+          setError(t('auth.forgotPassword.errors.newPasswordRequired'));
           return;
         }
 
         if (newPassword.length < 8) {
-          setError('Password must be at least 8 characters');
+          setError(t('auth.forgotPassword.errors.passwordLength'));
           return;
         }
 
         if (newPassword !== confirmPassword) {
-          setError('Passwords do not match');
+          setError(t('auth.forgotPassword.errors.passwordMismatch'));
           return;
         }
 
         await confirmPasswordReset(auth, oobCode, newPassword);
         setMode('success');
-        toast.success('Password reset successfully! You can now sign in with your new password.');
+        toast.success(t('auth.forgotPassword.success.loginWithNew'));
       }
     } catch (error: any) {
       if (mode === 'request') {
         if (error.code === 'auth/user-not-found') {
-          setError('No account found with this email address');
+          setError(t('auth.forgotPassword.errors.userNotFound'));
         } else if (error.code === 'auth/invalid-email') {
-          setError('Please enter a valid email address');
+          setError(t('auth.forgotPassword.errors.validEmail'));
         } else {
-          toast.error('Failed to send reset email. Please try again.');
+          toast.error(t('auth.forgotPassword.errors.sendFailed'));
         }
       } else {
         if (error.code === 'auth/invalid-action-code') {
-          setError('Invalid or expired reset link. Please request a new one.');
+          setError(t('auth.forgotPassword.errors.invalidLink'));
         } else if (error.code === 'auth/expired-action-code') {
-          setError('Reset link has expired. Please request a new one.');
+          setError(t('auth.forgotPassword.errors.expiredLink'));
         } else {
-          toast.error('Failed to reset password. Please try again.');
+          toast.error(t('auth.forgotPassword.errors.resetFailed'));
         }
       }
     } finally {
@@ -99,7 +102,7 @@ export default function ForgotPassword() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
@@ -107,31 +110,31 @@ export default function ForgotPassword() {
       >
         <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
           <div className="text-center mb-8">
-            <Logo size="lg" animated />
-            <motion.h2 
+            <Logo size="lg" />
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="mt-6 text-3xl lg:text-4xl font-bold text-white"
             >
-              {mode === 'request' ? 'Reset your password' : 
-               mode === 'reset' ? 'Set new password' : 
-               'Password Reset Complete'}
+              {mode === 'request' ? t('auth.forgotPassword.titles.request') :
+                mode === 'reset' ? t('auth.forgotPassword.titles.reset') :
+                  t('auth.forgotPassword.titles.success')}
             </motion.h2>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="mt-2 text-gray-400 text-lg"
             >
-              {mode === 'request' ? 'Enter your email to receive reset instructions' :
-               mode === 'reset' ? 'Enter your new password below' :
-               'Your password has been successfully reset'}
+              {mode === 'request' ? t('auth.forgotPassword.subtitles.request') :
+                mode === 'reset' ? t('auth.forgotPassword.subtitles.reset') :
+                  t('auth.forgotPassword.subtitles.success')}
             </motion.p>
           </div>
 
           {mode === 'success' ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="text-center"
@@ -141,25 +144,25 @@ export default function ForgotPassword() {
               </div>
               <div className="text-gray-300">
                 <p className="mb-3 font-medium text-white text-xl">
-                  {mode === 'success' && email ? 'Check your email' : 'Password Reset Complete'}
+                  {mode === 'success' && email ? t('auth.forgotPassword.success.checkEmail') : t('auth.forgotPassword.titles.success')}
                 </p>
                 {email && (
                   <>
                     <p className="mb-6 text-lg">
-                      We've sent password reset instructions to <strong>{email}</strong>
+                      {t('auth.forgotPassword.success.sentTo')} <strong>{email}</strong>
                     </p>
                     <p className="text-sm text-gray-400 mb-4">
-                      Didn't receive the email? Check your spam folder.
+                      {t('auth.forgotPassword.success.checkSpam')}
                     </p>
                     <div className="flex items-center justify-center text-sm text-gray-500 mb-6">
                       <Clock className="w-4 h-4 mr-2" />
-                      Reset link expires in 1 hour
+                      {t('auth.forgotPassword.success.expires')}
                     </div>
                   </>
                 )}
                 {!email && (
                   <p className="mb-6 text-lg">
-                    You can now sign in with your new password.
+                    {t('auth.forgotPassword.success.loginWithNew')}
                   </p>
                 )}
               </div>
@@ -173,7 +176,7 @@ export default function ForgotPassword() {
                     className="btn-primary inline-flex items-center justify-center px-6 py-4 text-lg font-semibold w-full sm:w-auto"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Return to login
+                    {t('auth.forgotPassword.success.returnLogin')}
                   </Link>
                 </motion.div>
               </div>
@@ -187,7 +190,7 @@ export default function ForgotPassword() {
                 transition={{ delay: 0.4 }}
               >
                 <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
-                  Email address
+                  {t('auth.forgotPassword.email')}
                 </label>
                 <input
                   id="email"
@@ -197,15 +200,14 @@ export default function ForgotPassword() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className={`w-full input-dark input-large ${
-                    error 
-                      ? 'ring-error-500 border-error-500' 
+                  className={`w-full input-dark input-large ${error
+                      ? 'ring-error-500 border-error-500'
                       : ''
-                  }`}
-                  placeholder="Enter your email address"
+                    }`}
+                  placeholder={t('auth.forgotPassword.form.emailPlaceholder')}
                 />
                 {error && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="mt-2 flex items-center text-sm text-error-400"
@@ -231,10 +233,10 @@ export default function ForgotPassword() {
                   {isLoading ? (
                     <>
                       <LoadingSpinner size="sm" color="white" />
-                      Sending...
+                      {t('auth.forgotPassword.form.sending')}
                     </>
                   ) : (
-                    'Send reset instructions'
+                    t('auth.forgotPassword.form.sendButton')
                   )}
                 </motion.button>
               </motion.div>
@@ -248,7 +250,7 @@ export default function ForgotPassword() {
                 transition={{ delay: 0.4 }}
               >
                 <label htmlFor="newPassword" className="block text-base font-medium text-gray-300 mb-3">
-                  New Password
+                  {t('auth.forgotPassword.form.newPassword')}
                 </label>
                 <div className="relative">
                   <input
@@ -258,10 +260,9 @@ export default function ForgotPassword() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
-                    className={`w-full input-dark input-large pr-12 ${
-                      error ? 'ring-error-500 border-error-500' : ''
-                    }`}
-                    placeholder="Enter your new password"
+                    className={`w-full input-dark input-large pr-12 ${error ? 'ring-error-500 border-error-500' : ''
+                      }`}
+                    placeholder={t('auth.forgotPassword.form.newPasswordPlaceholder')}
                   />
                   <button
                     type="button"
@@ -283,7 +284,7 @@ export default function ForgotPassword() {
                 transition={{ delay: 0.5 }}
               >
                 <label htmlFor="confirmPassword" className="block text-base font-medium text-gray-300 mb-3">
-                  Confirm New Password
+                  {t('auth.forgotPassword.form.confirmPassword')}
                 </label>
                 <input
                   id="confirmPassword"
@@ -292,13 +293,12 @@ export default function ForgotPassword() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className={`w-full input-dark input-large ${
-                    error ? 'ring-error-500 border-error-500' : ''
-                  }`}
-                  placeholder="Confirm your new password"
+                  className={`w-full input-dark input-large ${error ? 'ring-error-500 border-error-500' : ''
+                    }`}
+                  placeholder={t('auth.forgotPassword.form.confirmPasswordPlaceholder')}
                 />
                 {error && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="mt-2 flex items-center text-sm text-error-400"
@@ -324,28 +324,28 @@ export default function ForgotPassword() {
                   {isLoading ? (
                     <>
                       <LoadingSpinner size="sm" color="white" />
-                      Resetting Password...
+                      {t('auth.forgotPassword.form.resetting')}
                     </>
                   ) : (
-                    'Reset Password'
+                    t('auth.forgotPassword.form.resetButton')
                   )}
                 </motion.button>
               </motion.div>
             </form>
           )}
 
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
             className="mt-8 text-center text-base text-gray-400"
           >
-            Remember your password?{' '}
+            {t('auth.forgotPassword.rememberPassword')}{' '}
             <Link
               to="/login"
               className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
             >
-              Sign in
+              {t('auth.forgotPassword.signIn')}
             </Link>
           </motion.p>
         </div>

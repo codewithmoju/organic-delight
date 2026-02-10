@@ -45,8 +45,7 @@ service cloud.firestore {
     // Transactions rules (Stock in/out)
     match /transactions/{transactionId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && 
-        exists(/databases/$(database)/documents/items/$(request.resource.data.item_id));
+      allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated(); // Allow authenticated users to manage transactions
     }
 
@@ -126,6 +125,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Units rules
+    match /units/{unitId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
       allow delete: if isAuthenticated();
     }
 

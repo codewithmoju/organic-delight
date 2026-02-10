@@ -23,22 +23,35 @@ import { Customer, CustomerPayment } from '../types';
 export async function getCustomers(): Promise<Customer[]> {
     try {
         const customersRef = collection(db, 'customers');
-        // Simplified query to avoid index requirement
-        const q = query(customersRef, orderBy('name'));
+        // Filter server-side for active customers
+        const q = query(
+            customersRef,
+            where('is_active', '==', true),
+            orderBy('name')
+        );
         const snapshot = await getDocs(q);
 
-        const customers = snapshot.docs.map(doc => ({
+        return snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
             created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
             updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
         })) as Customer[];
-
-        return customers.filter(c => c.is_active !== false);
     } catch (error: any) {
         console.error('Firestore getCustomers error:', error);
+
+        // Return unfiltered as fallback if index is missing (graceful degradation)
         if (error.message?.includes('index')) {
-            console.info('To fix this index error, visit: https://console.firebase.google.com/project/organic-delight-inventory-db/firestore/indexes');
+            console.warn('Index required for active customer filtering. Falling back to client-side filter.');
+            const q = query(collection(db, 'customers'), orderBy('name'));
+            const snapshot = await getDocs(q);
+            const all = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
+                updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
+            })) as Customer[];
+            return all.filter(c => c.is_active !== false);
         }
         throw error;
     }
@@ -138,6 +151,27 @@ export async function deactivateCustomer(customerId: string): Promise<void> {
     });
 }
 
+/**
+ * Permanently delete a customer and their data
+ */
+export async function deleteCustomer(customerId: string): Promise<void> {
+    const customerRef = doc(db, 'customers', customerId);
+
+    await runTransaction(db, async (transaction) => {
+        // 1. Check if customer exists
+        const docSnap = await transaction.get(customerRef);
+        if (!docSnap.exists()) throw new Error("Customer does not exist");
+
+        // 2. Delete the customer document
+        transaction.delete(customerRef);
+
+        // Note: We are NOT deleting all their payments/transactions history here to preserve records
+        // unless explicitly requested. But for "Hard Delete" typically users expect it gone.
+        // For now, deleting the customer profile is sufficient to "remove" them.
+        // Orphaned payments will remain in the system for accounting integrity.
+    });
+}
+
 // ============================================
 // CUSTOMER CREDIT (UDHAAR) OPERATIONS
 // ============================================
@@ -149,66 +183,110 @@ export async function getCustomerLedger(customerId: string): Promise<CustomerPay
     const paymentsRef = collection(db, 'customer_payments');
     const q = query(
         paymentsRef,
-        where('customer_id', '==', customerId),
-        orderBy('payment_date', 'desc')
+        where('customer_id', '==', customerId)
+        // orderBy('payment_date', 'desc') // Removed to avoid index requirement
     );
-    const snapshot = await getDocs(q);
+    try {
+        const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        payment_date: doc.data().payment_date?.toDate() || new Date(),
-        created_at: doc.data().created_at?.toDate() || new Date()
-    })) as CustomerPayment[];
+        const payments = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            payment_date: doc.data().payment_date?.toDate() || new Date(),
+            created_at: doc.data().created_at?.toDate() || new Date()
+        })) as CustomerPayment[];
+
+        // Sort in memory
+        return payments.sort((a, b) => b.payment_date.getTime() - a.payment_date.getTime());
+    } catch (error: any) {
+        console.error('Error fetching customer ledger:', error);
+        if (error.message?.includes('index')) {
+            const indexLink = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/)?.[0];
+            if (indexLink) console.info('To fix this index error, visit:', indexLink);
+        }
+        throw error;
+    }
 }
 
 /**
  * Record a payment from a customer
  * Reduces customer's outstanding balance
  */
-export async function recordCustomerPayment(paymentData: {
+/**
+ * Record a transaction for a customer (Payment or Charge)
+ * Payment: Reduces outstanding balance (Money In)
+ * Charge: Increases outstanding balance (Money Out / Opening Balance)
+ */
+export async function recordCustomerTransaction(transactionData: {
     customer_id: string;
+    type: 'payment' | 'charge';
     amount: number;
-    payment_method: 'cash' | 'bank_transfer' | 'digital';
+    payment_method: 'cash' | 'bank_transfer' | 'digital' | 'adjustment' | 'opening_balance';
     reference_number?: string;
     notes?: string;
     payment_date: Date;
     created_by: string;
 }): Promise<CustomerPayment> {
-    return await runTransaction(db, async (transaction) => {
-        // Get current customer data
-        const customerRef = doc(db, 'customers', paymentData.customer_id);
-        const customerDoc = await transaction.get(customerRef);
+    try {
+        return await runTransaction(db, async (transaction) => {
+            // Get current customer data
+            const customerRef = doc(db, 'customers', transactionData.customer_id);
+            const customerDoc = await transaction.get(customerRef);
 
-        if (!customerDoc.exists()) {
-            throw new Error('Customer not found');
-        }
+            if (!customerDoc.exists()) {
+                throw new Error('Customer not found');
+            }
 
-        const customerData = customerDoc.data();
-        const newBalance = (customerData.outstanding_balance || 0) - paymentData.amount;
+            const customerData = customerDoc.data();
+            const currentBalance = Number(customerData.outstanding_balance) || 0;
+            const currentTotalPurchases = Number(customerData.total_purchases) || 0;
 
-        // Update customer balance (no limit, can go to 0 or negative for overpayment)
-        transaction.update(customerRef, {
-            outstanding_balance: newBalance,
-            updated_at: Timestamp.fromDate(new Date())
+            let newBalance = currentBalance;
+            let newTotalPurchases = currentTotalPurchases;
+
+            if (transactionData.type === 'charge') {
+                // Money Out / Charge: Increases debt
+                newBalance += transactionData.amount;
+                // Treat manual charges as "Purchases" for stats
+                newTotalPurchases += transactionData.amount;
+            } else {
+                // Money In / Payment: Reduces debt
+                newBalance -= transactionData.amount;
+            }
+
+            // Update customer balance
+            transaction.update(customerRef, {
+                outstanding_balance: newBalance,
+                total_purchases: newTotalPurchases,
+                updated_at: Timestamp.fromDate(new Date())
+            });
+
+            // Create transaction record
+            const paymentRef = doc(collection(db, 'customer_payments'));
+            const paymentRecord = {
+                customer_id: transactionData.customer_id,
+                type: transactionData.type,
+                amount: transactionData.amount,
+                payment_method: transactionData.payment_method,
+                payment_date: Timestamp.fromDate(transactionData.payment_date),
+                created_at: Timestamp.fromDate(new Date()),
+                reference_number: transactionData.reference_number || null,
+                notes: transactionData.notes || null,
+                created_by: transactionData.created_by
+            };
+
+            transaction.set(paymentRef, paymentRecord);
+
+            return {
+                id: paymentRef.id,
+                ...transactionData,
+                created_at: new Date()
+            };
         });
-
-        // Create payment record
-        const paymentRef = doc(collection(db, 'customer_payments'));
-        const paymentRecord = {
-            ...paymentData,
-            payment_date: Timestamp.fromDate(paymentData.payment_date),
-            created_at: Timestamp.fromDate(new Date())
-        };
-
-        transaction.set(paymentRef, paymentRecord);
-
-        return {
-            id: paymentRef.id,
-            ...paymentData,
-            created_at: new Date()
-        };
-    });
+    } catch (error) {
+        console.error('Error recording transaction:', error);
+        throw error;
+    }
 }
 
 /**
@@ -291,19 +369,26 @@ export async function getCustomerCreditSales(customerId: string) {
     const q = query(
         transactionsRef,
         where('customer_id', '==', customerId),
-        where('is_credit_sale', '==', true),
-        orderBy('created_at', 'desc')
+        where('is_credit_sale', '==', true)
+        // orderBy('created_at', 'desc') // Removed to avoid index requirement
     );
 
     try {
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
+        const sales = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
             created_at: doc.data().created_at?.toDate() || new Date()
         }));
-    } catch (error) {
+
+        // Sort in memory
+        return sales.sort((a: any, b: any) => b.created_at.getTime() - a.created_at.getTime());
+    } catch (error: any) {
         console.warn('Error fetching credit sales:', error);
-        return [];
+        if (error.message?.includes('index')) {
+            const indexLink = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/)?.[0];
+            if (indexLink) console.info('To fix this index error, visit:', indexLink);
+        }
+        throw error;
     }
 }

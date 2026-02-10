@@ -52,25 +52,31 @@ export async function recordExpense(expenseData: {
  */
 export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Expense[]> {
     const expensesRef = collection(db, 'expenses');
-    const q = query(expensesRef, orderBy('expense_date', 'desc'));
-    const snapshot = await getDocs(q);
+    let q = query(expensesRef, orderBy('expense_date', 'desc'));
 
-    let expenses = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        expense_date: doc.data().expense_date?.toDate() || new Date(),
-        created_at: doc.data().created_at?.toDate() || new Date()
-    })) as Expense[];
-
-    // Apply date filters
     if (startDate) {
-        expenses = expenses.filter(e => e.expense_date >= startDate);
+        q = query(q, where('expense_date', '>=', Timestamp.fromDate(startDate)));
     }
     if (endDate) {
-        expenses = expenses.filter(e => e.expense_date <= endDate);
+        q = query(q, where('expense_date', '<=', Timestamp.fromDate(endDate)));
     }
 
-    return expenses;
+    try {
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            expense_date: doc.data().expense_date?.toDate() || new Date(),
+            created_at: doc.data().created_at?.toDate() || new Date()
+        })) as Expense[];
+    } catch (error: any) {
+        console.error('Error fetching expenses:', error);
+        // Fallback to client-side filter if server-side fails (e.g. index issue)
+        if (error.message?.includes('index')) {
+            console.warn('Composite index required for advanced expense filtering.');
+        }
+        throw error;
+    }
 }
 
 /**

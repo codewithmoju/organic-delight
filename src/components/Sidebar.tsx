@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthStore } from '../lib/store';
 import {
   LayoutDashboard,
   Package,
@@ -18,6 +17,8 @@ import {
 } from 'lucide-react';
 import Logo from './ui/Logo';
 import { useTranslation } from 'react-i18next';
+import { SimpleThemeToggle } from './ui/ThemeToggle';
+import { useIsDesktop } from '../hooks/useMediaQuery';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,43 +27,45 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const profile = useAuthStore(state => state.profile);
+  const [isHovered, setIsHovered] = React.useState(false);
+  const isDesktop = useIsDesktop();
+  const isExpanded = isHovered || !isDesktop;
 
   const navGroups = [
     {
-      title: 'Foundation',
+      title: t('navigation.groups.foundation'),
       items: [
         { to: '/', icon: LayoutDashboard, label: t('navigation.dashboard') },
-        { to: '/pos', icon: ShoppingCart, label: 'Point of Sale' },
+        { to: '/pos', icon: ShoppingCart, label: t('navigation.pointOfSale') },
       ]
     },
     {
-      title: 'Inventory Hub',
+      title: t('navigation.groups.inventoryHub'),
       items: [
-        { to: '/inventory/items', icon: Package, label: 'Inventory Manager' },
+        { to: '/inventory/items', icon: Package, label: t('navigation.inventoryManager') },
         { to: '/inventory/categories', icon: FolderOpen, label: t('navigation.categories') },
-        { to: '/inventory/valuation', icon: Wallet, label: 'Warehouse Value' },
+        { to: '/inventory/valuation', icon: Wallet, label: t('navigation.warehouseValue') },
       ]
     },
     {
-      title: 'Procurement',
+      title: t('navigation.groups.procurement'),
       items: [
-        { to: '/vendors', icon: Building2, label: 'Vendors' },
-        { to: '/transactions?tab=purchases&action=new', icon: ShoppingBag, label: 'New Purchase' },
+        { to: '/vendors', icon: Building2, label: t('navigation.vendors') },
+        { to: '/transactions?tab=purchases&action=new', icon: ShoppingBag, label: t('navigation.newPurchase') },
       ]
     },
     {
-      title: 'Sales & CRM',
+      title: t('navigation.groups.salesCrm'),
       items: [
-        { to: '/customers', icon: Users, label: 'Customers' },
-        { to: '/transactions', icon: ArrowUpDown, label: 'History & Logs' },
+        { to: '/customers', icon: Users, label: t('navigation.customers') },
+        { to: '/transactions', icon: ArrowUpDown, label: t('navigation.activityLog') },
       ]
     },
     {
-      title: 'Insights',
+      title: t('navigation.groups.insights'),
       items: [
-        { to: '/expenses', icon: Wallet, label: 'Expenses' },
-        { to: '/reports/performance', icon: BarChart3, label: 'Performance' },
+        { to: '/expenses', icon: Wallet, label: t('navigation.expenses') },
+        { to: '/reports/performance', icon: BarChart3, label: t('navigation.performance') },
         { to: '/settings', icon: Settings, label: t('navigation.settings') },
       ]
     }
@@ -70,36 +73,36 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   // Handle escape key to close sidebar on mobile
   React.useEffect(() => {
+    if (isDesktop) return;
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
         onClose();
       }
     };
 
-    // Only add listener on mobile screens
-    if (window.innerWidth < 1024) {
-      document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
-    }
-  }, [isOpen, onClose]);
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose, isDesktop]);
 
   // Prevent body scroll when mobile sidebar is open
   React.useEffect(() => {
-    if (window.innerWidth < 1024) {
-      if (isOpen) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'unset';
-      }
+    if (isDesktop) return;
+
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
 
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isOpen, isDesktop]);
+
   return (
     <>
-      {/* Mobile overlay - appears only on screens < 1024px */}
+      {/* Mobile overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -114,21 +117,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         )}
       </AnimatePresence>
 
-      {/* Sidebar - responsive behavior with smooth animations */}
+      {/* Sidebar */}
       <motion.aside
         data-tour="sidebar"
         initial={false}
         animate={{
-          x: isOpen ? 0 : -288 // 288px = w-72 (18rem)
+          width: isDesktop ? (isHovered ? 256 : 80) : 288,
+          x: isOpen || isDesktop ? 0 : -288
         }}
         transition={{
-          type: "tween",
-          duration: window.innerWidth <= 768 ? 0.25 : 0.3,
-          ease: [0.25, 0.46, 0.45, 0.94]
+          type: "spring",
+          stiffness: 300,
+          damping: 30
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={`
-          fixed inset-y-0 left-0 z-50 w-72 glass-effect border-r border-dark-700/50 flex flex-col sidebar-optimized
-          lg:translate-x-0
+          fixed inset-y-0 left-0 z-50 flex flex-col
+          bg-[rgb(var(--sidebar-bg))] text-[rgb(var(--sidebar-fg))]
+          border-r border-white/10 shadow-xl
+          lg:translate-x-0 overflow-hidden
+          rounded-r-3xl
         `}
         style={{
           willChange: 'transform',
@@ -138,52 +147,49 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         }}
         role="navigation"
         aria-label="Main navigation"
-        aria-hidden={!isOpen ? 'true' : 'false'}
+        aria-hidden={!isDesktop && !isOpen ? 'true' : 'false'}
       >
-        <div className="flex flex-col h-full">
-          {/* Header with logo and close button */}
-          <div className="flex items-center justify-between p-6 border-b border-dark-700/50">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Logo size="md" />
-              {profile?.business_logo && (
-                <img
-                  src={profile.business_logo}
-                  alt={profile.business_name || 'Business'}
-                  className="h-10 w-10 object-contain rounded-lg border border-primary-500/30"
-                />
-              )}
-              {profile?.business_name && (
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-bold text-white truncate">
-                    {profile.business_name}
-                  </span>
-                  {profile.business_tagline && (
-                    <span className="text-xs text-gray-400 truncate">
-                      {profile.business_tagline}
-                    </span>
-                  )}
-                </div>
-              )}
+        <div className="flex flex-col h-full w-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 h-20">
+            <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+              <div className="flex-shrink-0">
+                <Logo size="md" showText={false} className="text-white" />
+              </div>
+              <motion.div
+                animate={{ opacity: isExpanded ? 1 : 0 }}
+                className="flex flex-col min-w-0"
+              >
+                <span className="text-lg font-bold text-white whitespace-nowrap">
+                  StockSuit
+                </span>
+              </motion.div>
             </div>
-            {/* Close button - visible on mobile only, minimum 44px touch target */}
             <button
               onClick={onClose}
-              className="lg:hidden p-3 rounded-lg hover:bg-dark-700/50 transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="lg:hidden p-3 rounded-lg hover:bg-secondary transition-colors duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Close navigation menu"
               type="button"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
 
-          {/* Navigation menu with staggered animations */}
-          <nav className="flex-1 p-4 space-y-6 overflow-y-auto custom-scrollbar">
+          {/* Navigation */}
+          <nav className={`flex-1 p-4 overflow-y-auto custom-scrollbar overflow-x-hidden ${isExpanded ? 'space-y-4' : 'space-y-1'}`}>
             {navGroups.map((group, groupIndex) => (
-              <div key={group.title} className="space-y-2">
-                <h3 className="px-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">
+              <div key={group.title} className="space-y-1">
+                <motion.h3
+                  animate={{
+                    opacity: isExpanded ? 1 : 0,
+                    height: isExpanded ? 'auto' : 0,
+                    marginBottom: isExpanded ? 4 : 0
+                  }}
+                  className="px-4 text-[10px] font-bold uppercase tracking-wider text-white/50 truncate"
+                >
                   {group.title}
-                </h3>
-                <div className="space-y-1">
+                </motion.h3>
+                <div className="space-y-0.5">
                   {group.items.map((item, index) => (
                     <motion.div
                       key={item.to}
@@ -198,17 +204,30 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                       <NavLink
                         to={item.to}
                         onClick={() => {
-                          if (window.innerWidth < 1024) onClose();
+                          if (!isDesktop) onClose();
                         }}
                         className={({ isActive }: { isActive: boolean }) =>
-                          `group flex items-center px-4 py-2.5 rounded-xl transition-all duration-200 min-h-[44px] touch-manipulation ${isActive
-                            ? 'bg-gradient-to-r from-primary-600/20 to-accent-600/20 text-primary-400 border-l-4 border-primary-500 shadow-lg shadow-primary-500/10'
-                            : 'text-gray-400 hover:bg-dark-700/50 hover:text-white'
+                          `group flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 min-h-[40px] touch-manipulation whitespace-nowrap overflow-hidden ${isActive
+                            ? 'bg-[rgb(var(--sidebar-active))] text-white shadow-lg'
+                            : 'text-gray-300 hover:bg-white/10 hover:text-white'
                           }`
                         }
                       >
-                        <item.icon className={`w-5 h-5 mr-3 transition-transform duration-200 group-hover:scale-110`} />
-                        <span className="font-medium text-sm">{item.label}</span>
+                        {({ isActive }) => (
+                          <>
+                            <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                            <motion.span
+                              animate={{
+                                opacity: isExpanded ? 1 : 0,
+                                width: isExpanded ? 'auto' : 0,
+                                marginLeft: isExpanded ? 12 : 0
+                              }}
+                              className="font-medium text-sm"
+                            >
+                              {item.label}
+                            </motion.span>
+                          </>
+                        )}
                       </NavLink>
                     </motion.div>
                   ))}
@@ -218,15 +237,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-dark-700/50">
-            <div className="text-xs text-gray-500 text-center space-y-1">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4 lg:hidden">
+              <span className="text-sm font-medium text-muted-foreground">{t('navigation.theme', 'Theme')}</span>
+              <SimpleThemeToggle />
+            </div>
+            <motion.div
+              animate={{ opacity: isExpanded ? 1 : 0 }}
+              className="text-xs text-muted-foreground text-center space-y-1"
+            >
               <div>
-                Powered by NAM STUDIOS
+                {t('navigation.poweredBy')}
               </div>
               <div>
                 {t('app.version')}
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </motion.aside>

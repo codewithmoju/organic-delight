@@ -1,4 +1,4 @@
-import { 
+import {
   collection,
   getDocs,
   query,
@@ -25,13 +25,13 @@ function isCacheValid(timestamp: number): boolean {
 export async function getDashboardMetrics(period: TimePeriod): Promise<DashboardMetrics> {
   const cacheKey = getCacheKey(period);
   const cached = dashboardCache.get(cacheKey);
-  
+
   if (cached && isCacheValid(cached.timestamp)) {
     return cached.data;
   }
 
   const { start, end } = getDateRangeForPeriod(period);
-  
+
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
@@ -39,9 +39,9 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
     where('transaction_date', '<=', Timestamp.fromDate(end)),
     orderBy('transaction_date', 'desc')
   );
-  
+
   const snapshot = await getDocs(q);
-  
+
   let totalStockIn = 0;
   let totalStockOut = 0;
   let revenueSpentOnStockIn = 0;
@@ -49,7 +49,7 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
 
   snapshot.docs.forEach(doc => {
     const transaction = doc.data();
-    
+
     if (transaction.type === 'stock_in') {
       totalStockIn += transaction.quantity;
       revenueSpentOnStockIn += transaction.total_value;
@@ -65,23 +65,23 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
     revenueSpentOnStockIn,
     revenueEarnedFromStockOut
   };
-  
+
   // Cache the result
   dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  
+
   return result;
 }
 
 export async function getInventoryTrends(period: TimePeriod) {
   const cacheKey = `inventory-trends-${period}`;
   const cached = dashboardCache.get(cacheKey);
-  
+
   if (cached && isCacheValid(cached.timestamp)) {
     return cached.data;
   }
 
   const { start, end } = getDateRangeForPeriod(period);
-  
+
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
@@ -89,20 +89,20 @@ export async function getInventoryTrends(period: TimePeriod) {
     where('transaction_date', '<=', Timestamp.fromDate(end)),
     orderBy('transaction_date', 'desc')
   );
-  
+
   const snapshot = await getDocs(q);
-  
+
   // Group transactions by time intervals for trend analysis
   const trendData: { [key: string]: any } = {};
-  
+
   snapshot.docs.forEach(doc => {
     const transaction = doc.data();
-    const date = transaction.transaction_date?.toDate ? 
-      transaction.transaction_date.toDate() : 
+    const date = transaction.transaction_date?.toDate ?
+      transaction.transaction_date.toDate() :
       new Date(transaction.transaction_date || Date.now());
-    
+
     let key: string;
-    
+
     switch (period) {
       case 'today':
         key = date.getHours().toString().padStart(2, '0') + ':00';
@@ -138,41 +138,44 @@ export async function getInventoryTrends(period: TimePeriod) {
   });
 
   const result = Object.values(trendData);
-  
+
   // Cache the result
   dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  
+
   return result;
 }
 
 export async function getStockLevels() {
   const cacheKey = 'stock-levels';
   const cached = dashboardCache.get(cacheKey);
-  
+
   if (cached && isCacheValid(cached.timestamp)) {
     return cached.data;
   }
 
   const itemsRef = collection(db, 'items');
   const itemsSnapshot = await getDocs(itemsRef);
-  
-  const stockLevels = [];
-  
+
+  const stockLevels: any[] = [];
+
   for (const itemDoc of itemsSnapshot.docs) {
-    const item = { id: itemDoc.id, ...itemDoc.data() };
-    const stockLevel = await import('./items').then(m => m.getItemStockLevel(item.id));
-    
-    if (stockLevel) {
-      stockLevel.item = item;
-      stockLevels.push(stockLevel);
-    }
+    const data = itemDoc.data();
+    const item = { id: itemDoc.id, ...data };
+    const current_quantity = data.current_quantity ?? 0;
+
+    stockLevels.push({
+      item_id: item.id,
+      current_quantity,
+      total_value: current_quantity * (data.unit_price || 0),
+      item: item
+    });
   }
-  
+
   const result = stockLevels.sort((a, b) => b.total_value - a.total_value);
-  
+
   // Cache the result
   dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  
+
   return result;
 }
 

@@ -6,6 +6,8 @@ import './i18n'
 import { registerSW } from 'virtual:pwa-register'
 import { addResourceHints, PerformanceTracker } from './lib/utils/performance'
 
+import ErrorBoundary from './components/ui/ErrorBoundary.tsx'
+
 // Register PWA service worker
 registerSW({ immediate: true })
 
@@ -17,7 +19,9 @@ addResourceHints();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 )
 

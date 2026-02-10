@@ -12,6 +12,68 @@ export default {
         '3xl': '1600px',
       },
       colors: {
+        // Theme-aware colors using CSS variables
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
+        card: {
+          DEFAULT: 'rgb(var(--card) / <alpha-value>)',
+          hover: 'rgb(var(--card-hover) / <alpha-value>)',
+        },
+        sidebar: 'rgb(var(--sidebar) / <alpha-value>)',
+        border: {
+          DEFAULT: 'rgb(var(--border) / <alpha-value>)',
+          light: 'rgb(var(--border-light) / <alpha-value>)',
+          accent: 'rgb(var(--border-accent) / <alpha-value>)',
+        },
+
+        // Primary (Orange from screenshot)
+        primary: {
+          DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
+          light: 'rgb(var(--primary-light) / <alpha-value>)',
+          dark: 'rgb(var(--primary-dark) / <alpha-value>)',
+          foreground: 'rgb(var(--primary-foreground) / <alpha-value>)',
+          // Static color shades for fallback
+          50: '#FFF7ED',
+          100: '#FFEDD5',
+          200: '#FED7AA',
+          300: '#FDBA74',
+          400: '#FB923C',
+          500: '#F97316',
+          600: '#EA580C',
+          700: '#C2410C',
+          800: '#9A3412',
+          900: '#7C2D12',
+        },
+
+        // Secondary
+        secondary: {
+          DEFAULT: 'rgb(var(--secondary) / <alpha-value>)',
+          foreground: 'rgb(var(--secondary-foreground) / <alpha-value>)',
+        },
+
+        // Accent
+        accent: {
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          foreground: 'rgb(var(--accent-foreground) / <alpha-value>)',
+          50: '#fdf4ff',
+          100: '#fae8ff',
+          200: '#f5d0fe',
+          300: '#f0abfc',
+          400: '#e879f9',
+          500: '#d946ef',
+          600: '#c026d3',
+          700: '#a21caf',
+          800: '#86198f',
+          900: '#701a75',
+        },
+
+        // Muted text colors
+        muted: {
+          DEFAULT: 'rgb(var(--foreground-muted) / <alpha-value>)',
+          secondary: 'rgb(var(--foreground-secondary) / <alpha-value>)',
+        },
+
+        // Dark/Slate colors (for backward compatibility)
         dark: {
           50: '#f8fafc',
           100: '#f1f5f9',
@@ -25,31 +87,11 @@ export default {
           900: '#0f172a',
           950: '#020617',
         },
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-        },
-        accent: {
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-          900: '#701a75',
-        },
+
+        // Semantic colors
         success: {
+          DEFAULT: 'rgb(var(--success) / <alpha-value>)',
+          light: 'rgb(var(--success-light) / <alpha-value>)',
           50: '#f0fdf4',
           100: '#dcfce7',
           200: '#bbf7d0',
@@ -62,6 +104,8 @@ export default {
           900: '#14532d',
         },
         warning: {
+          DEFAULT: 'rgb(var(--warning) / <alpha-value>)',
+          light: 'rgb(var(--warning-light) / <alpha-value>)',
           50: '#fffbeb',
           100: '#fef3c7',
           200: '#fde68a',
@@ -74,6 +118,8 @@ export default {
           900: '#78350f',
         },
         error: {
+          DEFAULT: 'rgb(var(--error) / <alpha-value>)',
+          light: 'rgb(var(--error-light) / <alpha-value>)',
           50: '#fef2f2',
           100: '#fee2e2',
           200: '#fecaca',
@@ -85,6 +131,17 @@ export default {
           800: '#991b1b',
           900: '#7f1d1d',
         },
+        info: {
+          DEFAULT: 'rgb(var(--info) / <alpha-value>)',
+          light: 'rgb(var(--info-light) / <alpha-value>)',
+        },
+        purple: {
+          DEFAULT: 'rgb(var(--purple) / <alpha-value>)',
+          light: 'rgb(var(--purple-light) / <alpha-value>)',
+        },
+
+        // Ring color for focus states
+        ring: 'rgb(var(--ring) / <alpha-value>)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

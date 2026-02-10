@@ -1,4 +1,79 @@
 {
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "items": "Items",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "actions": "Actions",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "continue": "Continue",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "clear": "Clear",
+    "reset": "Reset",
+    "submit": "Submit",
+    "upload": "Upload",
+    "download": "Download",
+    "export": "Export",
+    "import": "Import",
+    "view": "View",
+    "show": "Show",
+    "hide": "Hide",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "select": "Select",
+    "deselect": "Deselect",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "required": "Required",
+    "optional": "Optional",
+    "recommended": "Recommended",
+    "deprecated": "Deprecated",
+    "new": "New",
+    "updated": "Updated",
+    "draft": "Draft",
+    "published": "Published",
+    "archived": "Archived",
+    "active": "Active",
+    "inactive": "Inactive",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "online": "Online",
+    "offline": "Offline",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "lowStock": "Low Stock",
+    "units": "Units",
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "results": "results",
+      "firstPage": "Go to first page",
+      "prevPage": "Go to previous page",
+      "page": "Go to page {{page}}",
+      "nextPage": "Go to next page",
+      "lastPage": "Go to last page"
+    }
+  },
   "app": {
     "title": "StockSuite - Professional Inventory Management",
     "description": "Professional inventory management system for modern businesses",
@@ -11,7 +86,24 @@
     "transactions": "Transactions",
     "stockLevels": "Stock Levels",
     "reports": "Reports",
-    "settings": "Settings"
+    "settings": "Settings",
+    "pointOfSale": "Point of Sale",
+    "inventoryManager": "Inventory Manager",
+    "warehouseValue": "Warehouse Value",
+    "vendors": "Vendors",
+    "newPurchase": "New Purchase",
+    "customers": "Customers",
+    "activityLog": "Activity Log",
+    "expenses": "Expenses",
+    "performance": "Performance",
+    "poweredBy": "Powered by NAM STUDIOS",
+    "groups": {
+      "foundation": "Foundation",
+      "inventoryHub": "Inventory Hub",
+      "procurement": "Procurement",
+      "salesCrm": "Sales & CRM",
+      "insights": "Insights"
+    }
   },
   "auth": {
     "login": {
@@ -76,11 +168,41 @@
       "emailSent": "We've sent password reset instructions to",
       "didntReceive": "Didn't receive the email? Check your spam folder.",
       "linkExpires": "Reset link expires in 1 hour"
+    },
+    "verifyEmail": {
+      "title": "Email Verification",
+      "verifying": "Verifying your email...",
+      "verified": "Email verified!",
+      "expired": "Verification link expired",
+      "failed": "Verification failed",
+      "messages": {
+        "loading": "Please wait while we verify your email address.",
+        "success": "Your email has been successfully verified. You can now access all features of your account.",
+        "expired": "The verification link has expired. Please request a new verification email.",
+        "error": "We could not verify your email address. The link might be invalid or already used."
+      },
+      "buttons": {
+        "continueLogin": "Continue to Login",
+        "resend": "Resend Verification Email",
+        "backLogin": "Back to Login",
+        "sending": "Sending...",
+        "resendIn": "Resend in {{seconds}}s"
+      },
+      "help": {
+        "title": "Need help?",
+        "text": "If you are having trouble verifying your email, please contact our support team."
+      },
+      "toast": {
+        "verified": "Email verified successfully!",
+        "sent": "Verification email sent! Please check your inbox.",
+        "failed": "Failed to send verification email. Please try again."
+      }
     }
   },
   "dashboard": {
     "title": "Dashboard Overview",
-    "subtitle": "Welcome back! Here's what's happening with your inventory.",
+    "welcome": "Welcome back,",
+    "subtitle": "Here's what's happening with your inventory.",
     "metrics": {
       "totalStockIn": "Total Stock In",
       "totalStockOut": "Total Stock Out",
@@ -111,7 +233,21 @@
       "tourDescription": "Learn how to use StockSuite in just 2 minutes",
       "manageCategories": "Manage Categories",
       "recordTransaction": "Record Transaction",
-      "viewStockLevels": "View Stock Levels"
+      "viewStockLevels": "View Stock Levels",
+      "addNewProduct": "Add New Product",
+      "pointOfSale": "Point of Sale"
+    },
+    "loadingStages": {
+      "fetching": "Fetching dashboard data...",
+      "inventory": "Loading inventory items...",
+      "metrics": "Calculating metrics...",
+      "preparing": "Preparing dashboard...",
+      "ready": "Dashboard ready!"
+    },
+    "errors": {
+      "loadFailed": "Failed to load dashboard data",
+      "metricsFailed": "Failed to load metrics data",
+      "generic": "Failed to load dashboard data. Please try again later."
     }
   },
   "categories": {
@@ -167,6 +303,8 @@
     "allCategories": "All Categories",
     "currentStock": "Current Stock",
     "avgCost": "Avg. Cost",
+    "salePrice": "Sale Price",
+    "searchPlaceholder": "Search items by name, SKU, or barcode...",
     "totalValue": "Total Value",
     "uncategorized": "Uncategorized",
     "form": {
@@ -199,7 +337,81 @@
       "updateError": "Failed to update item",
       "deleteError": "Failed to process item",
       "deleteConfirm": "Are you sure you want to delete this item? Items with transaction history will be archived instead of permanently deleted.",
-      "alreadyExists": "An item with this name already exists in this category"
+      "alreadyExists": "An item with this name already exists in this category",
+      "thresholdUpdated": "Threshold updated",
+      "thresholdError": "Failed to update threshold"
+    },
+    "table": {
+      "productInfo": "Product Info",
+      "category": "Category",
+      "stock": "Stock",
+      "avgCost": "Avg Cost",
+      "selling": "Selling",
+      "valuation": "Valuation",
+      "status": "Status"
+    },
+    "status": {
+      "outOfStock": "Out of Stock",
+      "lowStock": "Low Stock",
+      "good": "Good"
+    },
+    "wizard": {
+      "title": "Add New Product",
+      "stepIndicator": "Step {{current}} of {{total}}",
+      "steps": {
+        "category": "Select Category",
+        "basicInfo": "Product Info",
+        "price": "Set Price",
+        "productId": "Product ID",
+        "stock": "Stock & Attributes"
+      },
+      "category": {
+        "title": "Select Product Category",
+        "subtitle": "Choose the category that best describes your product"
+      },
+      "basicInfo": {
+        "title": "Product Information",
+        "subtitle": "Enter the basic product details"
+      },
+      "price": {
+        "title": "Set Product Price",
+        "subtitle": "This price will be used for all POS transactions",
+        "unitPrice": "Unit Price",
+        "adminOnly": "Requires admin privileges to modify unit price",
+        "perUnit": "per unit"
+      },
+      "productId": {
+        "title": "Product ID Assignment",
+        "subtitle": "Assign a unique identifier for this product",
+        "label": "Product ID",
+        "placeholder": "Enter or generate ID",
+        "generate": "Generate",
+        "helper": "This ID will be used for inventory tracking"
+      },
+      "stock": {
+        "title": "Stock & Additional Details",
+        "subtitle": "Set initial stock quantity and optional attributes",
+        "initialStock": "Initial Stock Quantity",
+        "initialStockPlaceholder": "Enter initial stock quantity",
+        "reorderPoint": "Reorder Point",
+        "reorderPointPlaceholder": "Minimum stock level",
+        "barcode": "Barcode",
+        "barcodePlaceholder": "Enter product barcode",
+        "location": "Storage Location",
+        "locationPlaceholder": "Enter storage location (e.g. Warehouse A, Shelf B-3)"
+      },
+      "summary": {
+        "title": "Product Summary",
+        "price": "Price",
+        "totalValue": "Total Value"
+      },
+      "errors": {
+        "categoryRequired": "Please select a category",
+        "priceRequired": "Product price must be greater than 0",
+        "productIdRequired": "Product ID is required",
+        "stockRequired": "Stock quantity must be 0 or greater",
+        "reorderPointRequired": "Reorder point must be 0 or greater"
+      }
     }
   },
   "transactions": {
@@ -222,6 +434,27 @@
       "lastWeek": "Last 7 Days",
       "lastMonth": "Last 30 Days"
     },
+    "activityLog": "Activity Log",
+    "historyTitle": "Activity Log",
+    "historySubtitle": "Central hub for tracking all business movements",
+    "addPurchase": "Add Purchase",
+    "generalLog": "General Log",
+    "tabs": {
+      "allLogs": "All Logs",
+      "procurement": "Procurement",
+      "salesHistory": "Sales History"
+    },
+    "searchPlaceholder": "Search history...",
+    "allTypes": "All Types",
+    "noLogs": "No logs found",
+    "noProcurement": "No procurement records found",
+    "unknownItem": "Unknown Item",
+    "table": {
+      "purchaseNum": "Purchase #",
+      "vendor": "Vendor",
+      "date": "Date",
+      "total": "Total"
+    },
     "form": {
       "transactionType": "Transaction Type",
       "stockIn": "Stock In",
@@ -230,20 +463,30 @@
       "stockOutDescription": "Remove inventory",
       "selectItem": "Select Item",
       "chooseItem": "Choose an item",
+      "selectCategory": "Select Category",
+      "chooseCategory": "Choose a category first",
+      "selectCategoryFirst": "Select Category First",
       "noItems": "No items available. Please create an item first.",
       "quantity": "Quantity",
+      "enterQuantity": "Enter quantity",
       "quantityPlaceholder": "Enter quantity",
       "unitPrice": "Unit Price",
+      "unitPriceFixed": "Unit Price (Fixed)",
+      "priceNote": "Price is automatically set from product definition and cannot be changed",
       "unitPricePlaceholder": "Enter unit price",
       "totalValue": "Total Value",
+      "currentStock": "Current Stock",
       "transactionDate": "Transaction Date",
       "supplier": "Supplier",
       "customer": "Customer",
       "supplierPlaceholder": "Enter supplier name",
       "customerPlaceholder": "Enter customer name",
+      "enterName": "Enter {{type}} name",
       "referenceNumber": "Reference Number",
+      "referenceOptional": "Reference Number (Optional)",
       "referencePlaceholder": "Enter invoice/receipt number (optional)",
       "notes": "Notes",
+      "notesOptional": "Notes (Optional)",
       "notesPlaceholder": "Add any additional notes about this transaction...",
       "cancel": "Cancel",
       "record": "Record Transaction",
@@ -259,8 +502,15 @@
       }
     },
     "messages": {
+      "success": "Transaction recorded successfully",
+      "error": "Failed to record transaction",
       "recordSuccess": "Transaction recorded successfully",
-      "recordError": "Failed to record transaction"
+      "recordError": "Failed to record transaction",
+      "selectItem": "Please select an item",
+      "invalidQty": "Quantity must be greater than 0",
+      "insufficientStock": "Insufficient stock. Available: {{stock}}",
+      "nameRequired": "{{type}} name is required",
+      "futureDate": "Transaction date cannot be in the future"
     }
   },
   "stockLevels": {
@@ -303,7 +553,9 @@
       "profile": "Profile",
       "security": "Security",
       "preferences": "Preferences",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "personal": "Personal Profile",
+      "business": "Business Settings"
     },
     "profile": {
       "title": "Profile Information",
@@ -395,9 +647,9 @@
         "currencyDisplay": "Currency Display",
         "currencyDisplayDescription": "How to display currency information",
         "currencyDisplayOptions": {
-          "symbol": "Symbol only ($)",
-          "code": "Code only (USD)",
-          "both": "Both ($ USD)"
+          "symbol": "Symbol only (Rs)",
+          "code": "Code only (PKR)",
+          "both": "Both (Rs PKR)"
         }
       },
       "saveActions": {
@@ -468,68 +720,6 @@
       "skipped": "Tour skipped. You can restart it anytime from Settings."
     }
   },
-  "common": {
-    "loading": "Loading...",
-    "error": "Error",
-    "success": "Success",
-    "cancel": "Cancel",
-    "save": "Save",
-    "delete": "Delete",
-    "edit": "Edit",
-    "add": "Add",
-    "search": "Search",
-    "filter": "Filter",
-    "sort": "Sort",
-    "actions": "Actions",
-    "confirm": "Confirm",
-    "yes": "Yes",
-    "no": "No",
-    "ok": "OK",
-    "close": "Close",
-    "back": "Back",
-    "next": "Next",
-    "previous": "Previous",
-    "finish": "Finish",
-    "continue": "Continue",
-    "retry": "Retry",
-    "refresh": "Refresh",
-    "clear": "Clear",
-    "reset": "Reset",
-    "submit": "Submit",
-    "upload": "Upload",
-    "download": "Download",
-    "export": "Export",
-    "import": "Import",
-    "view": "View",
-    "show": "Show",
-    "hide": "Hide",
-    "expand": "Expand",
-    "collapse": "Collapse",
-    "select": "Select",
-    "deselect": "Deselect",
-    "selectAll": "Select All",
-    "deselectAll": "Deselect All",
-    "required": "Required",
-    "optional": "Optional",
-    "recommended": "Recommended",
-    "deprecated": "Deprecated",
-    "new": "New",
-    "updated": "Updated",
-    "draft": "Draft",
-    "published": "Published",
-    "archived": "Archived",
-    "active": "Active",
-    "inactive": "Inactive",
-    "enabled": "Enabled",
-    "disabled": "Disabled",
-    "online": "Online",
-    "offline": "Offline",
-    "available": "Available",
-    "unavailable": "Unavailable",
-    "inStock": "In Stock",
-    "outOfStock": "Out of Stock",
-    "lowStock": "Low Stock"
-  },
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "network": "Network error. Please check your connection.",
@@ -540,6 +730,16 @@
     "validation": "Please check your input and try again.",
     "timeout": "Request timed out. Please try again.",
     "offline": "You are currently offline. Please check your connection."
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be at most {{max}} characters",
+    "minValue": "Must be at least {{min}}",
+    "maxValue": "Must be at most {{max}}",
+    "numeric": "Must be a number",
+    "url": "Please enter a valid URL"
   },
   "notifications": {
     "success": {
@@ -569,5 +769,298 @@
       "syncComplete": "Data synchronized",
       "updateAvailable": "Update available"
     }
+  },
+  "valuation": {
+    "title": "Inventory Valuation",
+    "subtitle": "Total financial value of your stock",
+    "analyzing": "Analyzing inventory batches...",
+    "totalAssetValue": "Total Asset Value",
+    "stockedItems": "Stocked Items",
+    "avgItemValue": "Avg Item Value",
+    "calculatedUsing": "Calculated using {{method}} method",
+    "acrossCategories": "Across all categories",
+    "perUniqueProduct": "Per unique product",
+    "breakdown": "Batch Inventory Breakdown",
+    "activeBatches": "Showing active batches only",
+    "table": {
+      "productName": "Product Name",
+      "qty": "Quantity",
+      "valuation": "Valuation",
+      "details": "Details",
+      "batchesCount": "{{count}} purchase batches"
+    }
+  },
+  "expenses": {
+    "title": "Business Expenses",
+    "subtitle": "Track rent, utilities, salaries, and other costs",
+    "recordExpense": "Record Expense",
+    "recordNew": "Record New Expense",
+    "loading": "Loading expenses...",
+    "noExpenses": "No expenses recorded yet",
+    "breakdown": "Category Breakdown",
+    "summary": "Summary (30 Days)",
+    "totalMonthly": "Total Monthly Expenses",
+    "count": "Expense Count",
+    "confirmDelete": "Are you sure you want to delete this expense?",
+    "form": {
+      "description": "Description",
+      "descPlaceholder": "e.g., Store electricity bill, Equipment maintenance",
+      "amount": "Amount",
+      "category": "Category",
+      "paymentMethod": "Payment Method",
+      "date": "Date",
+      "cancel": "Cancel",
+      "save": "Save Expense",
+      "methods": {
+        "cash": "Cash",
+        "bank_transfer": "Bank Transfer",
+        "digital": "Digital Payment"
+      }
+    },
+    "table": {
+      "expense": "Expense",
+      "category": "Category",
+      "date": "Date",
+      "method": "Method",
+      "amount": "Amount"
+    },
+    "categories": {
+      "rent": "Rent",
+      "utilities": "Utilities",
+      "salaries": "Salaries & Wages",
+      "supplies": "Supplies",
+      "maintenance": "Maintenance",
+      "marketing": "Marketing",
+      "transport": "Transport",
+      "taxes": "Taxes",
+      "miscellaneous": "Miscellaneous"
+    }
+  },
+  "pos": {
+    "title": "Point of Sale",
+    "subtitle": "Professional Retail & Billing System",
+    "scanBarcode": "Scan Barcode",
+    "searchProducts": "Search Products",
+    "cart": "Cart",
+    "shoppingCart": "Shopping Cart",
+    "emptyCart": "Cart is empty",
+    "cartEmpty": "Cart is empty",
+    "scanOrSearch": "Scan or search to add products",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "discount": "Discount",
+    "checkout": "Checkout",
+    "payment": "Payment",
+    "cash": "Cash",
+    "card": "Card",
+    "complete": "Complete",
+    "tabs": {
+      "terminal": "POS Terminal",
+      "reports": "Sales Reports",
+      "settings": "POS Settings"
+    },
+    "terminal": {
+      "regularBill": "🧾 Regular Bill",
+      "quotation": "📋 Quotation",
+      "pressF8": "Press F8 to toggle bill type",
+      "newTransaction": "New Transaction",
+      "new": "New",
+      "print": "Print",
+      "startScanner": "Start Scanner",
+      "stopScanner": "Stop Scanner",
+      "scannerActive": "Scanner Active",
+      "readyToScan": "Ready to scan",
+      "successfulScans": "Successful Scans",
+      "barcodeScanner": "Barcode Scanner",
+      "clickToScan": "Click 'Start Scanner' to begin scanning barcodes",
+      "supportsFormats": "Supports UPC, EAN, Code 128, Code 39, QR Codes",
+      "scannerNotWorking": "Scanner not working? Enter barcode manually",
+      "enterBarcode": "Enter barcode manually",
+      "add": "Add",
+      "scannerQuality": "Scanner Quality",
+      "qualityLow": "Low (5 FPS)",
+      "qualityMedium": "Medium (10 FPS)",
+      "qualityHigh": "High (15 FPS)",
+      "manualEntryLabel": "Manual Entry",
+      "productSearch": "Product Search",
+      "findProducts": "Find and add products to cart",
+      "barcode": "Barcode",
+      "productId": "Product ID",
+      "name": "Name",
+      "searchByName": "Search by name...",
+      "searchById": "Search by ID...",
+      "searchByBarcode": "Search by barcode...",
+      "searchTip": "Search products by name, ID, or barcode to add to cart",
+      "useBarcodeScanner": "💡 Use barcode scanner for faster checkout",
+      "enableCreditSale": "Enable Credit Sale",
+      "creditSale": "Credit Sale (Udhaar)",
+      "change": "Change",
+      "due": "Due",
+      "proceedToPayment": "Proceed to Payment",
+      "items": "Items",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "addToCart": "Add to Cart",
+      "outOfStock": "Out of Stock",
+      "noResults": "No products found",
+      "trySearchingBy": "Try searching by",
+      "scanPositionFrame": "Position barcode within frame",
+      "scannerError": "Scanner Error",
+      "retryScanner": "Retry Scanner",
+      "manualAdded": "Manual entry added: {{value}}",
+      "totalItems": "Total Items",
+      "avgPrice": "Avg Price",
+      "each": "each",
+      "left": "left"
+    },
+    "quotationMode": {
+      "title": "Quotation Mode Active",
+      "description": "This bill will not affect inventory or financial records. Use for price inquiries only."
+    },
+    "transaction": {
+      "complete": "Transaction Complete!",
+      "number": "Transaction No",
+      "change": "Change",
+      "printReceipt": "Print Receipt",
+      "newSale": "New Sale"
+    },
+    "keyboard": {
+      "title": "Keyboard Shortcuts",
+      "shortcuts": "Shortcuts"
+    },
+    "settings": {
+      "title": "POS Settings",
+      "subtitle": "Configure your Point of Sale system preferences",
+      "required": "POS Settings Required",
+      "configureMessage": "Please configure POS settings to continue",
+      "storeInfo": {
+        "title": "Store Information",
+        "storeName": "Store Name",
+        "storePhone": "Store Phone",
+        "storeAddress": "Store Address"
+      },
+      "financial": {
+        "title": "Financial Settings",
+        "currency": "Currency",
+        "taxRate": "Tax Rate (%)"
+      },
+      "hardware": {
+        "title": "Hardware Settings",
+        "barcodeScanner": "Barcode Scanner",
+        "enableScanner": "Enable camera-based barcode scanning",
+        "autoPrint": "Auto Print Receipt",
+        "autoPrintDesc": "Automatically print receipts after payment",
+        "thermalPrinter": "Thermal Printer",
+        "thermalPrinterDesc": "Enable thermal receipt printer support"
+      },
+      "receipt": {
+        "title": "Receipt Customization",
+        "footerMessage": "Receipt Footer Message",
+        "footerNote": "This message will appear at the bottom of all printed receipts.",
+        "defaultFooter": "Thank you for your business!"
+      }
+    },
+    "reports": {
+      "title": "Sales Reports",
+      "subtitle": "Analyze your Point of Sale performance and trends",
+      "totalSales": "Total Sales",
+      "transactions": "Transactions",
+      "avgTransaction": "Avg Transaction",
+      "itemsSold": "Items Sold",
+      "paymentMethods": "Payment Methods",
+      "topSellingItems": "Top Selling Items",
+      "recentTransactions": "Recent Transactions",
+      "transactionNumber": "Transaction #",
+      "date": "Date",
+      "items": "Items",
+      "payment": "Payment",
+      "total": "Total"
+    },
+    "loading": "Loading POS System...",
+    "messages": {
+      "printSuccess": "Receipt printed successfully",
+      "transactionSuccess": "Transaction completed successfully!",
+      "quotationSuccess": "Quotation created successfully!",
+      "cartCleared": "Cart cleared",
+      "clearCartConfirm": "Are you sure you want to clear the cart?",
+      "productNotFound": "Product not found for barcode: {{barcode}}",
+      "outOfStock": "{{name}} is out of stock",
+      "addedToCart": "{{name}} added to cart",
+      "limitedStock": "Only {{count}} items available in stock"
+    }
+  },
+  "purchases": {
+    "title": "Purchases",
+    "subtitle": "Manage purchases from vendors",
+    "newPurchase": "New Purchase",
+    "purchaseDetails": "Purchase Details",
+    "selectVendor": "Select Vendor",
+    "addItems": "Add Items",
+    "purchaseDate": "Purchase Date",
+    "invoiceNumber": "Invoice Number",
+    "paymentStatus": "Payment Status",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "partial": "Partial",
+    "step": "Step {{current}} of {{total}}",
+    "reviewComplete": "Review & Complete",
+    "billNumber": "Bill Number",
+    "billNumberOptional": "Bill Number (Optional)",
+    "vendorInvoiceNumber": "Vendor Invoice Number",
+    "paidAmount": "Paid Amount",
+    "notes": "Notes",
+    "notesOptional": "Notes (Optional)",
+    "addNotes": "Add any additional notes...",
+    "orderSummary": "Order Summary",
+    "totalUnits": "Total Units",
+    "totalAmount": "Total Amount",
+    "completePurchase": "Complete Purchase",
+    "creating": "Creating...",
+    "messages": {
+      "selectVendor": "Please select a vendor",
+      "addItems": "Please add at least one item",
+      "success": "Purchase created successfully",
+      "error": "Failed to create purchase",
+      "loadError": "Failed to load categories"
+    }
+  },
+  "customers": {
+    "title": "Customers",
+    "subtitle": "Manage customer credits (Udhaar) and profiles",
+    "addCustomer": "Add Customer",
+    "searchPlaceholder": "Search customers by name or phone...",
+    "noCustomers": "No customers found",
+    "creditDue": "Credit Due",
+    "purchases": "Purchases",
+    "viewLedger": "View Ledger",
+    "totalCollections": "Total Collections",
+    "udhaarPending": "Total 'Udhaar' Pending",
+    "activeCustomers": "Active Customers",
+    "quickActions": "Quick Actions",
+    "collectPayment": "Collect Payment",
+    "sendReminder": "Send Payment Reminder",
+    "loading": "Loading customers..."
+  },
+  "vendors": {
+    "title": "Vendors",
+    "subtitle": "Manage your suppliers and outstanding balances",
+    "addVendor": "Add Vendor",
+    "addNewVendor": "Add New Vendor",
+    "noVendors": "No vendors found",
+    "searchPlaceholder": "Search vendors by name, company or phone...",
+    "credit": "Credit",
+    "balance": "Balance",
+    "totalPurchases": "Total Purchases",
+    "noPurchasesYet": "No purchases yet",
+    "viewLedger": "View Ledger",
+    "deleteVendor": "Delete Vendor",
+    "confirmDelete": "Are you sure you want to delete vendor \"{{name}}\"? This action cannot be undone.",
+    "deleteSuccess": "Vendor deleted successfully",
+    "deleteFailed": "Failed to delete vendor",
+    "quickSummary": "Quick Summary",
+    "netOutstanding": "Net Outstanding",
+    "totalSuppliers": "Total Suppliers",
+    "globalActions": "Global Actions"
   }
 }

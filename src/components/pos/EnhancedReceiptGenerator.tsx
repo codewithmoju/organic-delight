@@ -29,8 +29,8 @@ const EnhancedReceiptGenerator = forwardRef<HTMLDivElement, EnhancedReceiptGener
     const styles = variant === 'thermal' ? getThermalStyles() : getStandardStyles();
 
     return (
-      <div 
-        ref={ref} 
+      <div
+        ref={ref}
         className={`bg-white text-black p-6 mx-auto ${className}`}
         style={styles}
       >
@@ -41,9 +41,7 @@ const EnhancedReceiptGenerator = forwardRef<HTMLDivElement, EnhancedReceiptGener
             <div className="font-medium">{settings.store_address}</div>
             <div className="font-medium">{settings.store_phone}</div>
           </div>
-          <div className="mt-2 text-sm text-gray-600">
-            Professional Inventory Management System
-          </div>
+
         </div>
 
         {/* Transaction Header */}
@@ -90,7 +88,7 @@ const EnhancedReceiptGenerator = forwardRef<HTMLDivElement, EnhancedReceiptGener
                       <div className="text-xs text-gray-600">#{item.barcode}</div>
                     )}
                   </td>
-                  <td className="text-center py-2">{item.quantity}</td>
+                  <td className="text-center py-2">{item.quantity} {item.unit}</td>
                   <td className="text-right py-2">{formatCurrency(item.unit_price)}</td>
                   <td className="text-right py-2 font-medium">{formatCurrency(item.line_total)}</td>
                 </tr>
@@ -165,32 +163,17 @@ const EnhancedReceiptGenerator = forwardRef<HTMLDivElement, EnhancedReceiptGener
         {/* Footer */}
         <div className="text-center space-y-3">
           <div className="text-lg font-medium">{settings.receipt_footer_message}</div>
-          
+
           <div className="border-t border-gray-400 pt-3">
             <div className="text-sm text-gray-600 space-y-1">
               <div>Thank you for your business!</div>
               <div>Visit us again soon</div>
-              <div className="font-medium">Powered by StockSuite POS</div>
+              <div className="text-xs mt-2">Powered by</div>
+              <div className="font-bold text-sm">STOCK SUITE by NAMS STUDIO</div>
             </div>
           </div>
 
-          {/* Return Policy */}
-          <div className="text-xs text-gray-500 border-t border-gray-300 pt-2">
-            <div>Returns accepted within 30 days with receipt</div>
-            <div>Store credit issued for returns without receipt</div>
-          </div>
 
-          {/* QR Code Placeholder */}
-          <div className="flex justify-center mt-4">
-            <div className="border-2 border-gray-400 p-2">
-              <div className="w-16 h-16 bg-gray-200 flex items-center justify-center text-xs font-bold">
-                QR CODE
-              </div>
-            </div>
-          </div>
-          <div className="text-xs text-gray-500">
-            Scan for digital receipt and loyalty points
-          </div>
         </div>
 
         {/* Print Instructions */}

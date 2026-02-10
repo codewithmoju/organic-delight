@@ -4,11 +4,14 @@ export function checkLowStockNotifications(items: Item[]): string[] {
   const notifications: string[] = [];
 
   items.forEach(item => {
-    if (item.quantity <= item.reorder_point) {
-      if (item.quantity === 0) {
+    const quantity = item.current_quantity || item.quantity || 0;
+    const threshold = item.low_stock_threshold || item.reorder_point || 0;
+
+    if (quantity <= threshold) {
+      if (quantity === 0) {
         notifications.push(`${item.name} is out of stock!`);
       } else {
-        notifications.push(`${item.name} is running low (${item.quantity} ${item.unit} remaining)`);
+        notifications.push(`${item.name} is running low (${quantity} ${item.unit || 'units'} remaining)`);
       }
     }
   });
@@ -34,25 +37,40 @@ export function formatNumber(value: number): string {
 }
 
 export function formatDate(date: Date | any): string {
-  const dateObj = date.toDate ? date.toDate() : new Date(date);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(dateObj);
+  if (!date) return 'N/A';
+  try {
+    const dateObj = date.toDate ? date.toDate() : new Date(date);
+    if (isNaN(dateObj.getTime())) return 'Invalid Date';
+
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(dateObj);
+  } catch (error) {
+    return 'Invalid Date';
+  }
 }
 
 export function calculateInventoryValue(items: Item[]): number {
-  return items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
+  return items.reduce((total, item) => {
+    const quantity = item.current_quantity || item.quantity || 0;
+    const price = item.average_unit_cost || item.unit_price || 0;
+    return total + (quantity * price);
+  }, 0);
 }
 
 export function getInventoryStats(items: Item[]) {
   const totalItems = items.length;
   const totalValue = calculateInventoryValue(items);
-  const lowStockItems = items.filter(item => item.quantity <= item.reorder_point);
-  const outOfStockItems = items.filter(item => item.quantity === 0);
+  const lowStockItems = items.filter(item => {
+    const quantity = item.current_quantity || item.quantity || 0;
+    const threshold = item.low_stock_threshold || item.reorder_point || 0;
+    return quantity <= threshold;
+  });
+  const outOfStockItems = items.filter(item => (item.current_quantity || item.quantity || 0) === 0);
 
   return {
     totalItems,

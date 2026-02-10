@@ -3,8 +3,6 @@ import {
     doc,
     getDocs,
     getDoc,
-    addDoc,
-    updateDoc,
     query,
     where,
     orderBy,
@@ -13,7 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Purchase, PurchaseItem } from '../types';
-import { updateVendorBalanceForPurchase, generatePurchaseNumber } from './vendors';
+import { generatePurchaseNumber } from './vendors';
 
 // ============================================
 // PURCHASE CRUD OPERATIONS
@@ -46,14 +44,17 @@ export async function createPurchase(purchaseData: {
 
         const items: PurchaseItem[] = purchaseData.items.map(item => ({
             ...item,
-            id: Math.random().toString(36).substr(2, 9)
+            id: Math.random().toString(36).substr(2, 9),
+            expiry_date: item.expiry_date || null,
+            shelf_location: item.shelf_location || null,
+            barcode: item.barcode || null
         }));
 
         const pendingAmount = purchaseData.total_amount - purchaseData.paid_amount;
 
         const purchase: Omit<Purchase, 'id'> = {
             purchase_number: purchaseNumber,
-            bill_number: purchaseData.bill_number,
+            bill_number: purchaseData.bill_number || null,
             vendor_id: purchaseData.vendor_id,
             vendor_name: purchaseData.vendor_name,
             items,
@@ -67,7 +68,7 @@ export async function createPurchase(purchaseData: {
             purchase_date: purchaseData.purchase_date,
             created_at: new Date(),
             created_by: purchaseData.created_by,
-            notes: purchaseData.notes
+            notes: purchaseData.notes || null
         };
 
         transaction.set(purchaseRef, {
@@ -96,10 +97,28 @@ export async function createPurchase(purchaseData: {
                 shelf_location: item.shelf_location || null
             });
 
-            // Update item's last purchase rate
+            // Update item's last purchase rate and current stock level
             const itemRef = doc(db, 'items', item.item_id);
+            const itemDoc = await transaction.get(itemRef);
+            const currentStock = itemDoc.exists() ? (itemDoc.data().current_quantity || 0) : 0;
+
             transaction.update(itemRef, {
                 last_purchase_rate: item.purchase_rate,
+                purchase_rate: item.purchase_rate, // Sync with purchase_rate field too
+                current_quantity: currentStock + item.quantity,
+                updated_at: Timestamp.fromDate(new Date())
+            });
+        }
+
+        // Update Vendor Balance & Stats
+        const vendorRef = doc(db, 'vendors', purchaseData.vendor_id);
+        const vendorDoc = await transaction.get(vendorRef);
+
+        if (vendorDoc.exists()) {
+            const vendorData = vendorDoc.data();
+            transaction.update(vendorRef, {
+                outstanding_balance: (vendorData.outstanding_balance || 0) + pendingAmount,
+                total_purchases: (vendorData.total_purchases || 0) + purchaseData.total_amount,
                 updated_at: Timestamp.fromDate(new Date())
             });
         }
@@ -213,6 +232,19 @@ export async function updatePurchasePayment(
             payment_status: newPaymentStatus,
             updated_at: Timestamp.fromDate(new Date())
         });
+
+        // Update Vendor Balance
+        const vendorRef = doc(db, 'vendors', vendorId);
+        const vendorDoc = await transaction.get(vendorRef);
+
+        if (vendorDoc.exists()) {
+            const vendorData = vendorDoc.data();
+            const currentBalance = vendorData.outstanding_balance || 0;
+            transaction.update(vendorRef, {
+                outstanding_balance: currentBalance - paymentAmount,
+                updated_at: Timestamp.fromDate(new Date())
+            });
+        }
     });
 }
 

@@ -9,6 +9,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Logo from '../../components/ui/Logo';
 import { validateEmail, validatePassword, validateRequired, validatePhone, validateUsername } from '../../lib/utils/validation';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface RegistrationData {
   // Step 1 - Basic Information
@@ -60,6 +61,7 @@ const COUNTRIES = [
 ];
 
 export default function MultiStepRegister() {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -279,10 +281,10 @@ export default function MultiStepRegister() {
   };
 
   const getPasswordStrengthText = () => {
-    if (passwordStrength < 25) return 'Weak';
-    if (passwordStrength < 50) return 'Fair';
-    if (passwordStrength < 75) return 'Good';
-    return 'Strong';
+    if (passwordStrength < 25) return t('auth.register.strength.weak');
+    if (passwordStrength < 50) return t('auth.register.strength.fair');
+    if (passwordStrength < 75) return t('auth.register.strength.good');
+    return t('auth.register.strength.strong');
   };
 
   return (
@@ -302,14 +304,14 @@ export default function MultiStepRegister() {
         <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
           {/* Header */}
           <div className="text-center mb-8">
-            <Logo size="lg" animated />
+            <Logo size="lg" />
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="mt-6 text-3xl lg:text-4xl font-bold text-white"
             >
-              Create Your Account
+              {t('auth.register.title')}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -317,7 +319,7 @@ export default function MultiStepRegister() {
               transition={{ delay: 0.3 }}
               className="mt-2 text-gray-400 text-lg"
             >
-              Step {currentStep} of 3
+              {t('auth.register.steps.stepIndicator', { current: currentStep, total: 3 })}
             </motion.p>
           </div>
 
@@ -328,8 +330,8 @@ export default function MultiStepRegister() {
                 <div
                   key={step}
                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${step <= currentStep
-                      ? 'border-primary-500 bg-primary-500 text-white'
-                      : 'border-gray-600 text-gray-400'
+                    ? 'border-primary-500 bg-primary-500 text-white'
+                    : 'border-gray-600 text-gray-400'
                     }`}
                 >
                   {step < currentStep ? <Check className="w-5 h-5" /> : step}
@@ -358,20 +360,20 @@ export default function MultiStepRegister() {
               >
                 <div className="flex items-center mb-6">
                   <User className="w-6 h-6 text-primary-400 mr-3" />
-                  <h3 className="text-xl font-semibold text-white">Basic Information</h3>
+                  <h3 className="text-xl font-semibold text-white">{t('auth.register.steps.basicInfo')}</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-base font-medium text-gray-300 mb-3">
-                      First Name *
+                      {t('auth.register.firstName')} *
                     </label>
                     <input
                       type="text"
                       value={formData.firstName}
                       onChange={(e) => updateFormData('firstName', e.target.value)}
                       className={`w-full input-dark input-large ${errors.firstName ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Enter your first name"
+                      placeholder={t('auth.register.placeholders.firstName')}
                     />
                     {errors.firstName && (
                       <p className="mt-2 text-sm text-error-400">{errors.firstName}</p>
@@ -380,14 +382,14 @@ export default function MultiStepRegister() {
 
                   <div>
                     <label className="block text-base font-medium text-gray-300 mb-3">
-                      Last Name *
+                      {t('auth.register.lastName')} *
                     </label>
                     <input
                       type="text"
                       value={formData.lastName}
                       onChange={(e) => updateFormData('lastName', e.target.value)}
                       className={`w-full input-dark input-large ${errors.lastName ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Enter your last name"
+                      placeholder={t('auth.register.placeholders.lastName')}
                     />
                     {errors.lastName && (
                       <p className="mt-2 text-sm text-error-400">{errors.lastName}</p>
@@ -397,14 +399,14 @@ export default function MultiStepRegister() {
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Email Address *
+                    {t('auth.register.email')} *
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => updateFormData('email', e.target.value)}
                     className={`w-full input-dark input-large ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
-                    placeholder="Enter your email address"
+                    placeholder={t('auth.register.placeholders.email')}
                   />
                   {errors.email && (
                     <p className="mt-2 text-sm text-error-400">{errors.email}</p>
@@ -413,7 +415,7 @@ export default function MultiStepRegister() {
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Phone Number *
+                    {t('auth.register.phone')} *
                   </label>
                   <div className="flex gap-3">
                     <select
@@ -432,7 +434,7 @@ export default function MultiStepRegister() {
                       value={formData.phone}
                       onChange={(e) => updateFormData('phone', e.target.value)}
                       className={`flex-1 input-dark input-large ${errors.phone ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Enter your phone number (e.g., +92 300 1234567)"
+                      placeholder={t('auth.register.placeholders.phone')}
                     />
                   </div>
                   {errors.phone && (
@@ -442,7 +444,7 @@ export default function MultiStepRegister() {
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Date of Birth *
+                    {t('auth.register.dob')} *
                   </label>
                   <input
                     type="date"
@@ -467,12 +469,12 @@ export default function MultiStepRegister() {
               >
                 <div className="flex items-center mb-6">
                   <Lock className="w-6 h-6 text-primary-400 mr-3" />
-                  <h3 className="text-xl font-semibold text-white">Account Security</h3>
+                  <h3 className="text-xl font-semibold text-white">{t('auth.register.steps.security')}</h3>
                 </div>
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Username *
+                    {t('auth.register.username')} *
                   </label>
                   <div className="relative">
                     <input
@@ -480,7 +482,7 @@ export default function MultiStepRegister() {
                       value={formData.username}
                       onChange={(e) => updateFormData('username', e.target.value)}
                       className={`w-full input-dark input-large pr-10 ${errors.username ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Choose a unique username"
+                      placeholder={t('auth.register.placeholders.username')}
                     />
                     {formData.username.length >= 3 && (
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -503,7 +505,7 @@ export default function MultiStepRegister() {
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Password *
+                    {t('auth.register.password')} *
                   </label>
                   <div className="relative">
                     <input
@@ -511,7 +513,7 @@ export default function MultiStepRegister() {
                       value={formData.password}
                       onChange={(e) => updateFormData('password', e.target.value)}
                       className={`w-full input-dark input-large pr-12 ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Create a strong password"
+                      placeholder={t('auth.register.placeholders.password')}
                     />
                     <button
                       type="button"
@@ -529,9 +531,9 @@ export default function MultiStepRegister() {
                   {formData.password && (
                     <div className="mt-3">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-400">Password Strength:</span>
+                        <span className="text-sm text-gray-400">{t('auth.register.strength.label')}</span>
                         <span className={`text-sm font-medium ${passwordStrength < 50 ? 'text-red-400' :
-                            passwordStrength < 75 ? 'text-yellow-400' : 'text-green-400'
+                          passwordStrength < 75 ? 'text-yellow-400' : 'text-green-400'
                           }`}>
                           {getPasswordStrengthText()}
                         </span>
@@ -552,7 +554,7 @@ export default function MultiStepRegister() {
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Confirm Password *
+                    {t('auth.register.confirmPassword')} *
                   </label>
                   <div className="relative">
                     <input
@@ -560,7 +562,7 @@ export default function MultiStepRegister() {
                       value={formData.confirmPassword}
                       onChange={(e) => updateFormData('confirmPassword', e.target.value)}
                       className={`w-full input-dark input-large pr-12 ${errors.confirmPassword ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Confirm your password"
+                      placeholder={t('auth.register.placeholders.confirmPassword')}
                     />
                     <button
                       type="button"
@@ -581,7 +583,7 @@ export default function MultiStepRegister() {
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Security Question *
+                    {t('auth.register.securityQuestion')} *
                   </label>
                   <select
                     value={formData.securityQuestion}
@@ -602,14 +604,14 @@ export default function MultiStepRegister() {
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Security Answer *
+                    {t('auth.register.securityAnswer')} *
                   </label>
                   <input
                     type="text"
                     value={formData.securityAnswer}
                     onChange={(e) => updateFormData('securityAnswer', e.target.value)}
                     className={`w-full input-dark input-large ${errors.securityAnswer ? 'ring-error-500 border-error-500' : ''}`}
-                    placeholder="Enter your answer"
+                    placeholder={t('auth.register.placeholders.securityAnswer')}
                   />
                   {errors.securityAnswer && (
                     <p className="mt-2 text-sm text-error-400">{errors.securityAnswer}</p>
@@ -628,12 +630,12 @@ export default function MultiStepRegister() {
               >
                 <div className="flex items-center mb-6">
                   <MapPin className="w-6 h-6 text-primary-400 mr-3" />
-                  <h3 className="text-xl font-semibold text-white">Additional Details</h3>
+                  <h3 className="text-xl font-semibold text-white">{t('auth.register.steps.additional')}</h3>
                 </div>
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Profile Picture (Optional)
+                    {t('auth.register.profilePicture')}
                   </label>
                   <div className="flex items-center space-x-4">
                     <div className="w-20 h-20 rounded-full bg-dark-700 flex items-center justify-center overflow-hidden">
@@ -649,7 +651,7 @@ export default function MultiStepRegister() {
                     </div>
                     <label className="btn-secondary cursor-pointer">
                       <Upload className="w-4 h-4 mr-2" />
-                      Upload Photo
+                      {t('auth.register.uploadPhoto')}
                       <input
                         type="file"
                         accept="image/*"
@@ -665,14 +667,14 @@ export default function MultiStepRegister() {
 
                 <div>
                   <label className="block text-base font-medium text-gray-300 mb-3">
-                    Street Address *
+                    {t('auth.register.address.street')} *
                   </label>
                   <input
                     type="text"
                     value={formData.street}
                     onChange={(e) => updateFormData('street', e.target.value)}
                     className={`w-full input-dark input-large ${errors.street ? 'ring-error-500 border-error-500' : ''}`}
-                    placeholder="Enter your street address"
+                    placeholder={t('auth.register.placeholders.street')}
                   />
                   {errors.street && (
                     <p className="mt-2 text-sm text-error-400">{errors.street}</p>
@@ -682,14 +684,14 @@ export default function MultiStepRegister() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-base font-medium text-gray-300 mb-3">
-                      City *
+                      {t('auth.register.address.city')} *
                     </label>
                     <input
                       type="text"
                       value={formData.city}
                       onChange={(e) => updateFormData('city', e.target.value)}
                       className={`w-full input-dark input-large ${errors.city ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Enter your city"
+                      placeholder={t('auth.register.placeholders.city')}
                     />
                     {errors.city && (
                       <p className="mt-2 text-sm text-error-400">{errors.city}</p>
@@ -698,14 +700,14 @@ export default function MultiStepRegister() {
 
                   <div>
                     <label className="block text-base font-medium text-gray-300 mb-3">
-                      State/Province *
+                      {t('auth.register.address.state')} *
                     </label>
                     <input
                       type="text"
                       value={formData.state}
                       onChange={(e) => updateFormData('state', e.target.value)}
                       className={`w-full input-dark input-large ${errors.state ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Enter your state/province"
+                      placeholder={t('auth.register.placeholders.state')}
                     />
                     {errors.state && (
                       <p className="mt-2 text-sm text-error-400">{errors.state}</p>
@@ -716,14 +718,14 @@ export default function MultiStepRegister() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-base font-medium text-gray-300 mb-3">
-                      Postal Code *
+                      {t('auth.register.address.postalCode')} *
                     </label>
                     <input
                       type="text"
                       value={formData.postalCode}
                       onChange={(e) => updateFormData('postalCode', e.target.value)}
                       className={`w-full input-dark input-large ${errors.postalCode ? 'ring-error-500 border-error-500' : ''}`}
-                      placeholder="Enter your postal code"
+                      placeholder={t('auth.register.placeholders.postalCode')}
                     />
                     {errors.postalCode && (
                       <p className="mt-2 text-sm text-error-400">{errors.postalCode}</p>
@@ -732,7 +734,7 @@ export default function MultiStepRegister() {
 
                   <div>
                     <label className="block text-base font-medium text-gray-300 mb-3">
-                      Country *
+                      {t('auth.register.address.country')} *
                     </label>
                     <select
                       value={formData.country}
@@ -763,7 +765,7 @@ export default function MultiStepRegister() {
                           onChange={(e) => setCaptchaVerified(e.target.checked)}
                           className="w-5 h-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800 mr-3"
                         />
-                        <span className="text-gray-300">I'm not a robot</span>
+                        <span className="text-gray-300">{t('auth.register.terms.captcha')}</span>
                       </label>
                     </div>
                   </div>
@@ -781,9 +783,9 @@ export default function MultiStepRegister() {
                       className="w-5 h-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800 mr-3 mt-0.5"
                     />
                     <span className="text-gray-300">
-                      I agree to the{' '}
+                      {t('auth.register.terms.agree')}{' '}
                       <Link to="/terms" className="text-primary-400 hover:text-primary-300">
-                        Terms of Service
+                        {t('auth.register.terms.service')}
                       </Link>
                     </span>
                   </label>
@@ -799,9 +801,9 @@ export default function MultiStepRegister() {
                       className="w-5 h-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800 mr-3 mt-0.5"
                     />
                     <span className="text-gray-300">
-                      I agree to the{' '}
+                      {t('auth.register.terms.agree')}{' '}
                       <Link to="/privacy" className="text-primary-400 hover:text-primary-300">
-                        Privacy Policy
+                        {t('auth.register.terms.privacy')}
                       </Link>
                     </span>
                   </label>
@@ -815,18 +817,21 @@ export default function MultiStepRegister() {
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-8 pt-6 border-t border-dark-700/50">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className={`btn-secondary flex items-center gap-2 ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Previous
-            </motion.button>
+
+            {currentStep > 1 ? (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={prevStep}
+                className="btn-secondary flex items-center gap-2"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                {t('auth.register.buttons.previous')}
+              </motion.button>
+            ) : (
+              <div />
+            )}
 
             {currentStep < 3 ? (
               <motion.button
@@ -836,8 +841,8 @@ export default function MultiStepRegister() {
                 onClick={nextStep}
                 className="btn-primary flex items-center gap-2"
               >
-                Next
-                <ArrowRight className="w-4 h-4" />
+                {t('auth.register.buttons.next')}
+                <ArrowRight className="w-5 h-5" />
               </motion.button>
             ) : (
               <motion.button
@@ -849,12 +854,12 @@ export default function MultiStepRegister() {
                 className="btn-primary flex items-center gap-2 min-w-[140px]"
               >
                 {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" color="white" />
-                    Creating Account...
-                  </>
+                  <LoadingSpinner size="sm" color="white" />
                 ) : (
-                  'Create Account'
+                  <>
+                    <Check className="w-5 h-5" />
+                    {t('auth.register.buttons.createAccount')}
+                  </>
                 )}
               </motion.button>
             )}
@@ -867,12 +872,12 @@ export default function MultiStepRegister() {
             transition={{ delay: 0.9 }}
             className="mt-8 text-center text-base text-gray-400"
           >
-            Already have an account?{' '}
+            {t('auth.register.hasAccount')}{' '}
             <Link
               to="/login"
               className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
             >
-              Sign in
+              {t('auth.register.signIn')}
             </Link>
           </motion.p>
         </div>

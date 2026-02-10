@@ -12,10 +12,10 @@ interface ReceiptGeneratorProps {
 const ReceiptGenerator = forwardRef<HTMLDivElement, ReceiptGeneratorProps>(
   ({ transaction, settings, className = '' }, ref) => {
     return (
-      <div 
-        ref={ref} 
+      <div
+        ref={ref}
         className={`bg-white text-black p-6 max-w-sm mx-auto font-mono text-sm ${className}`}
-        style={{ 
+        style={{
           width: '80mm', // Standard thermal receipt width
           fontSize: '12px',
           lineHeight: '1.2'
@@ -25,9 +25,20 @@ const ReceiptGenerator = forwardRef<HTMLDivElement, ReceiptGeneratorProps>(
         <div className="text-center border-b border-gray-300 pb-4 mb-4">
           <h1 className="text-lg font-bold mb-1">{settings.store_name}</h1>
           <div className="text-xs space-y-1">
-            <div>{settings.store_address}</div>
-            <div>{settings.store_phone}</div>
+            {settings.store_address && <div>{settings.store_address}</div>}
+            {settings.store_city && settings.store_country && (
+              <div>{settings.store_city}, {settings.store_country}</div>
+            )}
+            {settings.store_phone && <div>Tel: {settings.store_phone}</div>}
+            {settings.store_email && <div>Email: {settings.store_email}</div>}
+            {settings.store_website && <div>{settings.store_website}</div>}
+            {settings.tax_number && <div className="mt-1">Tax ID: {settings.tax_number}</div>}
           </div>
+          {settings.receipt_header_message && (
+            <div className="mt-2 text-xs font-semibold">
+              {settings.receipt_header_message}
+            </div>
+          )}
         </div>
 
         {/* Transaction Info */}
@@ -75,7 +86,7 @@ const ReceiptGenerator = forwardRef<HTMLDivElement, ReceiptGeneratorProps>(
             <span>{formatCurrency(transaction.subtotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Tax:</span>
+            <span>Tax ({settings.tax_rate * 100}%):</span>
             <span>{formatCurrency(transaction.tax_amount)}</span>
           </div>
           {transaction.discount_amount > 0 && (

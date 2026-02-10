@@ -1,213 +1,185 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { User, Save, Phone, Building2, MapPin, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-import { User, Save, Mail, Phone, Building, MapPin } from 'lucide-react';
 import { useAuthStore } from '../../lib/store';
 import { updateUserProfile } from '../../lib/api/auth';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import AnimatedCard from '../ui/AnimatedCard';
 
 export default function PersonalSettings() {
-    const [isLoading, setIsLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        full_name: '',
-        phone: '',
-        company: '',
-        address: ''
-    });
-    const [hasChanges, setHasChanges] = useState(false);
+    const profile = useAuthStore(state => state.profile);
+    const setProfile = useAuthStore(state => state.setProfile);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const profile = useAuthStore(useCallback((state) => state.profile, []));
-    const setProfile = useAuthStore(useCallback((state) => state.setProfile, []));
+    // Initialize form data from profile
+    const initialData = useMemo(() => ({
+        full_name: profile?.full_name || '',
+        phone_number: profile?.phone_number || '',
+        company: profile?.company || '',
+        address: profile?.address || ''
+    }), [profile]);
 
-    const memoizedProfile = useMemo(() => {
-        if (!profile) return null;
-        return {
-            id: profile.id,
-            full_name: profile.full_name || '',
-            email: profile.email || '',
-            phone: profile.phone || '',
-            company: profile.company || '',
-            address: profile.address || ''
-        };
-    }, [profile?.id, profile?.full_name, profile?.email, profile?.phone, profile?.company, profile?.address]);
+    const [formData, setFormData] = useState(initialData);
 
-    useEffect(() => {
-        if (memoizedProfile) {
-            setFormData({
-                full_name: memoizedProfile.full_name,
-                phone: memoizedProfile.phone,
-                company: memoizedProfile.company,
-                address: memoizedProfile.address
-            });
-            setHasChanges(false);
-        }
-    }, [memoizedProfile?.id]);
+    // Check if there are changes
+    const hasChanges = useMemo(() => {
+        return JSON.stringify(formData) !== JSON.stringify(initialData);
+    }, [formData, initialData]);
 
-    const handleFieldChange = useCallback((field: string, value: string) => {
-        setFormData(prev => {
-            const newData = { ...prev, [field]: value };
-            if (memoizedProfile) {
-                const hasActualChanges = Object.keys(newData).some(key =>
-                    newData[key as keyof typeof newData] !== memoizedProfile[key as keyof typeof memoizedProfile]
-                );
-                setHasChanges(hasActualChanges);
-            }
-            return newData;
-        });
-    }, [memoizedProfile]);
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: value }));
+    }, []);
 
-    const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!memoizedProfile?.id || !hasChanges) return;
+        if (!profile?.id) return;
 
-        setIsLoading(true);
+        setIsSaving(true);
         try {
-            await updateUserProfile(memoizedProfile.id, formData);
-            setProfile((prevProfile: any) => {
-                if (!prevProfile) return prevProfile;
-                return {
-                    ...prevProfile,
-                    ...formData,
-                    updated_at: new Date()
-                };
-            });
-            setHasChanges(false);
+            await updateUserProfile(profile.id, formData);
+            setProfile({ ...profile, ...formData });
             toast.success('Profile updated successfully');
         } catch (error) {
-            console.error('Profile update error:', error);
+            console.error('Error updating profile:', error);
             toast.error('Failed to update profile');
         } finally {
-            setIsLoading(false);
+            setIsSaving(false);
         }
-    }, [memoizedProfile?.id, formData, hasChanges, setProfile]);
+    };
 
-    if (!memoizedProfile) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <LoadingSpinner size="lg" text="Loading profile..." />
-            </div>
-        );
-    }
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    };
 
     return (
-        <AnimatedCard delay={0.1}>
-            <div className="p-6 sm:p-8">
-                <div className="flex items-center mb-8">
-                    <div className="p-3 rounded-lg bg-primary-500/20 text-primary-400 mr-4">
-                        <User className="w-6 h-6" />
+        <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-6"
+        >
+            {/* Header */}
+            <motion.div variants={itemVariants}>
+                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground-muted flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500">
+                        <Shield className="w-6 h-6" />
                     </div>
-                    <h3 className="text-xl font-semibold text-white">Personal Information</h3>
-                </div>
+                    Personal Profile
+                </h2>
+                <p className="text-foreground-muted mt-2 ml-14">Manage your personal details and preferences</p>
+            </motion.div>
 
+            {/* Form Card */}
+            <motion.div
+                variants={itemVariants}
+                className="p-6 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-md transition-all duration-300"
+            >
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Full Name */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                        <label htmlFor="fullName" className="block text-base font-medium text-gray-300 mb-3">
-                            <User className="w-4 h-4 inline mr-2" />
-                            Full Name
-                        </label>
-                        <input
-                            type="text"
-                            id="fullName"
-                            value={formData.full_name}
-                            onChange={(e) => handleFieldChange('full_name', e.target.value)}
-                            required
-                            className="w-full input-dark input-large"
-                            placeholder="Enter your full name"
-                        />
-                    </motion.div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Full Name */}
+                        <div className="space-y-2">
+                            <label htmlFor="full_name" className="text-sm font-medium text-foreground-muted flex items-center gap-2">
+                                <User className="w-4 h-4 text-primary-500" />
+                                Full Name
+                            </label>
+                            <input
+                                type="text"
+                                id="full_name"
+                                value={formData.full_name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                                placeholder="John Doe"
+                            />
+                        </div>
 
-                    {/* Email (Read-only) */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                        <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
-                            <Mail className="w-4 h-4 inline mr-2" />
-                            Email Address
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={memoizedProfile.email}
-                            disabled
-                            className="w-full input-dark input-large opacity-50 cursor-not-allowed"
-                        />
-                        <p className="text-gray-500 text-sm mt-2">
-                            Email cannot be changed. Contact support if you need to update your email.
-                        </p>
-                    </motion.div>
+                        {/* Phone Number */}
+                        <div className="space-y-2">
+                            <label htmlFor="phone_number" className="text-sm font-medium text-foreground-muted flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-success-500" />
+                                Phone Number
+                            </label>
+                            <input
+                                type="tel"
+                                id="phone_number"
+                                value={formData.phone_number}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                                placeholder="+1 234 567 890"
+                            />
+                        </div>
 
-                    {/* Phone */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                        <label htmlFor="phone" className="block text-base font-medium text-gray-300 mb-3">
-                            <Phone className="w-4 h-4 inline mr-2" />
-                            Phone Number
-                        </label>
-                        <input
-                            type="tel"
-                            id="phone"
-                            value={formData.phone}
-                            onChange={(e) => handleFieldChange('phone', e.target.value)}
-                            className="w-full input-dark input-large"
-                            placeholder="Enter phone number (e.g., +92 300 1234567)"
-                        />
-                    </motion.div>
+                        {/* Company */}
+                        <div className="space-y-2">
+                            <label htmlFor="company" className="text-sm font-medium text-foreground-muted flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-purple-500" />
+                                Company
+                            </label>
+                            <input
+                                type="text"
+                                id="company"
+                                value={formData.company}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                                placeholder="Acme Inc."
+                            />
+                        </div>
 
-                    {/* Company */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                        <label htmlFor="company" className="block text-base font-medium text-gray-300 mb-3">
-                            <Building className="w-4 h-4 inline mr-2" />
-                            Company
-                        </label>
-                        <input
-                            type="text"
-                            id="company"
-                            value={formData.company}
-                            onChange={(e) => handleFieldChange('company', e.target.value)}
-                            className="w-full input-dark input-large"
-                            placeholder="Enter company name"
-                        />
-                    </motion.div>
-
-                    {/* Address */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-                        <label htmlFor="address" className="block text-base font-medium text-gray-300 mb-3">
-                            <MapPin className="w-4 h-4 inline mr-2" />
-                            Address
-                        </label>
-                        <textarea
-                            id="address"
-                            rows={3}
-                            value={formData.address}
-                            onChange={(e) => handleFieldChange('address', e.target.value)}
-                            className="w-full input-dark input-large resize-none"
-                            placeholder="Enter your address"
-                        />
-                    </motion.div>
+                        {/* Address */}
+                        <div className="space-y-2">
+                            <label htmlFor="address" className="text-sm font-medium text-foreground-muted flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-error-500" />
+                                Address
+                            </label>
+                            <input
+                                type="text"
+                                id="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                                placeholder="123 Main St, City, Country"
+                            />
+                        </div>
+                    </div>
 
                     {/* Save Button */}
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="pt-6">
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                    <div className="flex justify-end pt-4 border-t border-border/50">
+                        <button
                             type="submit"
-                            disabled={isLoading || !hasChanges}
-                            className={`btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={isSaving || !hasChanges}
+                            className={`
+                flex items-center gap-2 px-8 py-3 rounded-xl shadow-lg transition-all duration-300
+                ${hasChanges
+                                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-primary-500/20 hover:shadow-primary-500/40 hover:-translate-y-0.5'
+                                    : 'bg-secondary text-foreground-muted cursor-not-allowed'}
+              `}
                         >
-                            {isLoading ? (
+                            {isSaving ? (
                                 <>
                                     <LoadingSpinner size="sm" color="white" />
-                                    Saving...
+                                    <span>Saving...</span>
                                 </>
                             ) : (
                                 <>
-                                    <Save className="w-4 h-4" />
-                                    {hasChanges ? 'Save Changes' : 'No Changes'}
+                                    <Save className="w-5 h-5" />
+                                    <span>Save Changes</span>
                                 </>
                             )}
-                        </motion.button>
-                    </motion.div>
+                        </button>
+                    </div>
                 </form>
-            </div>
-        </AnimatedCard>
+            </motion.div>
+        </motion.div>
     );
 }

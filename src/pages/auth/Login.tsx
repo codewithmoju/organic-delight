@@ -54,7 +54,7 @@ export default function Login() {
       navigate(from, { replace: true });
     } catch (error: any) {
       console.error('Login error:', error);
-      
+
       if (error.code === 'auth/user-not-found') {
         setErrors({ email: t('auth.login.errors.userNotFound') });
       } else if (error.code === 'auth/wrong-password') {
@@ -86,10 +86,10 @@ export default function Login() {
           <div className="text-center mb-8">
             <Logo size="lg" />
             <h2 className="mt-6 text-3xl lg:text-4xl font-bold text-white">
-              Welcome back
+              {t('auth.login.title')}
             </h2>
             <p className="mt-2 text-gray-400 text-lg">
-              Sign in to your StockSuite account
+              {t('auth.login.subtitle')}
             </p>
           </div>
 
@@ -105,7 +105,7 @@ export default function Login() {
                 autoComplete="email"
                 required
                 className={`w-full input-dark input-large ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
-                placeholder={t('auth.login.password')}
+                placeholder="name@company.com"
               />
               {errors.email && (
                 <div className="mt-2 flex items-center text-sm text-error-400">
@@ -127,7 +127,7 @@ export default function Login() {
                   autoComplete="current-password"
                   required
                   className={`w-full input-dark input-large pr-12 ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
-                  placeholder="Enter your password"
+                  placeholder={t('auth.login.password')}
                 />
                 <button
                   type="button"
@@ -158,14 +158,15 @@ export default function Login() {
                   className="h-5 w-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800"
                 />
                 <label htmlFor="remember-me" className="ml-3 block text-base text-gray-300">
-                  Remember me
+                  {t('auth.login.rememberMe')}
                 </label>
               </div>
               <Link
                 to="/forgot-password"
                 className="text-base font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200"
               >
-                Forgot password?
+
+                {t('auth.login.forgotPassword')}
               </Link>
             </div>
 

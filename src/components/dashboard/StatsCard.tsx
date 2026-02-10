@@ -23,9 +23,9 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-xs sm:text-sm font-medium text-gray-400 mb-1 truncate">{title}</p>
-          <motion.p 
-            className="text-xl sm:text-2xl lg:text-3xl font-bold text-white"
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 truncate">{title}</p>
+          <motion.p
+            className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ delay: delay + 0.1, duration: 0.3, ease: "easeOut" }}
@@ -33,10 +33,9 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
             {value}
           </motion.p>
           {trend && (
-            <motion.div 
-              className={`flex items-center mt-1 sm:mt-2 text-xs sm:text-sm font-medium ${
-                trend.value >= 0 ? 'text-success-400' : 'text-error-400'
-              }`}
+            <motion.div
+              className={`flex items-center mt-1 sm:mt-2 text-xs sm:text-sm font-medium ${trend.value >= 0 ? 'text-success-400' : 'text-error-400'
+                }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: delay + 0.2, duration: 0.3 }}
@@ -50,9 +49,9 @@ export default function StatsCard({ title, value, icon, trend, delay = 0 }: Stat
             </motion.div>
           )}
         </div>
-        
-        <motion.div 
-          className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/20 to-accent-500/20 text-primary-400 group-hover:from-primary-500/30 group-hover:to-accent-500/30 transition-all duration-300 flex-shrink-0"
+
+        <motion.div
+          className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 text-primary group-hover:from-primary/30 group-hover:to-accent/30 transition-all duration-300 flex-shrink-0"
           whileHover={{ rotate: 360 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
         >

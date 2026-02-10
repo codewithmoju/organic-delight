@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Store, Phone, MapPin, Percent, DollarSign, Printer, Camera, MessageSquare } from 'lucide-react';
+import { Save, Printer, Camera, Settings as SettingsIcon, ExternalLink, Monitor, ScrollText } from 'lucide-react';
 import { toast } from 'sonner';
 import { getPOSSettings, updatePOSSettings } from '../../lib/api/pos';
 import { POSSettings as POSSettingsType } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import AnimatedCard from '../ui/AnimatedCard';
+import { useNavigate } from 'react-router-dom';
 
 export default function POSSettings() {
   const [settings, setSettings] = useState<POSSettingsType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadSettings();
@@ -37,10 +39,10 @@ export default function POSSettings() {
     try {
       await updatePOSSettings(settings);
       setHasChanges(false);
-      toast.success('POS settings saved successfully');
+      toast.success('Terminal settings saved successfully');
     } catch (error) {
-      console.error('Error saving POS settings:', error);
-      toast.error('Failed to save POS settings');
+      console.error('Error saving terminal settings:', error);
+      toast.error('Failed to save settings');
     } finally {
       setIsSaving(false);
     }
@@ -59,272 +61,140 @@ export default function POSSettings() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="lg" text="Loading POS settings..." />
+        <LoadingSpinner size="lg" text="Loading settings..." />
       </div>
     );
   }
 
-  if (!settings) {
-    return (
-      <div className="text-center py-12">
-        <Store className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-400 mb-2">Settings Not Available</h3>
-        <p className="text-gray-500">Unable to load POS settings</p>
-      </div>
-    );
-  }
+  if (!settings) return null;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gradient">POS Settings</h1>
-        <p className="text-gray-400 mt-1">
-          Configure your Point of Sale system preferences
-        </p>
+    <div className="max-w-4xl mx-auto space-y-6">
+
+      {/* Top Actions */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => navigate('/settings')}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-foreground-muted hover:text-primary-400 hover:bg-muted/30 transition-all"
+        >
+          <SettingsIcon className="w-4 h-4" />
+          <span>Go to Business Settings</span>
+          <ExternalLink className="w-3 h-3 opacity-50" />
+        </button>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Store Information */}
-        <AnimatedCard delay={0.1}>
-          <div className="p-6">
-            <div className="flex items-center mb-6">
-              <div className="p-3 rounded-lg bg-primary-500/20 text-primary-400 mr-4">
-                <Store className="w-6 h-6" />
+      <form onSubmit={handleSave}>
+        <AnimatedCard delay={0.1} className="overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
+          {/* Section Header */}
+          <div className="p-6 border-b border-border/50 bg-muted/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary-500/10 text-primary-400">
+                <Monitor className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-semibold text-white">Store Information</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-base font-medium text-gray-300 mb-3">
-                  <Store className="w-4 h-4 inline mr-2" />
-                  Store Name
-                </label>
-                <input
-                  type="text"
-                  value={settings.store_name}
-                  onChange={(e) => updateSetting('store_name', e.target.value)}
-                  className="w-full input-dark input-large"
-                  placeholder="Enter store name"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-base font-medium text-gray-300 mb-3">
-                  <Phone className="w-4 h-4 inline mr-2" />
-                  Store Phone
-                </label>
-                <input
-                  type="tel"
-                  value={settings.store_phone}
-                  onChange={(e) => updateSetting('store_phone', e.target.value)}
-                  className="w-full input-dark input-large"
-                  placeholder="Enter store phone number (e.g., +92 300 1234567)"
-                  required
-                />
+                <h3 className="text-lg font-bold text-foreground">Terminal Preferences</h3>
+                <p className="text-sm text-foreground-muted">Configure hardware for this specific device</p>
               </div>
             </div>
+          </div>
 
-            <div className="mt-6">
-              <label className="block text-base font-medium text-gray-300 mb-3">
-                <MapPin className="w-4 h-4 inline mr-2" />
-                Store Address
+          {/* Settings List */}
+          <div className="divide-y divide-border/30">
+
+            {/* Barcode Scanner */}
+            <div className="p-5 flex items-center justify-between hover:bg-muted/20 transition-colors">
+              <div className="flex items-start gap-4">
+                <div className={`mt-1 p-2 rounded-lg ${settings.barcode_scanner_enabled ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-foreground">Camera Barcode Scanner</h4>
+                  <p className="text-sm text-foreground-muted mt-0.5">Allow using the device camera to scan product barcodes</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.barcode_scanner_enabled}
+                  onChange={(e) => updateSetting('barcode_scanner_enabled', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-muted/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-primary-600"></div>
               </label>
-              <textarea
-                value={settings.store_address}
-                onChange={(e) => updateSetting('store_address', e.target.value)}
-                rows={3}
-                className="w-full input-dark input-large resize-none"
-                placeholder="Enter complete store address"
-                required
-              />
             </div>
-          </div>
-        </AnimatedCard>
 
-        {/* Financial Settings */}
-        <AnimatedCard delay={0.2}>
-          <div className="p-6">
-            <div className="flex items-center mb-6">
-              <div className="p-3 rounded-lg bg-success-500/20 text-success-400 mr-4">
-                <DollarSign className="w-6 h-6" />
+            {/* Auto-Print */}
+            <div className="p-5 flex items-center justify-between hover:bg-muted/20 transition-colors">
+              <div className="flex items-start gap-4">
+                <div className={`mt-1 p-2 rounded-lg ${settings.auto_print_receipt ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
+                  <ScrollText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-foreground">Auto-Print Receipts</h4>
+                  <p className="text-sm text-foreground-muted mt-0.5">Automatically trigger print dialog after a successful sale</p>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-white">Financial Settings</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-base font-medium text-gray-300 mb-3">
-                  <Percent className="w-4 h-4 inline mr-2" />
-                  Tax Rate (%)
-                </label>
+              <label className="relative inline-flex items-center cursor-pointer">
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={settings.tax_rate * 100}
-                  onChange={(e) => updateSetting('tax_rate', parseFloat(e.target.value) / 100 || 0)}
-                  className="w-full input-dark input-large"
-                  placeholder="Enter tax rate"
-                  required
+                  type="checkbox"
+                  checked={settings.auto_print_receipt}
+                  onChange={(e) => updateSetting('auto_print_receipt', e.target.checked)}
+                  className="sr-only peer"
                 />
-                <p className="text-gray-500 text-sm mt-2">
-                  Current rate: {(settings.tax_rate * 100).toFixed(2)}%
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-base font-medium text-gray-300 mb-3">
-                  <DollarSign className="w-4 h-4 inline mr-2" />
-                  Currency
-                </label>
-                <select
-                  value={settings.currency}
-                  onChange={(e) => updateSetting('currency', e.target.value)}
-                  className="w-full input-dark input-large"
-                  required
-                >
-                  <option value="USD">USD - US Dollar</option>
-                  <option value="EUR">EUR - Euro</option>
-                  <option value="GBP">GBP - British Pound</option>
-                  <option value="CAD">CAD - Canadian Dollar</option>
-                  <option value="AUD">AUD - Australian Dollar</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </AnimatedCard>
-
-        {/* Hardware Settings */}
-        <AnimatedCard delay={0.3}>
-          <div className="p-6">
-            <div className="flex items-center mb-6">
-              <div className="p-3 rounded-lg bg-accent-500/20 text-accent-400 mr-4">
-                <Printer className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold text-white">Hardware Settings</h3>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-dark-700/30 border border-dark-600/50">
-                <div className="flex items-center space-x-4">
-                  <Camera className="w-5 h-5 text-primary-400" />
-                  <div>
-                    <h4 className="text-white font-medium">Barcode Scanner</h4>
-                    <p className="text-gray-400 text-sm">Enable camera-based barcode scanning</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.barcode_scanner_enabled}
-                    onChange={(e) => updateSetting('barcode_scanner_enabled', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600" />
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-xl bg-dark-700/30 border border-dark-600/50">
-                <div className="flex items-center space-x-4">
-                  <Printer className="w-5 h-5 text-primary-400" />
-                  <div>
-                    <h4 className="text-white font-medium">Auto-Print Receipts</h4>
-                    <p className="text-gray-400 text-sm">Automatically print receipts after payment</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.auto_print_receipt}
-                    onChange={(e) => updateSetting('auto_print_receipt', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600" />
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-xl bg-dark-700/30 border border-dark-600/50">
-                <div className="flex items-center space-x-4">
-                  <Printer className="w-5 h-5 text-primary-400" />
-                  <div>
-                    <h4 className="text-white font-medium">Thermal Printer</h4>
-                    <p className="text-gray-400 text-sm">Enable thermal receipt printer support</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.thermal_printer_enabled}
-                    onChange={(e) => updateSetting('thermal_printer_enabled', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-dark-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600" />
-                </label>
-              </div>
-            </div>
-          </div>
-        </AnimatedCard>
-
-        {/* Receipt Customization */}
-        <AnimatedCard delay={0.4}>
-          <div className="p-6">
-            <div className="flex items-center mb-6">
-              <div className="p-3 rounded-lg bg-warning-500/20 text-warning-400 mr-4">
-                <MessageSquare className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-semibold text-white">Receipt Customization</h3>
-            </div>
-
-            <div>
-              <label className="block text-base font-medium text-gray-300 mb-3">
-                Receipt Footer Message
+                <div className="w-11 h-6 bg-muted/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-primary-600"></div>
               </label>
-              <textarea
-                value={settings.receipt_footer_message}
-                onChange={(e) => updateSetting('receipt_footer_message', e.target.value)}
-                rows={3}
-                className="w-full input-dark input-large resize-none"
-                placeholder="Enter message to appear at bottom of receipts"
-              />
-              <p className="text-gray-500 text-sm mt-2">
-                This message will appear at the bottom of all printed receipts
-              </p>
             </div>
+
+            {/* Thermal Printer */}
+            <div className="p-5 flex items-center justify-between hover:bg-muted/20 transition-colors">
+              <div className="flex items-start gap-4">
+                <div className={`mt-1 p-2 rounded-lg ${settings.thermal_printer_enabled ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
+                  <Printer className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-foreground">Thermal Printer Mode</h4>
+                  <p className="text-sm text-foreground-muted mt-0.5">Format receipts for 80mm/58mm thermal printers</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.thermal_printer_enabled}
+                  onChange={(e) => updateSetting('thermal_printer_enabled', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-muted/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:shadow-sm after:transition-all peer-checked:bg-primary-600"></div>
+              </label>
+            </div>
+
+          </div>
+
+          {/* Card Footer */}
+          <div className="p-4 bg-muted/10 border-t border-border/50 flex justify-between items-center">
+            <div className="text-xs text-foreground-muted">
+              Changes are saved to this browser only.
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={!hasChanges || isSaving}
+              className={`btn-primary flex items-center gap-2 px-6 py-2.5 ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isSaving ? (
+                <>
+                  <LoadingSpinner size="sm" color="white" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Save Changes
+                </>
+              )}
+            </motion.button>
           </div>
         </AnimatedCard>
-
-        {/* Save Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="flex justify-end"
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            type="submit"
-            disabled={!hasChanges || isSaving}
-            className={`btn-primary flex items-center gap-2 px-8 py-3 ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-          >
-            {isSaving ? (
-              <>
-                <LoadingSpinner size="sm" color="white" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                Save Settings
-              </>
-            )}
-          </motion.button>
-        </motion.div>
       </form>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Calendar, DollarSign, TrendingUp, Users, Package } from 'lucide-react';
+import { DollarSign, TrendingUp, Users, Package } from 'lucide-react';
 import { getDailySalesReport, getPOSTransactions } from '../../lib/api/pos';
 import { SalesReport, POSTransaction } from '../../lib/types';
 import { formatCurrency, formatDate } from '../../lib/utils/notifications';
@@ -102,8 +102,8 @@ export default function SalesReports() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="glass-effect p-3 rounded-lg border border-dark-600/50">
-          <p className="text-gray-200 font-medium">{label}</p>
+        <div className="bg-card/95 backdrop-blur-sm p-3 rounded-lg border border-border/50 shadow-lg">
+          <p className="text-foreground font-medium">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-primary-400">
               {entry.name}: {entry.value}
@@ -125,24 +125,14 @@ export default function SalesReports() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Sales Reports</h1>
-          <p className="text-gray-400 mt-1">
-            Analyze your Point of Sale performance and trends
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          <Calendar className="w-5 h-5 text-gray-400" />
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="input-dark"
-          />
-        </div>
+      {/* Header Controls */}
+      <div className="flex justify-end mb-4">
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="px-4 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground"
+        />
       </div>
 
       {/* Key Metrics */}
@@ -151,8 +141,8 @@ export default function SalesReports() {
           <div className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm mb-1">Total Sales</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-foreground-muted text-sm mb-1">Total Sales</p>
+                <p className="text-2xl font-bold text-foreground">
                   {formatCurrency(salesReport?.total_sales || 0)}
                 </p>
               </div>
@@ -167,8 +157,8 @@ export default function SalesReports() {
           <div className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm mb-1">Transactions</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-foreground-muted text-sm mb-1">Transactions</p>
+                <p className="text-2xl font-bold text-foreground">
                   {salesReport?.total_transactions || 0}
                 </p>
               </div>
@@ -183,8 +173,8 @@ export default function SalesReports() {
           <div className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm mb-1">Avg. Transaction</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-foreground-muted text-sm mb-1">Avg. Transaction</p>
+                <p className="text-2xl font-bold text-foreground">
                   {formatCurrency(salesReport?.average_transaction || 0)}
                 </p>
               </div>
@@ -199,8 +189,8 @@ export default function SalesReports() {
           <div className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm mb-1">Items Sold</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-foreground-muted text-sm mb-1">Items Sold</p>
+                <p className="text-2xl font-bold text-foreground">
                   {salesReport?.top_selling_items.reduce((sum, item) => sum + item.quantity_sold, 0) || 0}
                 </p>
               </div>
@@ -217,7 +207,7 @@ export default function SalesReports() {
         {/* Top Selling Items */}
         <AnimatedCard delay={0.5}>
           <div className="p-6">
-            <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+            <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
               <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
               Top Selling Items
             </h3>
@@ -225,16 +215,16 @@ export default function SalesReports() {
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={salesReport?.top_selling_items || []}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #374151)" opacity={0.3} />
                   <XAxis
                     dataKey="item_name"
-                    stroke="#9CA3AF"
+                    stroke="var(--color-foreground-muted, #9CA3AF)"
                     fontSize={10}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
-                  <YAxis stroke="#9CA3AF" fontSize={10} />
+                  <YAxis stroke="var(--color-foreground-muted, #9CA3AF)" fontSize={10} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="quantity_sold" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -246,7 +236,7 @@ export default function SalesReports() {
         {/* Payment Methods */}
         <AnimatedCard delay={0.6}>
           <div className="p-6">
-            <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+            <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
               <div className="w-2 h-6 bg-gradient-to-b from-success-500 to-warning-500 rounded-full mr-3" />
               Payment Methods
             </h3>
@@ -278,7 +268,7 @@ export default function SalesReports() {
       {/* Recent Transactions */}
       <AnimatedCard delay={0.7}>
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+          <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
             <div className="w-2 h-6 bg-gradient-to-b from-warning-500 to-error-500 rounded-full mr-3" />
             Recent Transactions
           </h3>
@@ -286,12 +276,12 @@ export default function SalesReports() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-dark-700/50">
-                  <th className="text-left py-3 px-4 text-gray-300 font-medium">Transaction #</th>
-                  <th className="text-left py-3 px-4 text-gray-300 font-medium">Date</th>
-                  <th className="text-left py-3 px-4 text-gray-300 font-medium">Items</th>
-                  <th className="text-left py-3 px-4 text-gray-300 font-medium">Payment</th>
-                  <th className="text-right py-3 px-4 text-gray-300 font-medium">Total</th>
+                <tr className="border-b border-border/50">
+                  <th className="text-left py-3 px-4 text-foreground-muted font-medium">Transaction #</th>
+                  <th className="text-left py-3 px-4 text-foreground-muted font-medium">Date</th>
+                  <th className="text-left py-3 px-4 text-foreground-muted font-medium">Items</th>
+                  <th className="text-left py-3 px-4 text-foreground-muted font-medium">Payment</th>
+                  <th className="text-right py-3 px-4 text-foreground-muted font-medium">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -302,15 +292,15 @@ export default function SalesReports() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="border-b border-dark-700/30 hover:bg-dark-700/30 transition-colors cursor-pointer"
+                    className="border-b border-border/30 hover:bg-muted/30 transition-colors cursor-pointer"
                   >
-                    <td className="py-3 px-4 text-white font-medium">
+                    <td className="py-3 px-4 text-foreground font-medium">
                       {transaction.transaction_number}
                     </td>
-                    <td className="py-3 px-4 text-gray-300">
+                    <td className="py-3 px-4 text-foreground-muted">
                       {new Date(transaction.created_at).toLocaleDateString()}
                     </td>
-                    <td className="py-3 px-4 text-gray-300">
+                    <td className="py-3 px-4 text-foreground-muted">
                       {transaction.items.reduce((sum, item) => sum + item.quantity, 0)} items
                     </td>
                     <td className="py-3 px-4">
@@ -342,23 +332,23 @@ export default function SalesReports() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-2xl bg-dark-800 rounded-2xl border border-dark-700/50 shadow-2xl overflow-hidden"
+              className="w-full max-w-2xl bg-card rounded-2xl border border-border/50 shadow-xl overflow-hidden"
             >
-              <div className="p-6 border-b border-dark-700/50 flex items-center justify-between">
+              <div className="p-6 border-b border-border/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400">
                     <Receipt className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Transaction Details</h3>
-                    <p className="text-sm text-gray-400">#{selectedTransaction.transaction_number}</p>
+                    <h3 className="text-xl font-bold text-foreground">Transaction Details</h3>
+                    <p className="text-sm text-foreground-muted">#{selectedTransaction.transaction_number}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedTransaction(null)}
-                  className="p-2 rounded-lg hover:bg-dark-700 transition-colors"
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-foreground-muted" />
                 </button>
               </div>
 
@@ -366,11 +356,11 @@ export default function SalesReports() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-start text-sm">
                     <div>
-                      <p className="text-gray-400">Date & Time</p>
-                      <p className="text-white font-medium">{formatDate(selectedTransaction.created_at)}</p>
+                      <p className="text-foreground-muted">Date & Time</p>
+                      <p className="text-foreground font-medium">{formatDate(selectedTransaction.created_at)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Status</p>
+                      <p className="text-foreground-muted">Status</p>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase ${selectedTransaction.status === 'completed' ? 'bg-success-500/20 text-success-400' :
                         (selectedTransaction.status as string) === 'voided' ? 'bg-error-500/20 text-error-400' :
                           'bg-warning-500/20 text-warning-400'
@@ -380,14 +370,14 @@ export default function SalesReports() {
                     </div>
                   </div>
 
-                  <div className="border-t border-dark-700 pt-4">
-                    <h4 className="text-white font-semibold mb-3">Items</h4>
+                  <div className="border-t border-border/50 pt-4">
+                    <h4 className="text-foreground font-semibold mb-3">Items</h4>
                     <div className="space-y-2">
                       {selectedTransaction.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-dark-900/40 p-3 rounded-lg border border-dark-700/30">
+                        <div key={idx} className="flex justify-between items-center bg-muted/30 p-3 rounded-lg border border-border/30">
                           <div>
-                            <p className="text-white font-medium">{item.item_name}</p>
-                            <p className="text-xs text-gray-400">{item.quantity} x {formatCurrency(item.unit_price)}</p>
+                            <p className="text-foreground font-medium">{item.item_name}</p>
+                            <p className="text-xs text-foreground-muted">{item.quantity} x {formatCurrency(item.unit_price)}</p>
                           </div>
                           <p className="text-primary-400 font-bold">{formatCurrency(item.line_total)}</p>
                         </div>
@@ -395,12 +385,12 @@ export default function SalesReports() {
                     </div>
                   </div>
 
-                  <div className="border-t border-dark-700 pt-4 space-y-2">
-                    <div className="flex justify-between text-gray-400">
+                  <div className="border-t border-border/50 pt-4 space-y-2">
+                    <div className="flex justify-between text-foreground-muted">
                       <span>Subtotal</span>
                       <span>{formatCurrency(selectedTransaction.subtotal)}</span>
                     </div>
-                    <div className="flex justify-between text-gray-400">
+                    <div className="flex justify-between text-foreground-muted">
                       <span>Tax</span>
                       <span>{formatCurrency(selectedTransaction.tax_amount)}</span>
                     </div>
@@ -410,7 +400,7 @@ export default function SalesReports() {
                         <span>-{formatCurrency(selectedTransaction.discount_amount)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-xl font-bold text-white pt-2">
+                    <div className="flex justify-between text-xl font-bold text-foreground pt-2">
                       <span>Total</span>
                       <span className="text-primary-400">{formatCurrency(selectedTransaction.total_amount)}</span>
                     </div>
@@ -418,7 +408,7 @@ export default function SalesReports() {
                 </div>
               </div>
 
-              <div className="p-6 bg-dark-900/50 flex gap-3">
+              <div className="p-6 bg-muted/20 flex gap-3">
                 <button
                   onClick={() => setSelectedTransaction(null)}
                   className="btn-secondary flex-1"

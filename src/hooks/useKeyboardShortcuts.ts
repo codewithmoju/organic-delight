@@ -26,8 +26,12 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[], enabled: boole
         // Don't trigger shortcuts when typing in inputs
         const target = event.target as HTMLElement;
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-            // Only allow Escape in inputs
-            if (event.key !== 'Escape') {
+            // Only allow Escape and Function keys (F1-F12) in inputs
+            // Also allow Ctrl+F (Search) and Ctrl+P (Print)
+            const isFunctionKey = /^F([1-9]|1[0-2])$/.test(event.key);
+            const isCtrlShortcut = event.ctrlKey && (event.key === 'p' || event.key === 'f');
+
+            if (event.key !== 'Escape' && !isFunctionKey && !isCtrlShortcut) {
                 return;
             }
         }
@@ -83,7 +87,7 @@ export function usePOSShortcuts(handlers: {
         ...(handlers.onToggleBillType ? [{
             key: 'F8',
             action: handlers.onToggleBillType,
-            description: 'Toggle Dummy/Regular Bill'
+            description: 'Cycle Bill Type'
         }] : []),
         ...(handlers.onOpenVendors ? [{
             key: 'F12',
@@ -125,7 +129,7 @@ export function usePOSShortcuts(handlers: {
 export const POS_SHORTCUTS = [
     { key: 'F2', description: 'New Transaction' },
     { key: 'F5', description: 'Process Payment' },
-    { key: 'F8', description: 'Toggle Dummy/Regular Bill' },
+    { key: 'F8', description: 'Cycle Bill Type' },
     { key: 'F11', description: 'Open Customer List' },
     { key: 'F12', description: 'Open Vendor List' },
     { key: 'Esc', description: 'Close Modal' },

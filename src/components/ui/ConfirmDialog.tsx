@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, CheckCircle, X, AlertCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, X, AlertCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface ConfirmDialogProps {
   confirmText?: string;
   cancelText?: string;
   variant?: 'danger' | 'warning' | 'info';
+  isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -19,9 +21,16 @@ export default function ConfirmDialog({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   variant = 'danger',
+  isLoading = false,
   onConfirm,
   onCancel
 }: ConfirmDialogProps) {
+  const { t } = useTranslation();
+
+  // Use translations if props are not provided
+  const effectiveConfirmText = confirmText === 'Confirm' ? t('common.confirm', 'Confirm') : confirmText;
+  const effectiveCancelText = cancelText === 'Cancel' ? t('common.cancel', 'Cancel') : cancelText;
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'danger':
@@ -58,52 +67,57 @@ export default function ConfirmDialog({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={(e) => e.target === e.currentTarget && onCancel()}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={(e) => !isLoading && e.target === e.currentTarget && onCancel()}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-dark-800 rounded-2xl border border-dark-700/50 shadow-dark-lg p-6 max-w-md w-full"
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
+            className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-3xl border border-white/20 dark:border-white/10 shadow-2xl p-6 max-w-md w-full overflow-hidden"
           >
-            <div className="flex items-start space-x-4">
-              <div className={`p-3 rounded-full ${styles.iconBg} ${styles.iconColor} flex-shrink-0`}>
-                <Icon className="w-6 h-6" />
+            {/* Decorative background element */}
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative flex items-start gap-5">
+              <div className={`p-3.5 rounded-2xl ${styles.iconBg} ${styles.iconColor} shadow-lg ring-1 ring-inset ring-black/5 flex-shrink-0`}>
+                <Icon className="w-7 h-7" />
               </div>
-              
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-                <p className="text-gray-300 leading-relaxed">{message}</p>
+
+              <div className="flex-1 min-w-0 pt-1">
+                <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">{title}</h3>
+                <p className="text-muted-foreground leading-relaxed text-[15px]">{message}</p>
               </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={onCancel}
-                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-dark-700/50 transition-colors flex-shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </motion.button>
             </div>
-            
-            <div className="flex gap-3 mt-6 pt-4 border-t border-dark-700/50">
+
+            <div className="flex gap-3 mt-8 pt-0">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={!isLoading ? { scale: 1.02 } : {}}
+                whileTap={!isLoading ? { scale: 0.98 } : {}}
                 onClick={onCancel}
-                className="btn-secondary flex-1"
+                disabled={isLoading}
+                className="btn-secondary flex-1 py-3 text-[15px] font-medium rounded-xl border-border/50 hover:bg-secondary/80 hover:border-border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {cancelText}
+                {effectiveCancelText}
               </motion.button>
-              
+
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={!isLoading ? { scale: 1.02, boxShadow: "0 4px 12px rgba(var(--primary), 0.25)" } : {}}
+                whileTap={!isLoading ? { scale: 0.98 } : {}}
                 onClick={onConfirm}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${styles.confirmButton}`}
+                disabled={isLoading}
+                className={`flex-1 px-4 py-3 rounded-xl font-bold text-[15px] shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${styles.confirmButton}`}
               >
-                {confirmText}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  effectiveConfirmText
+                )}
               </motion.button>
             </div>
           </motion.div>

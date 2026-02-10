@@ -1,9 +1,8 @@
-import { 
+import {
   collection,
   doc,
   getDocs,
   getDoc,
-  addDoc,
   updateDoc,
   setDoc,
   query,
@@ -11,11 +10,11 @@ import {
   orderBy,
   limit,
   Timestamp,
-  runTransaction,
-  writeBatch
+  runTransaction
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { POSTransaction, POSTransactionItem, CartItem, BarcodeProduct, POSSettings, SalesReport } from '../types';
+import { BillType, POSTransaction, CartItem, BarcodeProduct, POSSettings, SalesReport } from '../types';
+import { DEFAULT_POS_SETTINGS } from '../constants/defaults';
 
 // POS Transaction Management
 export async function createPOSTransaction(transactionData: {
@@ -31,26 +30,42 @@ export async function createPOSTransaction(transactionData: {
   customer_name?: string;
   customer_phone?: string;
   notes?: string;
+  bill_type?: BillType;
 }): Promise<POSTransaction> {
   const transactionNumber = generateTransactionNumber();
-  
+  const affectsInventory = transactionData.bill_type?.affects_inventory ?? true;
+  const affectsAccounting = transactionData.bill_type?.affects_accounting ?? true;
+
   // Use Firestore transaction to ensure data consistency
   return await runTransaction(db, async (transaction) => {
-    // Check stock availability for all items
-    for (const cartItem of transactionData.items) {
-      const itemRef = doc(db, 'items', cartItem.item_id);
-      const itemDoc = await transaction.get(itemRef);
-      
-      if (!itemDoc.exists()) {
-        throw new Error(`Item ${cartItem.name} not found`);
-      }
-      
-      const currentStock = await getItemCurrentStock(cartItem.item_id);
-      if (currentStock < cartItem.quantity) {
-        throw new Error(`Insufficient stock for ${cartItem.name}. Available: ${currentStock}`);
+    // Check stock availability for all items if inventory is affected
+    if (affectsInventory) {
+      for (const cartItem of transactionData.items) {
+        const itemRef = doc(db, 'items', cartItem.item_id);
+        const itemDoc = await transaction.get(itemRef);
+
+        if (!itemDoc.exists()) {
+          throw new Error(`Item ${cartItem.name} not found`);
+        }
+
+        const itemData = itemDoc.data();
+        const currentStock = itemData.current_quantity ?? 0;
+
+        if (currentStock < cartItem.quantity) {
+          throw new Error(`Insufficient stock for ${cartItem.name}. Available: ${currentStock}`);
+        }
+
+        // Update item stock atomically
+        transaction.update(itemRef, {
+          current_quantity: currentStock - cartItem.quantity,
+          updated_at: Timestamp.fromDate(new Date())
+        });
       }
     }
-    
+
+    // ... rest of the code for creating pos_transactions and inventory transactions ...
+    // (I'll keep the block as is but ensure I handle the cancellation too)
+
     // Create POS transaction
     const posTransactionRef = doc(collection(db, 'pos_transactions'));
     const posTransactionData: Omit<POSTransaction, 'id'> = {
@@ -64,7 +79,8 @@ export async function createPOSTransaction(transactionData: {
         quantity: item.quantity,
         line_total: item.line_total,
         discount_amount: 0,
-        tax_rate: 0
+        tax_rate: 0,
+        unit: item.unit
       })),
       subtotal: transactionData.subtotal,
       tax_amount: transactionData.tax_amount,
@@ -79,33 +95,38 @@ export async function createPOSTransaction(transactionData: {
       created_at: new Date(),
       status: 'completed',
       receipt_printed: false,
-      notes: transactionData.notes
+      notes: transactionData.notes,
+      bill_type: transactionData.bill_type?.code || 'regular',
+      affects_inventory: affectsInventory,
+      affects_accounting: affectsAccounting
     };
-    
+
     transaction.set(posTransactionRef, {
       ...posTransactionData,
       created_at: Timestamp.fromDate(new Date())
     });
-    
-    // Create inventory transactions for each item
-    for (const cartItem of transactionData.items) {
-      const inventoryTransactionRef = doc(collection(db, 'transactions'));
-      transaction.set(inventoryTransactionRef, {
-        item_id: cartItem.item_id,
-        type: 'stock_out',
-        quantity: cartItem.quantity,
-        unit_price: cartItem.unit_price,
-        total_value: cartItem.line_total,
-        transaction_date: Timestamp.fromDate(new Date()),
-        supplier_customer: transactionData.customer_name || 'Walk-in Customer',
-        reference_number: transactionNumber,
-        notes: `POS Sale - Transaction #${transactionNumber}`,
-        created_by: transactionData.cashier_id,
-        created_at: Timestamp.fromDate(new Date()),
-        pos_transaction_id: posTransactionRef.id
-      });
+
+    // Create inventory transactions for each item ONLY if affects_inventory is true
+    if (affectsInventory) {
+      for (const cartItem of transactionData.items) {
+        const inventoryTransactionRef = doc(collection(db, 'transactions'));
+        transaction.set(inventoryTransactionRef, {
+          item_id: cartItem.item_id,
+          type: 'stock_out',
+          quantity: cartItem.quantity,
+          unit_price: cartItem.unit_price,
+          total_value: cartItem.line_total,
+          transaction_date: Timestamp.fromDate(new Date()),
+          supplier_customer: transactionData.customer_name || 'Walk-in Customer',
+          reference_number: transactionNumber,
+          notes: `POS Sale - Transaction #${transactionNumber}`,
+          created_by: transactionData.cashier_id,
+          created_at: Timestamp.fromDate(new Date()),
+          pos_transaction_id: posTransactionRef.id
+        });
+      }
     }
-    
+
     return {
       id: posTransactionRef.id,
       ...posTransactionData
@@ -119,22 +140,22 @@ export async function getProductByBarcode(barcode: string): Promise<BarcodeProdu
     const itemsRef = collection(db, 'items');
     const q = query(itemsRef, where('barcode', '==', barcode), where('is_archived', '!=', true));
     const snapshot = await getDocs(q);
-    
+
     if (snapshot.empty) {
       return null;
     }
-    
+
     const itemDoc = snapshot.docs[0];
     const itemData = itemDoc.data();
-    
+
     // Get current stock level
     const currentStock = await getItemCurrentStock(itemDoc.id);
-    
+
     return {
       id: itemDoc.id,
       name: itemData.name,
       barcode: itemData.barcode,
-      price: itemData.unit_price || 0,
+      price: itemData.unit_price || itemData.sale_rate || 0,
       stock: currentStock,
       category: itemData.category?.name
     };
@@ -146,97 +167,73 @@ export async function getProductByBarcode(barcode: string): Promise<BarcodeProdu
 
 // Get current stock level for an item
 async function getItemCurrentStock(itemId: string): Promise<number> {
-  const transactionsRef = collection(db, 'transactions');
-  const q = query(transactionsRef, where('item_id', '==', itemId));
-  const snapshot = await getDocs(q);
-  
-  let currentStock = 0;
-  
-  snapshot.docs.forEach(doc => {
-    const transaction = doc.data();
-    if (transaction.type === 'stock_in') {
-      currentStock += transaction.quantity;
-    } else if (transaction.type === 'stock_out') {
-      currentStock -= transaction.quantity;
-    }
-  });
-  
-  return Math.max(0, currentStock);
+  try {
+    const itemDoc = await getDoc(doc(db, 'items', itemId));
+    if (!itemDoc.exists()) return 0;
+    return itemDoc.data().current_quantity ?? 0;
+  } catch (error) {
+    console.error('Error fetching current stock:', error);
+    return 0;
+  }
 }
 
+// Search products for manual entry
 // Search products for manual entry
 export async function searchProducts(searchQuery: string): Promise<BarcodeProduct[]> {
   const itemsRef = collection(db, 'items');
   const q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
   const snapshot = await getDocs(q);
-  
+
   const products: BarcodeProduct[] = [];
-  
+  const searchTerm = searchQuery.toLowerCase();
+
   for (const itemDoc of snapshot.docs) {
-    const itemData = itemDoc.data();
-    
+    const itemData = itemDoc.data() as any;
+
     // Client-side filtering
-    if (itemData.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        itemData.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        itemData.barcode?.includes(searchQuery)) {
-      
-      const currentStock = await getItemCurrentStock(itemDoc.id);
-      
+    if (itemData.name.toLowerCase().includes(searchTerm) ||
+      itemData.description?.toLowerCase().includes(searchTerm) ||
+      itemData.barcode?.includes(searchQuery)) {
+
       products.push({
         id: itemDoc.id,
         name: itemData.name,
         barcode: itemData.barcode || '',
-        price: itemData.unit_price || 0,
-        stock: currentStock,
+        price: itemData.unit_price || itemData.sale_rate || 0,
+        stock: itemData.current_quantity ?? 0,
         category: itemData.category?.name
       });
     }
   }
-  
+
   return products.slice(0, 20); // Limit results
 }
 
-function getDefaultPOSSettings(): POSSettings {
-  return {
-    store_name: 'StockSuite Store',
-    store_address: '123 Business St, City, State 12345',
-    store_phone: '(555) 123-4567',
-    tax_rate: 0.08, // 8% tax
-    currency: 'USD',
-    receipt_footer_message: 'Thank you for your business!',
-    auto_print_receipt: true,
-    barcode_scanner_enabled: true,
-    thermal_printer_enabled: false
-  };
-}
+// POS Settings Management
+// ... (rest remains unchanged)
+
+
 
 // POS Settings Management
 export async function getPOSSettings(): Promise<POSSettings> {
   try {
     const settingsDoc = await getDoc(doc(db, 'pos_settings', 'default'));
-    
+
     if (settingsDoc.exists()) {
       return settingsDoc.data() as POSSettings;
     }
-    
-    // Return default settings
-    const defaultSettings: POSSettings = {
-      store_name: 'StockSuite Store',
-      store_address: '123 Business St, City, State 12345',
-      store_phone: '(555) 123-4567',
-      tax_rate: 0.08, // 8% tax
-      currency: 'USD',
-      receipt_footer_message: 'Thank you for your business!',
-      auto_print_receipt: true,
-      barcode_scanner_enabled: true,
-      thermal_printer_enabled: false
-    };
-    
-    return defaultSettings;
+
+    // Seed default settings if they don't exist
+    await setDoc(doc(db, 'pos_settings', 'default'), {
+      ...DEFAULT_POS_SETTINGS,
+      created_at: Timestamp.fromDate(new Date())
+    });
+
+    return DEFAULT_POS_SETTINGS;
   } catch (error) {
     console.warn('Error loading POS settings, using defaults:', error);
     // Return default settings as fallback
-    return getDefaultPOSSettings();
+    return DEFAULT_POS_SETTINGS;
   }
 }
 
@@ -251,10 +248,10 @@ export async function updatePOSSettings(settings: Partial<POSSettings>): Promise
 export async function getDailySalesReport(date: Date): Promise<SalesReport> {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
-  
+
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
-  
+
   try {
     const transactionsRef = collection(db, 'pos_transactions');
     const q = query(
@@ -264,26 +261,26 @@ export async function getDailySalesReport(date: Date): Promise<SalesReport> {
       where('created_at', '<=', Timestamp.fromDate(endOfDay)),
       orderBy('created_at', 'desc')
     );
-    
+
     const snapshot = await getDocs(q);
-    
+
     let totalSales = 0;
     let totalTransactions = 0;
     const itemSales: { [key: string]: { quantity: number; revenue: number } } = {};
     const paymentMethods: { [key: string]: { count: number; amount: number } } = {};
-    
+
     snapshot.docs.forEach(doc => {
       const transaction = doc.data() as POSTransaction;
       totalSales += transaction.total_amount;
       totalTransactions++;
-      
+
       // Track payment methods
       if (!paymentMethods[transaction.payment_method]) {
         paymentMethods[transaction.payment_method] = { count: 0, amount: 0 };
       }
       paymentMethods[transaction.payment_method].count++;
       paymentMethods[transaction.payment_method].amount += transaction.total_amount;
-      
+
       // Track item sales
       transaction.items.forEach(item => {
         if (!itemSales[item.item_name]) {
@@ -293,7 +290,7 @@ export async function getDailySalesReport(date: Date): Promise<SalesReport> {
         itemSales[item.item_name].revenue += item.line_total;
       });
     });
-    
+
     const topSellingItems = Object.entries(itemSales)
       .map(([name, data]) => ({
         item_name: name,
@@ -302,14 +299,14 @@ export async function getDailySalesReport(date: Date): Promise<SalesReport> {
       }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
-    
+
     const paymentMethodsArray = Object.entries(paymentMethods)
       .map(([method, data]) => ({
         method,
         count: data.count,
         amount: data.amount
       }));
-    
+
     return {
       date,
       total_sales: totalSales,
@@ -336,13 +333,13 @@ export async function getDailySalesReport(date: Date): Promise<SalesReport> {
 export async function getPOSTransactions(limitCount?: number) {
   const transactionsRef = collection(db, 'pos_transactions');
   let q = query(transactionsRef, orderBy('created_at', 'desc'));
-  
+
   if (limitCount) {
     q = query(q, limit(limitCount));
   }
-  
+
   const snapshot = await getDocs(q);
-  
+
   return snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data(),
@@ -355,26 +352,29 @@ export async function cancelPOSTransaction(transactionId: string, reason: string
   await runTransaction(db, async (transaction) => {
     const posTransactionRef = doc(db, 'pos_transactions', transactionId);
     const posTransactionDoc = await transaction.get(posTransactionRef);
-    
+
     if (!posTransactionDoc.exists()) {
       throw new Error('Transaction not found');
     }
-    
+
     const posTransaction = posTransactionDoc.data() as POSTransaction;
-    
+
     if (posTransaction.status !== 'completed') {
       throw new Error('Transaction cannot be cancelled');
     }
-    
+
     // Update POS transaction status
     transaction.update(posTransactionRef, {
       status: 'cancelled',
       cancellation_reason: reason,
       cancelled_at: Timestamp.fromDate(new Date())
     });
-    
-    // Create reverse inventory transactions
+
+    // Create reverse inventory transactions and update stock
     for (const item of posTransaction.items) {
+      const itemRef = doc(db, 'items', item.item_id);
+      const itemDoc = await transaction.get(itemRef);
+
       const inventoryTransactionRef = doc(collection(db, 'transactions'));
       transaction.set(inventoryTransactionRef, {
         item_id: item.item_id,
@@ -390,6 +390,16 @@ export async function cancelPOSTransaction(transactionId: string, reason: string
         created_at: Timestamp.fromDate(new Date()),
         pos_transaction_id: transactionId
       });
+
+      if (posTransaction.affects_inventory !== false) {
+        if (itemDoc.exists()) {
+          const currentStock = itemDoc.data().current_quantity ?? 0;
+          transaction.update(itemRef, {
+            current_quantity: currentStock + item.quantity,
+            updated_at: Timestamp.fromDate(new Date())
+          });
+        }
+      }
     }
   });
 }
@@ -401,7 +411,7 @@ function generateTransactionNumber(): string {
   const month = (now.getMonth() + 1).toString().padStart(2, '0');
   const day = now.getDate().toString().padStart(2, '0');
   const time = now.getTime().toString().slice(-6);
-  
+
   return `POS${year}${month}${day}${time}`;
 }
 
@@ -415,11 +425,11 @@ export async function addBarcodeToItem(itemId: string, barcode: string): Promise
   const itemsRef = collection(db, 'items');
   const existingQuery = query(itemsRef, where('barcode', '==', barcode));
   const existingSnapshot = await getDocs(existingQuery);
-  
+
   if (!existingSnapshot.empty && existingSnapshot.docs[0].id !== itemId) {
     throw new Error('Barcode already exists for another item');
   }
-  
+
   await updateDoc(doc(db, 'items', itemId), {
     barcode,
     updated_at: Timestamp.fromDate(new Date())
@@ -431,22 +441,21 @@ export async function getItemsWithBarcodes(): Promise<BarcodeProduct[]> {
   const itemsRef = collection(db, 'items');
   const q = query(itemsRef, where('barcode', '!=', null), where('is_archived', '!=', true));
   const snapshot = await getDocs(q);
-  
+
   const products: BarcodeProduct[] = [];
-  
+
   for (const itemDoc of snapshot.docs) {
-    const itemData = itemDoc.data();
-    const currentStock = await getItemCurrentStock(itemDoc.id);
-    
+    const itemData = itemDoc.data() as any;
+
     products.push({
       id: itemDoc.id,
       name: itemData.name,
       barcode: itemData.barcode,
-      price: itemData.unit_price || 0,
-      stock: currentStock,
+      price: itemData.unit_price || itemData.sale_rate || 0,
+      stock: itemData.current_quantity ?? 0,
       category: itemData.category?.name
     });
   }
-  
+
   return products;
 }

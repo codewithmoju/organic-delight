@@ -1,3 +1,9 @@
+export interface ItemLocation {
+  shelf: string;
+  rack?: string;
+  bin?: string;
+}
+
 export interface Item {
   id: string;
   name: string;
@@ -14,6 +20,19 @@ export interface Item {
   last_transaction_date?: Date;
   total_value?: number;
   low_stock_threshold?: number;
+  unit?: string; // Unit of measurement (e.g., 'kg', 'pcs')
+
+  // Pricing and Location
+  purchase_rate?: number;
+  sale_rate?: number;
+  location?: string | ItemLocation;
+
+  // Legacy/Compatibility fields (mapped to new fields or optional)
+  quantity?: number; // Mapped to current_quantity
+  reorder_point?: number; // Mapped to low_stock_threshold
+  sku?: string;
+  barcode?: string;
+  unit_price?: number; // Mapped to average_unit_cost or separate selling price
 }
 
 export interface Category {
@@ -163,6 +182,9 @@ export interface POSTransaction {
   created_at: Date;
   status: 'completed' | 'cancelled' | 'refunded' | 'voided';
   receipt_printed: boolean;
+  bill_type?: string;
+  affects_inventory?: boolean;
+  affects_accounting?: boolean;
   notes?: string;
   void_reason?: string;
   voided_at?: Date;
@@ -180,6 +202,7 @@ export interface POSTransactionItem {
   discount_amount?: number;
   purchase_rate?: number;
   tax_rate?: number;
+  unit?: string;
 }
 
 export interface CartItem {
@@ -193,6 +216,7 @@ export interface CartItem {
   line_total: number;
   available_stock: number;
   category?: string;
+  unit?: string;
 }
 
 export interface BarcodeProduct {
@@ -203,14 +227,21 @@ export interface BarcodeProduct {
   price: number;
   stock: number;
   category?: string;
+  unit?: string;
 }
 
 export interface POSSettings {
   store_name: string;
   store_address: string;
   store_phone: string;
+  store_email?: string;
+  store_website?: string;
+  store_city?: string;
+  store_country?: string;
   tax_rate: number;
+  tax_number?: string;
   currency: string;
+  receipt_header_message?: string;
   receipt_footer_message: string;
   auto_print_receipt: boolean;
   barcode_scanner_enabled: boolean;
@@ -281,7 +312,7 @@ export interface VendorPayment {
 export interface Purchase {
   id: string;
   purchase_number: string;
-  bill_number?: string; // Vendor's bill number
+  bill_number?: string | null; // Vendor's bill number
   vendor_id: string;
   vendor_name: string;
   items: PurchaseItem[];
@@ -295,19 +326,19 @@ export interface Purchase {
   purchase_date: Date;
   created_at: Date;
   created_by: string;
-  notes?: string;
+  notes?: string | null;
 }
 
 export interface PurchaseItem {
   id: string;
   item_id: string;
   item_name: string;
-  barcode?: string;
+  barcode?: string | null;
   quantity: number;
   purchase_rate: number; // Cost price from vendor
   sale_rate: number;     // Selling price
-  expiry_date?: Date;
-  shelf_location?: string;
+  expiry_date?: Date | null;
+  shelf_location?: string | null;
   line_total: number;
 }
 
@@ -332,8 +363,9 @@ export interface Customer {
 export interface CustomerPayment {
   id: string;
   customer_id: string;
+  type?: 'payment' | 'charge'; // Default 'payment'
   amount: number;
-  payment_method: 'cash' | 'bank_transfer' | 'digital';
+  payment_method: 'cash' | 'bank_transfer' | 'digital' | 'adjustment' | 'opening_balance';
   reference_number?: string;
   notes?: string;
   payment_date: Date;
@@ -344,12 +376,6 @@ export interface CustomerPayment {
 // ============================================
 // ENHANCED ITEM TYPES
 // ============================================
-
-export interface ItemLocation {
-  shelf: string;
-  rack?: string;
-  bin?: string;
-}
 
 export interface EnhancedItem extends Item {
   location?: ItemLocation;
@@ -417,10 +443,20 @@ export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string; icon: 
 // ENHANCED POS TRANSACTION TYPES
 // ============================================
 
-export type BillType = 'regular' | 'dummy';
+export interface BillType {
+  id: string;
+  name: string;
+  code: string;
+  affects_inventory: boolean;
+  affects_accounting: boolean;
+  is_default?: boolean;
+  description?: string;
+  active: boolean;
+}
 
 export interface EnhancedPOSTransaction extends POSTransaction {
-  bill_type: BillType;
+  bill_type: string;
+
   customer_id?: string;
   is_credit_sale: boolean;
   profit_discount: number;  // Discount calculated from profit margin
