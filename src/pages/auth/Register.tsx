@@ -46,23 +46,23 @@ export default function Register() {
     const newErrors: typeof errors = {};
 
     if (!fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+      newErrors.fullName = t('auth.register.errors.fullNameRequired');
     }
 
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.register.errors.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('auth.register.errors.invalidEmail');
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.register.errors.passwordRequired');
     } else if (!passwordRequirements.every(req => req.test(password))) {
-      newErrors.password = 'Password does not meet requirements';
+      newErrors.password = t('auth.register.errors.passwordRequirements');
     }
 
     if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.register.errors.passwordMismatch');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -74,28 +74,7 @@ export default function Register() {
     try {
       await signUp(email, password, fullName);
 
-      toast.success(t('auth.register.success.created')); // Assuming key exists or create new? Or just hardcode generic translated success?
-      // I'll stick to a generic key or hardcode usage if key missing. Let's use creating -> created?
-      // Actually ur.json doesn't have success message. I'll use hardcoded string or existing key if applicable.
-      // Re-checking ur.json... no specific success message. I'll add one or use simple string. 
-      // "Account created successfully" -> "اکاؤنٹ کامیابی سے بن گیا"
-      // But for now I'll use a direct string or skip if I can't add key.
-      // I'll check if I CAN add key. I just edited ur.json. 
-      // I'll just use a literal string here "Account created successfully" -> translated to "اکاؤنٹ کامیابی سے بن گیا"
-      // Wait, I can't add key in this tool call.
-      // I'll use t('auth.register.createAccount') + " successful" logic? No.
-      // I'll leave it as English for toast or use a generic success key if available.
-      // 'common.success'? Not checked.
-      // I'll use specific string: t('auth.login.signUp') + " successful"?
-      // Let's modify the replace to invoke toast with Urdu string directly for now? No, better to use t().
-      // I'll use t('auth.register.creating') but that's "Creating...".
-      // I'll use hardcoded translation for now or skip toast translation if key missing.
-      // BUT USER WANTS FULL TRANSLATION.
-      // I will overwrite the toast with english for now unless I add key.
-      // Actually I should add keys. But I can't in this tool.
-      // I will rely on "auth.register.title" for "Registration"?
-      // I'll skip toast translation for a moment or use "Account created".
-      toast.success("اکاؤنٹ کامیابی سے بن گیا! براہ کرم سائن ان کریں۔");
+      toast.success(t('auth.register.errors.registrationSuccess'));
       navigate('/login');
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
@@ -103,7 +82,7 @@ export default function Register() {
       } else if (error.code === 'auth/weak-password') {
         setErrors({ password: t('auth.register.errors.weakPassword') });
       } else {
-        toast.error("اکاؤنٹ بنانے میں ناکامی۔ براہ کرم دوبارہ کوشش کریں۔");
+        toast.error(t('auth.register.errors.registrationFailed'));
       }
     } finally {
       setIsLoading(false);
@@ -112,47 +91,35 @@ export default function Register() {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FFF7ED] via-white to-[#FFF7ED] px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[120px] animate-pulse-slow" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-lg relative z-10"
+        className="w-full max-w-[550px] relative z-10"
       >
-        <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
-          <div className="text-center mb-8">
-            <Logo size="lg" />
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-6 text-3xl lg:text-4xl font-bold text-white"
-            >
+        <div className="bg-white dark:bg-slate-900 p-8 lg:p-12 rounded-[2.5rem] border border-orange-100/50 dark:border-slate-800 shadow-2xl shadow-orange-200/20 dark:shadow-none">
+          <div className="text-center mb-10">
+            <div className="flex justify-center mb-6">
+              <Logo size="lg" />
+            </div>
+            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               {t('auth.register.title')}
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-2 text-gray-400 text-lg"
-            >
+            </h2>
+            <p className="mt-3 text-slate-500 dark:text-slate-400 text-lg">
               {t('auth.register.subtitle')}
-            </motion.p>
+            </p>
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <label htmlFor="fullName" className="block text-base font-medium text-gray-300 mb-3">
+            <div className="space-y-2">
+              <label htmlFor="fullName" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                 {t('auth.register.fullName')}
               </label>
               <input
@@ -161,30 +128,19 @@ export default function Register() {
                 type="text"
                 autoComplete="name"
                 required
-                className={`w-full input-dark input-large ${errors.fullName
-                  ? 'ring-error-500 border-error-500'
-                  : ''
-                  }`}
+                className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.fullName ? 'ring-error-500/20 border-error-500' : ''}`}
                 placeholder={t('auth.register.fullName')}
               />
               {errors.fullName && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-2 flex items-center text-sm text-error-400"
-                >
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center text-sm text-error-500 mt-1 ml-1">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.fullName}
                 </motion.div>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                 {t('auth.register.email')}
               </label>
               <input
@@ -193,30 +149,19 @@ export default function Register() {
                 type="email"
                 autoComplete="email"
                 required
-                className={`w-full input-dark input-large ${errors.email
-                  ? 'ring-error-500 border-error-500'
-                  : ''
-                  }`}
+                className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.email ? 'ring-error-500/20 border-error-500' : ''}`}
                 placeholder={t('auth.register.placeholders.email')}
               />
               {errors.email && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-2 flex items-center text-sm text-error-400"
-                >
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center text-sm text-error-500 mt-1 ml-1">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.email}
                 </motion.div>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <label htmlFor="password" className="block text-base font-medium text-gray-300 mb-3">
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                 {t('auth.register.password')}
               </label>
               <div className="relative">
@@ -228,68 +173,43 @@ export default function Register() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className={`w-full input-dark input-large pr-12 ${errors.password
-                    ? 'ring-error-500 border-error-500'
-                    : ''
-                    }`}
+                  className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 pr-12 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.password ? 'ring-error-500/20 border-error-500' : ''}`}
                   placeholder={t('auth.register.placeholders.password')}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-4"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                  ) : (
-                    <Eye className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                  )}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
 
-              {/* Password strength indicator */}
               {password && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-3 space-y-2"
-                >
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 ml-1">
                   {passwordRequirements.map((req, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center text-sm"
-                    >
-                      <Check className={`h-4 w-4 mr-2 ${req.test(password) ? 'text-green-500' : 'text-gray-300'
-                        }`} />
-                      <span className={req.test(password) ? 'text-green-400' : 'text-gray-500'}>
+                    <div key={index} className="flex items-center text-xs">
+                      <div className={`p-0.5 rounded-full mr-2 ${req.test(password) ? 'bg-success-500' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                        <Check className={`h-3 w-3 ${req.test(password) ? 'text-white' : 'text-transparent'}`} />
+                      </div>
+                      <span className={req.test(password) ? 'text-success-600 dark:text-success-400 font-medium' : 'text-slate-400 dark:text-slate-500'}>
                         {req.label}
                       </span>
-                    </motion.div>
+                    </div>
                   ))}
                 </motion.div>
               )}
 
               {errors.password && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-2 flex items-center text-sm text-error-400"
-                >
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center text-sm text-error-500 mt-1 ml-1">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.password}
                 </motion.div>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-            >
-              <label htmlFor="confirmPassword" className="block text-base font-medium text-gray-300 mb-3">
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                 {t('auth.register.confirmPassword')}
               </label>
               <div className="relative">
@@ -299,74 +219,53 @@ export default function Register() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   required
-                  className={`w-full input-dark input-large pr-12 ${errors.confirmPassword
-                    ? 'ring-error-500 border-error-500'
-                    : ''
-                    }`}
+                  className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 pr-12 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.confirmPassword ? 'ring-error-500/20 border-error-500' : ''}`}
                   placeholder={t('auth.register.placeholders.confirmPassword')}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-4"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                  ) : (
-                    <Eye className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                  )}
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-2 flex items-center text-sm text-error-400"
-                >
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center text-sm text-error-500 mt-1 ml-1">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.confirmPassword}
                 </motion.div>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
+            <div className="pt-4">
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 type="submit"
                 disabled={isLoading}
-                className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
+                className="btn-primary w-full flex items-center justify-center gap-3 py-4 text-lg font-bold shadow-lg shadow-primary/25"
               >
                 {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" color="white" />
-                    {t('auth.register.creating')}
-                  </>
+                  <><LoadingSpinner size="sm" color="white" />{t('auth.register.creating')}</>
                 ) : (
                   t('auth.register.createAccount')
                 )}
               </motion.button>
-            </motion.div>
+            </div>
           </form>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="mt-8 text-center text-base text-gray-400"
-          >
-            {t('auth.register.hasAccount')}{' '}
-            <Link
-              to="/login"
-              className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
-            >
-              {t('auth.register.signIn')}
-            </Link>
-          </motion.p>
+          <div className="mt-10 text-center">
+            <p className="text-slate-500 dark:text-slate-400 font-medium">
+              {t('auth.register.hasAccount')}{' '}
+              <Link
+                to="/login"
+                className="font-bold text-primary hover:text-primary-dark transition-colors duration-200"
+              >
+                {t('auth.register.signIn')}
+              </Link>
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>

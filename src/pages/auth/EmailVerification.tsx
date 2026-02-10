@@ -129,95 +129,104 @@ export default function EmailVerification() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FFF7ED] via-white to-[#FFF7ED] px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-200/20 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-100/30 rounded-full blur-[100px] animate-pulse-slow" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-lg relative z-10"
       >
-        <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
+        <div className="bg-white p-8 lg:p-12 rounded-[2.5rem] border border-orange-100/50 shadow-2xl shadow-orange-200/20">
           <div className="text-center">
             <Logo size="lg" />
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mt-8 mb-6"
+              className="mt-10 mb-8 flex justify-center"
             >
-              {getStatusIcon()}
+              <div className={`p-6 rounded-[2rem] ${status === 'success' ? 'bg-green-50 border border-green-100 shadow-sm shadow-green-200/50' :
+                  status === 'loading' ? 'bg-orange-50 border border-orange-100 shadow-sm shadow-orange-200/50' :
+                    'bg-red-50 border border-red-100 shadow-sm shadow-red-200/50'
+                }`}>
+                {getStatusIcon()}
+              </div>
             </motion.div>
 
             <motion.h2
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-3xl lg:text-4xl font-bold text-white mb-4"
+              className="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight mb-4"
             >
               {getStatusTitle()}
             </motion.h2>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-gray-400 text-lg mb-8"
+              className="text-slate-500 text-lg font-medium mb-10 leading-relaxed"
             >
               {getStatusMessage()}
             </motion.p>
 
             {/* Action Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="space-y-4"
             >
               {status === 'success' && (
-                <Link
-                  to="/login"
-                  className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
-                >
-                  {t('auth.verifyEmail.buttons.continueLogin')}
-                </Link>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Link
+                    to="/login"
+                    className="btn-primary w-full flex items-center justify-center gap-3 py-4 text-lg font-bold shadow-lg shadow-primary/20"
+                  >
+                    {t('auth.verifyEmail.buttons.continueLogin')}
+                  </Link>
+                </motion.div>
               )}
 
               {(status === 'expired' || status === 'error') && auth.currentUser && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={resendVerificationEmail}
-                  disabled={isResending || !canResend}
-                  className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
-                >
-                  {isResending ? (
-                    <>
-                      <LoadingSpinner size="sm" color="white" />
-                      {t('auth.verifyEmail.buttons.sending')}
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="h-4 w-4" />
-                      {canResend ? t('auth.verifyEmail.buttons.resend') : t('auth.verifyEmail.buttons.resendIn', { seconds: countdown })}
-                    </>
-                  )}
-                </motion.button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <button
+                    onClick={resendVerificationEmail}
+                    disabled={isResending || !canResend}
+                    className="btn-primary w-full flex items-center justify-center gap-3 py-4 text-lg font-bold shadow-lg shadow-primary/20"
+                  >
+                    {isResending ? (
+                      <>
+                        <LoadingSpinner size="sm" color="white" />
+                        {t('auth.verifyEmail.buttons.sending')}
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className={`h-5 w-5 ${!canResend ? 'animate-spin-slow' : ''}`} />
+                        {canResend ? t('auth.verifyEmail.buttons.resend') : t('auth.verifyEmail.buttons.resendIn', { seconds: countdown })}
+                      </>
+                    )}
+                  </button>
+                </motion.div>
               )}
 
-              <Link
-                to="/login"
-                className="btn-secondary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {t('auth.verifyEmail.buttons.backLogin')}
-              </Link>
+              <motion.div whileHover={{ x: -4 }} whileTap={{ scale: 0.98 }}>
+                <Link
+                  to="/login"
+                  className="btn-secondary w-full flex items-center justify-center gap-3 py-4 text-lg font-bold"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  {t('auth.verifyEmail.buttons.backLogin')}
+                </Link>
+              </motion.div>
             </motion.div>
 
             {/* Help Text */}
@@ -226,10 +235,15 @@ export default function EmailVerification() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="mt-8 p-4 bg-dark-800/50 rounded-xl border border-dark-700/50"
+                className="mt-10 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-left"
               >
-                <h4 className="text-white font-semibold mb-2">{t('auth.verifyEmail.help.title')}</h4>
-                <p className="text-gray-400 text-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-primary" />
+                  </div>
+                  <h4 className="text-slate-900 font-bold">{t('auth.verifyEmail.help.title')}</h4>
+                </div>
+                <p className="text-slate-500 text-sm font-medium leading-relaxed">
                   {t('auth.verifyEmail.help.text')}
                 </p>
               </motion.div>

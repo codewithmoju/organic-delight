@@ -130,44 +130,142 @@
     "register": {
       "title": "Create your account",
       "subtitle": "Join StockSuite and start managing your inventory",
-      "fullName": "Full Name",
+      "steps": {
+        "stepIndicator": "Step {{current}} of {{total}}",
+        "basicInfo": "Basic Information",
+        "security": "Account Security",
+        "additional": "Additional Details"
+      },
+      "firstName": "First Name",
+      "lastName": "Last Name",
       "email": "Email address",
+      "phone": "Phone Number",
+      "dob": "Date of Birth",
+      "username": "Username",
       "password": "Password",
       "confirmPassword": "Confirm Password",
-      "createAccount": "Create account",
-      "creating": "Creating account...",
+      "securityQuestion": "Security Question",
+      "securityAnswer": "Security Answer",
+      "profilePicture": "Profile Picture",
+      "uploadPhoto": "Upload Photo",
+      "address": {
+        "street": "Street Address",
+        "city": "City",
+        "state": "State / Province",
+        "postalCode": "Postal Code",
+        "country": "Country"
+      },
+      "placeholders": {
+        "firstName": "e.g. John",
+        "lastName": "e.g. Doe",
+        "email": "john@example.com",
+        "phone": "300 1234567",
+        "username": "johndoe123",
+        "password": "••••••••",
+        "confirmPassword": "••••••••",
+        "securityAnswer": "Your secret answer",
+        "street": "123 Business St",
+        "city": "London",
+        "state": "England",
+        "postalCode": "SW1A 1AA"
+      },
+      "strength": {
+        "label": "Password Strength",
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      },
+      "terms": {
+        "captcha": "I am not a robot",
+        "agree": "I agree to the",
+        "service": "Terms of Service",
+        "privacy": "Privacy Policy"
+      },
+      "buttons": {
+        "next": "Next Step",
+        "previous": "Previous",
+        "createAccount": "Create Account",
+        "creating": "Creating Account..."
+      },
       "hasAccount": "Already have an account?",
       "signIn": "Sign in",
-      "passwordRequirements": {
-        "length": "At least 8 characters",
-        "uppercase": "Contains uppercase letter",
-        "lowercase": "Contains lowercase letter",
-        "number": "Contains number",
-        "special": "Contains special character"
-      },
       "errors": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
         "fullNameRequired": "Full name is required",
         "emailRequired": "Email is required",
+        "phoneRequired": "Phone number is required",
+        "dobRequired": "Date of birth is required",
+        "ageRequirement": "You must be at least 13 years old",
         "invalidEmail": "Please enter a valid email address",
         "passwordRequired": "Password is required",
         "passwordRequirements": "Password does not meet requirements",
         "passwordMismatch": "Passwords do not match",
+        "usernameRequired": "Username is required",
+        "usernameTaken": "Username is already taken",
+        "securityQuestionRequired": "Please select a security question",
+        "securityAnswerRequired": "Security answer is required",
+        "addressRequired": "Complete address is required",
+        "streetRequired": "Street address is required",
+        "cityRequired": "City is required",
+        "stateRequired": "State/Province is required",
+        "postalCodeRequired": "Postal code is required",
+        "countryRequired": "Country is required",
+        "termsRequired": "You must accept the terms of service",
+        "privacyRequired": "You must accept the privacy policy",
+        "captchaRequired": "Please complete the CAPTCHA verification",
         "emailExists": "An account with this email already exists",
-        "weakPassword": "Password is too weak"
+        "weakPassword": "Password is too weak",
+        "registrationSuccess": "Registration successful! Please check your email to verify your account.",
+        "registrationFailed": "Registration failed. Please try again."
       }
     },
     "forgotPassword": {
-      "title": "Reset your password",
-      "subtitle": "Enter your email to receive reset instructions",
+      "titles": {
+        "request": "Reset Password",
+        "reset": "New Password",
+        "success": "Success!"
+      },
+      "subtitles": {
+        "request": "Enter your email to receive reset instructions",
+        "reset": "Create a new strong password for your account",
+        "success": "Your password has been updated"
+      },
       "email": "Email address",
-      "sendInstructions": "Send reset instructions",
-      "sending": "Sending...",
-      "backToLogin": "Return to login",
       "rememberPassword": "Remember your password?",
-      "checkEmail": "Check your email",
-      "emailSent": "We've sent password reset instructions to",
-      "didntReceive": "Didn't receive the email? Check your spam folder.",
-      "linkExpires": "Reset link expires in 1 hour"
+      "signIn": "Sign in",
+      "form": {
+        "emailPlaceholder": "Enter your email address",
+        "sendButton": "Send Instructions",
+        "sending": "Sending...",
+        "newPassword": "New Password",
+        "newPasswordPlaceholder": "••••••••",
+        "confirmPassword": "Confirm Password",
+        "confirmPasswordPlaceholder": "••••••••",
+        "resetButton": "Reset Password",
+        "resetting": "Resetting..."
+      },
+      "success": {
+        "checkEmail": "Check your email",
+        "sentTo": "Instructions sent to",
+        "checkSpam": "If you don't see it, please check your spam folder.",
+        "expires": "Link expires in 1 hour",
+        "loginWithNew": "You can now login with your new password",
+        "returnLogin": "Return to Login"
+      },
+      "errors": {
+        "emailRequired": "Email is required",
+        "validEmail": "Please enter a valid email",
+        "userNotFound": "No account found with this email",
+        "sendFailed": "Failed to send reset email",
+        "newPasswordRequired": "New password is required",
+        "passwordLength": "Password must be at least 8 characters",
+        "passwordMismatch": "Passwords do not match",
+        "resetFailed": "Failed to reset password",
+        "invalidLink": "Invalid reset link",
+        "expiredLink": "Reset link has expired"
+      }
     },
     "verifyEmail": {
       "title": "Email Verification",

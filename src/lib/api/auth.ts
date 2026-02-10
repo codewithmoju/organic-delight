@@ -7,6 +7,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { Profile } from '../types';
 
 export async function signUp(email: string, password: string, fullName: string) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
@@ -41,15 +42,16 @@ export async function getProfile(user: User) {
     // Convert Firestore Timestamps to JavaScript Date objects for consistency
     return {
       ...data,
+      email: data.email || user.email || '',
       created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
       updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at
-    };
+    } as Profile;
   }
 
   // Create profile if it doesn't exist
-  const newProfile = {
+  const newProfile: Profile = {
     id: user.uid,
-    email: user.email,
+    email: user.email || '',
     full_name: user.displayName || 'User',
     preferred_currency: 'PKR',
     role: 'user',

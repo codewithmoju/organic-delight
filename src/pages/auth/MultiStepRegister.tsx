@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Upload, X, Shield, Mail, User, Lock, MapPin } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Upload, X, Shield, User, Lock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, query, collection, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Logo from '../../components/ui/Logo';
-import { validateEmail, validatePassword, validateRequired, validatePhone, validateUsername } from '../../lib/utils/validation';
+import { validateEmail, validatePassword, validatePhone, validateUsername } from '../../lib/utils/validation';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -150,12 +150,12 @@ export default function MultiStepRegister() {
         const phoneError = validatePhone(formData.phone);
         if (phoneError) newErrors.phone = phoneError;
 
-        if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
+        if (!formData.dateOfBirth) newErrors.dateOfBirth = t('auth.register.errors.dobRequired');
         else {
           const birthDate = new Date(formData.dateOfBirth);
           const today = new Date();
           const age = today.getFullYear() - birthDate.getFullYear();
-          if (age < 13) newErrors.dateOfBirth = 'You must be at least 13 years old';
+          if (age < 13) newErrors.dateOfBirth = t('auth.register.errors.ageRequirement');
         }
         break;
 
@@ -163,29 +163,29 @@ export default function MultiStepRegister() {
         // Account Security validation
         const usernameError = validateUsername(formData.username);
         if (usernameError) newErrors.username = usernameError;
-        else if (isUsernameAvailable === false) newErrors.username = 'Username is already taken';
+        else if (isUsernameAvailable === false) newErrors.username = t('auth.register.errors.usernameTaken');
 
         const passwordError = validatePassword(formData.password);
         if (passwordError) newErrors.password = passwordError;
 
         if (formData.password !== formData.confirmPassword) {
-          newErrors.confirmPassword = 'Passwords do not match';
+          newErrors.confirmPassword = t('auth.register.errors.passwordMismatch');
         }
 
-        if (!formData.securityQuestion) newErrors.securityQuestion = 'Please select a security question';
-        if (!formData.securityAnswer.trim()) newErrors.securityAnswer = 'Security answer is required';
+        if (!formData.securityQuestion) newErrors.securityQuestion = t('auth.register.errors.securityQuestionRequired');
+        if (!formData.securityAnswer.trim()) newErrors.securityAnswer = t('auth.register.errors.securityAnswerRequired');
         break;
 
       case 3:
         // Additional Details validation
-        if (!formData.street.trim()) newErrors.street = 'Street address is required';
-        if (!formData.city.trim()) newErrors.city = 'City is required';
-        if (!formData.state.trim()) newErrors.state = 'State/Province is required';
-        if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
-        if (!formData.country.trim()) newErrors.country = 'Country is required';
-        if (!formData.acceptTerms) newErrors.acceptTerms = 'You must accept the terms of service';
-        if (!formData.acceptPrivacy) newErrors.acceptPrivacy = 'You must accept the privacy policy';
-        if (!captchaVerified) newErrors.captcha = 'Please complete the CAPTCHA verification';
+        if (!formData.street.trim()) newErrors.street = t('auth.register.errors.streetRequired');
+        if (!formData.city.trim()) newErrors.city = t('auth.register.errors.cityRequired');
+        if (!formData.state.trim()) newErrors.state = t('auth.register.errors.stateRequired');
+        if (!formData.postalCode.trim()) newErrors.postalCode = t('auth.register.errors.postalCodeRequired');
+        if (!formData.country.trim()) newErrors.country = t('auth.register.errors.countryRequired');
+        if (!formData.acceptTerms) newErrors.acceptTerms = t('auth.register.errors.termsRequired');
+        if (!formData.acceptPrivacy) newErrors.acceptPrivacy = t('auth.register.errors.privacyRequired');
+        if (!captchaVerified) newErrors.captcha = t('auth.register.errors.captchaRequired');
         break;
     }
 
@@ -240,7 +240,7 @@ export default function MultiStepRegister() {
       // Send verification email
       await sendEmailVerification(user);
 
-      toast.success('Registration successful! Please check your email to verify your account.');
+      toast.success(t('auth.register.errors.registrationSuccess'));
 
       // Redirect to verification page or login
       window.location.href = '/login?message=verify-email';
@@ -248,10 +248,10 @@ export default function MultiStepRegister() {
     } catch (error: any) {
       console.error('Registration error:', error);
       if (error.code === 'auth/email-already-in-use') {
-        setErrors({ email: 'An account with this email already exists' });
+        setErrors({ email: t('auth.register.errors.emailExists') });
         setCurrentStep(1);
       } else {
-        toast.error('Registration failed. Please try again.');
+        toast.error(t('auth.register.errors.registrationFailed'));
       }
     } finally {
       setIsLoading(false);
@@ -288,62 +288,63 @@ export default function MultiStepRegister() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FFF7ED] via-white to-[#FFF7ED] px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[120px] animate-pulse-slow" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-2xl relative z-10"
+        className="w-full max-w-2xl relative z-10 my-10"
       >
-        <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
+        <div className="bg-white dark:bg-slate-900 p-8 lg:p-12 rounded-[2.5rem] border border-orange-100/50 dark:border-slate-800 shadow-2xl shadow-orange-200/20 dark:shadow-none">
           {/* Header */}
-          <div className="text-center mb-8">
-            <Logo size="lg" />
+          <div className="text-center mb-10">
+            <div className="flex justify-center mb-6">
+              <Logo size="lg" />
+            </div>
             <motion.h2
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-6 text-3xl lg:text-4xl font-bold text-white"
+              className="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight"
             >
               {t('auth.register.title')}
             </motion.h2>
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-2 text-gray-400 text-lg"
+              transition={{ delay: 0.1 }}
+              className="mt-3 text-slate-500 dark:text-slate-400 text-lg font-medium"
             >
               {t('auth.register.steps.stepIndicator', { current: currentStep, total: 3 })}
             </motion.p>
           </div>
 
           {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
+          <div className="mb-12 relative px-4">
+            <div className="flex justify-between items-center relative z-10">
               {[1, 2, 3].map((step) => (
                 <div
                   key={step}
-                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${step <= currentStep
-                    ? 'border-primary-500 bg-primary-500 text-white'
-                    : 'border-gray-600 text-gray-400'
+                  className={`flex items-center justify-center w-12 h-12 rounded-2xl border-2 transition-all duration-500 shadow-sm ${step <= currentStep
+                    ? 'border-primary bg-primary text-white shadow-primary/30 scale-110'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400'
                     }`}
                 >
-                  {step < currentStep ? <Check className="w-5 h-5" /> : step}
+                  {step < currentStep ? <Check className="w-6 h-6" /> : <span className="text-lg font-bold">{step}</span>}
                 </div>
               ))}
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="absolute top-1/2 left-4 right-4 h-1 bg-slate-100 dark:bg-slate-800 -translate-y-1/2 rounded-full overflow-hidden">
               <motion.div
-                className="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full"
+                className="bg-primary h-full rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]"
                 initial={{ width: '33%' }}
-                animate={{ width: `${(currentStep / 3) * 100}%` }}
-                transition={{ duration: 0.3 }}
+                animate={{ width: `${((currentStep - 1) / 2) * 100}%` }}
+                transition={{ duration: 0.5, ease: "circOut" }}
               />
             </div>
           </div>
@@ -358,73 +359,75 @@ export default function MultiStepRegister() {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="flex items-center mb-6">
-                  <User className="w-6 h-6 text-primary-400 mr-3" />
-                  <h3 className="text-xl font-semibold text-white">{t('auth.register.steps.basicInfo')}</h3>
+                <div className="flex items-center mb-8 bg-orange-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-orange-100 dark:border-slate-800">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-4">
+                    <User className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('auth.register.steps.basicInfo')}</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-base font-medium text-gray-300 mb-3">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                       {t('auth.register.firstName')} *
                     </label>
                     <input
                       type="text"
                       value={formData.firstName}
                       onChange={(e) => updateFormData('firstName', e.target.value)}
-                      className={`w-full input-dark input-large ${errors.firstName ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.firstName ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.firstName')}
                     />
                     {errors.firstName && (
-                      <p className="mt-2 text-sm text-error-400">{errors.firstName}</p>
+                      <p className="mt-1 text-xs text-error-500 ml-1">{errors.firstName}</p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-base font-medium text-gray-300 mb-3">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                       {t('auth.register.lastName')} *
                     </label>
                     <input
                       type="text"
                       value={formData.lastName}
                       onChange={(e) => updateFormData('lastName', e.target.value)}
-                      className={`w-full input-dark input-large ${errors.lastName ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.lastName ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.lastName')}
                     />
                     {errors.lastName && (
-                      <p className="mt-2 text-sm text-error-400">{errors.lastName}</p>
+                      <p className="mt-1 text-xs text-error-500 ml-1">{errors.lastName}</p>
                     )}
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.email')} *
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => updateFormData('email', e.target.value)}
-                    className={`w-full input-dark input-large ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
+                    className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.email ? 'ring-error-500/20 border-error-500' : ''}`}
                     placeholder={t('auth.register.placeholders.email')}
                   />
                   {errors.email && (
-                    <p className="mt-2 text-sm text-error-400">{errors.email}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.email}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.phone')} *
                   </label>
                   <div className="flex gap-3">
                     <select
                       value={formData.countryCode}
                       onChange={(e) => updateFormData('countryCode', e.target.value)}
-                      className="input-dark input-large w-32"
+                      className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-3 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all w-28 cursor-pointer"
                     >
                       {COUNTRIES.map((country) => (
-                        <option key={country.code} value={country.code}>
+                        <option key={country.code} value={country.code} className="dark:bg-slate-900">
                           {country.flag} {country.code}
                         </option>
                       ))}
@@ -433,27 +436,27 @@ export default function MultiStepRegister() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => updateFormData('phone', e.target.value)}
-                      className={`flex-1 input-dark input-large ${errors.phone ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`flex-1 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.phone ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.phone')}
                     />
                   </div>
                   {errors.phone && (
-                    <p className="mt-2 text-sm text-error-400">{errors.phone}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.phone}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.dob')} *
                   </label>
                   <input
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={(e) => updateFormData('dateOfBirth', e.target.value)}
-                    className={`w-full input-dark input-large ${errors.dateOfBirth ? 'ring-error-500 border-error-500' : ''}`}
+                    className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.dateOfBirth ? 'ring-error-500/20 border-error-500' : ''}`}
                   />
                   {errors.dateOfBirth && (
-                    <p className="mt-2 text-sm text-error-400">{errors.dateOfBirth}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.dateOfBirth}</p>
                   )}
                 </div>
               </motion.div>
@@ -467,13 +470,15 @@ export default function MultiStepRegister() {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="flex items-center mb-6">
-                  <Lock className="w-6 h-6 text-primary-400 mr-3" />
-                  <h3 className="text-xl font-semibold text-white">{t('auth.register.steps.security')}</h3>
+                <div className="flex items-center mb-8 bg-orange-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-orange-100 dark:border-slate-800">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-4">
+                    <Lock className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('auth.register.steps.security')}</h3>
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.username')} *
                   </label>
                   <div className="relative">
@@ -481,30 +486,30 @@ export default function MultiStepRegister() {
                       type="text"
                       value={formData.username}
                       onChange={(e) => updateFormData('username', e.target.value)}
-                      className={`w-full input-dark input-large pr-10 ${errors.username ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 pr-10 ${errors.username ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.username')}
                     />
                     {formData.username.length >= 3 && (
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                         {isUsernameAvailable === true && (
-                          <Check className="w-5 h-5 text-green-500" />
+                          <Check className="w-5 h-5 text-success-500" />
                         )}
                         {isUsernameAvailable === false && (
-                          <X className="w-5 h-5 text-red-500" />
+                          <X className="w-5 h-5 text-error-500" />
                         )}
                       </div>
                     )}
                   </div>
                   {errors.username && (
-                    <p className="mt-2 text-sm text-error-400">{errors.username}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.username}</p>
                   )}
                   {isUsernameAvailable === true && (
-                    <p className="mt-2 text-sm text-green-400">Username is available!</p>
+                    <p className="mt-1 text-xs text-success-600 dark:text-success-400 ml-1 font-medium">Username is available!</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.password')} *
                   </label>
                   <div className="relative">
@@ -512,35 +517,31 @@ export default function MultiStepRegister() {
                       type={showPassword ? 'text' : 'password'}
                       value={formData.password}
                       onChange={(e) => updateFormData('password', e.target.value)}
-                      className={`w-full input-dark input-large pr-12 ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 pr-12 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.password ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.password')}
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 flex items-center pr-4"
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600 transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                      ) : (
-                        <Eye className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                      )}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
 
                   {formData.password && (
-                    <div className="mt-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-400">{t('auth.register.strength.label')}</span>
-                        <span className={`text-sm font-medium ${passwordStrength < 50 ? 'text-red-400' :
-                          passwordStrength < 75 ? 'text-yellow-400' : 'text-green-400'
+                    <div className="mt-4 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('auth.register.strength.label')}</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${passwordStrength < 50 ? 'bg-error-50 text-error-600' :
+                          passwordStrength < 75 ? 'bg-warning-50 text-warning-600' : 'bg-success-50 text-success-600'
                           }`}>
                           {getPasswordStrengthText()}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
+                          className={`h-full rounded-full transition-all duration-500 ${getPasswordStrengthColor()}`}
                           style={{ width: `${passwordStrength}%` }}
                         />
                       </div>
@@ -548,12 +549,12 @@ export default function MultiStepRegister() {
                   )}
 
                   {errors.password && (
-                    <p className="mt-2 text-sm text-error-400">{errors.password}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.password}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.confirmPassword')} *
                   </label>
                   <div className="relative">
@@ -561,60 +562,56 @@ export default function MultiStepRegister() {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={formData.confirmPassword}
                       onChange={(e) => updateFormData('confirmPassword', e.target.value)}
-                      className={`w-full input-dark input-large pr-12 ${errors.confirmPassword ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 pr-12 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.confirmPassword ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.confirmPassword')}
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 flex items-center pr-4"
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600 transition-colors"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                      ) : (
-                        <Eye className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                      )}
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="mt-2 text-sm text-error-400">{errors.confirmPassword}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.confirmPassword}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.securityQuestion')} *
                   </label>
                   <select
                     value={formData.securityQuestion}
                     onChange={(e) => updateFormData('securityQuestion', e.target.value)}
-                    className={`w-full input-dark input-large ${errors.securityQuestion ? 'ring-error-500 border-error-500' : ''}`}
+                    className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 cursor-pointer ${errors.securityQuestion ? 'ring-error-500/20 border-error-500' : ''}`}
                   >
-                    <option value="">Select a security question</option>
+                    <option value="" className="dark:bg-slate-900">Select a security question</option>
                     {SECURITY_QUESTIONS.map((question, index) => (
-                      <option key={index} value={question}>
+                      <option key={index} value={question} className="dark:bg-slate-900">
                         {question}
                       </option>
                     ))}
                   </select>
                   {errors.securityQuestion && (
-                    <p className="mt-2 text-sm text-error-400">{errors.securityQuestion}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.securityQuestion}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.securityAnswer')} *
                   </label>
                   <input
                     type="text"
                     value={formData.securityAnswer}
                     onChange={(e) => updateFormData('securityAnswer', e.target.value)}
-                    className={`w-full input-dark input-large ${errors.securityAnswer ? 'ring-error-500 border-error-500' : ''}`}
+                    className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.securityAnswer ? 'ring-error-500/20 border-error-500' : ''}`}
                     placeholder={t('auth.register.placeholders.securityAnswer')}
                   />
                   {errors.securityAnswer && (
-                    <p className="mt-2 text-sm text-error-400">{errors.securityAnswer}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.securityAnswer}</p>
                   )}
                 </div>
               </motion.div>
@@ -628,17 +625,19 @@ export default function MultiStepRegister() {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="flex items-center mb-6">
-                  <MapPin className="w-6 h-6 text-primary-400 mr-3" />
-                  <h3 className="text-xl font-semibold text-white">{t('auth.register.steps.additional')}</h3>
+                <div className="flex items-center mb-8 bg-orange-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-orange-100 dark:border-slate-800">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-4">
+                    <MapPin className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('auth.register.steps.additional')}</h3>
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.profilePicture')}
                   </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-full bg-dark-700 flex items-center justify-center overflow-hidden">
+                  <div className="flex items-center space-x-6 p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div className="w-20 h-20 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
                       {formData.profilePicture ? (
                         <img
                           src={URL.createObjectURL(formData.profilePicture)}
@@ -646,11 +645,11 @@ export default function MultiStepRegister() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="w-8 h-8 text-gray-400" />
+                        <User className="w-8 h-8 text-slate-300" />
                       )}
                     </div>
-                    <label className="btn-secondary cursor-pointer">
-                      <Upload className="w-4 h-4 mr-2" />
+                    <label className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm text-slate-700 dark:text-slate-300">
+                      <Upload className="w-4 h-4 text-primary" />
                       {t('auth.register.uploadPhoto')}
                       <input
                         type="file"
@@ -661,154 +660,155 @@ export default function MultiStepRegister() {
                     </label>
                   </div>
                   {errors.profilePicture && (
-                    <p className="mt-2 text-sm text-error-400">{errors.profilePicture}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.profilePicture}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-300 mb-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.address.street')} *
                   </label>
                   <input
                     type="text"
                     value={formData.street}
                     onChange={(e) => updateFormData('street', e.target.value)}
-                    className={`w-full input-dark input-large ${errors.street ? 'ring-error-500 border-error-500' : ''}`}
+                    className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.street ? 'ring-error-500/20 border-error-500' : ''}`}
                     placeholder={t('auth.register.placeholders.street')}
                   />
                   {errors.street && (
-                    <p className="mt-2 text-sm text-error-400">{errors.street}</p>
+                    <p className="mt-1 text-xs text-error-500 ml-1">{errors.street}</p>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-base font-medium text-gray-300 mb-3">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                       {t('auth.register.address.city')} *
                     </label>
                     <input
                       type="text"
                       value={formData.city}
                       onChange={(e) => updateFormData('city', e.target.value)}
-                      className={`w-full input-dark input-large ${errors.city ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.city ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.city')}
                     />
                     {errors.city && (
-                      <p className="mt-2 text-sm text-error-400">{errors.city}</p>
+                      <p className="mt-1 text-xs text-error-500 ml-1">{errors.city}</p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-base font-medium text-gray-300 mb-3">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                       {t('auth.register.address.state')} *
                     </label>
                     <input
                       type="text"
                       value={formData.state}
                       onChange={(e) => updateFormData('state', e.target.value)}
-                      className={`w-full input-dark input-large ${errors.state ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.state ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.state')}
                     />
                     {errors.state && (
-                      <p className="mt-2 text-sm text-error-400">{errors.state}</p>
+                      <p className="mt-1 text-xs text-error-500 ml-1">{errors.state}</p>
                     )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-base font-medium text-gray-300 mb-3">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                       {t('auth.register.address.postalCode')} *
                     </label>
                     <input
                       type="text"
                       value={formData.postalCode}
                       onChange={(e) => updateFormData('postalCode', e.target.value)}
-                      className={`w-full input-dark input-large ${errors.postalCode ? 'ring-error-500 border-error-500' : ''}`}
+                      className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.postalCode ? 'ring-error-500/20 border-error-500' : ''}`}
                       placeholder={t('auth.register.placeholders.postalCode')}
                     />
                     {errors.postalCode && (
-                      <p className="mt-2 text-sm text-error-400">{errors.postalCode}</p>
+                      <p className="mt-1 text-xs text-error-500 ml-1">{errors.postalCode}</p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-base font-medium text-gray-300 mb-3">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                       {t('auth.register.address.country')} *
                     </label>
                     <select
                       value={formData.country}
                       onChange={(e) => updateFormData('country', e.target.value)}
-                      className={`w-full input-dark input-large ${errors.country ? 'ring-error-500 border-error-500' : ''}`}
+                      className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 cursor-pointer w-full"
                     >
                       {COUNTRIES.map((country) => (
-                        <option key={country.name} value={country.name}>
+                        <option key={country.name} value={country.name} className="dark:bg-slate-900">
                           {country.flag} {country.name}
                         </option>
                       ))}
                     </select>
                     {errors.country && (
-                      <p className="mt-2 text-sm text-error-400">{errors.country}</p>
+                      <p className="mt-1 text-xs text-error-500 ml-1">{errors.country}</p>
                     )}
                   </div>
                 </div>
 
-                {/* Simple CAPTCHA */}
-                <div className="bg-dark-800/50 p-4 rounded-xl border border-dark-700/50">
+                <div className="bg-orange-50/50 dark:bg-slate-800/30 p-5 rounded-2xl border border-orange-100 dark:border-slate-800">
                   <div className="flex items-center space-x-4">
-                    <Shield className="w-6 h-6 text-primary-400" />
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-primary" />
+                    </div>
                     <div className="flex-1">
-                      <label className="flex items-center">
+                      <label className="flex items-center cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={captchaVerified}
                           onChange={(e) => setCaptchaVerified(e.target.checked)}
-                          className="w-5 h-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800 mr-3"
+                          className="w-5 h-5 rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-primary focus:ring-primary/20 mr-3 transition-all cursor-pointer"
                         />
-                        <span className="text-gray-300">{t('auth.register.terms.captcha')}</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 group-hover:text-slate-900 transition-colors">{t('auth.register.terms.captcha')}</span>
                       </label>
                     </div>
                   </div>
                   {errors.captcha && (
-                    <p className="mt-2 text-sm text-error-400">{errors.captcha}</p>
+                    <p className="mt-2 text-xs text-error-500 ml-14 font-medium">{errors.captcha}</p>
                   )}
                 </div>
 
-                <div className="space-y-4">
-                  <label className="flex items-start">
+                <div className="space-y-4 px-1">
+                  <label className="flex items-start cursor-pointer group">
                     <input
                       type="checkbox"
                       checked={formData.acceptTerms}
                       onChange={(e) => updateFormData('acceptTerms', e.target.checked)}
-                      className="w-5 h-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800 mr-3 mt-0.5"
+                      className="w-5 h-5 rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-primary focus:ring-primary/20 mr-3 mt-0.5 transition-all cursor-pointer"
                     />
-                    <span className="text-gray-300">
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
                       {t('auth.register.terms.agree')}{' '}
-                      <Link to="/terms" className="text-primary-400 hover:text-primary-300">
+                      <Link to="/terms" className="text-primary font-bold hover:text-primary-dark transition-colors">
                         {t('auth.register.terms.service')}
                       </Link>
                     </span>
                   </label>
                   {errors.acceptTerms && (
-                    <p className="text-sm text-error-400">{errors.acceptTerms}</p>
+                    <p className="text-xs text-error-500 ml-8 font-medium">{errors.acceptTerms}</p>
                   )}
 
-                  <label className="flex items-start">
+                  <label className="flex items-start cursor-pointer group">
                     <input
                       type="checkbox"
                       checked={formData.acceptPrivacy}
                       onChange={(e) => updateFormData('acceptPrivacy', e.target.checked)}
-                      className="w-5 h-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800 mr-3 mt-0.5"
+                      className="w-5 h-5 rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-primary focus:ring-primary/20 mr-3 mt-0.5 transition-all cursor-pointer"
                     />
-                    <span className="text-gray-300">
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
                       {t('auth.register.terms.agree')}{' '}
-                      <Link to="/privacy" className="text-primary-400 hover:text-primary-300">
+                      <Link to="/privacy" className="text-primary font-bold hover:text-primary-dark transition-colors">
                         {t('auth.register.terms.privacy')}
                       </Link>
                     </span>
                   </label>
                   {errors.acceptPrivacy && (
-                    <p className="text-sm text-error-400">{errors.acceptPrivacy}</p>
+                    <p className="text-xs text-error-500 ml-8 font-medium">{errors.acceptPrivacy}</p>
                   )}
                 </div>
               </motion.div>
@@ -816,15 +816,14 @@ export default function MultiStepRegister() {
           </AnimatePresence>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-dark-700/50">
-
+          <div className="flex justify-between mt-12 pt-8 border-t border-slate-100 dark:border-slate-800">
             {currentStep > 1 ? (
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ x: -4 }}
                 whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={prevStep}
-                className="btn-secondary flex items-center gap-2"
+                className="btn-secondary flex items-center gap-2 px-6 py-3 font-bold"
               >
                 <ArrowLeft className="w-5 h-5" />
                 {t('auth.register.buttons.previous')}
@@ -835,23 +834,23 @@ export default function MultiStepRegister() {
 
             {currentStep < 3 ? (
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={nextStep}
-                className="btn-primary flex items-center gap-2"
+                className="btn-primary flex items-center gap-2 px-8 py-3 font-bold shadow-lg shadow-primary/20"
               >
                 {t('auth.register.buttons.next')}
                 <ArrowRight className="w-5 h-5" />
               </motion.button>
             ) : (
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="btn-primary flex items-center gap-2 min-w-[140px]"
+                className="btn-primary flex items-center justify-center gap-3 px-10 py-3 font-bold shadow-lg shadow-primary/25 min-w-[180px]"
               >
                 {isLoading ? (
                   <LoadingSpinner size="sm" color="white" />
@@ -869,13 +868,13 @@ export default function MultiStepRegister() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="mt-8 text-center text-base text-gray-400"
+            transition={{ delay: 0.5 }}
+            className="mt-10 text-center text-slate-500 dark:text-slate-400 font-medium"
           >
             {t('auth.register.hasAccount')}{' '}
             <Link
               to="/login"
-              className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
+              className="font-bold text-primary hover:text-primary-dark transition-colors duration-200"
             >
               {t('auth.register.signIn')}
             </Link>

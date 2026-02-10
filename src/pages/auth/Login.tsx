@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -74,51 +75,67 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FFF7ED] via-white to-[#FFF7ED] px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[120px] animate-pulse-slow" />
       </div>
 
-      <div className="w-full max-w-lg relative z-10">
-        <div className="glass-effect p-8 lg:p-10 rounded-2xl border border-dark-700/50 shadow-dark-lg">
-          <div className="text-center mb-8">
-            <Logo size="lg" />
-            <h2 className="mt-6 text-3xl lg:text-4xl font-bold text-white">
+      <div className="w-full max-w-[500px] relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-slate-900 p-8 lg:p-12 rounded-[2.5rem] border border-orange-100/50 dark:border-slate-800 shadow-2xl shadow-orange-200/20 dark:shadow-none"
+        >
+          <div className="text-center mb-10">
+            <div className="flex justify-center mb-6">
+              <Logo size="lg" />
+            </div>
+            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               {t('auth.login.title')}
             </h2>
-            <p className="mt-2 text-gray-400 text-lg">
+            <p className="mt-3 text-slate-500 dark:text-slate-400 text-lg">
               {t('auth.login.subtitle')}
             </p>
           </div>
 
-          <form className="space-y-8" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-base font-medium text-gray-300 mb-3">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                 {t('auth.login.email')}
               </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className={`w-full input-dark input-large ${errors.email ? 'ring-error-500 border-error-500' : ''}`}
-                placeholder="name@company.com"
-              />
+              <div className="relative">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.email ? 'ring-error-500/20 border-error-500' : ''}`}
+                  placeholder="name@company.com"
+                />
+              </div>
               {errors.email && (
-                <div className="mt-2 flex items-center text-sm text-error-400">
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center text-sm text-error-500 mt-1 ml-1">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.email}
-                </div>
+                </motion.div>
               )}
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-base font-medium text-gray-300 mb-3">
-                {t('auth.login.password')}
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between ml-1">
+                <label htmlFor="password" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  {t('auth.login.password')}
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-bold text-primary hover:text-primary-dark transition-colors duration-200"
+                >
+                  {t('auth.login.forgotPassword')}
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   id="password"
@@ -126,77 +143,62 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className={`w-full input-dark input-large pr-12 ${errors.password ? 'ring-error-500 border-error-500' : ''}`}
-                  placeholder={t('auth.login.password')}
+                  className={`w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 pr-12 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.password ? 'ring-error-500/20 border-error-500' : ''}`}
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-4"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                  ) : (
-                    <Eye className="h-6 w-6 text-gray-400 hover:text-gray-200" />
-                  )}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
               {errors.password && (
-                <div className="mt-2 flex items-center text-sm text-error-400">
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center text-sm text-error-500 mt-1 ml-1">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   {errors.password}
-                </div>
+                </motion.div>
               )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-5 w-5 rounded border-dark-600 bg-dark-700 text-primary-600 focus:ring-primary-600 focus:ring-offset-dark-800"
-                />
-                <label htmlFor="remember-me" className="ml-3 block text-base text-gray-300">
-                  {t('auth.login.rememberMe')}
-                </label>
-              </div>
-              <Link
-                to="/forgot-password"
-                className="text-base font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200"
-              >
-
-                {t('auth.login.forgotPassword')}
-              </Link>
+            <div className="flex items-center ml-1">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-5 w-5 rounded-lg border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-primary focus:ring-primary/20 transition-all cursor-pointer"
+              />
+              <label htmlFor="remember-me" className="ml-3 block text-sm font-medium text-slate-600 dark:text-slate-400 cursor-pointer">
+                {t('auth.login.rememberMe')}
+              </label>
             </div>
 
-            <div>
-              <button
+            <div className="pt-2">
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 type="submit"
                 disabled={isLoading}
-                className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-lg font-semibold"
+                className="btn-primary w-full flex items-center justify-center gap-3 py-4 text-lg font-bold shadow-lg shadow-primary/25"
               >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" color="white" />
-                  </>
-                ) : (
-                  t('auth.login.signIn')
-                )}
-              </button>
+                {isLoading ? <LoadingSpinner size="sm" color="white" /> : t('auth.login.signIn')}
+              </motion.button>
             </div>
           </form>
 
-          <p className="mt-8 text-center text-base text-gray-400">
-            {t('auth.login.noAccount')}{' '}
-            <Link
-              to="/register-multi"
-              className="font-semibold text-primary-400 hover:text-primary-300 transition-colors duration-200 text-lg"
-            >
-              {t('auth.login.signUp')}
-            </Link>
-          </p>
-        </div>
+          <div className="mt-10 text-center">
+            <p className="text-slate-500 dark:text-slate-400 font-medium">
+              {t('auth.login.noAccount')}{' '}
+              <Link
+                to="/register-multi"
+                className="font-bold text-primary hover:text-primary-dark transition-colors duration-200"
+              >
+                {t('auth.login.signUp')}
+              </Link>
+            </p>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
