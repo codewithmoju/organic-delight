@@ -18,20 +18,54 @@ import PaginationControls from '../../components/ui/PaginationControls';
 import { PageSkeleton, TableSkeleton } from '../../components/ui/SkeletonLoader';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
+const ITEMS_CACHE_KEY = 'inventory_items_cache';
+const CATEGORIES_CACHE_KEY = 'inventory_categories_cache';
+
 export default function Items() {
   const { t } = useTranslation();
-  const [items, setItems] = useState<EnhancedItem[]>([]);
+
+  // Initialize from cache to provide instant feedback
+  const [items, setItems] = useState<EnhancedItem[]>(() => {
+    try {
+      const cached = localStorage.getItem(ITEMS_CACHE_KEY);
+      if (cached) {
+        return JSON.parse(cached, (key, value) => {
+          if (['created_at', 'updated_at', 'last_transaction_date'].includes(key)) {
+            return new Date(value);
+          }
+          return value;
+        });
+      }
+    } catch (e) {
+      console.error('Failed to parse items cache', e);
+    }
+    return [];
+  });
+
+  const [categories, setCategories] = useState<Category[]>(() => {
+    try {
+      const cached = localStorage.getItem(CATEGORIES_CACHE_KEY);
+      if (cached) {
+        return JSON.parse(cached, (key, value) => {
+          if (['created_at', 'updated_at'].includes(key)) return new Date(value);
+          return value;
+        });
+      }
+    } catch (e) {
+      console.error('Failed to parse categories cache', e);
+    }
+    return [];
+  });
+
   const [filteredItems, setFilteredItems] = useState<EnhancedItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  // Use cache presence to determine initial loading state
+  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem(ITEMS_CACHE_KEY));
   const [selectedItem, setSelectedItem] = useState<EnhancedItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'analysis'>('grid');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-
   // Inline editing state for price
   const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
   const [editingPriceValue, setEditingPriceValue] = useState<number>(0);
@@ -44,7 +78,9 @@ export default function Items() {
   });
 
   useEffect(() => {
-    loadData();
+    // If we have cached data, update silently. Otherwise show loading.
+    const hasCache = items.length > 0;
+    loadData(!hasCache);
   }, []);
 
   // Automatic Stock Synchronization
@@ -58,18 +94,15 @@ export default function Items() {
 
       if (!lastSync || now - parseInt(lastSync) > SYNC_COOLDOWN) {
         console.log('Running automatic stock synchronization...');
-        setIsSyncing(true);
         try {
           const result = await reconcileAllItemsStock();
           if (result.updated > 0) {
             toast.success(`Automatically synced ${result.updated} items`, { duration: 3000 });
-            loadData();
+            loadData(false);
           }
           localStorage.setItem(LAST_SYNC_KEY, now.toString());
         } catch (error) {
           console.error('Auto sync failed:', error);
-        } finally {
-          setIsSyncing(false);
         }
       }
     };
@@ -81,20 +114,27 @@ export default function Items() {
     filterItems();
   }, [items, searchQuery, selectedCategory, showLowStockOnly]);
 
-  async function loadData() {
-    setIsLoading(true);
+  async function loadData(showLoading = true) {
+    if (showLoading) setIsLoading(true);
     try {
       const [itemsData, categoriesData] = await Promise.all([
         getItems(),
         getCategories(),
       ]);
-      setItems(itemsData.items || itemsData);
+
+      const loadedItems = itemsData.items || itemsData;
+      setItems(loadedItems);
       setCategories(categoriesData);
+
+      // Update cache
+      localStorage.setItem(ITEMS_CACHE_KEY, JSON.stringify(loadedItems));
+      localStorage.setItem(CATEGORIES_CACHE_KEY, JSON.stringify(categoriesData));
+
     } catch (error) {
       toast.error('Failed to load data');
       console.error(error);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }
 
@@ -201,7 +241,7 @@ export default function Items() {
         setItems(prevItems => prevItems.map(item => item.id === tempId ? { ...item, id: createdItem.id } : item));
       }
       // Reload data in the background to sync with server (e.g., for stock levels)
-      loadData();
+      loadData(false);
     } catch (error: any) {
       // --- Rollback: Revert to previous state on error ---
       setItems(previousItems);

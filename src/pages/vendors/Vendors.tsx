@@ -14,23 +14,38 @@ import AnimatedCard from '../../components/ui/AnimatedCard';
 
 export default function Vendors() {
     const { t } = useTranslation();
-    const [vendors, setVendors] = useState<Vendor[]>([]);
+    const [vendors, setVendors] = useState<Vendor[]>(() => {
+        try {
+            const cached = localStorage.getItem('vendors_cache');
+            if (cached) {
+                return JSON.parse(cached, (key, value) => {
+                    if (['created_at', 'updated_at'].includes(key)) return new Date(value);
+                    return value;
+                });
+            }
+        } catch (e) {
+            console.error('Failed to parse vendors cache', e);
+        }
+        return [];
+    });
     const [searchQuery, setSearchQuery] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('vendors_cache'));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
-        loadVendors();
+        const hasCache = vendors.length > 0;
+        loadVendors(!hasCache);
     }, []);
 
-    const loadVendors = async () => {
-        setIsLoading(true);
+    const loadVendors = async (showLoading = true) => {
+        if (showLoading) setIsLoading(true);
         try {
             // Simulate delay for skeleton demo
             // await new Promise(resolve => setTimeout(resolve, 800));
             const data = await getVendors();
             setVendors(data);
+            localStorage.setItem('vendors_cache', JSON.stringify(data));
         } catch (error: any) {
             console.error('Error loading vendors:', error);
             const msg = error.message?.includes('index')
@@ -38,7 +53,7 @@ export default function Vendors() {
                 : 'Failed to load vendors';
             toast.error(msg);
         } finally {
-            setIsLoading(false);
+            if (showLoading) setIsLoading(false);
         }
     };
 

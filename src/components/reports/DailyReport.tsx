@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-    Calendar,
     DollarSign,
     TrendingUp,
     TrendingDown,
@@ -12,8 +11,6 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Receipt,
-    Users,
-    Building2,
     Package
 } from 'lucide-react';
 import { DailyOperationsReport } from '../../lib/types';
@@ -22,23 +19,39 @@ import { formatCurrency } from '../../lib/utils/notifications';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
 export default function DailyReport() {
-    const [report, setReport] = useState<DailyOperationsReport | null>(null);
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [isLoading, setIsLoading] = useState(true);
+    const [report, setReport] = useState<DailyOperationsReport | null>(() => {
+        try {
+            const cached = localStorage.getItem('daily_report_cache');
+            return cached ? JSON.parse(cached) : null;
+        } catch { return null; }
+    });
+    const [selectedDate, setSelectedDate] = useState(() => {
+        try {
+            const cachedDate = localStorage.getItem('daily_report_date_cache');
+            return cachedDate ? new Date(cachedDate) : new Date();
+        } catch { return new Date(); }
+    });
+    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('daily_report_cache'));
 
     useEffect(() => {
-        loadReport();
+        // Only skip loading if we have cache AND the dates match (roughly)
+        // Actually, simpler logic: if cache exists, show it, then fetch new data.
+        // We'll rely on the fact that we initialize from cache.
+        const hasCache = !!report;
+        loadReport(!hasCache);
     }, [selectedDate]);
 
-    const loadReport = async () => {
-        setIsLoading(true);
+    const loadReport = async (showLoading = true) => {
+        if (showLoading) setIsLoading(true);
         try {
             const data = await generateDailyReport(selectedDate);
             setReport(data);
+            localStorage.setItem('daily_report_cache', JSON.stringify(data));
+            localStorage.setItem('daily_report_date_cache', selectedDate.toISOString());
         } catch (error) {
             console.error('Error loading daily report:', error);
         } finally {
-            setIsLoading(false);
+            if (showLoading) setIsLoading(false);
         }
     };
 
@@ -118,7 +131,7 @@ export default function DailyReport() {
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={loadReport}
+                        onClick={() => loadReport(true)}
                         className="btn-secondary p-2"
                     >
                         <RefreshCcw className="w-5 h-5" />

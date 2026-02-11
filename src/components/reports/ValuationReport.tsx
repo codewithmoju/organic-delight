@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, Filter, TrendingUp, Package, BarChart3, Info } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { calculateInventoryValuation, ItemValuation } from '../../lib/api/valuation';
 import { formatCurrency } from '../../lib/utils/notifications';
 import ValuationSkeleton from './ValuationSkeleton';
@@ -10,26 +10,33 @@ import { useTranslation } from 'react-i18next';
 
 export default function ValuationReport() {
     const [method, setMethod] = useState<'FIFO' | 'LIFO'>('FIFO');
-    const [data, setData] = useState<{ items: ItemValuation[], totalValue: number } | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [data, setData] = useState<{ items: ItemValuation[], totalValue: number } | null>(() => {
+        try {
+            const cached = localStorage.getItem('valuation_cache');
+            return cached ? JSON.parse(cached) : null;
+        } catch { return null; }
+    });
+    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('valuation_cache'));
     const { t } = useTranslation();
 
     useEffect(() => {
-        loadValuation();
+        const hasCache = !!data;
+        loadValuation(!hasCache);
     }, [method]);
 
-    const loadValuation = async () => {
-        setIsLoading(true);
+    const loadValuation = async (showLoading = true) => {
+        if (showLoading) setIsLoading(true);
         try {
             // Simulate delay for skeleton demo
             // await new Promise(resolve => setTimeout(resolve, 800)); 
             const result = await calculateInventoryValuation(method);
             setData(result);
+            localStorage.setItem('valuation_cache', JSON.stringify(result));
         } catch (error) {
             console.error('Valuation error:', error);
             toast.error('Failed to calculate valuation');
         } finally {
-            setIsLoading(false);
+            if (showLoading) setIsLoading(false);
         }
     };
 

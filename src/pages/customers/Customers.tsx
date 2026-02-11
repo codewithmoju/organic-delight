@@ -306,26 +306,41 @@ function EmptyState() {
 export default function Customers() {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const [customers, setCustomers] = useState<Customer[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [customers, setCustomers] = useState<Customer[]>(() => {
+        try {
+            const cached = localStorage.getItem('customers_cache');
+            if (cached) {
+                return JSON.parse(cached, (key, value) => {
+                    if (['created_at', 'updated_at', 'last_transaction_date'].includes(key)) return new Date(value);
+                    return value;
+                });
+            }
+        } catch (e) {
+            console.error('Failed to parse customers cache', e);
+        }
+        return [];
+    });
+    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('customers_cache'));
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddForm, setShowAddForm] = useState(false);
     const [filterMode, setFilterMode] = useState<'all' | 'credit' | 'clear'>('all');
 
     useEffect(() => {
-        loadCustomers();
+        const hasCache = customers.length > 0;
+        loadCustomers(!hasCache);
     }, []);
 
-    async function loadCustomers() {
-        setIsLoading(true);
+    async function loadCustomers(showLoading = true) {
+        if (showLoading) setIsLoading(true);
         try {
             const data = await getCustomers();
             setCustomers(data);
+            localStorage.setItem('customers_cache', JSON.stringify(data));
         } catch (error) {
             toast.error('Failed to load customers');
             console.error(error);
         } finally {
-            setIsLoading(false);
+            if (showLoading) setIsLoading(false);
         }
     }
 

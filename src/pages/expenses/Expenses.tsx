@@ -68,9 +68,22 @@ function StatCard({ icon: Icon, label, value, subtext, accent, delay = 0 }: {
 export default function Expenses() {
     const { t } = useTranslation();
     const profile = useAuthStore(state => state.profile);
-    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [expenses, setExpenses] = useState<Expense[]>(() => {
+        try {
+            const cached = localStorage.getItem('expenses_cache');
+            if (cached) {
+                return JSON.parse(cached, (key, value) => {
+                    if (['created_at', 'updated_at', 'expense_date'].includes(key)) return new Date(value);
+                    return value;
+                });
+            }
+        } catch (e) {
+            console.error('Failed to parse expenses cache', e);
+        }
+        return [];
+    });
     const [summary, setSummary] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('expenses_cache'));
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
@@ -89,14 +102,17 @@ export default function Expenses() {
 
 
     useEffect(() => {
-        loadData();
+        const hasCache = expenses.length > 0;
+        loadData(!hasCache);
     }, []);
 
-    const loadData = async () => {
-        setIsLoading(true);
+    const loadData = async (showLoading = true) => {
+        if (showLoading) setIsLoading(true);
         try {
             const data = await getExpenses();
             setExpenses(data);
+            localStorage.setItem('expenses_cache', JSON.stringify(data));
+
 
             const oneMonthAgo = new Date();
             oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);

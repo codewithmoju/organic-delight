@@ -21,8 +21,21 @@ interface DeletedCategory {
 
 export default function Categories() {
   const { t } = useTranslation();
-  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState<CategoryWithCount[]>(() => {
+    try {
+      const cached = localStorage.getItem('inventory_categories_cache');
+      if (cached) {
+        return JSON.parse(cached, (key, value) => {
+          if (['created_at', 'updated_at'].includes(key)) return new Date(value);
+          return value;
+        });
+      }
+    } catch (e) {
+      console.error('Failed to parse categories cache', e);
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('inventory_categories_cache'));
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryWithCount | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,20 +75,24 @@ export default function Categories() {
   }, [categories, searchQuery]);
 
   useEffect(() => {
-    loadData();
+    const hasCache = categories.length > 0;
+    loadData(!hasCache);
   }, []);
 
-  async function loadData() {
+  async function loadData(showLoading = true) {
+    if (showLoading) setIsLoading(true);
     try {
       // Intentional delay to show off the skeleton loading for a split second if data loads too fast
       // (Optional, but good for UX perception in demos)
       const data = await getCategories();
-      setCategories(data.map(cat => ({ ...cat, itemCount: cat.item_count || 0 })));
+      const enrichedData = data.map(cat => ({ ...cat, itemCount: cat.item_count || 0 }));
+      setCategories(enrichedData);
+      localStorage.setItem('inventory_categories_cache', JSON.stringify(enrichedData));
     } catch (error) {
       toast.error(t('categories.messages.loadError', 'Failed to load categories'));
       console.error(error);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }
 

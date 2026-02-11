@@ -9,23 +9,30 @@ import PerformanceSkeleton from '../skeletons/PerformanceSkeleton';
 
 export default function PerformanceDashboard() {
     const { profile } = useAuthStore();
-    const [data, setData] = useState<ProductRanking[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [data, setData] = useState<ProductRanking[]>(() => {
+        try {
+            const cached = localStorage.getItem('performance_cache');
+            return cached ? JSON.parse(cached) : [];
+        } catch { return []; }
+    });
+    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('performance_cache'));
     const [timeRange, setTimeRange] = useState(30);
 
     useEffect(() => {
-        loadPerformance();
+        const hasCache = data.length > 0;
+        loadPerformance(!hasCache);
     }, [timeRange]);
 
-    const loadPerformance = async () => {
-        setIsLoading(true);
+    const loadPerformance = async (showLoading = true) => {
+        if (showLoading) setIsLoading(true);
         try {
             const rankings = await getProductPerformance(timeRange);
             setData(rankings);
+            localStorage.setItem('performance_cache', JSON.stringify(rankings));
         } catch (error) {
             console.error('Error:', error);
         } finally {
-            setIsLoading(false);
+            if (showLoading) setIsLoading(false);
         }
     };
 

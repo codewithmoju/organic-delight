@@ -1,29 +1,45 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getTransactions } from '../lib/api/transactions';
 import { getItems } from '../lib/api/items';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import { formatCurrency } from '../lib/utils/notifications';
 import ContextualLoader from '../components/ui/ContextualLoader';
 
 export default function Reports() {
   const { t } = useTranslation();
-  const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
-  const [topItems, setTopItems] = useState<any[]>([]);
-  const [categoryDistribution, setCategoryDistribution] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('reports_monthly_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
+  const [topItems, setTopItems] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('reports_top_items_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
+  const [categoryDistribution, setCategoryDistribution] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('reports_category_dist_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
+  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('reports_monthly_cache'));
 
   const COLORS = ['#3b82f6', '#d946ef', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   useEffect(() => {
-    loadReportData();
+    const hasCache = monthlyTransactions.length > 0;
+    loadReportData(!hasCache);
   }, []);
 
-  async function loadReportData() {
+  async function loadReportData(showLoading = true) {
+    if (showLoading) setIsLoading(true);
     try {
       const [transactionsResult, itemsResult] = await Promise.all([
         getTransactions(),
@@ -71,14 +87,23 @@ export default function Reports() {
         return acc;
       }, {});
 
-      setMonthlyTransactions(Object.values(monthlyData));
-      setTopItems(Object.values(itemsData).sort((a: any, b: any) => b.quantity - a.quantity).slice(0, 5));
-      setCategoryDistribution(Object.values(categoryData));
+      const processedMonthly = Object.values(monthlyData);
+      const processedTopItems = Object.values(itemsData).sort((a: any, b: any) => b.quantity - a.quantity).slice(0, 5);
+      const processedCategory = Object.values(categoryData);
+
+      setMonthlyTransactions(processedMonthly);
+      setTopItems(processedTopItems);
+      setCategoryDistribution(processedCategory);
+
+      localStorage.setItem('reports_monthly_cache', JSON.stringify(processedMonthly));
+      localStorage.setItem('reports_top_items_cache', JSON.stringify(processedTopItems));
+      localStorage.setItem('reports_category_dist_cache', JSON.stringify(processedCategory));
+
     } catch (error) {
       toast.error(t('reports.messages.loadError'));
       console.error(error);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }
 
@@ -166,7 +191,7 @@ export default function Reports() {
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {categoryDistribution.map((entry, index) => (
+                      {categoryDistribution.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
