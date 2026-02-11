@@ -13,7 +13,7 @@ import {
   runTransaction
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { BillType, POSTransaction, CartItem, BarcodeProduct, POSSettings, SalesReport } from '../types';
+import { CartItem, BarcodeProduct, POSTransaction, POSSettings, BillType, SalesReport } from '../types';
 import { DEFAULT_POS_SETTINGS } from '../constants/defaults';
 
 // POS Transaction Management
@@ -31,6 +31,7 @@ export async function createPOSTransaction(transactionData: {
   customer_phone?: string;
   notes?: string;
   bill_type?: BillType;
+  is_return?: boolean;
 }): Promise<POSTransaction> {
   const transactionNumber = generateTransactionNumber();
   const affectsInventory = transactionData.bill_type?.affects_inventory ?? true;
@@ -73,14 +74,14 @@ export async function createPOSTransaction(transactionData: {
       items: transactionData.items.map(item => ({
         id: generateItemId(),
         item_id: item.item_id,
-        item_name: item.name,
-        barcode: item.barcode,
-        unit_price: item.unit_price,
-        quantity: item.quantity,
-        line_total: item.line_total,
+        item_name: item.name || 'Unknown Item',
+        barcode: item.barcode || null,
+        unit_price: item.unit_price || 0,
+        quantity: item.quantity || 1,
+        line_total: item.line_total || 0,
         discount_amount: 0,
         tax_rate: 0,
-        unit: item.unit
+        unit: item.unit || 'pcs'
       })),
       subtotal: transactionData.subtotal,
       tax_amount: transactionData.tax_amount,
@@ -90,15 +91,16 @@ export async function createPOSTransaction(transactionData: {
       payment_amount: transactionData.payment_amount,
       change_amount: transactionData.change_amount,
       cashier_id: transactionData.cashier_id,
-      customer_name: transactionData.customer_name,
-      customer_phone: transactionData.customer_phone,
+      customer_name: transactionData.customer_name || 'Walk-in Customer',
+      customer_phone: transactionData.customer_phone || null,
       created_at: new Date(),
       status: 'completed',
       receipt_printed: false,
-      notes: transactionData.notes,
+      notes: transactionData.notes || null,
       bill_type: transactionData.bill_type?.code || 'regular',
       affects_inventory: affectsInventory,
-      affects_accounting: affectsAccounting
+      affects_accounting: affectsAccounting,
+      is_return: transactionData.is_return || false
     };
 
     transaction.set(posTransactionRef, {
@@ -166,7 +168,7 @@ export async function getProductByBarcode(barcode: string): Promise<BarcodeProdu
 }
 
 // Get current stock level for an item
-async function getItemCurrentStock(itemId: string): Promise<number> {
+export async function getItemCurrentStock(itemId: string): Promise<number> {
   try {
     const itemDoc = await getDoc(doc(db, 'items', itemId));
     if (!itemDoc.exists()) return 0;
@@ -458,4 +460,69 @@ export async function getItemsWithBarcodes(): Promise<BarcodeProduct[]> {
   }
 
   return products;
+}
+
+// Get Quick Access Products
+export async function getQuickAccessProducts(itemIds: string[]): Promise<BarcodeProduct[]> {
+  if (!itemIds || itemIds.length === 0) return [];
+
+  try {
+    const productPromises = itemIds.map(async (id) => {
+      const docRef = doc(db, 'items', id);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        return {
+          id: snap.id,
+          name: data.name,
+          barcode: data.barcode,
+          price: data.unit_price || data.sale_rate || 0,
+          stock: data.current_quantity || 0,
+          category: data.category_id
+        } as BarcodeProduct;
+      }
+      return null;
+    });
+
+    const results = await Promise.all(productPromises);
+    return results.filter((p): p is BarcodeProduct => p !== null);
+
+  } catch (error) {
+    console.error('Error fetching quick access products:', error);
+    return [];
+  }
+}
+
+// Toggle Quick Access Item
+export async function toggleQuickAccessItem(itemId: string): Promise<string[]> {
+  try {
+    const settingsRef = doc(db, 'pos_settings', 'default');
+    const settingsSnap = await getDoc(settingsRef);
+
+    let currentItems: string[] = [];
+
+    if (settingsSnap.exists()) {
+      const data = settingsSnap.data() as POSSettings;
+      currentItems = data.quick_access_items || [];
+    }
+
+    const index = currentItems.indexOf(itemId);
+    if (index >= 0) {
+      currentItems.splice(index, 1); // Remove
+    } else {
+      currentItems.push(itemId); // Add
+    }
+
+    // Update firestore
+    if (settingsSnap.exists()) {
+      await updateDoc(settingsRef, { quick_access_items: currentItems });
+    } else {
+      await setDoc(settingsRef, { ...DEFAULT_POS_SETTINGS, quick_access_items: currentItems });
+    }
+
+    return currentItems;
+  } catch (error) {
+    console.error('Error toggling quick access item:', error);
+    throw error;
+  }
 }

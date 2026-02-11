@@ -177,15 +177,16 @@ export interface POSTransaction {
   payment_amount: number;
   change_amount: number;
   cashier_id: string;
-  customer_name?: string;
-  customer_phone?: string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
   created_at: Date;
   status: 'completed' | 'cancelled' | 'refunded' | 'voided';
   receipt_printed: boolean;
   bill_type?: string;
   affects_inventory?: boolean;
   affects_accounting?: boolean;
-  notes?: string;
+  is_return?: boolean;
+  notes?: string | null;
   void_reason?: string;
   voided_at?: Date;
   voided_by?: string;
@@ -195,7 +196,7 @@ export interface POSTransactionItem {
   id: string;
   item_id: string;
   item_name: string;
-  barcode?: string;
+  barcode?: string | null;
   unit_price: number;
   quantity: number;
   line_total: number;
@@ -246,6 +247,7 @@ export interface POSSettings {
   auto_print_receipt: boolean;
   barcode_scanner_enabled: boolean;
   thermal_printer_enabled: boolean;
+  quick_access_items?: string[];
 }
 
 export interface PaymentMethod {

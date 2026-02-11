@@ -47,6 +47,36 @@ export default function Items() {
     loadData();
   }, []);
 
+  // Automatic Stock Synchronization
+  useEffect(() => {
+    const autoSyncStock = async () => {
+      const LAST_SYNC_KEY = 'stock_last_sync_timestamp';
+      const SYNC_COOLDOWN = 60 * 60 * 1000; // 1 hour
+
+      const lastSync = localStorage.getItem(LAST_SYNC_KEY);
+      const now = Date.now();
+
+      if (!lastSync || now - parseInt(lastSync) > SYNC_COOLDOWN) {
+        console.log('Running automatic stock synchronization...');
+        setIsSyncing(true);
+        try {
+          const result = await reconcileAllItemsStock();
+          if (result.updated > 0) {
+            toast.success(`Automatically synced ${result.updated} items`, { duration: 3000 });
+            loadData();
+          }
+          localStorage.setItem(LAST_SYNC_KEY, now.toString());
+        } catch (error) {
+          console.error('Auto sync failed:', error);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
+    };
+
+    autoSyncStock();
+  }, []);
+
   useEffect(() => {
     filterItems();
   }, [items, searchQuery, selectedCategory, showLowStockOnly]);
@@ -304,29 +334,7 @@ export default function Items() {
             {t('items.addItem')}
           </motion.button>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={async () => {
-              setIsSyncing(true);
-              const toastId = toast.loading('Syncing stock levels...');
-              try {
-                const result = await reconcileAllItemsStock();
-                toast.success(`Synced ${result.updated} items successfully!`, { id: toastId });
-                loadData();
-              } catch (error) {
-                toast.error('Failed to sync stock levels', { id: toastId });
-              } finally {
-                setIsSyncing(false);
-              }
-            }}
-            disabled={isSyncing}
-            className="flex items-center justify-center gap-2 p-3 bg-secondary/50 rounded-2xl hover:bg-secondary transition-colors text-muted-foreground border border-border/50"
-            title="Reconcile stock levels with transaction history"
-          >
-            <Calendar className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span className="text-sm font-semibold hidden sm:inline">Sync Stock</span>
-          </motion.button>
+          {/* specific manual sync button removed in favor of auto-sync */}
         </motion.div>
 
         {/* Filters and View Controls - Redesigned */}

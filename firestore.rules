@@ -27,32 +27,28 @@ service cloud.firestore {
     match /items/{itemId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
-      allow update: if isAuthenticated() && (
-        isAdmin() || 
-        // Non-admins can update other fields but NOT the pricing fields
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['unit_price', 'sale_rate', 'purchase_rate'])
-      );
+      allow delete: if isAuthenticated();
+      allow update: if isAuthenticated(); // REMOVED RESTRICTION: Allow any authenticated user to update including price
     }
     
     // Categories rules
     match /categories/{categoryId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+      allow delete: if isAuthenticated();
     }
     
     // Transactions rules (Stock in/out)
     match /transactions/{transactionId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated(); // Allow authenticated users to manage transactions
+      allow update, delete: if isAuthenticated();
     }
 
     // POS Settings rules
     match /pos_settings/{settingsId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated(); // Allow any authenticated user
+      allow create, update: if isAuthenticated();
       allow delete: if isAuthenticated();
     }
 
@@ -60,8 +56,8 @@ service cloud.firestore {
     match /pos_transactions/{transactionId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update: if isAuthenticated(); // For status changes
-      allow delete: if isAuthenticated(); // Allow deletion
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
 
     // User Settings rules
@@ -73,14 +69,14 @@ service cloud.firestore {
     match /vendors/{vendorId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+      allow delete: if isAuthenticated();
     }
 
     // Vendor Payments rules
     match /vendor_payments/{paymentId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated(); // Allow management of payments
+      allow update, delete: if isAuthenticated();
     }
 
     // Purchase rules
@@ -88,21 +84,21 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update: if isAuthenticated(); 
-      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+      allow delete: if isAuthenticated();
     }
 
     // Customer rules
     match /customers/{customerId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+      allow delete: if isAuthenticated();
     }
 
     // Customer Payments rules
     match /customer_payments/{paymentId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated(); // Allow management of payments
+      allow update, delete: if isAuthenticated();
     }
 
     // Expense rules
@@ -110,17 +106,17 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update: if isAuthenticated();
-      allow delete: if isAuthenticated(); // Allow any authenticated user to delete
+      allow delete: if isAuthenticated();
     }
 
     // POS Returns rules
     match /pos_returns/{returnId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated(); // Allow management of returns
+      allow update, delete: if isAuthenticated();
     }
 
-    // Sales rules (if exists)
+    // Sales rules
     match /sales/{saleId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
@@ -128,14 +124,7 @@ service cloud.firestore {
       allow delete: if isAuthenticated();
     }
 
-    // Units rules
-    match /units/{unitId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
-    }
-
-    // Stock Adjustments rules (if exists)
+    // Stock Adjustments rules
     match /stock_adjustments/{adjustmentId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();

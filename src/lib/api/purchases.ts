@@ -38,19 +38,35 @@ export async function createPurchase(purchaseData: {
 }): Promise<Purchase> {
     const purchaseNumber = generatePurchaseNumber();
 
-    return await runTransaction(db, async (transaction) => {
-        // Create purchase record
-        const purchaseRef = doc(collection(db, 'purchases'));
+    const items: PurchaseItem[] = purchaseData.items.map(item => ({
+        ...item,
+        id: Math.random().toString(36).substr(2, 9),
+        expiry_date: item.expiry_date || null,
+        shelf_location: item.shelf_location || null,
+        barcode: item.barcode || null
+    }));
 
-        const items: PurchaseItem[] = purchaseData.items.map(item => ({
-            ...item,
-            id: Math.random().toString(36).substr(2, 9),
-            expiry_date: item.expiry_date || null,
-            shelf_location: item.shelf_location || null,
-            barcode: item.barcode || null
+    const pendingAmount = purchaseData.total_amount - purchaseData.paid_amount;
+
+    return await runTransaction(db, async (transaction) => {
+        // 1. Perform ALL Reads First
+        const itemReads = await Promise.all(items.map(async (item) => {
+            const itemRef = doc(db, 'items', item.item_id);
+            const itemDoc = await transaction.get(itemRef);
+            return {
+                ref: itemRef,
+                doc: itemDoc,
+                data: item, // Pass original item data for processing
+                currentStock: itemDoc.exists() ? (itemDoc.data().current_quantity || 0) : 0
+            };
         }));
 
-        const pendingAmount = purchaseData.total_amount - purchaseData.paid_amount;
+        const vendorRef = doc(db, 'vendors', purchaseData.vendor_id);
+        const vendorDoc = await transaction.get(vendorRef);
+
+        // 2. Perform ALL Writes
+        // Create purchase record
+        const purchaseRef = doc(collection(db, 'purchases'));
 
         const purchase: Omit<Purchase, 'id'> = {
             purchase_number: purchaseNumber,
@@ -77,43 +93,37 @@ export async function createPurchase(purchaseData: {
             created_at: Timestamp.fromDate(new Date())
         });
 
-        // Create stock_in transactions for each item
-        for (const item of items) {
+        // Process Items (Transactions & Updates)
+        for (const { ref, data, currentStock } of itemReads) {
+            // Create stock_in transaction
             const inventoryTransactionRef = doc(collection(db, 'transactions'));
             transaction.set(inventoryTransactionRef, {
-                item_id: item.item_id,
+                item_id: data.item_id,
                 type: 'stock_in',
-                quantity: item.quantity,
-                unit_price: item.purchase_rate,
-                total_value: item.line_total,
+                quantity: data.quantity,
+                unit_price: data.purchase_rate,
+                total_value: data.line_total,
                 transaction_date: Timestamp.fromDate(purchaseData.purchase_date),
                 supplier_customer: purchaseData.vendor_name,
                 reference_number: purchaseData.bill_number || purchaseNumber,
-                notes: `Purchase from ${purchaseData.vendor_name}${item.expiry_date ? ` (Exp: ${item.expiry_date.toLocaleDateString()})` : ''}`,
+                notes: `Purchase from ${purchaseData.vendor_name}${data.expiry_date ? ` (Exp: ${data.expiry_date.toLocaleDateString()})` : ''}`,
                 created_by: purchaseData.created_by,
                 created_at: Timestamp.fromDate(new Date()),
                 purchase_id: purchaseRef.id,
-                expiry_date: item.expiry_date ? Timestamp.fromDate(item.expiry_date) : null,
-                shelf_location: item.shelf_location || null
+                expiry_date: data.expiry_date ? Timestamp.fromDate(data.expiry_date) : null,
+                shelf_location: data.shelf_location || null
             });
 
-            // Update item's last purchase rate and current stock level
-            const itemRef = doc(db, 'items', item.item_id);
-            const itemDoc = await transaction.get(itemRef);
-            const currentStock = itemDoc.exists() ? (itemDoc.data().current_quantity || 0) : 0;
-
-            transaction.update(itemRef, {
-                last_purchase_rate: item.purchase_rate,
-                purchase_rate: item.purchase_rate, // Sync with purchase_rate field too
-                current_quantity: currentStock + item.quantity,
+            // Update item
+            transaction.update(ref, {
+                last_purchase_rate: data.purchase_rate,
+                purchase_rate: data.purchase_rate,
+                current_quantity: currentStock + data.quantity,
                 updated_at: Timestamp.fromDate(new Date())
             });
         }
 
-        // Update Vendor Balance & Stats
-        const vendorRef = doc(db, 'vendors', purchaseData.vendor_id);
-        const vendorDoc = await transaction.get(vendorRef);
-
+        // Update Vendor
         if (vendorDoc.exists()) {
             const vendorData = vendorDoc.data();
             transaction.update(vendorRef, {

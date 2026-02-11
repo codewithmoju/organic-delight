@@ -7,6 +7,7 @@ import { registerSW } from 'virtual:pwa-register'
 import { addResourceHints, PerformanceTracker } from './lib/utils/performance'
 
 import ErrorBoundary from './components/ui/ErrorBoundary.tsx'
+import { SyncProvider } from './contexts/SyncContext'
 
 // Register PWA service worker
 registerSW({ immediate: true })
@@ -19,9 +20,11 @@ addResourceHints();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
+    <SyncProvider>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </SyncProvider>
   </StrictMode>,
 )
 

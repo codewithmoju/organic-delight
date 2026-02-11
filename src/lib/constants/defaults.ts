@@ -15,5 +15,6 @@ export const DEFAULT_POS_SETTINGS: POSSettings = {
     receipt_footer_message: 'Thank you for shopping with us!',
     auto_print_receipt: true,
     barcode_scanner_enabled: true,
-    thermal_printer_enabled: false
+    thermal_printer_enabled: false,
+    quick_access_items: []
 };

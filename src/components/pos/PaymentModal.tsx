@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CreditCard, Banknote, Smartphone, Calculator, Receipt, DollarSign, Tag } from 'lucide-react';
+import { X, CreditCard, Banknote, Smartphone, Calculator, Receipt, CheckCircle, DollarSign, Tag } from 'lucide-react';
 import { CartItem, POSSettings } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { getPaymentMethods, PaymentMethod } from '../../lib/api/paymentMethods';
@@ -51,6 +52,7 @@ export default function PaymentModal({
   settings,
   onPaymentComplete
 }: PaymentModalProps) {
+  const { t } = useTranslation();
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'digital'>('cash');
   const [availableMethods, setAvailableMethods] = useState<PaymentMethod[]>([]);
   const [discountTypes, setDiscountTypes] = useState<DiscountType[]>([]);
@@ -145,6 +147,8 @@ export default function PaymentModal({
 
   if (!isOpen) return null;
 
+  const isRefund = total < 0;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -152,16 +156,26 @@ export default function PaymentModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-        onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="w-full max-w-2xl bg-card rounded-2xl border border-border/50 shadow-xl overflow-hidden max-h-[90vh] overflow-y-auto"
+          className="w-full max-w-4xl bg-card rounded-2xl border border-border/50 shadow-xl overflow-hidden max-h-[90vh] flex flex-col md:flex-row"
         >
-          {/* Header */}
-          <div className="p-6 border-b border-border/50 sticky top-0 bg-card z-10">
+          {/* Left Panel - Payment Methods */}
+          <div className="md:w-80 shrink-0 p-6 border-b md:border-b-0 md:border-r border-border/50 bg-muted/10 space-y-6 overflow-y-auto custom-scrollbar">
+            <div>
+              <h2 className="text-2xl font-bold mb-1">
+                {isRefund ? 'Refund' : 'Payment'}
+              </h2>
+              <p className="text-foreground-muted">
+                {isRefund
+                  ? `Refund amount: ${formatCurrency(Math.abs(total))}`
+                  : `Total Amount Due: ${formatCurrency(total)}`
+                }
+              </p>
+            </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-lg bg-success-500/20 text-success-400">
@@ -183,7 +197,7 @@ export default function PaymentModal({
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
             {/* Order Summary */}
             <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
               <h4 className="text-foreground font-semibold mb-3">Order Summary</h4>
@@ -372,6 +386,8 @@ export default function PaymentModal({
               </div>
             </div>
 
+
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border/50 sticky bottom-0 bg-card pb-2">
               <motion.button
@@ -387,18 +403,23 @@ export default function PaymentModal({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePayment}
-                disabled={!isPaymentValid || isProcessing}
-                className="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
+                disabled={isProcessing || (paymentMethod === 'cash' && changeAmount < 0 && !isRefund)}
+                className="w-full py-4 rounded-xl bg-success-600 hover:bg-success-700 text-white font-bold text-lg shadow-lg shadow-success-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
               >
                 {isProcessing ? (
                   <>
-                    <LoadingSpinner size="sm" color="white" />
-                    Processing...
+                    <LoadingSpinner size="sm" />
+                    <span>Processing...</span>
                   </>
                 ) : (
                   <>
-                    <Receipt className="w-4 h-4" />
-                    Complete Sale
+                    <CheckCircle className="w-5 h-5" />
+                    <span>
+                      {isRefund
+                        ? `${t('common.refund', 'Refund')} ${formatCurrency(Math.abs(total))}`
+                        : `${t('pos.payment.pay', 'Pay')} ${formatCurrency(total)}`
+                      }
+                    </span>
                   </>
                 )}
               </motion.button>

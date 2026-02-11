@@ -21,6 +21,7 @@ const EmailVerification = lazy(() => import('./pages/auth/EmailVerification'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const POS = lazy(() => import('./pages/POS'));
 const Items = lazy(() => import('./pages/inventory/Items'));
+const Alerts = lazy(() => import('./pages/inventory/Alerts'));
 const Categories = lazy(() => import('./pages/inventory/Categories'));
 const Transactions = lazy(() => import('./pages/inventory/Transactions'));
 const Vendors = lazy(() => import('./pages/vendors/Vendors'));
@@ -129,6 +130,11 @@ function App() {
               <Route path="/inventory/items" element={
                 <Suspense fallback={<LoadingFallback text="Loading items" />}>
                   <Items />
+                </Suspense>
+              } />
+              <Route path="/inventory/alerts" element={
+                <Suspense fallback={<LoadingFallback text="Loading alerts" />}>
+                  <Alerts />
                 </Suspense>
               } />
               <Route path="/vendors" element={

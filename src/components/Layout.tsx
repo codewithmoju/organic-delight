@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import { useIsDesktop } from '../hooks/useMediaQuery';
+import OfflineIndicator from './ui/OfflineIndicator';
 
 export default function Layout() {
   const isDesktop = useIsDesktop();
@@ -17,6 +18,7 @@ export default function Layout() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className={`${sidebarOpen && isDesktop ? 'lg:pl-20' : ''} transition-all duration-300`}>
+        <OfflineIndicator />
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="min-h-[calc(100vh-4rem)] px-4 pt-2 pb-4 sm:px-6 lg:px-8 lg:pt-2 lg:pb-8">

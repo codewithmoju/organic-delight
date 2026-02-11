@@ -15,8 +15,8 @@ import PaymentModal from './PaymentModal';
 import EnhancedReceiptGenerator from './EnhancedReceiptGenerator';
 import VendorListModal from '../vendors/VendorListModal';
 import CustomerSelector from '../customers/CustomerSelector';
-import { CartItem, BarcodeProduct, POSTransaction, POSSettings, BillType, Customer } from '../../lib/types';
-import { getProductByBarcode, createPOSTransaction, getPOSSettings, searchProducts } from '../../lib/api/pos';
+import { BarcodeProduct, POSTransaction, POSSettings, BillType, Customer } from '../../lib/types';
+import { getProductByBarcode, createPOSTransaction, getPOSSettings, searchProducts, getQuickAccessProducts, toggleQuickAccessItem, getItemCurrentStock } from '../../lib/api/pos';
 import { getBillTypes, DEFAULT_BILL_TYPES } from '../../lib/api/billTypes';
 import { getItemByBarcode, getItemByProductId } from '../../lib/api/enhancedItems';
 import { updateCustomerBalanceForSale } from '../../lib/api/customers';
@@ -25,13 +25,32 @@ import { clearDashboardCache } from '../../lib/api/dashboard';
 import { useAuthStore } from '../../lib/store';
 import { usePOSShortcuts, POS_SHORTCUTS } from '../../hooks/useKeyboardShortcuts';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import { usePOSCart } from '../../lib/hooks/usePOSCart';
+import HeldCartsModal from './HeldCartsModal';
+import { Star, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { useOfflineQueue } from '../../hooks/useOfflineQueue';
 
 export default function POSInterface() {
   const { t } = useTranslation();
   const profile = useAuthStore((state) => state.profile);
 
   // Core state
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  // Core state
+  const {
+    cartItems,
+    addToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    heldCarts,
+    holdCurrentCart,
+    restoreHeldCart,
+    discardHeldCart
+  } = usePOSCart();
+
+  // Removed local cartItems state as it's now managed by the hook
+
   const [settings, setSettings] = useState<POSSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,11 +70,29 @@ export default function POSInterface() {
   // Customer / Credit
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isCreditSale, setIsCreditSale] = useState(false);
+  const [isReturnMode, setIsReturnMode] = useState(false);
+
+  // Quick Access Logic
+  const [quickAccessItems, setQuickAccessItems] = useState<BarcodeProduct[]>([]);
+  const [isLoadingQuickAccess, setIsLoadingQuickAccess] = useState(false);
+
+  // Offline Support
+  const isOnline = useOnlineStatus();
+  const { queue: offlineQueue, addToQueue, syncQueue, isSyncing } = useOfflineQueue();
+
+  // Auto-sync when back online
+  useEffect(() => {
+    if (isOnline && offlineQueue.length > 0) {
+      toast.info('Back online with pending transactions. Syncing...');
+      syncQueue();
+    }
+  }, [isOnline]);
 
   // Modals
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isVendorModalOpen, setIsVendorModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isHeldCartsModalOpen, setIsHeldCartsModalOpen] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isClearCartConfirmOpen, setIsClearCartConfirmOpen] = useState(false);
 
@@ -147,8 +184,18 @@ export default function POSInterface() {
 
   const loadPOSSettings = async () => {
     try {
-      const posSettings = await getPOSSettings();
-      setSettings(posSettings);
+      const fetchedSettings = await getPOSSettings();
+      if (fetchedSettings) {
+        setSettings(fetchedSettings);
+        // Fetch Quick Access Items
+        if (fetchedSettings.quick_access_items && fetchedSettings.quick_access_items.length > 0) {
+          setIsLoadingQuickAccess(true);
+          getQuickAccessProducts(fetchedSettings.quick_access_items)
+            .then(items => setQuickAccessItems(items))
+            .catch(err => console.error(err))
+            .finally(() => setIsLoadingQuickAccess(false));
+        }
+      }
     } catch (error) {
       console.error('Error loading POS settings:', error);
       setSettings({
@@ -190,13 +237,15 @@ export default function POSInterface() {
       let product = await getProductByBarcode(barcode);
       if (!product) {
         const item = await getItemByBarcode(barcode) || await getItemByProductId(barcode);
+        // ...
+        // ...
         if (item) {
-          const stockLevel = await import('../../lib/api/items').then(m => m.getItemStockLevel(item.id));
+          const currentStock = await getItemCurrentStock(item.id);
           const enhancedItem = item as any;
           product = {
             id: item.id, name: item.name, barcode: enhancedItem.barcode || barcode,
             price: enhancedItem.unit_price || enhancedItem.sale_rate || enhancedItem.last_sale_rate || 0,
-            stock: stockLevel?.current_quantity || 0,
+            stock: currentStock,
             category: item.category?.name, unit: enhancedItem.unit || 'pcs'
           };
         }
@@ -206,56 +255,55 @@ export default function POSInterface() {
         return;
       }
       const affectsInventory = selectedBillType?.affects_inventory ?? true;
-      if (affectsInventory && product.stock === 0) {
+      const quantityToAdd = isReturnMode ? -1 : 1;
+
+      if (affectsInventory && product.stock === 0 && !isReturnMode) {
         toast.error(t('pos.messages.outOfStock', { name: product.name, defaultValue: `${product.name} is out of stock` }));
         return;
       }
-      addToCart(product, 1);
+      addToCart(product, quantityToAdd);
       toast.success(t('pos.messages.addedToCart', { name: product.name, defaultValue: `Added ${product.name}` }));
     } catch (error: any) {
       console.error('Barcode scan error:', error);
       toast.error('Failed to process barcode');
-    }
-  };
-
-  const addToCart = (product: BarcodeProduct, quantity: number) => {
-    const existingIdx = cartItems.findIndex(item => item.item_id === product.id);
-    const affectsInventory = selectedBillType?.affects_inventory ?? true;
-
-    if (existingIdx >= 0) {
-      const newQty = cartItems[existingIdx].quantity + quantity;
-      if (!affectsInventory || newQty <= product.stock) {
-        updateCartItemQuantity(cartItems[existingIdx].id, newQty);
-      } else {
-        toast.warning(t('pos.messages.limitedStock', { count: product.stock, defaultValue: `Only ${product.stock} available` }));
-      }
-    } else {
-      const newItem: CartItem = {
-        id: Math.random().toString(36).substr(2, 9),
-        item_id: product.id, name: product.name, quantity,
-        unit_price: product.price, line_total: product.price * quantity,
-        available_stock: product.stock, sku: product.sku,
-        barcode: product.barcode, category: product.category,
-        unit: product.unit || 'pcs'
-      };
-      setCartItems(prev => [...prev, newItem]);
     }
     // Clear search after adding
     setSearchQuery('');
     setSearchResults([]);
   };
 
-  const updateCartItemQuantity = (cartItemId: string, quantity: number) => {
-    setCartItems(prev => prev.map(item =>
-      item.id === cartItemId
-        ? { ...item, quantity, line_total: item.unit_price * quantity }
-        : item
-    ));
+  const handleProductSelect = (product: BarcodeProduct) => {
+    const quantityToAdd = isReturnMode ? -1 : 1;
+    addToCart(product, quantityToAdd);
+    // Clear search after adding
+    setSearchQuery('');
+    setSearchResults([]);
   };
 
-  const removeCartItem = (cartItemId: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== cartItemId));
+  const toggleQuickAccess = async (e: React.MouseEvent, product: BarcodeProduct) => {
+    e.stopPropagation();
+    try {
+      const newIds = await toggleQuickAccessItem(product.id);
+      // Update local settings
+      if (settings) {
+        setSettings({ ...settings, quick_access_items: newIds });
+      }
+
+      // Update local quick access list
+      if (newIds.includes(product.id)) {
+        setQuickAccessItems(prev => [...prev, product]);
+        toast.success('Added to Quick Access');
+      } else {
+        setQuickAccessItems(prev => prev.filter(i => i.id !== product.id));
+        toast.success('Removed from Quick Access');
+      }
+    } catch (error) {
+      toast.error('Failed to update Quick Access');
+    }
   };
+
+  // Cart manipulation functions are now handled by usePOSCart hook
+
 
   // ─── Payment ───
   const handlePrint = useReactToPrint({
@@ -280,36 +328,69 @@ export default function POSInterface() {
     try {
       if (!selectedBillType) { toast.error('No bill type selected'); return; }
 
-      const transaction = await createPOSTransaction({
-        ...paymentData,
-        items: cartItems, subtotal: discountedSubtotal, tax_amount: taxAmount,
-        discount_amount: totalDiscount + discountAmount, total_amount: netTotal,
+      const transactionData = {
+        items: cartItems.map(item => ({ ...item })), // Deep copy items
+        subtotal: discountedSubtotal,
+        tax_amount: taxAmount,
+        discount_amount: totalDiscount + discountAmount,
+        total_amount: netTotal,
+        payment_method: paymentData.payment_method,
+        payment_amount: paymentData.payment_amount,
+        change_amount: paymentData.change_amount,
         cashier_id: profile?.id || 'unknown',
-        customer_name: selectedCustomer?.name || paymentData.customer_name || "",
-        customer_phone: selectedCustomer?.phone || paymentData.customer_phone || "",
-        notes: paymentData.notes || "",
-        bill_type: selectedBillType
-      });
+        customer_name: paymentData.customer_name || selectedCustomer?.name || 'Walk-in Customer',
+        customer_phone: paymentData.customer_phone || selectedCustomer?.phone,
+        notes: paymentData.notes,
+        bill_type: selectedBillType,
+        is_return: isReturnMode
+      };
+
+      let newTransaction;
+
+      if (isOnline) {
+        newTransaction = await createPOSTransaction(transactionData);
+      } else {
+        newTransaction = addToQueue(transactionData);
+        // Mock a completed transaction for the UI
+        newTransaction = {
+          ...newTransaction,
+          id: newTransaction.id,
+          transaction_number: 'OFFLINE',
+          status: 'completed',
+          created_at: new Date()
+        } as POSTransaction;
+      }
 
       if (isCreditSale && selectedCustomer && selectedBillType.affects_accounting) {
         await updateCustomerBalanceForSale(selectedCustomer.id, netTotal);
         toast.info(`Credit added to ${selectedCustomer.name}'s account`);
       }
 
-      setCompletedTransaction(transaction);
-      setCartItems([]);
-      setIsPaymentModalOpen(false);
+      setCompletedTransaction(newTransaction);
+      clearCart(); // Use clearCart from hook
+      setIsPaymentModalOpen(false); // Close payment modal
       resetBillState();
 
       // Clear dashboard cache to ensure metrics reflect new sale
       clearDashboardCache();
 
-      toast.success('Transaction completed!');
-
-      if (settings?.auto_print_receipt) {
-        setTimeout(() => handlePrint(), 500);
+      if (newTransaction.transaction_number !== 'OFFLINE') {
+        toast.success('Transaction completed!');
+      } else {
+        toast.success('Transaction saved offline!');
       }
+
+      if (settings?.auto_print_receipt && newTransaction.transaction_number !== 'OFFLINE') {
+        setTimeout(() => {
+          if (receiptRef.current) handlePrint();
+        }, 500);
+      } else if (newTransaction.transaction_number === 'OFFLINE') {
+        // Maybe print offline receipt?
+        // For now just show success
+      }
+
     } catch (error: any) {
+      console.error('Payment processing error:', error);
       toast.error(error.message || 'Failed to process payment');
       throw error;
     }
@@ -324,11 +405,12 @@ export default function POSInterface() {
     setIsCreditSale(false);
     setProfitDiscount(0);
     setPriceDiscount(0);
+    setIsReturnMode(false); // Reset return mode
   };
 
   function startNewTransaction() {
     setCompletedTransaction(null);
-    setCartItems([]);
+    clearCart(); // Use clearCart from hook
     resetBillState();
   }
 
@@ -508,8 +590,8 @@ export default function POSInterface() {
                         transition={{ delay: index * 0.03 }}
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => product.stock > 0 && addToCart(product, 1)}
-                        className={`relative p-4 rounded-xl border transition-all cursor-pointer group ${product.stock === 0
+                        onClick={() => product.stock > 0 && handleProductSelect(product)}
+                        className={`relative p-4 rounded-xl border transition-all cursor-pointer group ${product.stock === 0 && !isReturnMode
                           ? 'bg-muted/20 border-border/30 opacity-60 cursor-not-allowed'
                           : 'bg-card border-border/50 hover:border-primary-500/50 hover:shadow-md'
                           }`}
@@ -540,10 +622,31 @@ export default function POSInterface() {
                         </div>
 
                         {/* Add overlay */}
-                        {product.stock > 0 && (
-                          <div className="absolute inset-0 rounded-xl bg-primary-500/0 group-hover:bg-primary-500/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                            <div className="bg-primary-600 text-white rounded-full p-2 shadow-lg">
-                              <Plus className="w-5 h-5" />
+                        {(product.stock > 0 || isReturnMode) && (
+                          <div className="absolute inset-0 rounded-xl bg-primary-500/0 group-hover:bg-primary-500/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+                            <div className="flex gap-2 pointer-events-auto">
+                              {/* Quick Access Toggle */}
+                              <button
+                                onClick={(e) => toggleQuickAccess(e, product)}
+                                className={`p-2 rounded-full shadow-lg transition-colors ${settings?.quick_access_items?.includes(product.id)
+                                  ? 'bg-yellow-400 text-white hover:bg-yellow-500'
+                                  : 'bg-white text-gray-400 hover:text-yellow-400'
+                                  }`}
+                                title={settings?.quick_access_items?.includes(product.id) ? "Remove from Quick Access" : "Add to Quick Access"}
+                              >
+                                <Star className={`w-5 h-5 ${settings?.quick_access_items?.includes(product.id) ? 'fill-current' : ''}`} />
+                              </button>
+
+                              {/* Add to Cart */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleProductSelect(product);
+                                }}
+                                className="bg-primary-600 hover:bg-primary-700 text-white rounded-full p-2 shadow-lg"
+                              >
+                                {isReturnMode ? <Minus className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                              </button>
                             </div>
                           </div>
                         )}
@@ -561,13 +664,73 @@ export default function POSInterface() {
                 <p className="text-foreground-muted font-medium text-lg mb-1">
                   {t('pos.terminal.readyToSell', 'Ready to sell')}
                 </p>
-                <p className="text-foreground-muted/50 text-sm max-w-xs">
+                <p className="text-foreground-muted/50 text-sm max-w-[200px]">
                   Search for products by name, scan a barcode, or press Enter to look up an item
                 </p>
-                <div className="flex gap-4 mt-6 text-xs text-foreground-muted/40">
-                  <span className="flex items-center gap-1"><Keyboard className="w-3 h-3" /> F5 New sale</span>
-                  <span className="flex items-center gap-1"><Keyboard className="w-3 h-3" /> F9 Pay</span>
-                  <span className="flex items-center gap-1"><Keyboard className="w-3 h-3" /> F8 Bill type</span>
+
+                {/* Quick Access Grid */}
+                {isLoadingQuickAccess ? (
+                  <div className="w-full mt-8 px-4 flex justify-center items-center py-8">
+                    <LoadingSpinner size="md" />
+                  </div>
+                ) : quickAccessItems.length > 0 && (
+                  <div className="w-full mt-8 px-4">
+                    <div className="flex items-center gap-2 mb-3 text-foreground-muted/60">
+                      <Star className="w-4 h-4" />
+                      <span className="text-xs font-semibold uppercase tracking-wider">Quick Access</span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-left">
+                      {quickAccessItems.map((product) => (
+                        <motion.button
+                          key={product.id}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleProductSelect(product)}
+                          className={`relative p-3 rounded-lg border text-left transition-all group ${product.stock === 0 && !isReturnMode
+                            ? 'bg-muted/20 border-border/30 opacity-60 cursor-not-allowed'
+                            : 'bg-card border-border hover:border-primary-500/30 hover:shadow-sm'
+                            }`}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className="font-medium text-sm text-foreground truncate max-w-[80%]" title={product.name}>
+                              {product.name}
+                            </h4>
+                            <button
+                              onClick={(e) => toggleQuickAccess(e, product)}
+                              className="text-yellow-400 hover:text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Star className="w-3 h-3 fill-current" />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-primary-500 font-bold text-sm">
+                              {formatCurrency(product.price)}
+                            </span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${product.stock > 0 ? 'bg-success-500/10 text-success-500' : 'bg-error-500/10 text-error-500'
+                              }`}>
+                              {product.stock}
+                            </span>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-4 mt-8 text-xs text-foreground-muted/40">
+                  <div className="flex items-center justify-center gap-3">
+                    {/* Return Mode Toggle for Empty State too if needed, or just keep it in header? 
+                        The previous edit put the Return Mode toggle INSIDE the empty state instructions which is weird but okay if intended. 
+                        I'll move it to a cleaner spot or just fix the syntax. 
+                        Actually, the return toggle was added to the main header in lines 570, but also here? 
+                        The previous edit block showed it being added in an odd place. 
+                        Let's just keep the keyboard shortcuts here.
+                     */}
+                    <span className="flex items-center gap-1"><Keyboard className="w-3 h-3" /> F5 New sale</span>
+                    <span className="flex items-center gap-1"><Keyboard className="w-3 h-3" /> F9 Pay</span>
+                    <span className="flex items-center gap-1"><Keyboard className="w-3 h-3" /> F8 Bill type</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -611,19 +774,80 @@ export default function POSInterface() {
                   <CreditCard className="w-4 h-4" />
                 </motion.button>
               )}
-              {cartItems.length > 0 && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsClearCartConfirmOpen(true)}
-                  className="p-1.5 rounded-lg text-error-400/60 hover:text-error-400 hover:bg-error-500/10 transition-all"
-                  title="Clear Cart"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </motion.button>
-              )}
+              {/* Quick Actions */}
+              <div className="flex items-center gap-2">
+                {/* Offline Indicator */}
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${isOnline
+                  ? 'bg-success-500/10 border-success-500/20 text-success-600'
+                  : 'bg-error-500/10 border-error-500/20 text-error-600'
+                  }`}>
+                  {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
+                  <span className="text-sm font-medium hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
+                </div>
+
+                {/* Sync Button */}
+                {offlineQueue.length > 0 && (
+                  <button
+                    onClick={syncQueue}
+                    disabled={isSyncing || !isOnline}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${isSyncing
+                      ? 'bg-primary-500/10 border-primary-500/20 text-primary-600 animate-pulse'
+                      : 'bg-warning-500/10 border-warning-500/20 text-warning-600 hover:bg-warning-500/20'
+                      }`}
+                    title="Sync Offline Transactions"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                    <span className="text-sm font-medium">{offlineQueue.length} Pending</span>
+                  </button>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <span className="bg-primary-500/10 text-primary-500 px-2 py-0.5 rounded text-xs font-medium">
+                    {cartItems.length} {t('pos.cart.items', 'items')}
+                  </span>
+
+                  {/* Hold Cart Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => holdCurrentCart(selectedCustomer, 'Held from POS')}
+                    disabled={cartItems.length === 0}
+                    className="p-1.5 rounded-lg text-warning-500 hover:bg-warning-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Hold Cart"
+                  >
+                    <RotateCcw className="w-4 h-4 rotate-180" /> {/* Using Rotate as Hold icon equivalent for now */}
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsClearCartConfirmOpen(true)}
+                    className="p-1.5 rounded-lg text-foreground-muted hover:text-error-500 hover:bg-error-500/10 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </motion.button>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Held Carts Indicator */}
+          {heldCarts.length > 0 && (
+            <div className="px-4 pb-2">
+              <button
+                onClick={() => setIsHeldCartsModalOpen(true)}
+                className="w-full py-2 px-3 bg-warning-500/10 border border-warning-500/20 rounded-lg flex items-center justify-between text-warning-600 hover:bg-warning-500/20 transition-colors"
+              >
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  {heldCarts.length} Held Transaction{heldCarts.length !== 1 ? 's' : ''}
+                </span>
+                <span className="text-xs bg-warning-500/20 px-2 py-0.5 rounded-full">
+                  View
+                </span>
+              </button>
+            </div>
+          )}
 
           {/* Customer Badge */}
           <AnimatePresence>
@@ -684,7 +908,7 @@ export default function POSInterface() {
                       {/* Quantity Stepper */}
                       <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/30">
                         <button
-                          onClick={() => updateCartItemQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                           className="p-1.5 rounded-md text-foreground-muted hover:bg-white hover:text-primary-600 hover:shadow-sm transition-all"
                         >
                           <Minus className="w-3.5 h-3.5" />
@@ -695,7 +919,7 @@ export default function POSInterface() {
                         <button
                           onClick={() => {
                             if (item.quantity < item.available_stock) {
-                              updateCartItemQuantity(item.id, item.quantity + 1);
+                              updateQuantity(item.id, item.quantity + 1);
                             } else {
                               toast.warning(`Only ${item.available_stock} available`);
                             }
@@ -716,7 +940,7 @@ export default function POSInterface() {
 
                       {/* Remove */}
                       <button
-                        onClick={() => removeCartItem(item.id)}
+                        onClick={() => removeFromCart(item.id)}
                         className="p-1.5 rounded-lg text-foreground-muted/40 hover:text-error-500 hover:bg-error-500/10 transition-all opacity-0 group-hover:opacity-100"
                       >
                         <X className="w-4 h-4" />
@@ -761,7 +985,7 @@ export default function POSInterface() {
             >
               <Receipt className="w-5 h-5" />
               {cartItems.length > 0
-                ? `${t('pos.terminal.charge', 'Charge')} ${formatCurrency(total)}`
+                ? `${total < 0 ? t('common.refund', 'Refund') : t('pos.terminal.charge', 'Charge')} ${formatCurrency(Math.abs(total))}`
                 : t('pos.terminal.addItemsToStart', 'Add items to start')
               }
             </motion.button>
@@ -787,6 +1011,20 @@ export default function POSInterface() {
         mode="view"
       />
 
+      <HeldCartsModal
+        isOpen={isHeldCartsModalOpen}
+        onClose={() => setIsHeldCartsModalOpen(false)}
+        heldCarts={heldCarts}
+        onRestore={(id) => {
+          const restored = restoreHeldCart(id);
+          if (restored) {
+            setSelectedCustomer(restored.customer || null);
+            // Handle restoring note if you have a place for it
+          }
+        }}
+        onDiscard={discardHeldCart}
+      />
+
       <CustomerSelector
         isOpen={isCustomerModalOpen}
         onClose={() => setIsCustomerModalOpen(false)}
@@ -802,7 +1040,7 @@ export default function POSInterface() {
         message={t('pos.messages.clearCartConfirm', 'Are you sure you want to clear the cart?')}
         confirmText={t('common.clear', 'Clear')}
         variant="danger"
-        onConfirm={() => { setCartItems([]); setIsClearCartConfirmOpen(false); toast.info('Cart cleared'); }}
+        onConfirm={() => { clearCart(); setIsClearCartConfirmOpen(false); toast.info('Cart cleared'); }}
         onCancel={() => setIsClearCartConfirmOpen(false)}
       />
 

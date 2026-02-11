@@ -72,7 +72,9 @@ export async function createItemWithInitialStock(itemData: {
       unit: itemData.unit || 'pcs',
       is_archived: false,
       created_at: Timestamp.fromDate(new Date()),
-      updated_at: Timestamp.fromDate(new Date())
+      updated_at: Timestamp.fromDate(new Date()),
+      current_quantity: initialStock || 0,
+      total_value: (initialStock || 0) * itemData.unit_price
     };
 
     transaction.set(itemRef, itemDoc);
