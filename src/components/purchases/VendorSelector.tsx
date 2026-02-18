@@ -14,9 +14,14 @@ interface VendorSelectorProps {
 
 export default function VendorSelector({ onVendorSelected, selectedVendor }: VendorSelectorProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [vendors, setVendors] = useState<Vendor[]>([]);
+    const [vendors, setVendors] = useState<Vendor[]>(() => {
+        try {
+            const cached = localStorage.getItem('vendors_cache');
+            return cached ? JSON.parse(cached) : [];
+        } catch { return []; }
+    });
     const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('vendors_cache'));
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const user = useAuthStore(state => state.user);
@@ -49,14 +54,19 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
     }, [searchQuery, vendors]);
 
     const loadVendors = async () => {
-        setIsLoading(true);
+        if (!vendors.length) setIsLoading(true);
         try {
             const data = await getVendors();
             setVendors(data);
-            setFilteredVendors(data);
+            localStorage.setItem('vendors_cache', JSON.stringify(data));
+            // Only update filtered if we are not searching
+            if (!searchQuery.trim()) {
+                setFilteredVendors(data);
+            }
         } catch (error) {
             console.error('Error loading vendors:', error);
-            toast.error('Failed to load vendors');
+            // Only show error if no cache
+            if (vendors.length === 0) toast.error('Failed to load vendors');
         } finally {
             setIsLoading(false);
         }

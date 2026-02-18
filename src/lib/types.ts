@@ -81,6 +81,7 @@ export interface Profile {
   role?: 'admin' | 'manager' | 'user';
   company?: string;
   phone?: string;
+  phone_number?: string;
   avatar_url?: string;
   address?: string;
   language?: string;

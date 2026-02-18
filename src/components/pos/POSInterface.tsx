@@ -51,8 +51,13 @@ export default function POSInterface() {
 
   // Removed local cartItems state as it's now managed by the hook
 
-  const [settings, setSettings] = useState<POSSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [settings, setSettings] = useState<POSSettings | null>(() => {
+    try {
+      const cached = localStorage.getItem('pos_settings_cache');
+      return cached ? JSON.parse(cached) : null;
+    } catch { return null; }
+  });
+  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('pos_settings_cache'));
 
   // Scanner
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -64,7 +69,12 @@ export default function POSInterface() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Bill types
-  const [billTypes, setBillTypes] = useState<BillType[]>([]);
+  const [billTypes, setBillTypes] = useState<BillType[]>(() => {
+    try {
+      const cached = localStorage.getItem('pos_bill_types_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
   const [selectedBillType, setSelectedBillType] = useState<BillType | null>(null);
 
   // Customer / Credit
@@ -73,8 +83,13 @@ export default function POSInterface() {
   const [isReturnMode, setIsReturnMode] = useState(false);
 
   // Quick Access Logic
-  const [quickAccessItems, setQuickAccessItems] = useState<BarcodeProduct[]>([]);
-  const [isLoadingQuickAccess, setIsLoadingQuickAccess] = useState(false);
+  const [quickAccessItems, setQuickAccessItems] = useState<BarcodeProduct[]>(() => {
+    try {
+      const cached = localStorage.getItem('pos_quick_access_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
+  const [isLoadingQuickAccess, setIsLoadingQuickAccess] = useState(() => !localStorage.getItem('pos_quick_access_cache'));
 
   // Offline Support
   const isOnline = useOnlineStatus();
@@ -133,9 +148,15 @@ export default function POSInterface() {
   // ─── Init ───
   useEffect(() => {
     const init = async () => {
-      setIsLoading(true);
+      // Check if we have cached data for silent load
+      const hasCache = !!settings && billTypes.length > 0;
+
+      if (!hasCache) setIsLoading(true);
+
       await Promise.all([loadPOSSettings(), loadBillTypes()]);
+
       setIsLoading(false);
+      setIsLoadingQuickAccess(false);
     };
     init();
   }, []);
@@ -169,6 +190,10 @@ export default function POSInterface() {
         setBillTypes([emergencyFallback]);
         setSelectedBillType(emergencyFallback);
       }
+
+      // Cache the result
+      localStorage.setItem('pos_bill_types_cache', JSON.stringify(activeTypes));
+
     } catch (error) {
       console.error('Error loading bill types:', error);
       // Emergency fallback on crash
@@ -187,13 +212,22 @@ export default function POSInterface() {
       const fetchedSettings = await getPOSSettings();
       if (fetchedSettings) {
         setSettings(fetchedSettings);
+        localStorage.setItem('pos_settings_cache', JSON.stringify(fetchedSettings));
+
         // Fetch Quick Access Items
         if (fetchedSettings.quick_access_items && fetchedSettings.quick_access_items.length > 0) {
-          setIsLoadingQuickAccess(true);
+          // If we don't have cache, show loading
+          if (quickAccessItems.length === 0) setIsLoadingQuickAccess(true);
+
           getQuickAccessProducts(fetchedSettings.quick_access_items)
-            .then(items => setQuickAccessItems(items))
+            .then(items => {
+              setQuickAccessItems(items);
+              localStorage.setItem('pos_quick_access_cache', JSON.stringify(items));
+            })
             .catch(err => console.error(err))
             .finally(() => setIsLoadingQuickAccess(false));
+        } else {
+          setIsLoadingQuickAccess(false);
         }
       }
     } catch (error) {
@@ -913,9 +947,22 @@ export default function POSInterface() {
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="text-foreground font-bold text-sm min-w-[1.5rem] text-center tabular-nums">
-                          {item.quantity}
-                        </span>
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (!isNaN(val)) {
+                              updateQuantity(item.id, val);
+                            } else if (e.target.value === '') {
+                              // Allow empty string temporarily for typing
+                              (item as any)._tempQty = '';
+                              updateQuantity(item.id, 0); // Or handle as 1? updateQuantity(id, 0) removes item usually.
+                            }
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          className="w-12 bg-transparent text-foreground font-bold text-sm text-center tabular-nums focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
                         <button
                           onClick={() => {
                             if (item.quantity < item.available_stock) {

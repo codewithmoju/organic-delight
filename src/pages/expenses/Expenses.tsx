@@ -132,26 +132,48 @@ export default function Expenses() {
         }
 
         setIsSubmitting(true);
+
+        // Optimistic UI Data
+        const optimisticId = 'temp_' + Date.now();
+        const expenseData: Expense = {
+            id: optimisticId,
+            ...newExpense,
+            amount: parseFloat(newExpense.amount),
+            expense_date: new Date(newExpense.expense_date),
+            created_by: profile?.id || 'unknown',
+            created_at: new Date()
+        };
+
+        // 1. Optimistic Update
+        const previousExpenses = [...expenses];
+        setExpenses(prev => [expenseData, ...prev]);
+        setIsAddFormOpen(false);
+        setNewExpense({
+            category: 'miscellaneous',
+            description: '',
+            amount: '',
+            payment_method: 'cash',
+            expense_date: format(new Date(), 'yyyy-MM-dd')
+        });
+        toast.success(t('expenses.addSuccess', 'Expense recorded successfully'));
+
+        // Cache immediately
+        localStorage.setItem('expenses_cache', JSON.stringify([expenseData, ...previousExpenses]));
+
         try {
-            await recordExpense({
-                ...newExpense,
-                amount: parseFloat(newExpense.amount),
-                expense_date: new Date(newExpense.expense_date),
-                created_by: profile?.id || 'unknown'
-            });
-            setIsAddFormOpen(false);
-            setNewExpense({
-                category: 'miscellaneous',
-                description: '',
-                amount: '',
-                payment_method: 'cash',
-                expense_date: format(new Date(), 'yyyy-MM-dd')
-            });
-            loadData();
-            toast.success(t('expenses.addSuccess', 'Expense recorded successfully'));
+            // 2. Real API Call
+            await recordExpense(expenseData);
+
+            // 3. Re-fetch to confirm ID and data (background)
+            loadData(false);
+
         } catch (error) {
             console.error('Error recording expense:', error);
-            toast.error(t('expenses.addError', 'Failed to record expense'));
+            // Revert on real failure
+            setExpenses(previousExpenses);
+            localStorage.setItem('expenses_cache', JSON.stringify(previousExpenses));
+            toast.error(t('expenses.addError', 'Failed to record expense. Please try again.'));
+            setIsAddFormOpen(true); // Re-open form so user doesn't lose data
         } finally {
             setIsSubmitting(false);
         }

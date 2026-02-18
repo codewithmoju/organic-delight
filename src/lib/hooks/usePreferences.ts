@@ -7,6 +7,7 @@ import { debounce } from '../utils/debounce';
 export interface PreferenceSettings {
   preferred_currency: string;
   language: string;
+  theme: 'light' | 'dark' | 'system';
   timezone: string;
   notifications_enabled: boolean;
   email_notifications: boolean;

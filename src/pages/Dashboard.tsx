@@ -20,25 +20,46 @@ import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
 export default function Dashboard() {
   const { t } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [summary, setSummary] = useState<any>(null);
-  const [transactions, setTransactions] = useState<POSTransaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(() => {
+    try {
+      const cached = localStorage.getItem('dashboard_metrics_cache');
+      return cached ? JSON.parse(cached) : null;
+    } catch { return null; }
+  });
+  const [chartData, setChartData] = useState<any[]>([]); // Chart data is derived, we can cache or just let it re-derive
+  const [summary, setSummary] = useState<any>(() => {
+    try {
+      const cached = localStorage.getItem('dashboard_summary_cache');
+      return cached ? JSON.parse(cached) : null;
+    } catch { return null; }
+  });
+  const [transactions, setTransactions] = useState<POSTransaction[]>(() => {
+    try {
+      const cached = localStorage.getItem('dashboard_transactions_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
+  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('dashboard_summary_cache'));
   const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [topProduct, setTopProduct] = useState<any>(null);
+  const [topProduct, setTopProduct] = useState<any>(() => {
+    // Try to re-calculate or just start null and let it load. 
+    // For simplicity, we can trust the previous run or just wait for the silent update
+    return null;
+  });
 
   useEffect(() => {
-    loadInitialData();
+    const hasCache = !!summary;
+    loadInitialData(!hasCache);
   }, []);
 
   useEffect(() => {
     loadMetricsData();
   }, [selectedPeriod]);
 
-  async function loadInitialData() {
+  async function loadInitialData(showLoading = true) {
+    if (showLoading) setIsLoading(true);
     try {
       // Fetch more transactions to better determine top selling product
       const [itemsResult, recentSales, allTransactions] = await Promise.all([

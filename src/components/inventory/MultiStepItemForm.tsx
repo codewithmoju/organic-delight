@@ -7,7 +7,6 @@ import { Category } from '../../lib/types';
 import { getUnits, Unit } from '../../lib/api/units';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { AlertCircle } from 'lucide-react';
-import { useAuthStore } from '../../lib/store';
 
 interface MultiStepItemFormProps {
   categories: Category[];
@@ -42,7 +41,7 @@ interface ItemFormData {
   reorder_point: number;
 }
 
-export default function MultiStepItemForm({ categories, onSubmit, onCancel }: MultiStepItemFormProps) {
+export default function MultiStepItemForm({ categories, onSubmit }: MultiStepItemFormProps) {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
