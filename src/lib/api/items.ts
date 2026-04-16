@@ -29,6 +29,32 @@ export function invalidateItemsCache() {
 function isCacheValid(timestamp: number): boolean {
   return Date.now() - timestamp < CACHE_DURATION;
 }
+
+function mapItemSnapshot(docSnapshot: DocumentSnapshot): Item {
+  const data = docSnapshot.data() as any;
+  return {
+    id: docSnapshot.id,
+    ...data,
+    current_quantity: data.current_quantity ?? 0,
+    average_unit_cost: data.average_unit_cost ?? 0,
+    total_value: (data.current_quantity ?? 0) * (data.average_unit_cost ?? 0),
+    created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now()),
+    updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : new Date(data.updated_at || Date.now())
+  } as Item;
+}
+
+async function fetchAllItems(categoryId?: string): Promise<Item[]> {
+  const snapshot = await getDocs(collection(db, 'items'));
+  let items = snapshot.docs.map(mapItemSnapshot).filter(item => item.is_archived !== true);
+
+  if (categoryId) {
+    items = items.filter(item => item.category_id === categoryId);
+  }
+
+  items.sort((a, b) => a.name.localeCompare(b.name));
+  return items;
+}
+
 export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) {
   const cacheKey = `items-${limitCount || 'all'}-${lastDoc?.id || 'start'}`;
   const cached = itemsCache.get(cacheKey);
@@ -37,91 +63,20 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
     return cached.data;
   }
 
-  try {
-    const itemsRef = collection(db, 'items');
-    let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
-
-    if (limitCount) {
-      q = query(q, limit(limitCount));
-    }
-
-    if (lastDoc) {
-      q = query(q, startAfter(lastDoc));
-    }
-
-    const snapshot = await getDocs(q);
-
-    const items = snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        // Map persistent stock fields
-        current_quantity: data.current_quantity ?? 0,
-        average_unit_cost: data.average_unit_cost ?? 0,
-        total_value: (data.current_quantity ?? 0) * (data.average_unit_cost ?? 0),
-        created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now()),
-        updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : new Date(data.updated_at || Date.now())
-      } as Item;
-    });
-
-    // Solve N+1 for categories
-    const categoryIds = [...new Set(items.map(item => item.category_id).filter(Boolean))];
-    const categories: Record<string, any> = {};
-
-    if (categoryIds.length > 0) {
-      for (let i = 0; i < categoryIds.length; i += 30) {
-        const chunk = categoryIds.slice(i, i + 30);
-        const categoriesRef = collection(db, 'categories');
-        const catQuery = query(categoriesRef, where('__name__', 'in', chunk));
-        const catSnapshot = await getDocs(catQuery);
-        catSnapshot.forEach(catDoc => {
-          categories[catDoc.id] = { id: catDoc.id, ...catDoc.data() };
-        });
-      }
-    }
-
-    // Attach categories to items
-    items.forEach(item => {
-      if (item.category_id && categories[item.category_id]) {
-        item.category = categories[item.category_id];
-      }
-    });
-
-    const result = { items, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
-
-    // Cache the result
-    itemsCache.set(cacheKey, { data: result, timestamp: Date.now() });
-
-    return result;
-  } catch (error: any) {
-    console.error('Firestore getItems error:', error);
-    if (error.message?.includes('index')) {
-      console.info('To fix this index error, visit: https://console.firebase.google.com/project/organic-delight-inventory-db/firestore/indexes');
-    }
-    throw error;
-  }
+  const allItems = await fetchAllItems();
+  const items = limitCount ? allItems.slice(0, limitCount) : allItems;
+  const result = { items, lastDoc: null };
+  itemsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  return result;
 }
 
 export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
-  const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where('category_id', '==', categoryId), where('is_archived', '!=', true), orderBy('name'));
-  const snapshot = await getDocs(q);
-
-  const items = snapshot.docs.map(docSnapshot => {
-    const itemData = docSnapshot.data();
-    return {
-      id: docSnapshot.id,
-      ...itemData,
-      current_quantity: itemData.current_quantity ?? 0,
-      average_unit_cost: itemData.average_unit_cost ?? 0,
-      total_value: (itemData.current_quantity ?? 0) * (itemData.average_unit_cost ?? 0),
-      created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
-      updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
-    } as Item;
-  });
-
-  return items;
+  try {
+    return await fetchAllItems(categoryId);
+  } catch (error) {
+    console.error('Firestore getItemsByCategory error:', error);
+    return [];
+  }
 }
 
 export async function getItem(id: string): Promise<Item> {

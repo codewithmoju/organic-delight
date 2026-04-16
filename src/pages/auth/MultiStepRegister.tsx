@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Upload, X, Shield, User, Loc
 import { toast } from 'sonner';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, query, collection, where, getDocs } from 'firebase/firestore';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import { auth, db } from '../../lib/firebase';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Logo from '../../components/ui/Logo';
@@ -17,7 +19,6 @@ interface RegistrationData {
   lastName: string;
   email: string;
   phone: string;
-  countryCode: string;
   dateOfBirth: string;
 
   // Step 2 - Account Security
@@ -76,7 +77,6 @@ export default function MultiStepRegister() {
     lastName: '',
     email: '',
     phone: '',
-    countryCode: '+1',
     dateOfBirth: '',
     username: '',
     password: '',
@@ -210,6 +210,8 @@ export default function MultiStepRegister() {
     try {
       // Create user account
       const { user } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      localStorage.setItem('pendingVerificationUid', user.uid);
+      localStorage.setItem('pendingVerificationEmail', formData.email);
 
       // Create user profile
       await setDoc(doc(db, 'profiles', user.uid), {
@@ -219,7 +221,7 @@ export default function MultiStepRegister() {
         full_name: `${formData.firstName} ${formData.lastName}`,
         username: formData.username,
         email: formData.email,
-        phone: `${formData.countryCode}${formData.phone}`,
+        phone: formData.phone,
         dateOfBirth: formData.dateOfBirth,
         address: {
           street: formData.street,
@@ -420,26 +422,53 @@ export default function MultiStepRegister() {
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                     {t('auth.register.phone')} *
                   </label>
-                  <div className="flex gap-3">
-                    <select
-                      value={formData.countryCode}
-                      onChange={(e) => updateFormData('countryCode', e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-3 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all w-28 cursor-pointer"
-                    >
-                      {COUNTRIES.map((country) => (
-                        <option key={country.code} value={country.code} className="dark:bg-slate-900">
-                          {country.flag} {country.code}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => updateFormData('phone', e.target.value)}
-                      className={`flex-1 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 ${errors.phone ? 'ring-error-500/20 border-error-500' : ''}`}
-                      placeholder={t('auth.register.placeholders.phone')}
-                    />
-                  </div>
+                  <PhoneInput
+                    country="us"
+                    value={formData.phone}
+                    onChange={(value) => updateFormData('phone', value || '')}
+                    enableSearch
+                    countryCodeEditable={false}
+                    placeholder={t('auth.register.placeholders.phone')}
+                    inputProps={{
+                      name: 'phone',
+                      required: true,
+                      autoComplete: 'tel',
+                    }}
+                    containerClass={`w-full ${errors.phone ? 'phone-input-error' : ''}`}
+                    inputStyle={{
+                      width: '100%',
+                      height: '56px',
+                      borderRadius: '1rem',
+                      border: `1px solid ${errors.phone ? 'rgb(var(--error))' : 'rgb(var(--border))'}`,
+                      backgroundColor: 'rgb(var(--card))',
+                      color: 'rgb(var(--foreground))',
+                      fontSize: '1rem',
+                      paddingLeft: '4.25rem',
+                      paddingRight: '1rem',
+                      boxShadow: 'none',
+                    }}
+                    buttonStyle={{
+                      borderRadius: '1rem 0 0 1rem',
+                      border: `1px solid ${errors.phone ? 'rgb(var(--error))' : 'rgb(var(--border))'}`,
+                      backgroundColor: 'rgb(var(--secondary))',
+                    }}
+                    dropdownStyle={{
+                      borderRadius: '1rem',
+                      border: '1px solid rgb(var(--border))',
+                      backgroundColor: 'rgb(var(--card))',
+                      color: 'rgb(var(--foreground))',
+                      boxShadow: '0 20px 50px rgba(15, 23, 42, 0.15)',
+                      zIndex: 50,
+                    }}
+                    searchStyle={{
+                      width: 'calc(100% - 20px)',
+                      margin: '10px',
+                      borderRadius: '0.75rem',
+                      border: '1px solid rgb(var(--border))',
+                      backgroundColor: 'rgb(var(--card))',
+                      color: 'rgb(var(--foreground))',
+                    }}
+                  />
                   {errors.phone && (
                     <p className="mt-1 text-xs text-error-500 ml-1">{errors.phone}</p>
                   )}
@@ -740,11 +769,13 @@ export default function MultiStepRegister() {
                       onChange={(e) => updateFormData('country', e.target.value)}
                       className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 cursor-pointer w-full"
                     >
-                      {COUNTRIES.map((country) => (
-                        <option key={country.name} value={country.name} className="dark:bg-slate-900">
-                          {country.flag} {country.name}
-                        </option>
-                      ))}
+                      <option value="United States" className="dark:bg-slate-900">🇺🇸 United States</option>
+                      <option value="United Kingdom" className="dark:bg-slate-900">🇬🇧 United Kingdom</option>
+                      <option value="Canada" className="dark:bg-slate-900">🇨🇦 Canada</option>
+                      <option value="Pakistan" className="dark:bg-slate-900">🇵🇰 Pakistan</option>
+                      <option value="India" className="dark:bg-slate-900">🇮🇳 India</option>
+                      <option value="Australia" className="dark:bg-slate-900">🇦🇺 Australia</option>
+                      <option value="Brazil" className="dark:bg-slate-900">🇧🇷 Brazil</option>
                     </select>
                     {errors.country && (
                       <p className="mt-1 text-xs text-error-500 ml-1">{errors.country}</p>

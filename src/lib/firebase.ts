@@ -1,33 +1,33 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import {
-  getFirestore,
-  enableMultiTabIndexedDbPersistence
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
 } from 'firebase/firestore';
 
+function getEnv(name: keyof ImportMetaEnv): string {
+  const value = import.meta.env[name];
+  if (!value || value.trim() === '') {
+    throw new Error(`Missing Firebase configuration: ${name}`);
+  }
+  return value;
+}
+
 const firebaseConfig = {
-  apiKey: "AIzaSyAr_l5BZdZnScis8ACekrRyrNBtn-Vn-O0",
-  authDomain: "organic-delight-inventory-db.firebaseapp.com",
-  projectId: "organic-delight-inventory-db",
-  storageBucket: "organic-delight-inventory-db.firebasestorage.app",
-  messagingSenderId: "111222170933",
-  appId: "1:111222170933:web:b7748bd1803278c81f587c",
-  measurementId: "G-LQX137002G"
+  apiKey: getEnv('VITE_FIREBASE_API_KEY'),
+  authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+  projectId: getEnv('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: getEnv('VITE_FIREBASE_APP_ID'),
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
-
-// Enable offline persistence
-enableMultiTabIndexedDbPersistence(db).catch((err) => {
-  if (err.code == 'failed-precondition') {
-    // Multiple tabs open, persistence can only be enabled
-    // in one tab at a a time.
-    console.warn('Firestore persistence failed: multi-tab precondition failed');
-  } else if (err.code == 'unimplemented') {
-    // The current browser does not support all of the
-    // features required to enable persistence
-    console.warn('Firestore persistence failed: browser unimplemented');
-  }
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
 });

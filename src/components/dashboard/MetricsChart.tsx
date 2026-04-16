@@ -51,11 +51,9 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
     return (
       <div className="card-theme p-4 sm:p-6 flex flex-col items-center justify-center h-[350px] text-center">
         <div className="p-3 bg-secondary rounded-full mb-4">
-          <ResponsiveContainer width={40} height={40}>
-            <BarChart data={[{ v: 1 }, { v: 2 }, { v: 1 }]}>
-              <Bar dataKey="v" fill="#cbd5e1" />
-            </BarChart>
-          </ResponsiveContainer>
+          <BarChart width={40} height={40} data={[{ v: 1 }, { v: 2 }, { v: 1 }]}> 
+            <Bar dataKey="v" fill="#cbd5e1" />
+          </BarChart>
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-1">No Data Available</h3>
         <p className="text-muted-foreground text-sm">sales analytics will appear here once you have transactions.</p>

@@ -1,3 +1,163 @@
 {
-    "indexes": []
+    "indexes": [
+        {
+            "collectionGroup": "items",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "is_archived",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "name",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "items",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "category_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "is_archived",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "name",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "items",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "barcode",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "is_archived",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "items",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "sku",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "is_archived",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "customers",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "is_active",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "name",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "transactions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "item_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "transaction_date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "purchases",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "vendor_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "purchase_date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "vendor_payments",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "vendor_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "payment_date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "pos_transactions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "customer_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "is_credit_sale",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "pos_transactions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "cashier_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "pos_transactions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "ASCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
 }

@@ -68,7 +68,7 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="light">
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <TourProvider>
           <Toaster
             position="top-right"

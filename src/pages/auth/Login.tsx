@@ -66,6 +66,8 @@ export default function Login() {
         setErrors({ email: t('auth.login.errors.invalidEmail') });
       } else if (error.code === 'auth/too-many-requests') {
         toast.error(t('auth.login.errors.tooManyRequests'));
+      } else if (error.code === 'auth/api-key-not-valid.-please-pass-a-valid-api-key.') {
+        toast.error('Firebase project configuration is invalid. Please update your VITE_FIREBASE_* keys.');
       } else {
         toast.error(t('errors.generic'));
       }

@@ -45,12 +45,16 @@ export default function EmailVerification() {
       await applyActionCode(auth, oobCode!);
 
       // Update user profile to mark email as verified
-      if (auth.currentUser) {
-        await updateDoc(doc(db, 'profiles', auth.currentUser.uid), {
+      const verificationUid = auth.currentUser?.uid || localStorage.getItem('pendingVerificationUid');
+      if (verificationUid) {
+        await updateDoc(doc(db, 'profiles', verificationUid), {
           emailVerified: true,
           updated_at: new Date()
         });
       }
+
+      localStorage.removeItem('pendingVerificationUid');
+      localStorage.removeItem('pendingVerificationEmail');
 
       setStatus('success');
       toast.success(t('auth.verifyEmail.toast.verified'));

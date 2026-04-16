@@ -12,6 +12,8 @@ import { Profile } from '../types';
 export async function signUp(email: string, password: string, fullName: string) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(user, { displayName: fullName });
+  localStorage.setItem('pendingVerificationUid', user.uid);
+  localStorage.setItem('pendingVerificationEmail', email);
 
   // Send email verification
   await sendEmailVerification(user);

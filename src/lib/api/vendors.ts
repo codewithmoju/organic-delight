@@ -40,7 +40,8 @@ export async function getVendors(): Promise<Vendor[]> {
     } catch (error: any) {
         console.error('Firestore getVendors error:', error);
         if (error.message?.includes('index')) {
-            console.info('To fix this index error, visit: https://console.firebase.google.com/project/organic-delight-inventory-db/firestore/indexes');
+            const indexLink = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/)?.[0];
+            if (indexLink) console.info('To fix this index error, visit:', indexLink);
         }
         throw error;
     }
