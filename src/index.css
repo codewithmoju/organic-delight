@@ -542,6 +542,42 @@
     backface-visibility: hidden;
     contain: layout style paint;
   }
+  
+  .app-page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    justify-content: space-between;
+  }
+  
+  @media (min-width: 640px) {
+    .app-page-header {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+  
+  .app-page-title {
+    font-size: 1.875rem;
+    line-height: 1.15;
+    font-weight: 800;
+    color: rgb(var(--foreground));
+    letter-spacing: -0.02em;
+  }
+  
+  .app-page-subtitle {
+    margin-top: 0.35rem;
+    font-size: 0.95rem;
+    color: rgb(var(--foreground-secondary));
+  }
+  
+  .app-toolbar-surface {
+    background: rgb(var(--card) / 0.78);
+    border: 1px solid rgb(var(--border) / 0.7);
+    border-radius: 1.4rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  }
 
   .dark .card-dark,
   .dark .card-theme {

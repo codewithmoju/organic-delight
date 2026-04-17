@@ -24,20 +24,20 @@ export default function POS() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between gap-4"
+        className="app-page-header gap-4"
       >
         {/* Title — hide on terminal tab to maximize space */}
         {activeView !== 'interface' && (
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gradient">{t('pos.title')}</h1>
-            <p className="text-foreground-muted mt-1">
+            <h1 className="app-page-title">{t('pos.title')}</h1>
+            <p className="app-page-subtitle">
               {t('pos.subtitle')}
             </p>
           </div>
         )}
 
         {/* View Selector */}
-        <div className={`flex bg-card/80 backdrop-blur-sm rounded-xl p-1 border border-border/50 shadow-sm ${activeView === 'interface' ? '' : 'ml-auto'}`}>
+        <div className={`flex app-toolbar-surface rounded-xl p-1 ${activeView === 'interface' ? '' : 'ml-auto'}`}>
           {views.map((view) => (
             <motion.button
               key={view.id}

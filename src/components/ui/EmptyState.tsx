@@ -8,20 +8,23 @@ interface EmptyStateProps {
     label: string;
     onClick: () => void;
   };
+  className?: string;
 }
 
-export default function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export default function EmptyState({ icon: Icon, title, description, action, className = '' }: EmptyStateProps) {
   return (
-    <div className="text-center py-12">
-      <Icon className="mx-auto h-12 w-12 text-gray-400" />
-      <h3 className="mt-2 text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mt-1 text-sm text-gray-500">{description}</p>
+    <div className={`card-theme border border-border/50 rounded-[2.5rem] p-10 sm:p-14 text-center shadow-sm ${className}`.trim()}>
+      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <Icon className="h-8 w-8" />
+      </div>
+      <h3 className="text-xl font-bold text-foreground">{title}</h3>
+      <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">{description}</p>
       {action && (
-        <div className="mt-6">
+        <div className="mt-8">
           <button
             type="button"
             onClick={action.onClick}
-            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            className="btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg shadow-primary/20"
           >
             {action.label}
           </button>

@@ -17,6 +17,7 @@ import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
 import { PageSkeleton, TableSkeleton } from '../../components/ui/SkeletonLoader';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import EmptyState from '../../components/ui/EmptyState';
 
 const ITEMS_CACHE_KEY = 'inventory_items_cache';
 const CATEGORIES_CACHE_KEY = 'inventory_categories_cache';
@@ -352,11 +353,11 @@ export default function Items() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          className="app-page-header"
         >
           <div>
-            <h1 className="text-3xl font-bold text-gradient">{t('navigation.inventoryManager')}</h1>
-            <p className="text-gray-400 text-sm mt-1">
+            <h1 className="app-page-title">{t('navigation.inventoryManager')}</h1>
+            <p className="app-page-subtitle">
               {t('items.subtitle')}
             </p>
           </div>
@@ -378,14 +379,14 @@ export default function Items() {
         </motion.div>
 
         {/* Filters and View Controls - Redesigned */}
-        <div className="card-theme p-2 rounded-[2rem] sticky top-4 z-30 shadow-xl backdrop-blur-md border border-white/20 bg-white/50 dark:bg-black/50">
+        <div className="app-toolbar-surface p-2 sticky top-4 z-30">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-2">
             <div className="w-full lg:w-1/3 relative">
               <SearchInput
                 placeholder={t('items.searchPlaceholder')}
                 value={searchQuery}
                 onChange={setSearchQuery}
-                className="w-full h-12 bg-white/80 dark:bg-dark-800/80 border-0 rounded-2xl shadow-sm focus:ring-2 focus:ring-primary-500/50"
+                className="w-full h-12 bg-background/70 border border-border/50 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/50"
               />
             </div>
 
@@ -395,7 +396,7 @@ export default function Items() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full h-12 pl-4 pr-10 appearance-none bg-white/80 dark:bg-dark-800/80 rounded-2xl border-0 shadow-sm focus:ring-2 focus:ring-primary-500/50 text-sm font-medium cursor-pointer"
+                  className="w-full h-12 pl-4 pr-10 appearance-none bg-background/70 rounded-xl border border-border/50 shadow-sm focus:ring-2 focus:ring-primary/50 text-sm font-medium cursor-pointer"
                 >
                   <option value="">{t('items.allCategories')}</option>
                   {categories.map((category) => (
@@ -412,7 +413,7 @@ export default function Items() {
               <div className="h-8 w-px bg-border/50 mx-2 hidden lg:block" />
 
               {/* View Toggles */}
-              <div className="flex bg-white/80 dark:bg-dark-800/80 rounded-2xl p-1 shadow-sm border border-white/10">
+              <div className="flex bg-background/70 rounded-xl p-1 shadow-sm border border-border/50">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2.5 rounded-xl transition-all duration-300 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-md scale-105' : 'text-muted-foreground hover:bg-secondary/50'}`}
@@ -670,31 +671,19 @@ export default function Items() {
 
         {/* Empty state */}
         {filteredItems.length === 0 && !isLoading && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12 sm:py-16 px-4"
-          >
-            <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-400 mb-2">{t('items.noItems')}</h3>
-            <p className="text-gray-500 mb-6 text-sm sm:text-base">
-              {searchQuery || selectedCategory
-                ? t('items.noItemsDescription')
-                : t('items.noItemsEmpty')
-              }
-            </p>
-            {!searchQuery && !selectedCategory && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsFormOpen(true)}
-                className="btn-primary"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                {t('items.addFirstItem')}
-              </motion.button>
-            )}
-          </motion.div>
+          <EmptyState
+            icon={Package}
+            title={t('items.noItems')}
+            description={searchQuery || selectedCategory
+              ? t('items.noItemsDescription')
+              : t('items.noItemsEmpty')
+            }
+            action={!searchQuery && !selectedCategory ? {
+              label: t('items.addFirstItem'),
+              onClick: () => setIsFormOpen(true)
+            } : undefined}
+            className="max-w-2xl mx-auto mt-4"
+          />
         )}
       </div>
       {/* Delete Confirmation Dialog */}

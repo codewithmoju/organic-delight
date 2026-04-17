@@ -252,12 +252,12 @@ export default function Categories() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="app-page-header">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gradient">
+          <h1 className="app-page-title">
             {t('categories.title', 'Categories')}
           </h1>
-          <p className="text-gray-400 mt-1 text-sm sm:text-base">
+          <p className="app-page-subtitle">
             {t('categories.subtitle', 'Organize your inventory')} • {categories.length} {t('common.total', 'total')}
           </p>
         </div>
@@ -265,18 +265,18 @@ export default function Categories() {
         <div className="flex flex-wrap gap-3">
           {/* Search */}
           <div className="relative flex-1 sm:flex-none sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('common.search', 'Search categories...')}
-              className="w-full pl-10 pr-8 py-2 input-dark"
+              className="w-full pl-10 pr-8 py-2 input-theme"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="w-4 h-4" />
               </button>

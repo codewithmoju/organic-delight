@@ -283,7 +283,7 @@ function EmptyState() {
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-16 px-6"
+            className="card-theme border border-border/50 rounded-[2.5rem] flex flex-col items-center justify-center py-16 px-6"
         >
             <motion.div
                 animate={{ y: [10, -4, 10] }}
@@ -390,17 +390,17 @@ export default function Customers() {
                             initial={{ opacity: 0, y: -16 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                            className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
+                            className="app-page-header"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/20">
                                     <Users className="w-5 h-5 text-primary-foreground" />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                                    <h1 className="app-page-title">
                                         {t('customers.title', 'Customers')}
                                     </h1>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="app-page-subtitle">
                                         {t('customers.subtitle', 'Manage customer credits (Udhaar) and profiles')}
                                     </p>
                                 </div>

@@ -11,6 +11,7 @@ import VendorListModal from '../../components/vendors/VendorListModal';
 import { toast } from 'sonner';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import AnimatedCard from '../../components/ui/AnimatedCard';
+import EmptyState from '../../components/ui/EmptyState';
 
 export default function Vendors() {
     const { t } = useTranslation();
@@ -113,13 +114,13 @@ export default function Vendors() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="app-page-header">
                 <div>
-                    <h1 className="text-3xl font-bold text-gradient flex items-center gap-3">
+                    <h1 className="app-page-title flex items-center gap-3">
                         <Users className="w-8 h-8 text-primary" />
                         {t('vendors.title')}
                     </h1>
-                    <p className="text-muted-foreground mt-1 text-lg">{t('vendors.subtitle')}</p>
+                    <p className="app-page-subtitle">{t('vendors.subtitle')}</p>
                 </div>
 
                 <motion.button
@@ -143,7 +144,7 @@ export default function Vendors() {
                         <input
                             type="text"
                             placeholder={t('vendors.searchPlaceholder')}
-                            className="input-theme w-full pl-11 py-4 text-lg bg-card/50 backdrop-blur-sm border-border/50 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl transition-all duration-300 shadow-sm"
+                            className="input-theme w-full pl-11 py-3 rounded-xl border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300 shadow-sm"
                             value={searchQuery}
                             onChange={(e) => handleSearch(e.target.value)}
                         />
@@ -152,13 +153,16 @@ export default function Vendors() {
                     {isLoading ? (
                         <VendorSkeleton />
                     ) : vendors.length === 0 ? (
-                        <div className="card-theme p-12 text-center rounded-[2.5rem] border border-border/50">
-                            <div className="w-24 h-24 bg-secondary/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Building2 className="w-12 h-12 text-muted-foreground" />
-                            </div>
-                            <h3 className="text-xl font-bold text-foreground mb-2">{t('vendors.noVendors')}</h3>
-                            <p className="text-muted-foreground">{t('vendors.addFirst')}</p>
-                        </div>
+                        <EmptyState
+                            icon={Building2}
+                            title={t('vendors.noVendors')}
+                            description={t('vendors.addFirst')}
+                            action={{
+                                label: t('vendors.addVendor'),
+                                onClick: () => setIsModalOpen(true)
+                            }}
+                            className="max-w-2xl mx-auto"
+                        />
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <AnimatePresence mode='popLayout'>
