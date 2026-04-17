@@ -7,6 +7,7 @@ import { Category } from '../../lib/types';
 import { getUnits, Unit } from '../../lib/api/units';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { AlertCircle } from 'lucide-react';
+import { useAuthStore } from '../../lib/store';
 
 interface MultiStepItemFormProps {
   categories: Category[];
@@ -43,6 +44,8 @@ interface ItemFormData {
 
 export default function MultiStepItemForm({ categories, onSubmit }: MultiStepItemFormProps) {
   const { t } = useTranslation();
+  const user = useAuthStore(state => state.user);
+  const profile = useAuthStore(state => state.profile);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -174,7 +177,7 @@ export default function MultiStepItemForm({ categories, onSubmit }: MultiStepIte
         supplier: formData.supplier.trim() || undefined,
         location: formData.location.trim() || undefined,
         reorder_point: formData.reorder_point,
-        created_by: 'current-user'
+        created_by: user?.uid || profile?.id || 'unknown'
       });
 
       toast.success(t('items.messages.createSuccess', 'Product created successfully'));

@@ -2,7 +2,8 @@ import { auth } from '../firebase';
 import { useAuthStore } from '../store';
 
 export function getCurrentUserId(): string | null {
-  return auth.currentUser?.uid || useAuthStore.getState().profile?.id || null;
+  const state = useAuthStore.getState();
+  return auth.currentUser?.uid || state.user?.uid || state.profile?.id || null;
 }
 
 export function requireCurrentUserId(): string {

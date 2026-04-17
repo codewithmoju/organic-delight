@@ -14,6 +14,7 @@ import {
 import { db } from '../firebase';
 import { Item } from '../types';
 import { invalidateItemsCache } from './items';
+import { requireCurrentUserId } from './userScope';
 
 export async function createItemWithInitialStock(itemData: {
   name: string;
@@ -28,38 +29,50 @@ export async function createItemWithInitialStock(itemData: {
   reorder_point: number;
   created_by: string;
 }, initialStock: number): Promise<Item> {
+  const userId = requireCurrentUserId();
 
   // Use Firestore transaction to ensure data consistency
   const result = await runTransaction(db, async (transaction) => {
-    // Check for duplicate item names within the same category
+    // Check for duplicates only within current user's scope.
     const itemsRef = collection(db, 'items');
-    const existingQuery = query(
-      itemsRef,
-      where('category_id', '==', itemData.category_id),
-      where('name', '==', itemData.name.trim())
-    );
-    const existingSnapshot = await getDocs(existingQuery);
+    const existingSnapshot = await getDocs(query(itemsRef, where('created_by', '==', userId)));
 
-    if (!existingSnapshot.empty) {
+    const normalizedName = itemData.name.trim().toLowerCase();
+    const normalizedBarcode = (itemData.barcode || '').trim();
+    const normalizedSku = (itemData.sku || '').trim().toLowerCase();
+
+    const duplicateName = existingSnapshot.docs.some((docSnap) => {
+      const data = docSnap.data() as any;
+      return (
+        String(data.category_id || '') === String(itemData.category_id || '') &&
+        String(data.name || '').trim().toLowerCase() === normalizedName
+      );
+    });
+
+    if (duplicateName) {
       throw new Error('An item with this name already exists in this category');
     }
 
     // Check for duplicate barcode if provided
-    if (itemData.barcode) {
-      const barcodeQuery = query(itemsRef, where('barcode', '==', itemData.barcode));
-      const barcodeSnapshot = await getDocs(barcodeQuery);
+    if (normalizedBarcode) {
+      const duplicateBarcode = existingSnapshot.docs.some((docSnap) => {
+        const data = docSnap.data() as any;
+        return String(data.barcode || '').trim() === normalizedBarcode;
+      });
 
-      if (!barcodeSnapshot.empty) {
+      if (duplicateBarcode) {
         throw new Error('An item with this barcode already exists');
       }
     }
 
     // Check for duplicate SKU if provided
-    if (itemData.sku) {
-      const skuQuery = query(itemsRef, where('sku', '==', itemData.sku));
-      const skuSnapshot = await getDocs(skuQuery);
+    if (normalizedSku) {
+      const duplicateSku = existingSnapshot.docs.some((docSnap) => {
+        const data = docSnap.data() as any;
+        return String(data.sku || '').trim().toLowerCase() === normalizedSku;
+      });
 
-      if (!skuSnapshot.empty) {
+      if (duplicateSku) {
         throw new Error('An item with this SKU already exists');
       }
     }
@@ -68,6 +81,7 @@ export async function createItemWithInitialStock(itemData: {
     const itemRef = doc(collection(db, 'items'));
     const itemDoc = {
       ...itemData,
+      created_by: userId,
       name: itemData.name.trim(),
       unit: itemData.unit || 'pcs',
       is_archived: false,
@@ -92,7 +106,7 @@ export async function createItemWithInitialStock(itemData: {
         supplier_customer: itemData.supplier || 'Initial Stock',
         reference_number: `INIT-${itemRef.id.slice(-6).toUpperCase()}`,
         notes: 'Initial stock entry during product creation',
-        created_by: itemData.created_by,
+        created_by: userId,
         created_at: Timestamp.fromDate(new Date())
       });
     }
@@ -112,16 +126,20 @@ export async function createItemWithInitialStock(itemData: {
 }
 
 export async function getItemByBarcode(barcode: string): Promise<Item | null> {
+  const userId = requireCurrentUserId();
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('barcode', '==', barcode));
+    const q = query(itemsRef, where('created_by', '==', userId), where('barcode', '==', barcode));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       return null;
     }
 
-    const itemDoc = snapshot.docs.find((docSnap) => docSnap.data().is_archived !== true);
+    const itemDoc = snapshot.docs.find((docSnap) => {
+      const data = docSnap.data() as any;
+      return data.created_by === userId && data.is_archived !== true;
+    });
     if (!itemDoc) {
       return null;
     }
@@ -140,16 +158,20 @@ export async function getItemByBarcode(barcode: string): Promise<Item | null> {
 }
 
 export async function getItemByProductId(productId: string): Promise<Item | null> {
+  const userId = requireCurrentUserId();
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('sku', '==', productId));
+    const q = query(itemsRef, where('created_by', '==', userId), where('sku', '==', productId));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       return null;
     }
 
-    const itemDoc = snapshot.docs.find((docSnap) => docSnap.data().is_archived !== true);
+    const itemDoc = snapshot.docs.find((docSnap) => {
+      const data = docSnap.data() as any;
+      return data.created_by === userId && data.is_archived !== true;
+    });
     if (!itemDoc) {
       return null;
     }
@@ -168,15 +190,19 @@ export async function getItemByProductId(productId: string): Promise<Item | null
 }
 
 export async function searchItemsEnhanced(searchQuery: string, searchType: 'name' | 'barcode' | 'sku' = 'name'): Promise<Item[]> {
+  const userId = requireCurrentUserId();
   try {
     const itemsRef = collection(db, 'items');
-    let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
+    const q = query(itemsRef, where('created_by', '==', userId), orderBy('name'));
 
     const snapshot = await getDocs(q);
 
     const items = [];
     for (const docSnapshot of snapshot.docs) {
       const itemData = docSnapshot.data();
+      if ((itemData as any).is_archived === true || (itemData as any).created_by !== userId) {
+        continue;
+      }
       const item = {
         id: docSnapshot.id,
         ...itemData,

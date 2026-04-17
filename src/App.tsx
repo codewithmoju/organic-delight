@@ -55,6 +55,7 @@ function App() {
           setProfile(profile);
         } catch (error) {
           console.error('Error fetching profile:', error);
+          setProfile(null);
         }
       } else {
         setProfile(null);

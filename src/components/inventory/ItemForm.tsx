@@ -19,6 +19,7 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [units, setUnits] = useState<Unit[]>([]);
   const [errors, setErrors] = useState<{ name?: string; description?: string; category_id?: string; unit_price?: string; unit?: string }>({});
+  const user = useAuthStore(state => state.user);
   const profile = useAuthStore(state => state.profile);
 
   // State for controlled CustomSelect components
@@ -100,7 +101,7 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
         category_id: categoryId,
         unit: selectedUnit,
         unit_price,
-        created_by: profile?.id || 'unknown'
+        created_by: user?.uid || profile?.id || 'unknown'
       });
 
       toast.success(`Item ${initialData ? 'updated' : 'created'} successfully`);

@@ -299,12 +299,17 @@ export async function getItemCurrentStock(itemId: string): Promise<number> {
 // Search products
 export async function searchProducts(searchQuery: string): Promise<BarcodeProduct[]> {
   const userId = requireCurrentUserId();
+  const normalizedQuery = String(searchQuery || '').trim();
+  if (!normalizedQuery) {
+    return [];
+  }
+
   const itemsRef = collection(db, 'items');
   const q = query(itemsRef, where('created_by', '==', userId));
   const snapshot = await getDocs(q);
 
   const products: BarcodeProduct[] = [];
-  const searchTerm = searchQuery.toLowerCase();
+  const searchTerm = normalizedQuery.toLowerCase();
 
   for (const itemDoc of snapshot.docs) {
     const itemData = itemDoc.data() as any;
@@ -315,10 +320,12 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
     const name = String(itemData.name || '');
     const description = String(itemData.description || '');
     const barcode = String(itemData.barcode || '');
+    const sku = String(itemData.sku || '');
 
     if (name.toLowerCase().includes(searchTerm) ||
       description.toLowerCase().includes(searchTerm) ||
-      barcode.includes(searchQuery)) {
+      barcode.includes(normalizedQuery) ||
+      sku.toLowerCase().includes(searchTerm)) {
 
       products.push({
         id: itemDoc.id,

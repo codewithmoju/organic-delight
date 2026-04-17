@@ -5,6 +5,7 @@ import { Item } from '../../lib/types';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { AlertCircle, Calculator, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils/notifications';
+import { useAuthStore } from '../../lib/store';
 
 interface TransactionFormProps {
   items: Item[];
@@ -24,6 +25,8 @@ interface TransactionFormProps {
 }
 
 export default function TransactionForm({ items, onComplete, onCancel, onSubmit }: TransactionFormProps) {
+  const user = useAuthStore(state => state.user);
+  const profile = useAuthStore(state => state.profile);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [transactionType, setTransactionType] = useState<'stock_in' | 'stock_out'>('stock_in');
@@ -86,7 +89,7 @@ export default function TransactionForm({ items, onComplete, onCancel, onSubmit 
         supplier_customer,
         reference_number: reference_number || null,
         notes: notes || null,
-        created_by: 'current-user'
+        created_by: user?.uid || profile?.id || 'unknown'
       });
       
       toast.success('Transaction recorded successfully');

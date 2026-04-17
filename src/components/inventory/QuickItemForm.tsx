@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Category } from '../../lib/types';
 import { getUnits, createUnit, Unit } from '../../lib/api/units';
 import CustomSelect from '../ui/CustomSelect';
+import { useAuthStore } from '../../lib/store';
 
 interface QuickItemFormProps {
     categories: Category[];
@@ -44,6 +45,8 @@ export default function QuickItemForm({ categories, onSubmit, onCancel }: QuickI
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [units, setUnits] = useState<Unit[]>([]);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const user = useAuthStore(state => state.user);
+    const profile = useAuthStore(state => state.profile);
 
     const [formData, setFormData] = useState<QuickItemFormData>({
         category_id: '',
@@ -121,7 +124,7 @@ export default function QuickItemForm({ categories, onSubmit, onCancel }: QuickI
                 sku: finalSku,
                 reorder_point: Number(formData.reorder_point) || 10,
                 initial_stock: Number(formData.total_stock) || 0,
-                created_by: 'current-user'
+                created_by: user?.uid || profile?.id || 'unknown'
             };
 
             // Only add barcode if it exists and is not empty
