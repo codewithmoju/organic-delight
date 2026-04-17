@@ -36,12 +36,7 @@ export async function getPaymentMethods(): Promise<PaymentMethod[]> {
 
         if (snapshot.empty) {
             console.log('No payment methods found, seeding defaults...');
-            await seedPaymentMethods();
-            const newSnapshot = await getDocs(q);
-            return newSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as PaymentMethod));
+            return DEFAULT_PAYMENT_METHODS.map(m => ({ ...m, type: m.type as 'cash' | 'card' | 'digital' }));
         }
 
         return snapshot.docs.map(doc => ({
@@ -50,7 +45,6 @@ export async function getPaymentMethods(): Promise<PaymentMethod[]> {
         } as PaymentMethod));
     } catch (error) {
         console.error('Error fetching payment methods:', error);
-        // Fallback
         return DEFAULT_PAYMENT_METHODS.map(m => ({ ...m, type: m.type as 'cash' | 'card' | 'digital' }));
     }
 }

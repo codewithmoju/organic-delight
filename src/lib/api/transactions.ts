@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Transaction } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 // Cache for transaction data
 const transactionsCache = new Map<string, { data: any; timestamp: number }>();
@@ -23,6 +24,7 @@ function isCacheValid(timestamp: number): boolean {
   return Date.now() - timestamp < CACHE_DURATION;
 }
 export async function getTransactions(limitCount?: number, lastDoc?: DocumentSnapshot) {
+  const userId = requireCurrentUserId();
   const cacheKey = `transactions-${limitCount || 'all'}-${lastDoc?.id || 'start'}`;
   const cached = transactionsCache.get(cacheKey);
 
@@ -51,7 +53,7 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
       transaction_date: data.transaction_date?.toDate ? data.transaction_date.toDate() : new Date(data.transaction_date || Date.now()),
       created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now())
     } as Transaction;
-  });
+  }).filter(t => t.created_by === userId);
 
   // Solve N+1 for items
   const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];
@@ -126,6 +128,7 @@ export function clearTransactionsCache() {
 }
 
 export async function getTransactionsByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
+  const userId = requireCurrentUserId();
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
@@ -143,7 +146,7 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
       transaction_date: data.transaction_date?.toDate ? data.transaction_date.toDate() : new Date(data.transaction_date || Date.now()),
       created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now())
     } as Transaction;
-  });
+  }).filter(t => t.created_by === userId);
 
   // Solve N+1 for items
   const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];
@@ -180,8 +183,14 @@ export async function createTransaction(transactionData: {
   notes?: string;
   created_by: string;
 }): Promise<Transaction> {
+  const userId = requireCurrentUserId();
   // Calculate total value
   const total_value = transactionData.quantity * transactionData.unit_price;
+
+  const itemDocForOwnership = await getDoc(doc(db, 'items', transactionData.item_id));
+  if (!itemDocForOwnership.exists() || itemDocForOwnership.data().created_by !== userId) {
+    throw new Error('Item not found');
+  }
 
   // Validate stock out doesn't exceed available quantity
   if (transactionData.type === 'stock_out') {
@@ -193,6 +202,7 @@ export async function createTransaction(transactionData: {
 
   const docRef = await addDoc(collection(db, 'transactions'), {
     ...transactionData,
+    created_by: userId,
     total_value,
     transaction_date: Timestamp.fromDate(transactionData.transaction_date),
     created_at: new Date(),
@@ -201,6 +211,7 @@ export async function createTransaction(transactionData: {
   const newTransaction: any = {
     id: docRef.id,
     ...transactionData,
+    created_by: userId,
     transaction_date: transactionData.transaction_date,
     created_at: new Date(),
     total_value,
@@ -216,6 +227,7 @@ export async function createTransaction(transactionData: {
 }
 
 export async function getTransactionsByItem(itemId: string): Promise<Transaction[]> {
+  const userId = requireCurrentUserId();
   const transactionsRef = collection(db, 'transactions');
   const q = query(transactionsRef, where('item_id', '==', itemId), orderBy('transaction_date', 'desc'));
   const snapshot = await getDocs(q);
@@ -225,10 +237,11 @@ export async function getTransactionsByItem(itemId: string): Promise<Transaction
     ...docSnapshot.data(),
     transaction_date: docSnapshot.data().transaction_date?.toDate ? docSnapshot.data().transaction_date.toDate() : new Date(docSnapshot.data().transaction_date || Date.now()),
     created_at: docSnapshot.data().created_at?.toDate ? docSnapshot.data().created_at.toDate() : new Date(docSnapshot.data().created_at || Date.now())
-  })) as Transaction[];
+  })).filter(t => (t as Transaction).created_by === userId) as Transaction[];
 }
 
 export async function getTransactionsForPeriod(startDate: Date, endDate: Date): Promise<Transaction[]> {
+  const userId = requireCurrentUserId();
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
@@ -247,7 +260,7 @@ export async function getTransactionsForPeriod(startDate: Date, endDate: Date): 
       transaction_date: data.transaction_date?.toDate ? data.transaction_date.toDate() : new Date(data.transaction_date || Date.now()),
       created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now())
     } as Transaction;
-  });
+  }).filter(t => t.created_by === userId);
 
   // Solve N+1 for items
   const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];

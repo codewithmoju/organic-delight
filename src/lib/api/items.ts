@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Item, StockLevel } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 // Simple cache for frequently accessed data
 const itemsCache = new Map<string, { data: any; timestamp: number }>();
@@ -43,13 +44,51 @@ function mapItemSnapshot(docSnapshot: DocumentSnapshot): Item {
   } as Item;
 }
 
+async function hydrateItemCategories(items: Item[]): Promise<Item[]> {
+  const categoryIds = [...new Set(items.map(item => item.category_id).filter(Boolean))] as string[];
+  if (categoryIds.length === 0) return items;
+
+  const categoriesById: Record<string, any> = {};
+
+  for (let i = 0; i < categoryIds.length; i += 30) {
+    const chunk = categoryIds.slice(i, i + 30);
+    const categoriesRef = collection(db, 'categories');
+    const categoriesQuery = query(categoriesRef, where('__name__', 'in', chunk));
+    const categoriesSnapshot = await getDocs(categoriesQuery);
+
+    categoriesSnapshot.forEach(categoryDoc => {
+      const categoryData = categoryDoc.data();
+      categoriesById[categoryDoc.id] = {
+        id: categoryDoc.id,
+        ...categoryData,
+        created_at: categoryData.created_at?.toDate ? categoryData.created_at.toDate() : new Date(),
+        updated_at: categoryData.updated_at?.toDate ? categoryData.updated_at.toDate() : new Date()
+      };
+    });
+  }
+
+  items.forEach(item => {
+    if (item.category_id && categoriesById[item.category_id]) {
+      item.category = categoriesById[item.category_id];
+    }
+  });
+
+  return items;
+}
+
 async function fetchAllItems(categoryId?: string): Promise<Item[]> {
+  const userId = requireCurrentUserId();
   const snapshot = await getDocs(collection(db, 'items'));
-  let items = snapshot.docs.map(mapItemSnapshot).filter(item => item.is_archived !== true);
+  let items = snapshot.docs
+    .map(mapItemSnapshot)
+    .filter(item => item.is_archived !== true)
+    .filter(item => item.created_by === userId);
 
   if (categoryId) {
     items = items.filter(item => item.category_id === categoryId);
   }
+
+  items = await hydrateItemCategories(items);
 
   items.sort((a, b) => a.name.localeCompare(b.name));
   return items;
@@ -80,6 +119,7 @@ export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
 }
 
 export async function getItem(id: string): Promise<Item> {
+  const userId = requireCurrentUserId();
   const docRef = doc(db, 'items', id);
   const docSnap = await getDoc(docRef);
 
@@ -94,6 +134,10 @@ export async function getItem(id: string): Promise<Item> {
     created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
     updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
   } as Item;
+
+  if (item.created_by !== userId) {
+    throw new Error('Item not found');
+  }
 
   // Get category data
   if (item.category_id) {
@@ -136,12 +180,14 @@ export async function createItem(itemData: {
   sale_rate?: number;
   created_by: string;
 }): Promise<Item> {
+  const userId = requireCurrentUserId();
   console.log('Creating item in database:', itemData);
 
   // Check for duplicate item names within the same category
   const itemsRef = collection(db, 'items');
   const existingQuery = query(
     itemsRef,
+    where('created_by', '==', userId),
     where('category_id', '==', itemData.category_id),
     where('name', '==', itemData.name.trim())
   );
@@ -163,6 +209,7 @@ export async function createItem(itemData: {
     reorder_point: itemData.reorder_point || 10,
     purchase_rate: itemData.purchase_rate || 0,
     sale_rate: itemData.sale_rate || 0,
+    created_by: userId,
     is_archived: false,
     created_at: Timestamp.fromDate(new Date()),
     updated_at: Timestamp.fromDate(new Date())
@@ -188,6 +235,7 @@ export async function updateItem(id: string, itemData: {
   purchase_rate?: number;
   sale_rate?: number;
 }): Promise<Item> {
+  const userId = requireCurrentUserId();
   // Check for duplicate item names if name or category is being updated
   if (itemData.name || itemData.category_id) {
     const currentItem = await getItem(id);
@@ -197,6 +245,7 @@ export async function updateItem(id: string, itemData: {
     const itemsRef = collection(db, 'items');
     const existingQuery = query(
       itemsRef,
+      where('created_by', '==', userId),
       where('category_id', '==', newCategoryId),
       where('name', '==', newName)
     );
@@ -210,6 +259,11 @@ export async function updateItem(id: string, itemData: {
   }
 
   const docRef = doc(db, 'items', id);
+  const currentDoc = await getDoc(docRef);
+  if (!currentDoc.exists() || currentDoc.data().created_by !== userId) {
+    throw new Error('Item not found');
+  }
+
   const updateData = {
     ...itemData,
     ...(itemData.name && { name: itemData.name.trim() }),
@@ -223,15 +277,25 @@ export async function updateItem(id: string, itemData: {
 }
 
 export async function deleteItem(id: string): Promise<void> {
+  const userId = requireCurrentUserId();
+  const itemRef = doc(db, 'items', id);
+  const itemDoc = await getDoc(itemRef);
+  if (!itemDoc.exists() || itemDoc.data().created_by !== userId) {
+    throw new Error('Item not found');
+  }
+
   // Check if item has transactions
   const transactionsRef = collection(db, 'transactions');
-  const transactionsQuery = query(transactionsRef, where('item_id', '==', id));
+  const transactionsQuery = query(
+    transactionsRef,
+    where('item_id', '==', id),
+    where('created_by', '==', userId)
+  );
   const transactionsSnapshot = await getDocs(transactionsQuery);
 
   if (!transactionsSnapshot.empty) {
     // Archive the item instead of deleting it
-    const docRef = doc(db, 'items', id);
-    await updateDoc(docRef, {
+    await updateDoc(itemRef, {
       is_archived: true,
       updated_at: Timestamp.fromDate(new Date())
     });
@@ -240,7 +304,7 @@ export async function deleteItem(id: string): Promise<void> {
     return;
   }
 
-  await deleteDoc(doc(db, 'items', id));
+  await deleteDoc(itemRef);
   // Invalidate cache
   itemsCache.clear();
 }
@@ -308,6 +372,7 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
 }
 
 export async function searchItems(searchQuery: string, categoryId?: string): Promise<Item[]> {
+  const userId = requireCurrentUserId();
   const itemsRef = collection(db, 'items');
   let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
 
@@ -331,6 +396,8 @@ export async function searchItems(searchQuery: string, categoryId?: string): Pro
   });
 
   // Client-side filtering for search (Firestore search is limited)
+  items = items.filter(item => item.created_by === userId);
+
   if (searchQuery) {
     const term = searchQuery.toLowerCase();
     items = items.filter(item =>
@@ -339,32 +406,13 @@ export async function searchItems(searchQuery: string, categoryId?: string): Pro
     );
   }
 
-  // Solve N+1 for categories
-  const categoryIds = [...new Set(items.map(item => item.category_id).filter(Boolean))];
-  const categories: Record<string, any> = {};
-
-  if (categoryIds.length > 0) {
-    for (let i = 0; i < categoryIds.length; i += 30) {
-      const chunk = categoryIds.slice(i, i + 30);
-      const categoriesRef = collection(db, 'categories');
-      const catQuery = query(categoriesRef, where('__name__', 'in', chunk));
-      const catSnapshot = await getDocs(catQuery);
-      catSnapshot.forEach(catDoc => {
-        categories[catDoc.id] = { id: catDoc.id, ...catDoc.data() };
-      });
-    }
-  }
-
-  items.forEach(item => {
-    if (item.category_id && categories[item.category_id]) {
-      item.category = categories[item.category_id];
-    }
-  });
+  items = await hydrateItemCategories(items);
 
   return items;
 }
 export async function reconcileAllItemsStock(): Promise<{ updated: number; failed: number }> {
   try {
+    const userId = requireCurrentUserId();
     const itemsRef = collection(db, 'items');
     const snapshot = await getDocs(itemsRef);
     let updatedCount = 0;
@@ -376,6 +424,9 @@ export async function reconcileAllItemsStock(): Promise<{ updated: number; faile
     let countInBatch = 0;
 
     for (const itemDoc of snapshot.docs) {
+      if (itemDoc.data().created_by !== userId) {
+        continue;
+      }
       try {
         const stockLevel = await getItemStockLevel(itemDoc.id);
         if (stockLevel) {

@@ -14,6 +14,7 @@ import {
 import { db } from '../firebase';
 import { Purchase, PurchaseItem } from '../types';
 import { generatePurchaseNumber } from './vendors';
+import { requireCurrentUserId } from './userScope';
 
 // ============================================
 // PURCHASE CRUD OPERATIONS
@@ -39,6 +40,7 @@ export async function createPurchase(purchaseData: {
     created_by: string;
     notes?: string;
 }): Promise<Purchase> {
+    const userId = requireCurrentUserId();
     const purchaseNumber = generatePurchaseNumber();
 
     const items: PurchaseItem[] = purchaseData.items.map(item => ({
@@ -68,7 +70,7 @@ export async function createPurchase(purchaseData: {
         pending_amount: pendingAmount,
         purchase_date: purchaseData.purchase_date,
         created_at: new Date(),
-        created_by: purchaseData.created_by,
+        created_by: userId,
         notes: purchaseData.notes || null
     });
 
@@ -78,6 +80,9 @@ export async function createPurchase(purchaseData: {
             const itemReads = await Promise.all(items.map(async (item) => {
                 const itemRef = doc(db, 'items', item.item_id);
                 const itemDoc = await transaction.get(itemRef);
+                if (itemDoc.exists() && itemDoc.data().created_by !== userId) {
+                    throw new Error(`Item ${item.item_name} not found`);
+                }
                 return {
                     ref: itemRef,
                     doc: itemDoc,
@@ -135,6 +140,9 @@ export async function createPurchase(purchaseData: {
 
             // Update Vendor
             if (vendorDoc.exists()) {
+                if (vendorDoc.data().created_by !== userId) {
+                    throw new Error('Vendor not found');
+                }
                 const vendorData = vendorDoc.data();
                 transaction.update(vendorRef, {
                     outstanding_balance: (vendorData.outstanding_balance || 0) + pendingAmount,
@@ -216,6 +224,7 @@ export async function createPurchase(purchaseData: {
  * I will implement getPurchases matching the file purpose)
  */
 export async function getPurchases(startDate?: Date, endDate?: Date): Promise<Purchase[]> {
+    const userId = requireCurrentUserId();
     const purchasesRef = collection(db, 'purchases');
     let q = query(purchasesRef, orderBy('purchase_date', 'desc'));
 
@@ -232,26 +241,29 @@ export async function getPurchases(startDate?: Date, endDate?: Date): Promise<Pu
         ...doc.data(),
         purchase_date: doc.data().purchase_date?.toDate() || new Date(),
         created_at: doc.data().created_at?.toDate() || new Date()
-    })) as Purchase[];
+    })).filter(p => (p as Purchase).created_by === userId) as Purchase[];
 }
 
 export async function getPurchase(id: string): Promise<Purchase | null> {
+    const userId = requireCurrentUserId();
     const docRef = doc(db, 'purchases', id);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-        return {
+        const purchase = {
             id: docSnap.id,
             ...docSnap.data(),
             purchase_date: docSnap.data().purchase_date?.toDate(),
             created_at: docSnap.data().created_at?.toDate()
         } as Purchase;
+        return purchase.created_by === userId ? purchase : null;
     } else {
         return null;
     }
 }
 
 export async function getPurchasesByVendor(vendorId: string): Promise<Purchase[]> {
+    const userId = requireCurrentUserId();
     const purchasesRef = collection(db, 'purchases');
     const q = query(purchasesRef, where('vendor_id', '==', vendorId), orderBy('purchase_date', 'desc'));
     const snapshot = await getDocs(q);
@@ -261,5 +273,5 @@ export async function getPurchasesByVendor(vendorId: string): Promise<Purchase[]
         ...doc.data(),
         purchase_date: doc.data().purchase_date?.toDate() || new Date(),
         created_at: doc.data().created_at?.toDate() || new Date()
-    })) as Purchase[];
+    })).filter(p => (p as Purchase).created_by === userId) as Purchase[];
 }

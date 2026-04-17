@@ -2,6 +2,7 @@ import {
     collection,
     doc,
     getDocs,
+    getDoc,
     addDoc,
     updateDoc,
     deleteDoc,
@@ -12,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Expense, ExpenseCategory } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 // ============================================
 // EXPENSE CRUD OPERATIONS
@@ -30,10 +32,12 @@ export async function recordExpense(expenseData: {
     notes?: string;
     created_by: string;
 }): Promise<Expense> {
+    const userId = requireCurrentUserId();
     const expensesRef = collection(db, 'expenses');
 
     const newExpense = {
         ...expenseData,
+        created_by: userId,
         expense_date: Timestamp.fromDate(expenseData.expense_date),
         created_at: Timestamp.fromDate(new Date())
     };
@@ -43,6 +47,7 @@ export async function recordExpense(expenseData: {
     return {
         id: docRef.id,
         ...expenseData,
+        created_by: userId,
         created_at: new Date()
     };
 }
@@ -51,6 +56,7 @@ export async function recordExpense(expenseData: {
  * Get expenses for a date range
  */
 export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Expense[]> {
+    const userId = requireCurrentUserId();
     const expensesRef = collection(db, 'expenses');
     let q = query(expensesRef, orderBy('expense_date', 'desc'));
 
@@ -68,7 +74,7 @@ export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Exp
             ...doc.data(),
             expense_date: doc.data().expense_date?.toDate() || new Date(),
             created_at: doc.data().created_at?.toDate() || new Date()
-        })) as Expense[];
+        })).filter(e => (e as Expense).created_by === userId) as Expense[];
     } catch (error: any) {
         console.error('Error fetching expenses:', error);
         // Fallback to client-side filter if server-side fails (e.g. index issue)
@@ -83,6 +89,7 @@ export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Exp
  * Get expenses by category
  */
 export async function getExpensesByCategory(category: ExpenseCategory): Promise<Expense[]> {
+    const userId = requireCurrentUserId();
     const expensesRef = collection(db, 'expenses');
     const q = query(
         expensesRef,
@@ -96,7 +103,7 @@ export async function getExpensesByCategory(category: ExpenseCategory): Promise<
         ...doc.data(),
         expense_date: doc.data().expense_date?.toDate() || new Date(),
         created_at: doc.data().created_at?.toDate() || new Date()
-    })) as Expense[];
+    })).filter(e => (e as Expense).created_by === userId) as Expense[];
 }
 
 /**
@@ -119,7 +126,12 @@ export async function updateExpense(
     expenseId: string,
     updates: Partial<Omit<Expense, 'id' | 'created_at' | 'created_by'>>
 ): Promise<void> {
+    const userId = requireCurrentUserId();
     const expenseRef = doc(db, 'expenses', expenseId);
+    const expenseSnap = await getDoc(expenseRef);
+    if (!expenseSnap.exists() || expenseSnap.data().created_by !== userId) {
+        throw new Error('Expense not found');
+    }
 
     const updateData: any = { ...updates };
     if (updates.expense_date) {
@@ -133,7 +145,12 @@ export async function updateExpense(
  * Delete an expense
  */
 export async function deleteExpense(expenseId: string): Promise<void> {
+    const userId = requireCurrentUserId();
     const expenseRef = doc(db, 'expenses', expenseId);
+    const expenseSnap = await getDoc(expenseRef);
+    if (!expenseSnap.exists() || expenseSnap.data().created_by !== userId) {
+        throw new Error('Expense not found');
+    }
     await deleteDoc(expenseRef);
 }
 

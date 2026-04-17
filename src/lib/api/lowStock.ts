@@ -4,16 +4,19 @@ import {
     query,
     where,
     doc,
+    getDoc,
     updateDoc,
     Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Item, EnhancedItem } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 /**
  * Get all items where current stock is at or below the threshold
  */
 export async function getLowStockItems(): Promise<EnhancedItem[]> {
+    const userId = requireCurrentUserId();
     const itemsRef = collection(db, 'items');
     const q = query(itemsRef, where('is_archived', '!=', true));
     const snapshot = await getDocs(q);
@@ -22,6 +25,9 @@ export async function getLowStockItems(): Promise<EnhancedItem[]> {
 
     for (const itemDoc of snapshot.docs) {
         const data = itemDoc.data() as Item;
+        if ((data as any).created_by !== userId) {
+            continue;
+        }
         // Get current stock
         const currentStock = await getItemCurrentStock(itemDoc.id);
 
@@ -44,6 +50,7 @@ export async function getLowStockItems(): Promise<EnhancedItem[]> {
  * Helper to get current stock for an item
  */
 async function getItemCurrentStock(itemId: string): Promise<number> {
+    const userId = requireCurrentUserId();
     const transactionsRef = collection(db, 'transactions');
     const q = query(transactionsRef, where('item_id', '==', itemId));
     const snapshot = await getDocs(q);
@@ -51,6 +58,7 @@ async function getItemCurrentStock(itemId: string): Promise<number> {
     let stock = 0;
     snapshot.docs.forEach(doc => {
         const t = doc.data();
+        if (t.created_by !== userId) return;
         if (t.type === 'stock_in') stock += t.quantity;
         if (t.type === 'stock_out') stock -= t.quantity;
     });
@@ -62,7 +70,12 @@ async function getItemCurrentStock(itemId: string): Promise<number> {
  * Update the low stock threshold for an item
  */
 export async function updateLowStockThreshold(itemId: string, threshold: number): Promise<void> {
+    const userId = requireCurrentUserId();
     const itemRef = doc(db, 'items', itemId);
+    const itemSnap = await getDoc(itemRef);
+    if (!itemSnap.exists() || itemSnap.data().created_by !== userId) {
+        throw new Error('Item not found');
+    }
     await updateDoc(itemRef, {
         low_stock_threshold: threshold,
         updated_at: Timestamp.fromDate(new Date())

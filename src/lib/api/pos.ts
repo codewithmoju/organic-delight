@@ -17,6 +17,7 @@ import {
 import { db } from '../firebase';
 import { CartItem, BarcodeProduct, POSTransaction, POSSettings, BillType, SalesReport } from '../types';
 import { DEFAULT_POS_SETTINGS } from '../constants/defaults';
+import { requireCurrentUserId } from './userScope';
 
 // POS Transaction Management
 export async function createPOSTransaction(transactionData: {
@@ -35,6 +36,7 @@ export async function createPOSTransaction(transactionData: {
   bill_type?: BillType;
   is_return?: boolean;
 }): Promise<POSTransaction> {
+  const userId = requireCurrentUserId();
   const transactionNumber = generateTransactionNumber();
   const affectsInventory = transactionData.bill_type?.affects_inventory ?? true;
   const affectsAccounting = transactionData.bill_type?.affects_accounting ?? true;
@@ -62,7 +64,7 @@ export async function createPOSTransaction(transactionData: {
     payment_method: transactionData.payment_method,
     payment_amount: transactionData.payment_amount,
     change_amount: transactionData.change_amount,
-    cashier_id: transactionData.cashier_id,
+    cashier_id: userId,
     customer_name: transactionData.customer_name || 'Walk-in Customer',
     customer_phone: transactionData.customer_phone || null,
     created_at: new Date(),
@@ -123,6 +125,7 @@ export async function createPOSTransaction(transactionData: {
             reference_id: posTransactionRef.id,
             reference_type: 'pos_sale',
             notes: `POS ${transactionData.is_return ? 'Return' : 'Sale'} - ${transactionNumber}`,
+            created_by: userId,
             created_at: Timestamp.fromDate(new Date())
           });
         }
@@ -164,6 +167,7 @@ export async function createPOSTransaction(transactionData: {
             reference_id: posTransactionRef.id,
             reference_type: 'pos_sale',
             notes: `POS ${transactionData.is_return ? 'Return' : 'Sale'} (Offline) - ${transactionNumber}`,
+            created_by: userId,
             created_at: Timestamp.fromDate(new Date())
           });
         }
@@ -178,6 +182,7 @@ export async function createPOSTransaction(transactionData: {
 
 // Transaction History
 export async function getPOSTransactions(limitCount?: number): Promise<POSTransaction[]> {
+  const userId = requireCurrentUserId();
   const transactionsRef = collection(db, 'pos_transactions');
   let q = query(transactionsRef, orderBy('created_at', 'desc'));
 
@@ -191,7 +196,7 @@ export async function getPOSTransactions(limitCount?: number): Promise<POSTransa
     id: doc.id,
     ...doc.data(),
     created_at: doc.data().created_at?.toDate() || new Date(doc.data().created_at)
-  })) as POSTransaction[];
+  })).filter(t => (t as POSTransaction).cashier_id === userId) as POSTransaction[];
 }
 
 // Cancel/Refund Transaction
@@ -246,16 +251,20 @@ export async function cancelPOSTransaction(transactionId: string, reason: string
 
 // Barcode Product Lookup
 export async function getProductByBarcode(barcode: string): Promise<BarcodeProduct | null> {
+  const userId = requireCurrentUserId();
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('barcode', '==', barcode), where('is_archived', '!=', true));
+    const q = query(itemsRef, where('created_by', '==', userId));
     const snapshot = await getDocs(q);
 
-    if (snapshot.empty) {
+    const itemDoc = snapshot.docs.find((docSnap) => {
+      const data = docSnap.data() as any;
+      return data.created_by === userId && data.is_archived !== true && String(data.barcode || '') === String(barcode);
+    });
+    if (!itemDoc) {
       return null;
     }
 
-    const itemDoc = snapshot.docs[0];
     const itemData = itemDoc.data();
     const currentStock = itemData.current_quantity ?? 0;
 
@@ -275,9 +284,11 @@ export async function getProductByBarcode(barcode: string): Promise<BarcodeProdu
 
 // Get current stock level
 export async function getItemCurrentStock(itemId: string): Promise<number> {
+  const userId = requireCurrentUserId();
   try {
     const itemDoc = await getDoc(doc(db, 'items', itemId));
     if (!itemDoc.exists()) return 0;
+    if (itemDoc.data().created_by !== userId) return 0;
     return itemDoc.data().current_quantity ?? 0;
   } catch (error) {
     console.error('Error fetching current stock:', error);
@@ -287,8 +298,9 @@ export async function getItemCurrentStock(itemId: string): Promise<number> {
 
 // Search products
 export async function searchProducts(searchQuery: string): Promise<BarcodeProduct[]> {
+  const userId = requireCurrentUserId();
   const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
+  const q = query(itemsRef, where('created_by', '==', userId));
   const snapshot = await getDocs(q);
 
   const products: BarcodeProduct[] = [];
@@ -296,26 +308,37 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
 
   for (const itemDoc of snapshot.docs) {
     const itemData = itemDoc.data() as any;
-    if (itemData.name.toLowerCase().includes(searchTerm) ||
-      itemData.description?.toLowerCase().includes(searchTerm) ||
-      itemData.barcode?.includes(searchQuery)) {
+    if (itemData.created_by !== userId || itemData.is_archived === true) {
+      continue;
+    }
+
+    const name = String(itemData.name || '');
+    const description = String(itemData.description || '');
+    const barcode = String(itemData.barcode || '');
+
+    if (name.toLowerCase().includes(searchTerm) ||
+      description.toLowerCase().includes(searchTerm) ||
+      barcode.includes(searchQuery)) {
 
       products.push({
         id: itemDoc.id,
-        name: itemData.name,
-        barcode: itemData.barcode || '',
+        name,
+        barcode,
         price: itemData.unit_price || itemData.sale_rate || 0,
         stock: itemData.current_quantity ?? 0,
         category: itemData.category?.name
       });
     }
   }
+
+  products.sort((a, b) => a.name.localeCompare(b.name));
   return products.slice(0, 20);
 }
 
 // POS Settings
 export async function getPOSSettings(): Promise<POSSettings> {
-  const settingsRef = doc(db, 'pos_settings', 'default');
+  const userId = requireCurrentUserId();
+  const settingsRef = doc(db, 'pos_settings', userId);
   const docSnap = await getDoc(settingsRef);
 
   if (docSnap.exists()) {
@@ -326,9 +349,11 @@ export async function getPOSSettings(): Promise<POSSettings> {
 }
 
 export async function updatePOSSettings(settings: Partial<POSSettings>): Promise<void> {
-  const settingsRef = doc(db, 'pos_settings', 'default');
+  const userId = requireCurrentUserId();
+  const settingsRef = doc(db, 'pos_settings', userId);
   await setDoc(settingsRef, {
     ...settings,
+    created_by: userId,
     updated_at: Timestamp.fromDate(new Date())
   }, { merge: true });
 }
@@ -336,6 +361,7 @@ export async function updatePOSSettings(settings: Partial<POSSettings>): Promise
 // Quick Access Products
 export async function getQuickAccessProducts(itemIds: string[]): Promise<BarcodeProduct[]> {
   if (!itemIds || itemIds.length === 0) return [];
+  const userId = requireCurrentUserId();
 
   try {
     const productPromises = itemIds.map(async (id) => {
@@ -343,6 +369,9 @@ export async function getQuickAccessProducts(itemIds: string[]): Promise<Barcode
       const snap = await getDoc(docRef);
       if (snap.exists()) {
         const data = snap.data();
+        if (data.created_by !== userId || data.is_archived === true) {
+          return null;
+        }
         return {
           id: snap.id,
           name: data.name,
@@ -365,7 +394,8 @@ export async function getQuickAccessProducts(itemIds: string[]): Promise<Barcode
 
 // Toggle Quick Access Item
 export async function toggleQuickAccessItem(itemId: string): Promise<string[]> {
-  const settingsRef = doc(db, 'pos_settings', 'default');
+  const userId = requireCurrentUserId();
+  const settingsRef = doc(db, 'pos_settings', userId);
   const settingsSnap = await getDoc(settingsRef);
 
   let currentItems: string[] = [];
@@ -394,6 +424,7 @@ export async function getBillTypes(): Promise<BillType[]> {
 
 // Sales Report helper
 export async function getDailySalesReport(date: Date, cashierId?: string): Promise<SalesReport> {
+  const userId = requireCurrentUserId();
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
@@ -405,9 +436,7 @@ export async function getDailySalesReport(date: Date, cashierId?: string): Promi
     where('created_at', '<=', Timestamp.fromDate(endOfDay))
   );
 
-  if (cashierId) {
-    q = query(q, where('cashier_id', '==', cashierId));
-  }
+  q = query(q, where('cashier_id', '==', cashierId || userId));
 
   const snapshot = await getDocs(q);
   const transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as POSTransaction));
@@ -432,11 +461,14 @@ export async function addBarcodeToItem(itemId: string, barcode: string): Promise
 
 // Get items with barcodes
 export async function getItemsWithBarcodes(): Promise<BarcodeProduct[]> {
+  const userId = requireCurrentUserId();
   const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where('barcode', '!=', null));
+  const q = query(itemsRef, where('created_by', '==', userId));
   const snapshot = await getDocs(q);
 
-  return snapshot.docs.map(doc => {
+  return snapshot.docs
+    .filter(doc => doc.data().barcode != null)
+    .map(doc => {
     const data = doc.data();
     return {
       id: doc.id,

@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Vendor, VendorPayment } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 // ============================================
 // VENDOR CRUD OPERATIONS
@@ -22,6 +23,7 @@ import { Vendor, VendorPayment } from '../types';
  * Get all vendors with their outstanding balances
  */
 export async function getVendors(): Promise<Vendor[]> {
+    const userId = requireCurrentUserId();
     try {
         const vendorsRef = collection(db, 'vendors');
         // Simplified query: remove 'is_active' filter from server query to avoid index requirement
@@ -36,7 +38,7 @@ export async function getVendors(): Promise<Vendor[]> {
             updated_at: doc.data().updated_at?.toDate() || new Date()
         })) as Vendor[];
 
-        return vendors.filter(v => v.is_active !== false);
+        return vendors.filter(v => v.is_active !== false && v.created_by === userId);
     } catch (error: any) {
         console.error('Firestore getVendors error:', error);
         if (error.message?.includes('index')) {
@@ -51,6 +53,7 @@ export async function getVendors(): Promise<Vendor[]> {
  * Get all vendors including inactive ones
  */
 export async function getAllVendors(): Promise<Vendor[]> {
+    const userId = requireCurrentUserId();
     const vendorsRef = collection(db, 'vendors');
     const q = query(vendorsRef, orderBy('name'));
     const snapshot = await getDocs(q);
@@ -60,13 +63,14 @@ export async function getAllVendors(): Promise<Vendor[]> {
         ...doc.data(),
         created_at: doc.data().created_at?.toDate() || new Date(),
         updated_at: doc.data().updated_at?.toDate() || new Date()
-    })) as Vendor[];
+    })).filter(v => (v as Vendor).created_by === userId) as Vendor[];
 }
 
 /**
  * Get a single vendor by ID
  */
 export async function getVendorById(vendorId: string): Promise<Vendor | null> {
+    const userId = requireCurrentUserId();
     const vendorDoc = await getDoc(doc(db, 'vendors', vendorId));
 
     if (!vendorDoc.exists()) {
@@ -74,12 +78,14 @@ export async function getVendorById(vendorId: string): Promise<Vendor | null> {
     }
 
     const data = vendorDoc.data();
-    return {
+    const vendor = {
         id: vendorDoc.id,
         ...data,
         created_at: data.created_at?.toDate() || new Date(),
         updated_at: data.updated_at?.toDate() || new Date()
     } as Vendor;
+
+    return vendor.created_by === userId ? vendor : null;
 }
 
 /**
@@ -94,10 +100,12 @@ export async function createVendor(vendorData: {
     gst_number?: string;
     created_by: string;
 }): Promise<Vendor> {
+    const userId = requireCurrentUserId();
     const vendorsRef = collection(db, 'vendors');
 
     const newVendor = {
         ...vendorData,
+        created_by: userId,
         outstanding_balance: 0,
         total_purchases: 0,
         is_active: true,
@@ -110,6 +118,7 @@ export async function createVendor(vendorData: {
     return {
         id: docRef.id,
         ...vendorData,
+        created_by: userId,
         outstanding_balance: 0,
         total_purchases: 0,
         is_active: true,
@@ -125,7 +134,13 @@ export async function updateVendor(
     vendorId: string,
     updates: Partial<Omit<Vendor, 'id' | 'created_at' | 'created_by'>>
 ): Promise<void> {
+    const userId = requireCurrentUserId();
     const vendorRef = doc(db, 'vendors', vendorId);
+    const vendorDoc = await getDoc(vendorRef);
+    if (!vendorDoc.exists() || vendorDoc.data().created_by !== userId) {
+        throw new Error('Vendor not found');
+    }
+
     await updateDoc(vendorRef, {
         ...updates,
         updated_at: Timestamp.fromDate(new Date())
@@ -136,7 +151,13 @@ export async function updateVendor(
  * Deactivate a vendor (soft delete)
  */
 export async function deactivateVendor(vendorId: string): Promise<void> {
+    const userId = requireCurrentUserId();
     const vendorRef = doc(db, 'vendors', vendorId);
+    const vendorDoc = await getDoc(vendorRef);
+    if (!vendorDoc.exists() || vendorDoc.data().created_by !== userId) {
+        throw new Error('Vendor not found');
+    }
+
     await updateDoc(vendorRef, {
         is_active: false,
         updated_at: Timestamp.fromDate(new Date())
@@ -148,10 +169,14 @@ export async function deactivateVendor(vendorId: string): Promise<void> {
  * Will fail if vendor has outstanding balance
  */
 export async function deleteVendor(vendorId: string): Promise<void> {
+    const userId = requireCurrentUserId();
     const vendorRef = doc(db, 'vendors', vendorId);
     const vendorDoc = await getDoc(vendorRef);
 
     if (!vendorDoc.exists()) {
+        throw new Error('Vendor not found');
+    }
+    if (vendorDoc.data().created_by !== userId) {
         throw new Error('Vendor not found');
     }
 
@@ -195,6 +220,7 @@ export async function deleteVendor(vendorId: string): Promise<void> {
  * Get vendor payment history (ledger)
  */
 export async function getVendorLedger(vendorId: string): Promise<VendorPayment[]> {
+    const userId = requireCurrentUserId();
     const paymentsRef = collection(db, 'vendor_payments');
     const q = query(
         paymentsRef,
@@ -208,7 +234,7 @@ export async function getVendorLedger(vendorId: string): Promise<VendorPayment[]
         ...doc.data(),
         payment_date: doc.data().payment_date?.toDate() || new Date(),
         created_at: doc.data().created_at?.toDate() || new Date()
-    })) as VendorPayment[];
+    })).filter(p => (p as VendorPayment).created_by === userId) as VendorPayment[];
 }
 
 /**
@@ -224,12 +250,16 @@ export async function recordVendorPayment(paymentData: {
     payment_date: Date;
     created_by: string;
 }): Promise<VendorPayment> {
+    const userId = requireCurrentUserId();
     return await runTransaction(db, async (transaction) => {
         // Get current vendor data
         const vendorRef = doc(db, 'vendors', paymentData.vendor_id);
         const vendorDoc = await transaction.get(vendorRef);
 
         if (!vendorDoc.exists()) {
+            throw new Error('Vendor not found');
+        }
+        if (vendorDoc.data().created_by !== userId) {
             throw new Error('Vendor not found');
         }
 
@@ -246,6 +276,7 @@ export async function recordVendorPayment(paymentData: {
         const paymentRef = doc(collection(db, 'vendor_payments'));
         const paymentRecord = {
             ...paymentData,
+            created_by: userId,
             payment_date: Timestamp.fromDate(paymentData.payment_date),
             created_at: Timestamp.fromDate(new Date())
         };
@@ -255,6 +286,7 @@ export async function recordVendorPayment(paymentData: {
         return {
             id: paymentRef.id,
             ...paymentData,
+            created_by: userId,
             created_at: new Date()
         };
     });
@@ -268,12 +300,16 @@ export async function updateVendorBalanceForPurchase(
     vendorId: string,
     purchaseAmount: number
 ): Promise<void> {
+    const userId = requireCurrentUserId();
     const vendorRef = doc(db, 'vendors', vendorId);
 
     await runTransaction(db, async (transaction) => {
         const vendorDoc = await transaction.get(vendorRef);
 
         if (!vendorDoc.exists()) {
+            throw new Error('Vendor not found');
+        }
+        if (vendorDoc.data().created_by !== userId) {
             throw new Error('Vendor not found');
         }
 

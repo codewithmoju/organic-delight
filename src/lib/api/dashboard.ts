@@ -10,19 +10,22 @@ import { db } from '../firebase';
 import { TimePeriod } from '../../components/dashboard/TimePeriodFilter';
 import { getDateRangeForPeriod } from '../utils/dateFilters';
 import { DashboardMetrics } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 // Cache for dashboard data to improve loading performance
 const dashboardCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 function getCacheKey(period: TimePeriod): string {
-  return `dashboard-metrics-${period}`;
+  const userId = requireCurrentUserId();
+  return `dashboard-metrics-${userId}-${period}`;
 }
 
 function isCacheValid(timestamp: number): boolean {
   return Date.now() - timestamp < CACHE_DURATION;
 }
 export async function getDashboardMetrics(period: TimePeriod): Promise<DashboardMetrics> {
+  const userId = requireCurrentUserId();
   const cacheKey = getCacheKey(period);
   const cached = dashboardCache.get(cacheKey);
 
@@ -49,6 +52,7 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
 
   snapshot.docs.forEach(doc => {
     const transaction = doc.data();
+    if (transaction.created_by !== userId) return;
 
     if (transaction.type === 'stock_in') {
       totalStockIn += transaction.quantity;
@@ -73,7 +77,8 @@ export async function getDashboardMetrics(period: TimePeriod): Promise<Dashboard
 }
 
 export async function getInventoryTrends(period: TimePeriod) {
-  const cacheKey = `inventory-trends-${period}`;
+  const userId = requireCurrentUserId();
+  const cacheKey = `inventory-trends-${userId}-${period}`;
   const cached = dashboardCache.get(cacheKey);
 
   if (cached && isCacheValid(cached.timestamp)) {
@@ -97,6 +102,7 @@ export async function getInventoryTrends(period: TimePeriod) {
 
   snapshot.docs.forEach(doc => {
     const transaction = doc.data();
+    if (transaction.created_by !== userId) return;
     const date = transaction.transaction_date?.toDate ?
       transaction.transaction_date.toDate() :
       new Date(transaction.transaction_date || Date.now());
@@ -146,7 +152,8 @@ export async function getInventoryTrends(period: TimePeriod) {
 }
 
 export async function getStockLevels() {
-  const cacheKey = 'stock-levels';
+  const userId = requireCurrentUserId();
+  const cacheKey = `stock-levels-${userId}`;
   const cached = dashboardCache.get(cacheKey);
 
   if (cached && isCacheValid(cached.timestamp)) {
@@ -160,6 +167,7 @@ export async function getStockLevels() {
 
   for (const itemDoc of itemsSnapshot.docs) {
     const data = itemDoc.data();
+    if (data.created_by !== userId) continue;
     const item = { id: itemDoc.id, ...data };
     const current_quantity = data.current_quantity ?? 0;
 

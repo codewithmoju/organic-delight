@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Transaction } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 export interface ValuationBatch {
     quantity: number;
@@ -28,6 +29,7 @@ export interface ItemValuation {
  * or LIFO (Last-In First-Out) methods.
  */
 export async function calculateInventoryValuation(method: 'FIFO' | 'LIFO' = 'FIFO') {
+    const userId = requireCurrentUserId();
     // 1. Get all movements
     const transactionsRef = collection(db, 'transactions');
     const itemsRef = collection(db, 'items');
@@ -38,13 +40,17 @@ export async function calculateInventoryValuation(method: 'FIFO' | 'LIFO' = 'FIF
     ]);
 
     const itemsMap = new Map();
-    itemsSnap.docs.forEach(doc => itemsMap.set(doc.id, doc.data().name));
+    itemsSnap.docs
+        .filter(doc => doc.data().created_by === userId)
+        .forEach(doc => itemsMap.set(doc.id, doc.data().name));
 
     const inventory: { [key: string]: ValuationBatch[] } = {};
 
     // Process transactions sequentially to build batches
     transactionsSnap.docs.forEach(doc => {
         const t = doc.data() as Transaction;
+        if ((t as any).created_by !== userId) return;
+        if (!itemsMap.has(t.item_id)) return;
         if (!inventory[t.item_id]) inventory[t.item_id] = [];
 
         if (t.type === 'stock_in') {

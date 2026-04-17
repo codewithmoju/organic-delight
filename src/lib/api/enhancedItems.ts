@@ -114,14 +114,17 @@ export async function createItemWithInitialStock(itemData: {
 export async function getItemByBarcode(barcode: string): Promise<Item | null> {
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('barcode', '==', barcode), where('is_archived', '!=', true));
+    const q = query(itemsRef, where('barcode', '==', barcode));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       return null;
     }
 
-    const itemDoc = snapshot.docs[0];
+    const itemDoc = snapshot.docs.find((docSnap) => docSnap.data().is_archived !== true);
+    if (!itemDoc) {
+      return null;
+    }
     const itemData = itemDoc.data();
 
     return {
@@ -139,14 +142,17 @@ export async function getItemByBarcode(barcode: string): Promise<Item | null> {
 export async function getItemByProductId(productId: string): Promise<Item | null> {
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('sku', '==', productId), where('is_archived', '!=', true));
+    const q = query(itemsRef, where('sku', '==', productId));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       return null;
     }
 
-    const itemDoc = snapshot.docs[0];
+    const itemDoc = snapshot.docs.find((docSnap) => docSnap.data().is_archived !== true);
+    if (!itemDoc) {
+      return null;
+    }
     const itemData = itemDoc.data();
 
     return {

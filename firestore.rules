@@ -14,10 +14,38 @@ service cloud.firestore {
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
+
+    function isCreatedByOwner() {
+      return isAuthenticated() && (resource.data.created_by == request.auth.uid || isAdmin());
+    }
+
+    function isCreatedByOwnerOnCreate() {
+      return isAuthenticated() && (request.resource.data.created_by == request.auth.uid || isAdmin());
+    }
+
+    function isCreatedByOwnerOnUpdate() {
+      return isAuthenticated() &&
+        (resource.data.created_by == request.auth.uid || isAdmin()) &&
+        (request.resource.data.created_by == resource.data.created_by || isAdmin());
+    }
+
+    function isCashierOwner() {
+      return isAuthenticated() && (resource.data.cashier_id == request.auth.uid || isAdmin());
+    }
+
+    function isCashierOwnerOnCreate() {
+      return isAuthenticated() && (request.resource.data.cashier_id == request.auth.uid || isAdmin());
+    }
+
+    function isCashierOwnerOnUpdate() {
+      return isAuthenticated() &&
+        (resource.data.cashier_id == request.auth.uid || isAdmin()) &&
+        (request.resource.data.cashier_id == resource.data.cashier_id || isAdmin());
+    }
     
     // Profile rules
     match /profiles/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isOwner(userId) || isAdmin();
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
@@ -25,69 +53,69 @@ service cloud.firestore {
     
     // Items rules
     match /items/{itemId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow delete: if isAuthenticated();
-      allow update: if isAuthenticated(); // REMOVED RESTRICTION: Allow any authenticated user to update including price
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
     
     // Categories rules
     match /categories/{categoryId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
     
     // Transactions rules (Stock in/out)
     match /transactions/{transactionId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // POS Settings rules
     match /pos_settings/{settingsId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read, create, update, delete: if isOwner(settingsId) || isAdmin();
     }
 
     // Bill types lookup rules
     match /bill_types/{billTypeId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
     }
 
     // Units lookup rules
     match /units/{unitId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
     }
 
     // Payment methods lookup rules
     match /payment_methods/{paymentMethodId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
     }
 
     // Business types lookup rules
     match /business_types/{businessTypeId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
     }
 
     // Discounts lookup rules
     match /discounts/{discountId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
     }
 
     // POS Transactions rules
     match /pos_transactions/{transactionId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if isCashierOwner();
+      allow create: if isCashierOwnerOnCreate();
+      allow update: if isCashierOwnerOnUpdate();
+      allow delete: if isCashierOwner();
     }
 
     // User Settings rules
@@ -97,68 +125,74 @@ service cloud.firestore {
 
     // Vendor rules
     match /vendors/{vendorId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // Vendor Payments rules
     match /vendor_payments/{paymentId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // Purchase rules
     match /purchases/{purchaseId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated(); 
-      allow delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // Customer rules
     match /customers/{customerId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // Customer Payments rules
     match /customer_payments/{paymentId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // Expense rules
     match /expenses/{expenseId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // POS Returns rules
     match /pos_returns/{returnId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // Sales rules
     match /sales/{saleId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
 
     // Stock Adjustments rules
     match /stock_adjustments/{adjustmentId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated();
+      allow read: if isCreatedByOwner();
+      allow create: if isCreatedByOwnerOnCreate();
+      allow update: if isCreatedByOwnerOnUpdate();
+      allow delete: if isCreatedByOwner();
     }
   }
 }

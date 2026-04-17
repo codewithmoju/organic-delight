@@ -28,13 +28,7 @@ export async function getBusinessTypes(): Promise<BusinessType[]> {
         // If no types found, seed them
         if (snapshot.empty) {
             console.log('No business types found, seeding defaults...');
-            await seedBusinessTypes();
-            // Fetch again after seeding
-            const newSnapshot = await getDocs(q);
-            return newSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as BusinessType));
+            return STATIC_BUSINESS_TYPES.map(t => ({ ...t, id: t.value }));
         }
 
         return snapshot.docs.map(doc => ({
@@ -43,7 +37,6 @@ export async function getBusinessTypes(): Promise<BusinessType[]> {
         } as BusinessType));
     } catch (error) {
         console.error('Error fetching business types:', error);
-        // Fallback to static types if DB fails (offline support basic)
         return STATIC_BUSINESS_TYPES.map(t => ({ ...t, id: t.value }));
     }
 }

@@ -14,6 +14,7 @@ import { db } from '../firebase';
 import { DailyOperationsReport } from '../types';
 import { getExpenses, getCashExpenses } from './expenses';
 import { getPurchases } from './purchases';
+import { requireCurrentUserId } from './userScope';
 
 // ============================================
 // DAILY OPERATIONS REPORT
@@ -24,6 +25,7 @@ import { getPurchases } from './purchases';
  * Aggregates all financial data for a given date
  */
 export async function generateDailyReport(date: Date): Promise<DailyOperationsReport> {
+    const userId = requireCurrentUserId();
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -54,7 +56,7 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
         }))
         .filter(t => {
             const txDate = new Date(t.created_at);
-            return txDate >= startOfDay && txDate <= endOfDay;
+            return t.cashier_id === userId && txDate >= startOfDay && txDate <= endOfDay;
         });
 
     // Calculate sales by payment method
@@ -104,7 +106,7 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
             }))
             .filter(r => {
                 const rDate = new Date(r.created_at);
-                return rDate >= startOfDay && rDate <= endOfDay;
+                return r.created_by === userId && rDate >= startOfDay && rDate <= endOfDay;
             });
 
         totalReturns = dayReturns.reduce((sum, r) => sum + (r.total_refund || 0), 0);
@@ -134,7 +136,7 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
             }))
             .filter(vp => {
                 const vpDate = new Date(vp.payment_date);
-                return vpDate >= startOfDay && vpDate <= endOfDay;
+                return vp.created_by === userId && vpDate >= startOfDay && vpDate <= endOfDay;
             });
         vendorPayments = dayVP.reduce((sum, vp) => sum + (vp.amount || 0), 0);
     } catch (error) {
@@ -153,7 +155,7 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
             }))
             .filter(cp => {
                 const cpDate = new Date(cp.payment_date);
-                return cpDate >= startOfDay && cpDate <= endOfDay;
+                return cp.created_by === userId && cpDate >= startOfDay && cpDate <= endOfDay;
             });
         customerCollections = dayCP.reduce((sum, cp) => sum + (cp.amount || 0), 0);
     } catch (error) {

@@ -12,8 +12,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Category } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 export async function getCategories(): Promise<Category[]> {
+  const userId = requireCurrentUserId();
   const categoriesRef = collection(db, 'categories');
   const q = query(categoriesRef, orderBy('name'));
   const snapshot = await getDocs(q);
@@ -21,10 +23,17 @@ export async function getCategories(): Promise<Category[]> {
   const categories = [];
   for (const docSnapshot of snapshot.docs) {
     const category = { id: docSnapshot.id, ...docSnapshot.data() } as Category;
+    if (category.created_by !== userId) {
+      continue;
+    }
 
     // Get item count for this category
     const itemsRef = collection(db, 'items');
-    const itemsQuery = query(itemsRef, where('category_id', '==', category.id));
+    const itemsQuery = query(
+      itemsRef,
+      where('category_id', '==', category.id),
+      where('created_by', '==', userId)
+    );
     const itemsSnapshot = await getDocs(itemsQuery);
     category.item_count = itemsSnapshot.size;
 
@@ -35,6 +44,7 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getCategoryById(id: string): Promise<Category> {
+  const userId = requireCurrentUserId();
   const docRef = doc(db, 'categories', id);
   const docSnap = await getDoc(docRef);
 
@@ -42,7 +52,12 @@ export async function getCategoryById(id: string): Promise<Category> {
     throw new Error('Category not found');
   }
 
-  return { id: docSnap.id, ...docSnap.data() } as Category;
+  const category = { id: docSnap.id, ...docSnap.data() } as Category;
+  if (category.created_by !== userId) {
+    throw new Error('Category not found');
+  }
+
+  return category;
 }
 
 export async function createCategory(categoryData: {
@@ -51,9 +66,14 @@ export async function createCategory(categoryData: {
   color?: string;
   created_by: string;
 }): Promise<Category> {
+  const userId = requireCurrentUserId();
   // Check for duplicate category names
   const categoriesRef = collection(db, 'categories');
-  const existingQuery = query(categoriesRef, where('name', '==', categoryData.name.trim()));
+  const existingQuery = query(
+    categoriesRef,
+    where('name', '==', categoryData.name.trim()),
+    where('created_by', '==', userId)
+  );
   const existingSnapshot = await getDocs(existingQuery);
 
   if (!existingSnapshot.empty) {
@@ -62,6 +82,7 @@ export async function createCategory(categoryData: {
 
   const docRef = await addDoc(collection(db, 'categories'), {
     ...categoryData,
+    created_by: userId,
     name: categoryData.name.trim(),
     color: categoryData.color || '#6366f1',
     created_at: new Date(),
@@ -83,14 +104,21 @@ export async function updateCategory(id: string, categoryData: {
   description?: string;
   color?: string;
 }): Promise<Category> {
+  const userId = requireCurrentUserId();
+  const currentCategory = await getCategoryById(id);
+
   // Check for duplicate category names if name is being updated
   if (categoryData.name) {
     const categoriesRef = collection(db, 'categories');
-    const existingQuery = query(categoriesRef, where('name', '==', categoryData.name.trim()));
+    const existingQuery = query(
+      categoriesRef,
+      where('name', '==', categoryData.name.trim()),
+      where('created_by', '==', userId)
+    );
     const existingSnapshot = await getDocs(existingQuery);
 
     // Check if any existing category has this name (excluding current category)
-    const duplicateExists = existingSnapshot.docs.some(doc => doc.id !== id);
+    const duplicateExists = existingSnapshot.docs.some(doc => doc.id !== id && doc.data().created_by === currentCategory.created_by);
     if (duplicateExists) {
       throw new Error('A category with this name already exists');
     }
@@ -108,9 +136,16 @@ export async function updateCategory(id: string, categoryData: {
 }
 
 export async function deleteCategory(id: string): Promise<void> {
+  const userId = requireCurrentUserId();
+  await getCategoryById(id);
+
   // Check if category has items
   const itemsRef = collection(db, 'items');
-  const itemsQuery = query(itemsRef, where('category_id', '==', id));
+  const itemsQuery = query(
+    itemsRef,
+    where('category_id', '==', id),
+    where('created_by', '==', userId)
+  );
   const itemsSnapshot = await getDocs(itemsQuery);
 
   if (!itemsSnapshot.empty) {
@@ -121,8 +156,13 @@ export async function deleteCategory(id: string): Promise<void> {
 }
 
 export async function getCategoryItemCount(categoryId: string): Promise<number> {
+  const userId = requireCurrentUserId();
   const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where('category_id', '==', categoryId));
+  const q = query(
+    itemsRef,
+    where('category_id', '==', categoryId),
+    where('created_by', '==', userId)
+  );
   const snapshot = await getDocs(q);
   return snapshot.size;
 }

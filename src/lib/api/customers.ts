@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Customer, CustomerPayment } from '../types';
+import { requireCurrentUserId } from './userScope';
 // ============================================
 // CUSTOMER CRUD OPERATIONS
 // ============================================
@@ -21,6 +22,7 @@ import { Customer, CustomerPayment } from '../types';
  * Get all active customers
  */
 export async function getCustomers(): Promise<Customer[]> {
+    const userId = requireCurrentUserId();
     try {
         const customersRef = collection(db, 'customers');
         // Filter server-side for active customers
@@ -36,7 +38,7 @@ export async function getCustomers(): Promise<Customer[]> {
             ...doc.data(),
             created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
             updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
-        })) as Customer[];
+        })).filter(c => (c as Customer).created_by === userId) as Customer[];
     } catch (error: any) {
         console.error('Firestore getCustomers error:', error);
 
@@ -51,7 +53,7 @@ export async function getCustomers(): Promise<Customer[]> {
                 created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
                 updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
             })) as Customer[];
-            return all.filter(c => c.is_active !== false);
+            return all.filter(c => c.is_active !== false && c.created_by === userId);
         }
         throw error;
     }
@@ -61,6 +63,7 @@ export async function getCustomers(): Promise<Customer[]> {
  * Get all customers including inactive
  */
 export async function getAllCustomers(): Promise<Customer[]> {
+    const userId = requireCurrentUserId();
     const customersRef = collection(db, 'customers');
     const q = query(customersRef, orderBy('name'));
     const snapshot = await getDocs(q);
@@ -70,13 +73,14 @@ export async function getAllCustomers(): Promise<Customer[]> {
         ...doc.data(),
         created_at: doc.data().created_at?.toDate() || new Date(),
         updated_at: doc.data().updated_at?.toDate() || new Date()
-    })) as Customer[];
+    })).filter(c => (c as Customer).created_by === userId) as Customer[];
 }
 
 /**
  * Get a single customer by ID
  */
 export async function getCustomerById(customerId: string): Promise<Customer | null> {
+    const userId = requireCurrentUserId();
     const customerDoc = await getDoc(doc(db, 'customers', customerId));
 
     if (!customerDoc.exists()) {
@@ -84,12 +88,14 @@ export async function getCustomerById(customerId: string): Promise<Customer | nu
     }
 
     const data = customerDoc.data();
-    return {
+    const customer = {
         id: customerDoc.id,
         ...data,
         created_at: data.created_at?.toDate() || new Date(),
         updated_at: data.updated_at?.toDate() || new Date()
     } as Customer;
+
+    return customer.created_by === userId ? customer : null;
 }
 
 /**
@@ -102,10 +108,12 @@ export async function createCustomer(customerData: {
     address?: string;
     created_by: string;
 }): Promise<Customer> {
+    const userId = requireCurrentUserId();
     const customersRef = collection(db, 'customers');
 
     const newCustomer = {
         ...customerData,
+        created_by: userId,
         outstanding_balance: 0,
         total_purchases: 0,
         is_active: true,
@@ -118,6 +126,7 @@ export async function createCustomer(customerData: {
     return {
         id: docRef.id,
         ...customerData,
+        created_by: userId,
         outstanding_balance: 0,
         total_purchases: 0,
         is_active: true,
@@ -133,7 +142,13 @@ export async function updateCustomer(
     customerId: string,
     updates: Partial<Omit<Customer, 'id' | 'created_at' | 'created_by'>>
 ): Promise<void> {
+    const userId = requireCurrentUserId();
     const customerRef = doc(db, 'customers', customerId);
+    const customerDoc = await getDoc(customerRef);
+    if (!customerDoc.exists() || customerDoc.data().created_by !== userId) {
+        throw new Error('Customer not found');
+    }
+
     await updateDoc(customerRef, {
         ...updates,
         updated_at: Timestamp.fromDate(new Date())
@@ -144,7 +159,13 @@ export async function updateCustomer(
  * Deactivate a customer (soft delete)
  */
 export async function deactivateCustomer(customerId: string): Promise<void> {
+    const userId = requireCurrentUserId();
     const customerRef = doc(db, 'customers', customerId);
+    const customerDoc = await getDoc(customerRef);
+    if (!customerDoc.exists() || customerDoc.data().created_by !== userId) {
+        throw new Error('Customer not found');
+    }
+
     await updateDoc(customerRef, {
         is_active: false,
         updated_at: Timestamp.fromDate(new Date())
@@ -155,12 +176,14 @@ export async function deactivateCustomer(customerId: string): Promise<void> {
  * Permanently delete a customer and their data
  */
 export async function deleteCustomer(customerId: string): Promise<void> {
+    const userId = requireCurrentUserId();
     const customerRef = doc(db, 'customers', customerId);
 
     await runTransaction(db, async (transaction) => {
         // 1. Check if customer exists
         const docSnap = await transaction.get(customerRef);
         if (!docSnap.exists()) throw new Error("Customer does not exist");
+        if (docSnap.data().created_by !== userId) throw new Error('Customer not found');
 
         // 2. Delete the customer document
         transaction.delete(customerRef);
@@ -180,6 +203,7 @@ export async function deleteCustomer(customerId: string): Promise<void> {
  * Get customer payment history (ledger)
  */
 export async function getCustomerLedger(customerId: string): Promise<CustomerPayment[]> {
+    const userId = requireCurrentUserId();
     const paymentsRef = collection(db, 'customer_payments');
     const q = query(
         paymentsRef,
@@ -194,7 +218,7 @@ export async function getCustomerLedger(customerId: string): Promise<CustomerPay
             ...doc.data(),
             payment_date: doc.data().payment_date?.toDate() || new Date(),
             created_at: doc.data().created_at?.toDate() || new Date()
-        })) as CustomerPayment[];
+        })).filter(p => (p as CustomerPayment).created_by === userId) as CustomerPayment[];
 
         // Sort in memory
         return payments.sort((a, b) => b.payment_date.getTime() - a.payment_date.getTime());
@@ -227,6 +251,7 @@ export async function recordCustomerTransaction(transactionData: {
     payment_date: Date;
     created_by: string;
 }): Promise<CustomerPayment> {
+    const userId = requireCurrentUserId();
     try {
         return await runTransaction(db, async (transaction) => {
             // Get current customer data
@@ -234,6 +259,9 @@ export async function recordCustomerTransaction(transactionData: {
             const customerDoc = await transaction.get(customerRef);
 
             if (!customerDoc.exists()) {
+                throw new Error('Customer not found');
+            }
+            if (customerDoc.data().created_by !== userId) {
                 throw new Error('Customer not found');
             }
 
@@ -275,11 +303,14 @@ export async function recordCustomerTransaction(transactionData: {
                 created_by: transactionData.created_by
             };
 
+            paymentRecord.created_by = userId;
+
             transaction.set(paymentRef, paymentRecord);
 
             return {
                 id: paymentRef.id,
                 ...transactionData,
+                created_by: userId,
                 created_at: new Date()
             };
         });
@@ -297,12 +328,16 @@ export async function updateCustomerBalanceForSale(
     customerId: string,
     saleAmount: number
 ): Promise<void> {
+    const userId = requireCurrentUserId();
     const customerRef = doc(db, 'customers', customerId);
 
     await runTransaction(db, async (transaction) => {
         const customerDoc = await transaction.get(customerRef);
 
         if (!customerDoc.exists()) {
+            throw new Error('Customer not found');
+        }
+        if (customerDoc.data().created_by !== userId) {
             throw new Error('Customer not found');
         }
 
@@ -365,6 +400,7 @@ export async function getCustomerBalanceSummary(customerId: string) {
  * Get credit sales for a customer
  */
 export async function getCustomerCreditSales(customerId: string) {
+    const userId = requireCurrentUserId();
     const transactionsRef = collection(db, 'pos_transactions');
     const q = query(
         transactionsRef,
@@ -379,7 +415,7 @@ export async function getCustomerCreditSales(customerId: string) {
             id: doc.id,
             ...doc.data(),
             created_at: doc.data().created_at?.toDate() || new Date()
-        }));
+        })).filter((s: any) => s.cashier_id === userId);
 
         // Sort in memory
         return sales.sort((a: any, b: any) => b.created_at.getTime() - a.created_at.getTime());

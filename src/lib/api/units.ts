@@ -29,7 +29,7 @@ export async function getUnits(): Promise<Unit[]> {
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
-            return await seedUnits();
+            return DEFAULT_UNITS.map(unit => ({ id: unit.symbol.toLowerCase(), ...unit }));
         }
 
         return snapshot.docs.map(doc => ({
@@ -38,7 +38,7 @@ export async function getUnits(): Promise<Unit[]> {
         } as Unit));
     } catch (error) {
         console.error('Error fetching units:', error);
-        return [];
+        return DEFAULT_UNITS.map(unit => ({ id: unit.symbol.toLowerCase(), ...unit }));
     }
 }
 

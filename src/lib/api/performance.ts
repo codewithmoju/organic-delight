@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { POSTransaction } from '../types';
+import { requireCurrentUserId } from './userScope';
 
 export interface ProductRanking {
     name: string;
@@ -20,6 +21,7 @@ export interface ProductRanking {
  * Get product performance metrics over a date range
  */
 export async function getProductPerformance(days: number = 30): Promise<ProductRanking[]> {
+    const userId = requireCurrentUserId();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -46,7 +48,7 @@ export async function getProductPerformance(days: number = 30): Promise<ProductR
         const filteredDocs = fallbackSnapshot.docs.filter((doc) => {
             const data = doc.data() as any;
             const createdAt = data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || 0);
-            return createdAt.getTime() >= minTime;
+            return data.cashier_id === userId && createdAt.getTime() >= minTime;
         });
 
         snapshot = { docs: filteredDocs } as typeof fallbackSnapshot;
@@ -56,6 +58,7 @@ export async function getProductPerformance(days: number = 30): Promise<ProductR
 
     snapshot.docs.forEach(doc => {
         const t = doc.data() as POSTransaction;
+        if ((t as any).cashier_id !== userId) return;
         t.items.forEach(item => {
             if (!performance[item.item_name]) {
                 performance[item.item_name] = { qty: 0, revenue: 0, cost: 0 };

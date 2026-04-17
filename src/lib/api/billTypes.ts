@@ -32,7 +32,7 @@ export async function getBillTypes(): Promise<BillType[]> {
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
-            return await seedBillTypes();
+            return DEFAULT_BILL_TYPES.map(type => ({ id: type.code, ...type }));
         }
 
         const types = snapshot.docs.map(doc => ({
@@ -44,7 +44,7 @@ export async function getBillTypes(): Promise<BillType[]> {
         return types.sort((a, _b) => (a.is_default ? -1 : 1));
     } catch (error) {
         console.error('Error fetching bill types:', error);
-        return [];
+        return DEFAULT_BILL_TYPES.map(type => ({ id: type.code, ...type }));
     }
 }
 
