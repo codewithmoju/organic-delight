@@ -1150,6 +1150,18 @@
         "quickSummary": "فوری خلاصہ",
         "netOutstanding": "خالص بقایا",
         "totalSuppliers": "کل سپلائرز",
-        "globalActions": "عالمی اعمال"
+        "globalActions": "عالمی اعمال",
+        "messages": {
+            "indexRequired": "ڈیٹا بیس انڈیکس درکار ہے۔ سیٹ اپ لنک کے لیے براہ کرم براؤزر کنسول چیک کریں۔",
+            "loadFailed": "سپلائرز لوڈ کرنے میں ناکامی",
+            "searchFailed": "تلاش ناکام ہو گئی",
+            "requiredFields": "براہ کرم تمام لازمی فیلڈز (*) بھریں",
+            "requiredFieldsSimple": "براہ کرم تمام لازمی فیلڈز بھریں",
+            "addSuccess": "{{company}} کامیابی سے شامل ہو گیا",
+            "addFailed": "سپلائر شامل کرنے میں ناکامی",
+            "createSuccess": "{{company}} کامیابی سے بنایا گیا",
+            "createFailed": "سپلائر بنانے میں ناکامی",
+            "unsavedDiscarded": "غیر محفوظ سپلائر تفصیلات ختم کر دی گئیں"
+        }
     }
 }

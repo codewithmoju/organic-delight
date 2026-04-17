@@ -6,6 +6,7 @@ import { Vendor } from '../../lib/types';
 import { getVendors, createVendor } from '../../lib/api/vendors';
 import { useAuthStore } from '../../lib/store';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import { useTranslation } from 'react-i18next';
 
 interface VendorSelectorProps {
     onVendorSelected: (vendor: Vendor) => void;
@@ -13,6 +14,15 @@ interface VendorSelectorProps {
 }
 
 export default function VendorSelector({ onVendorSelected, selectedVendor }: VendorSelectorProps) {
+    const { t } = useTranslation();
+    const emptyVendorForm = {
+        name: '',
+        company: '',
+        phone: '',
+        email: '',
+        address: '',
+        gst_number: ''
+    };
     const [searchQuery, setSearchQuery] = useState('');
     const [vendors, setVendors] = useState<Vendor[]>(() => {
         try {
@@ -34,6 +44,18 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
         address: '',
         gst_number: ''
     });
+
+    const hasUnsavedVendorInput = () => {
+        return Object.values(newVendor).some(value => value.trim() !== '');
+    };
+
+    const handleCancelCreateForm = () => {
+        if (hasUnsavedVendorInput()) {
+            toast.info(t('vendors.messages.unsavedDiscarded', 'Unsaved vendor details were discarded'));
+        }
+        setShowCreateForm(false);
+        setNewVendor(emptyVendorForm);
+    };
 
     useEffect(() => {
         loadVendors();
@@ -66,7 +88,7 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
         } catch (error) {
             console.error('Error loading vendors:', error);
             // Only show error if no cache
-            if (vendors.length === 0) toast.error('Failed to load vendors');
+            if (vendors.length === 0) toast.error(t('vendors.messages.loadFailed', 'Failed to load vendors'));
         } finally {
             setIsLoading(false);
         }
@@ -75,34 +97,35 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
     const handleCreateVendor = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!newVendor.name.trim() || !newVendor.company.trim() || !newVendor.phone.trim()) {
-            toast.error('Please fill in all required fields');
+        const payload = {
+            ...newVendor,
+            name: newVendor.name.trim(),
+            company: newVendor.company.trim(),
+            phone: newVendor.phone.trim(),
+            email: newVendor.email.trim(),
+            address: newVendor.address.trim(),
+            gst_number: newVendor.gst_number.trim()
+        };
+
+        if (!payload.name || !payload.company || !payload.phone) {
+            toast.error(t('vendors.messages.requiredFieldsSimple', 'Please fill in all required fields'));
             return;
         }
 
         setIsCreating(true);
         try {
             const vendor = await createVendor({
-                ...newVendor,
-                name: newVendor.name.trim(),
-                company: newVendor.company.trim(),
-                phone: newVendor.phone.trim(),
-                email: newVendor.email.trim(),
-                address: newVendor.address.trim(),
-                gst_number: newVendor.gst_number.trim(),
+                ...payload,
                 created_by: user?.uid || 'unknown'
             });
 
-            toast.success('Vendor created successfully');
+            toast.success(t('vendors.messages.createSuccess', '{{company}} created successfully', { company: vendor.company }));
             setVendors(prev => [vendor, ...prev]);
             onVendorSelected(vendor);
             setShowCreateForm(false);
-            setNewVendor({
-                name: '', company: '', phone: '',
-                email: '', address: '', gst_number: ''
-            });
+            setNewVendor(emptyVendorForm);
         } catch (error: any) {
-            toast.error(error.message || 'Failed to create vendor');
+            toast.error(error.message || t('vendors.messages.createFailed', 'Failed to create vendor'));
         } finally {
             setIsCreating(false);
         }
@@ -153,7 +176,7 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
                             Add New Vendor
                         </h3>
                         <button
-                            onClick={() => setShowCreateForm(false)}
+                            onClick={handleCancelCreateForm}
                             className="p-2 hover:bg-secondary rounded-lg transition-colors"
                         >
                             <X className="w-5 h-5 text-muted-foreground" />
@@ -253,7 +276,7 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
                         <div className="flex gap-3 pt-4 border-t border-border/50">
                             <button
                                 type="button"
-                                onClick={() => setShowCreateForm(false)}
+                                onClick={handleCancelCreateForm}
                                 className="flex-1 py-3 px-4 rounded-xl border border-border hover:bg-secondary transition-colors font-medium"
                             >
                                 Cancel

@@ -12,19 +12,21 @@ import {
     Printer
 } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
+import { toast } from 'sonner';
 import { Vendor, POSSettings } from '../../lib/types';
 import {
     getVendorById,
     getVendorLedger
 } from '../../lib/api/vendors';
 import { getPOSSettings } from '../../lib/api/pos';
-import { getPurchases } from '../../lib/api/purchases';
+import { getPurchasesByVendor } from '../../lib/api/purchases';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { exportToCSV } from '../../lib/utils/export';
 import LedgerSkeleton from './LedgerSkeleton';
 import RecordPaymentModal from './RecordPaymentModal';
 import AnimatedCard from '../ui/AnimatedCard';
 import VendorLedgerPDF from './VendorLedgerPDF';
+import EmptyState from '../ui/EmptyState';
 
 interface LedgerEntry {
     id: string;
@@ -100,11 +102,10 @@ export default function VendorLedger() {
         if (!id) return;
         setIsLoading(true);
         try {
-            // await new Promise(resolve => setTimeout(resolve, 800)); // Demo delay
-            const [vendorData, payments, purchases] = await Promise.all([
+            const [vendorData, payments, purchases, posSettings] = await Promise.all([
                 getVendorById(id),
                 getVendorLedger(id),
-                getPurchases(), // We'll filter these locally for now
+                getPurchasesByVendor(id),
                 getPOSSettings()
             ]);
 
@@ -114,12 +115,13 @@ export default function VendorLedger() {
             }
 
             setVendor(vendorData);
+            setSettings(posSettings);
 
             // Combine into a single ledger
             const entries: LedgerEntry[] = [];
 
             // Add purchases
-            purchases.filter(p => p.vendor_id === id).forEach(p => {
+            purchases.forEach(p => {
                 const itemNames = p.items.map(i => i.item_name).join(', ');
                 const displayNames = itemNames.length > 30 ? itemNames.substring(0, 27) + '...' : itemNames;
 
@@ -147,23 +149,14 @@ export default function VendorLedger() {
                 });
             });
 
-            {/* Sort of Sort of entries.sort((a, b) => b.date.getTime() - a.date.getTime()); */ }
             setLedger(entries.sort((a, b) => b.date.getTime() - a.date.getTime()));
         } catch (error) {
             console.error('Error loading ledger:', error);
+            toast.error('Failed to load complete vendor ledger data');
         } finally {
             setIsLoading(false);
         }
     };
-
-    // Update settings in state when fetched
-    useEffect(() => {
-        const fetchSettings = async () => {
-            const s = await getPOSSettings();
-            setSettings(s);
-        };
-        fetchSettings();
-    }, []);
 
     const handleExport = () => {
         if (!vendor || ledger.length === 0) return;
@@ -344,12 +337,13 @@ export default function VendorLedger() {
                                 ))}
                                 {ledger.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-24 text-center">
-                                            <div className="flex flex-col items-center justify-center opacity-50">
-                                                <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-                                                <p className="text-lg font-medium text-foreground">No transactions found</p>
-                                                <p className="text-sm text-muted-foreground">This vendor has no recorded history yet.</p>
-                                            </div>
+                                        <td colSpan={6} className="px-6 py-10">
+                                            <EmptyState
+                                                icon={FileText}
+                                                title="No transactions found"
+                                                description="This vendor has no recorded history yet."
+                                                className="max-w-2xl mx-auto shadow-none"
+                                            />
                                         </td>
                                     </tr>
                                 )}
@@ -362,7 +356,7 @@ export default function VendorLedger() {
             <RecordPaymentModal
                 isOpen={isPaymentModalOpen}
                 onClose={() => setIsPaymentModalOpen(false)}
-                vendor={vendor}
+                vendor={displayVendor || vendor}
                 onSuccess={loadData}
             />
 

@@ -6,6 +6,7 @@ import { getVendors, searchVendors, createVendor } from '../../lib/api/vendors';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface VendorListModalProps {
     isOpen: boolean;
@@ -20,10 +21,13 @@ export default function VendorListModal({
     onSelectVendor,
     mode = 'view'
 }: VendorListModalProps) {
+    const { t } = useTranslation();
+    const emptyVendorForm = { name: '', company: '', phone: '', email: '', address: '', gst_number: '' };
     const profile = useAuthStore(state => state.profile);
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [isAdding, setIsAdding] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newVendor, setNewVendor] = useState({
         name: '',
@@ -33,6 +37,18 @@ export default function VendorListModal({
         address: '',
         gst_number: ''
     });
+
+    const hasUnsavedVendorInput = () => {
+        return Object.values(newVendor).some(value => value.trim() !== '');
+    };
+
+    const handleCancelAddForm = () => {
+        if (hasUnsavedVendorInput()) {
+            toast.info(t('vendors.messages.unsavedDiscarded', 'Unsaved vendor details were discarded'));
+        }
+        setShowAddForm(false);
+        setNewVendor(emptyVendorForm);
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -59,8 +75,8 @@ export default function VendorListModal({
         } catch (error: any) {
             console.error('Error loading vendors:', error);
             const msg = error.message?.includes('index')
-                ? 'Database index required. Please check the browser console for the setup link.'
-                : 'Failed to load vendors';
+                ? t('vendors.messages.indexRequired', 'Database index required. Please check the browser console for the setup link.')
+                : t('vendors.messages.loadFailed', 'Failed to load vendors');
             toast.error(msg);
         } finally {
             setIsLoading(false);
@@ -75,27 +91,40 @@ export default function VendorListModal({
             setVendors(data);
         } catch (error) {
             console.error('Error searching vendors:', error);
-            toast.error('Search failed');
+            toast.error(t('vendors.messages.searchFailed', 'Search failed'));
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleAddVendor = async () => {
-        if (!newVendor.name || !newVendor.company || !newVendor.phone) {
-            toast.error('Please fill in all required fields (*)');
+    const handleAddVendor = async (e?: React.FormEvent) => {
+        e?.preventDefault();
+
+        const payload = {
+            ...newVendor,
+            name: newVendor.name.trim(),
+            company: newVendor.company.trim(),
+            phone: newVendor.phone.trim(),
+            email: newVendor.email.trim(),
+            address: newVendor.address.trim(),
+            gst_number: newVendor.gst_number.trim()
+        };
+
+        if (!payload.name || !payload.company || !payload.phone) {
+            toast.error(t('vendors.messages.requiredFields', 'Please fill in all required fields (*)'));
             return;
         }
 
         try {
+            setIsAdding(true);
             const vendor = await createVendor({
-                ...newVendor,
+                ...payload,
                 created_by: profile?.id || 'unknown'
             });
             setVendors(prev => [vendor, ...prev]);
             setShowAddForm(false);
-            setNewVendor({ name: '', company: '', phone: '', email: '', address: '', gst_number: '' });
-            toast.success('Vendor added successfully');
+            setNewVendor(emptyVendorForm);
+            toast.success(t('vendors.messages.addSuccess', '{{company}} added successfully', { company: vendor.company }));
 
             // If in select mode, auto-select the new vendor
             if (mode === 'select' && onSelectVendor) {
@@ -104,7 +133,9 @@ export default function VendorListModal({
             }
         } catch (error) {
             console.error('Error adding vendor:', error);
-            toast.error('Failed to add vendor');
+            toast.error(t('vendors.messages.addFailed', 'Failed to add vendor'));
+        } finally {
+            setIsAdding(false);
         }
     };
 
@@ -167,7 +198,7 @@ export default function VendorListModal({
                                         />
                                     </div>
                                     <button
-                                        onClick={() => setShowAddForm(!showAddForm)}
+                                        onClick={() => showAddForm ? handleCancelAddForm() : setShowAddForm(true)}
                                         className={`px-5 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${showAddForm
                                             ? 'bg-secondary text-foreground hover:bg-secondary/80'
                                             : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20'}`}
@@ -187,7 +218,7 @@ export default function VendorListModal({
                                         exit={{ height: 0, opacity: 0 }}
                                         className="border-b border-border/50 bg-secondary/5 overflow-hidden"
                                     >
-                                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <form onSubmit={handleAddVendor} className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-4">
                                                 <div className="relative">
                                                     <User className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
@@ -254,14 +285,15 @@ export default function VendorListModal({
                                             </div>
                                             <div className="sm:col-span-2 flex justify-end">
                                                 <button
-                                                    onClick={handleAddVendor}
-                                                    className="btn-primary px-8 py-3 rounded-xl shadow-lg shadow-primary/20 flex items-center gap-2"
+                                                    type="submit"
+                                                    disabled={isAdding}
+                                                    className="btn-primary px-8 py-3 rounded-xl shadow-lg shadow-primary/20 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                                                 >
                                                     <Check className="w-5 h-5" />
-                                                    Save New Vendor
+                                                    {isAdding ? 'Saving...' : 'Save New Vendor'}
                                                 </button>
                                             </div>
-                                        </div>
+                                        </form>
                                     </motion.div>
                                 )}
                             </AnimatePresence>

@@ -1160,6 +1160,18 @@
     "quickSummary": "Quick Summary",
     "netOutstanding": "Net Outstanding",
     "totalSuppliers": "Total Suppliers",
-    "globalActions": "Global Actions"
+    "globalActions": "Global Actions",
+    "messages": {
+      "indexRequired": "Database index required. Please check the browser console for the setup link.",
+      "loadFailed": "Failed to load vendors",
+      "searchFailed": "Search failed",
+      "requiredFields": "Please fill in all required fields (*)",
+      "requiredFieldsSimple": "Please fill in all required fields",
+      "addSuccess": "{{company}} added successfully",
+      "addFailed": "Failed to add vendor",
+      "createSuccess": "{{company}} created successfully",
+      "createFailed": "Failed to create vendor",
+      "unsavedDiscarded": "Unsaved vendor details were discarded"
+    }
   }
 }
