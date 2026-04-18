@@ -1,6 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
+import { formatCurrency } from '../../lib/utils/notifications';
 
 interface TopProductProps {
     product?: {
@@ -54,7 +55,7 @@ export default function TopProductCard({ product, isLoading }: TopProductProps) 
 
             <div className="mt-6 flex items-end justify-between">
                 <div>
-                    <p className="font-bold text-3xl text-primary">${data.price}</p>
+                    <p className="font-bold text-3xl text-primary">{formatCurrency(data.price)}</p>
                     <p className="text-xs text-muted-foreground mt-1">Unit Price</p>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">

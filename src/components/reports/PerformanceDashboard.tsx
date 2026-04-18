@@ -3,12 +3,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, Award, Target, Info, Calendar } from 'lucide-react';
 import { getProductPerformance, ProductRanking } from '../../lib/api/performance';
 import { formatCurrency } from '../../lib/utils/notifications';
-import { useAuthStore } from '../../lib/store';
 import AnimatedCard from '../ui/AnimatedCard';
 import PerformanceSkeleton from '../skeletons/PerformanceSkeleton';
 
 export default function PerformanceDashboard() {
-    const { profile } = useAuthStore();
     const [data, setData] = useState<ProductRanking[]>(() => {
         try {
             const cached = localStorage.getItem('performance_cache');
@@ -99,7 +97,7 @@ export default function PerformanceDashboard() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={top10} layout="vertical" margin={{ left: 0, right: 30 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} horizontal={true} vertical={false} />
-                                    <XAxis type="number" stroke="currentColor" opacity={0.4} fontSize={10} axisLine={false} tickLine={false} tickFormatter={(val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: profile?.preferred_currency || 'PKR', maximumFractionDigits: 0 }).format(val)} />
+                                    <XAxis type="number" stroke="currentColor" opacity={0.4} fontSize={10} axisLine={false} tickLine={false} tickFormatter={(val) => new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 }).format(val)} />
                                     <YAxis dataKey="name" type="category" stroke="currentColor" opacity={0.7} fontSize={11} width={100} axisLine={false} tickLine={false} />
                                     <Tooltip content={<CustomTooltip />} cursor={{ fill: 'currentColor', opacity: 0.05 }} />
                                     <Bar dataKey="profit" radius={[0, 6, 6, 0]} barSize={32}>

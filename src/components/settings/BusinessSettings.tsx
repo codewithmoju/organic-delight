@@ -18,7 +18,11 @@ export default function BusinessSettings() {
     const loadSettings = async () => {
         try {
             const settings = await getPOSSettings();
-            setFormData(settings);
+            setFormData({
+                ...settings,
+                store_country: settings.store_country || 'Pakistan',
+                currency: 'PKR'
+            });
         } catch (error) {
             console.error('Error loading business settings:', error);
             toast.error('Failed to load business settings');
@@ -145,8 +149,8 @@ export default function BusinessSettings() {
                         <label className="text-sm font-medium text-foreground-muted">Country</label>
                         <input
                             type="text"
-                            value={formData.store_country || ''}
-                            onChange={(e) => setFormData(prev => prev ? ({ ...prev, store_country: e.target.value }) : null)}
+                            value={formData.store_country || 'Pakistan'}
+                            readOnly
                             className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground"
                         />
                     </div>
@@ -217,15 +221,10 @@ export default function BusinessSettings() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-foreground-muted">Currency</label>
                         <select
-                            value={formData.currency}
-                            onChange={(e) => setFormData(prev => prev ? ({ ...prev, currency: e.target.value }) : null)}
+                            value={'PKR'}
+                            onChange={() => undefined}
                             className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground"
                         >
-                            <option value="USD">USD - US Dollar</option>
-                            <option value="EUR">EUR - Euro</option>
-                            <option value="GBP">GBP - British Pound</option>
-                            <option value="CAD">CAD - Canadian Dollar</option>
-                            <option value="AUD">AUD - Australian Dollar</option>
                             <option value="PKR">PKR - Pakistani Rupee</option>
                         </select>
                     </div>

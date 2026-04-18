@@ -234,7 +234,8 @@ export default function POSInterface() {
       console.error('Error loading POS settings:', error);
       setSettings({
         id: 'default', store_name: 'StockSuite Store', store_address: '', store_phone: '',
-        tax_rate: 0, currency: 'USD', receipt_footer_message: 'Thank you for your business!',
+        store_city: 'Lahore', store_country: 'Pakistan',
+        tax_rate: 0, currency: 'PKR', receipt_footer_message: 'Thank you for your business!',
         barcode_scanner_enabled: true, thermal_printer_enabled: false, auto_print_receipt: false
       } as any);
     }

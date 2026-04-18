@@ -48,19 +48,6 @@ const SECURITY_QUESTIONS = [
   "What was the make of your first car?",
 ];
 
-const COUNTRIES = [
-  { code: '+1', name: 'United States', flag: '🇺🇸' },
-  { code: '+44', name: 'United Kingdom', flag: '🇬🇧' },
-  { code: '+33', name: 'France', flag: '🇫🇷' },
-  { code: '+49', name: 'Germany', flag: '🇩🇪' },
-  { code: '+81', name: 'Japan', flag: '🇯🇵' },
-  { code: '+86', name: 'China', flag: '🇨🇳' },
-  { code: '+91', name: 'India', flag: '🇮🇳' },
-  { code: '+61', name: 'Australia', flag: '🇦🇺' },
-  { code: '+1', name: 'Canada', flag: '🇨🇦' },
-  { code: '+55', name: 'Brazil', flag: '🇧🇷' },
-];
-
 export default function MultiStepRegister() {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
@@ -87,7 +74,7 @@ export default function MultiStepRegister() {
     city: '',
     state: '',
     postalCode: '',
-    country: 'United States',
+    country: 'Pakistan',
     acceptTerms: false,
     acceptPrivacy: false,
   });
@@ -232,7 +219,7 @@ export default function MultiStepRegister() {
         },
         securityQuestion: formData.securityQuestion,
         securityAnswer: formData.securityAnswer, // In production, hash this
-        preferred_currency: 'USD',
+        preferred_currency: 'PKR',
         role: 'user',
         emailVerified: false,
         created_at: new Date(),
@@ -423,7 +410,7 @@ export default function MultiStepRegister() {
                     {t('auth.register.phone')} *
                   </label>
                   <PhoneInput
-                    country="us"
+                    country="pk"
                     value={formData.phone}
                     onChange={(value) => updateFormData('phone', value || '')}
                     enableSearch
@@ -769,13 +756,7 @@ export default function MultiStepRegister() {
                       onChange={(e) => updateFormData('country', e.target.value)}
                       className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 cursor-pointer w-full"
                     >
-                      <option value="United States" className="dark:bg-slate-900">🇺🇸 United States</option>
-                      <option value="United Kingdom" className="dark:bg-slate-900">🇬🇧 United Kingdom</option>
-                      <option value="Canada" className="dark:bg-slate-900">🇨🇦 Canada</option>
                       <option value="Pakistan" className="dark:bg-slate-900">🇵🇰 Pakistan</option>
-                      <option value="India" className="dark:bg-slate-900">🇮🇳 India</option>
-                      <option value="Australia" className="dark:bg-slate-900">🇦🇺 Australia</option>
-                      <option value="Brazil" className="dark:bg-slate-900">🇧🇷 Brazil</option>
                     </select>
                     {errors.country && (
                       <p className="mt-1 text-xs text-error-500 ml-1">{errors.country}</p>

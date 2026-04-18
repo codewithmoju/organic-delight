@@ -33,7 +33,7 @@ export function formatCurrency(amount: number, currency?: string): string {
 }
 
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat('en-US').format(value);
+  return new Intl.NumberFormat('en-PK').format(value);
 }
 
 export function formatDate(date: Date | any): string {
@@ -42,7 +42,7 @@ export function formatDate(date: Date | any): string {
     const dateObj = date.toDate ? date.toDate() : new Date(date);
     if (isNaN(dateObj.getTime())) return 'Invalid Date';
 
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat('en-PK', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

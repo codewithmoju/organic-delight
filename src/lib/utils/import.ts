@@ -79,7 +79,7 @@ export async function importItems(data: any[]): Promise<ImportResult> {
         category_id: categoryId,
         quantity: parseInt(row.quantity) || 0,
         unit: row.unit || 'units',
-        currency: row.currency || 'USD',
+        currency: row.currency || 'PKR',
         unit_price: parseFloat(row.unit_price) || 0,
         reorder_point: parseInt(row.reorder_point) || 10,
         sku: row.sku || null,
@@ -117,7 +117,7 @@ export function generateImportTemplate(): string {
   ];
 
   const sampleData = [
-    'Sample Product,A sample product description,Electronics,100,units,USD,29.99,10,SKU001,Supplier Inc,Warehouse A'
+    'Sample Product,A sample product description,Electronics,100,units,PKR,29.99,10,SKU001,Supplier Inc,Warehouse A'
   ];
 
   return [headers.join(','), ...sampleData].join('\n');

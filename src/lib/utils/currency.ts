@@ -6,26 +6,7 @@ export interface CurrencyRate {
 
 // Mock exchange rates - in production, fetch from a real API
 const MOCK_EXCHANGE_RATES: CurrencyRate = {
-  USD: 1.0,
-  EUR: 0.85,
-  GBP: 0.73,
-  JPY: 110.0,
-  CAD: 1.25,
-  AUD: 1.35,
-  CHF: 0.92,
-  CNY: 6.45,
-  INR: 74.5,
   PKR: 278.0,
-  SGD: 1.35,
-  HKD: 7.8,
-  SEK: 8.5,
-  NOK: 8.8,
-  DKK: 6.3,
-  NZD: 1.42,
-  MXN: 20.1,
-  BRL: 5.2,
-  ZAR: 14.8,
-  KRW: 1180.0,
 };
 
 export function getCurrencySymbol(currencyCode: string): string {
@@ -48,7 +29,8 @@ export function formatCurrencyWithCode(
   currencyCode: string = 'PKR',
   showCode: boolean = false
 ): string {
-  const currency = SUPPORTED_CURRENCIES.find(c => c.code === currencyCode);
+  const resolvedCurrency = currencyCode === 'PKR' ? 'PKR' : 'PKR';
+  const currency = SUPPORTED_CURRENCIES.find(c => c.code === resolvedCurrency);
   const symbol = currency?.symbol || currencyCode;
 
   // Special formatting for different currencies
@@ -57,16 +39,10 @@ export function formatCurrencyWithCode(
     maximumFractionDigits: 2,
   };
 
-  // Adjust decimal places for certain currencies
-  if (['JPY', 'KRW'].includes(currencyCode)) {
-    formatOptions.minimumFractionDigits = 0;
-    formatOptions.maximumFractionDigits = 0;
-  }
-
-  const formattedAmount = new Intl.NumberFormat('en-US', formatOptions).format(amount);
+  const formattedAmount = new Intl.NumberFormat('en-PK', formatOptions).format(amount);
 
   if (showCode) {
-    return `${symbol}${formattedAmount} ${currencyCode}`;
+    return `${symbol}${formattedAmount} PKR`;
   }
 
   return `${symbol}${formattedAmount}`;
@@ -98,7 +74,7 @@ export async function fetchExchangeRates(): Promise<CurrencyRate> {
 }
 
 export function getPopularCurrencies(): string[] {
-  return ['PKR', 'USD', 'EUR', 'GBP', 'SAR', 'AED'];
+  return ['PKR'];
 }
 
 export function searchCurrencies(query: string): typeof SUPPORTED_CURRENCIES {
