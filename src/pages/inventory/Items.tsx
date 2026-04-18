@@ -190,13 +190,12 @@ export default function Items() {
     reorder_point?: number;
     created_by: string;
   }, initialStock?: number) {
-    // --- Optimistic UI: Update state immediately ---
     const previousItems = [...items];
-    const tempId = `temp-${Date.now()}`;
     const categoryData = categories.find(c => c.id === data.category_id);
+    const isEditing = !!selectedItem;
 
     const optimisticItem: EnhancedItem = {
-      id: selectedItem?.id || tempId,
+      id: selectedItem?.id || `temp-${Date.now()}`,
       name: data.name,
       description: data.description,
       category_id: data.category_id,
@@ -214,22 +213,18 @@ export default function Items() {
       created_by: data.created_by,
     };
 
-    if (selectedItem) {
-      // Update existing item in state
+    if (isEditing) {
+      // Keep optimistic updates only for edit flow.
       setItems(prevItems => prevItems.map(item => item.id === selectedItem.id ? { ...item, ...optimisticItem } : item));
       toast.success(t('items.messages.updateSuccess', 'Item updated!'));
-    } else {
-      // Add new item to state
-      setItems(prevItems => [optimisticItem, ...prevItems]);
-      toast.success(t('items.messages.createSuccess', 'Item created!'));
+      setIsFormOpen(false);
+      setSelectedItem(null);
     }
-    setIsFormOpen(false);
-    setSelectedItem(null);
 
-    // --- Perform the actual API call in the background ---
+    // Run API call and update UI only after successful create.
     try {
       let createdItem;
-      if (selectedItem) {
+      if (isEditing && selectedItem) {
         await updateItem(selectedItem.id, data);
       } else if (initialStock !== undefined) {
         createdItem = await createItemWithInitialStock(data as any, initialStock);
@@ -237,16 +232,26 @@ export default function Items() {
         createdItem = await createItem(data);
       }
 
-      // Update the temporary item with the real ID after successful creation
-      if (createdItem && !selectedItem) {
-        setItems(prevItems => prevItems.map(item => item.id === tempId ? { ...item, id: createdItem.id } : item));
+      if (createdItem && !isEditing) {
+        const normalizedCreatedItem: EnhancedItem = {
+          ...(createdItem as EnhancedItem),
+          category: categoryData,
+          current_quantity: initialStock ?? 0,
+        };
+        setItems(prevItems => [normalizedCreatedItem, ...prevItems]);
+        setIsFormOpen(false);
+        setSelectedItem(null);
+        toast.success(t('items.messages.createSuccess', 'Item created!'));
       }
+
       // Reload data in the background to sync with server (e.g., for stock levels)
       loadData(false);
     } catch (error: any) {
-      // --- Rollback: Revert to previous state on error ---
-      setItems(previousItems);
-      toast.error(error.message || t('items.messages.error', 'Operation failed. Changes reverted.'));
+      if (isEditing) {
+        // Rollback optimistic edit state only when edit fails.
+        setItems(previousItems);
+      }
+      toast.error(error.message || t('items.messages.error', 'Operation failed.'));
       throw error;
     }
   }

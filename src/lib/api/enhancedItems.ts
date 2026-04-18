@@ -9,7 +9,7 @@ import {
   where,
   orderBy,
   Timestamp,
-  runTransaction
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Item } from '../types';
@@ -31,93 +31,90 @@ export async function createItemWithInitialStock(itemData: {
 }, initialStock: number): Promise<Item> {
   const userId = requireCurrentUserId();
 
-  // Use Firestore transaction to ensure data consistency
-  const result = await runTransaction(db, async (transaction) => {
-    // Check for duplicates only within current user's scope.
-    const itemsRef = collection(db, 'items');
-    const existingSnapshot = await getDocs(query(itemsRef, where('created_by', '==', userId)));
+  // Check for duplicates only within current user's scope.
+  const itemsRef = collection(db, 'items');
+  const existingSnapshot = await getDocs(query(itemsRef, where('created_by', '==', userId)));
 
-    const normalizedName = itemData.name.trim().toLowerCase();
-    const normalizedBarcode = (itemData.barcode || '').trim();
-    const normalizedSku = (itemData.sku || '').trim().toLowerCase();
+  const normalizedName = itemData.name.trim().toLowerCase();
+  const normalizedBarcode = (itemData.barcode || '').trim();
+  const normalizedSku = (itemData.sku || '').trim().toLowerCase();
 
-    const duplicateName = existingSnapshot.docs.some((docSnap) => {
+  const duplicateName = existingSnapshot.docs.some((docSnap) => {
+    const data = docSnap.data() as any;
+    return (
+      String(data.category_id || '') === String(itemData.category_id || '') &&
+      String(data.name || '').trim().toLowerCase() === normalizedName
+    );
+  });
+
+  if (duplicateName) {
+    throw new Error('An item with this name already exists in this category');
+  }
+
+  if (normalizedBarcode) {
+    const duplicateBarcode = existingSnapshot.docs.some((docSnap) => {
       const data = docSnap.data() as any;
-      return (
-        String(data.category_id || '') === String(itemData.category_id || '') &&
-        String(data.name || '').trim().toLowerCase() === normalizedName
-      );
+      return String(data.barcode || '').trim() === normalizedBarcode;
     });
 
-    if (duplicateName) {
-      throw new Error('An item with this name already exists in this category');
+    if (duplicateBarcode) {
+      throw new Error('An item with this barcode already exists');
     }
+  }
 
-    // Check for duplicate barcode if provided
-    if (normalizedBarcode) {
-      const duplicateBarcode = existingSnapshot.docs.some((docSnap) => {
-        const data = docSnap.data() as any;
-        return String(data.barcode || '').trim() === normalizedBarcode;
-      });
+  if (normalizedSku) {
+    const duplicateSku = existingSnapshot.docs.some((docSnap) => {
+      const data = docSnap.data() as any;
+      return String(data.sku || '').trim().toLowerCase() === normalizedSku;
+    });
 
-      if (duplicateBarcode) {
-        throw new Error('An item with this barcode already exists');
-      }
+    if (duplicateSku) {
+      throw new Error('An item with this SKU already exists');
     }
+  }
 
-    // Check for duplicate SKU if provided
-    if (normalizedSku) {
-      const duplicateSku = existingSnapshot.docs.some((docSnap) => {
-        const data = docSnap.data() as any;
-        return String(data.sku || '').trim().toLowerCase() === normalizedSku;
-      });
+  const now = new Date();
+  const itemRef = doc(collection(db, 'items'));
+  const itemDoc = {
+    ...itemData,
+    created_by: userId,
+    name: itemData.name.trim(),
+    unit: itemData.unit || 'pcs',
+    is_archived: false,
+    created_at: Timestamp.fromDate(now),
+    updated_at: Timestamp.fromDate(now),
+    current_quantity: initialStock || 0,
+    total_value: (initialStock || 0) * itemData.unit_price
+  };
 
-      if (duplicateSku) {
-        throw new Error('An item with this SKU already exists');
-      }
-    }
+  const batch = writeBatch(db);
+  batch.set(itemRef, itemDoc);
 
-    // Create the item
-    const itemRef = doc(collection(db, 'items'));
-    const itemDoc = {
-      ...itemData,
+  if (initialStock > 0) {
+    const transactionRef = doc(collection(db, 'transactions'));
+    batch.set(transactionRef, {
+      item_id: itemRef.id,
+      type: 'stock_in',
+      quantity: initialStock,
+      unit_price: itemData.unit_price,
+      total_value: initialStock * itemData.unit_price,
+      transaction_date: Timestamp.fromDate(now),
+      supplier_customer: itemData.supplier || 'Initial Stock',
+      reference_number: `INIT-${itemRef.id.slice(-6).toUpperCase()}`,
+      notes: 'Initial stock entry during product creation',
       created_by: userId,
-      name: itemData.name.trim(),
-      unit: itemData.unit || 'pcs',
-      is_archived: false,
-      created_at: Timestamp.fromDate(new Date()),
-      updated_at: Timestamp.fromDate(new Date()),
-      current_quantity: initialStock || 0,
-      total_value: (initialStock || 0) * itemData.unit_price
-    };
+      created_at: Timestamp.fromDate(now)
+    });
+  }
 
-    transaction.set(itemRef, itemDoc);
+  await batch.commit();
 
-    // Create initial stock transaction if stock > 0
-    if (initialStock > 0) {
-      const transactionRef = doc(collection(db, 'transactions'));
-      transaction.set(transactionRef, {
-        item_id: itemRef.id,
-        type: 'stock_in',
-        quantity: initialStock,
-        unit_price: itemData.unit_price,
-        total_value: initialStock * itemData.unit_price,
-        transaction_date: Timestamp.fromDate(new Date()),
-        supplier_customer: itemData.supplier || 'Initial Stock',
-        reference_number: `INIT-${itemRef.id.slice(-6).toUpperCase()}`,
-        notes: 'Initial stock entry during product creation',
-        created_by: userId,
-        created_at: Timestamp.fromDate(new Date())
-      });
-    }
-
-    return {
-      id: itemRef.id,
-      ...itemDoc,
-      created_at: new Date() as any,
-      updated_at: new Date() as any
-    };
-  });
+  const result = {
+    id: itemRef.id,
+    ...itemDoc,
+    created_at: now as any,
+    updated_at: now as any
+  } as Item;
 
   // Invalidate items cache
   invalidateItemsCache();
