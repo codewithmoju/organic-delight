@@ -1,5 +1,4 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { motion } from 'framer-motion';
 
 interface MetricsChartProps {
   data: Array<{
@@ -35,14 +34,10 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
   if (isLoading) {
     return (
       <div className="card-theme p-4 sm:p-6">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-4"
-        >
+        <div className="space-y-4">
           <div className="h-6 bg-secondary rounded mb-6 w-1/3 animate-pulse" />
           <div className="h-64 sm:h-80 bg-secondary rounded animate-pulse" />
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -62,28 +57,13 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="card-theme p-4 sm:p-6"
-    >
-      <motion.h3
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
-        className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6 flex items-center"
-      >
+    <div className="card-theme p-4 sm:p-6">
+      <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6 flex items-center">
         <div className="w-2 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3" />
         {title}
-      </motion.h3>
+      </h3>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
-        className="h-64 sm:h-80 w-full"
-      >
+      <div className="h-64 sm:h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
             <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -148,7 +128,7 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
             </LineChart>
           )}
         </ResponsiveContainer>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

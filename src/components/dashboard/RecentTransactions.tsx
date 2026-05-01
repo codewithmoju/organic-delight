@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import { motion } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
 import { POSTransaction } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils/notifications';
@@ -11,13 +10,9 @@ interface RecentTransactionsProps {
 export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
     <div className="card-theme p-4 sm:p-6 rounded-[2.5rem]">
-      <motion.h3
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-lg font-bold text-foreground mb-6"
-      >
+      <h3 className="text-lg font-bold text-foreground mb-6">
         Recent Orders
-      </motion.h3>
+      </h3>
 
       <div className="overflow-hidden">
         {transactions.length === 0 ? (
@@ -28,8 +23,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
             <p className="text-foreground font-medium">No recent orders</p>
             <p className="text-sm text-muted-foreground max-w-[200px]">New sales will appear here</p>
           </div>
-        ) : (
-          <table className="w-full text-sm text-left">
+        ) : (          <table className="w-full text-sm text-left">
             <thead className="text-xs text-muted-foreground uppercase bg-secondary/50 rounded-2xl">
               <tr>
                 <th className="px-4 py-3 rounded-l-2xl">Order #</th>
@@ -41,12 +35,9 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {transactions.map((transaction, index) => (
-                <motion.tr
+              {transactions.map((transaction) => (
+                <tr
                   key={transaction.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
                   className="group hover:bg-secondary/30 transition-colors"
                 >
                   <td className="px-4 py-3 font-medium text-foreground">
@@ -83,7 +74,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                   <td className="px-4 py-3 text-foreground">
                     {transaction.customer_name || 'Walk-in Customer'}
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
