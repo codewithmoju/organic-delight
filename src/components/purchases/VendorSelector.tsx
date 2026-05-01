@@ -309,23 +309,23 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
                     exit={{ opacity: 0, x: 20 }}
                     className="space-y-6"
                 >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-muted/50 pointer-events-none" />
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search vendors..."
-                                className="w-full pl-11 pr-4 py-4 bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                                className="w-full h-11 pl-10 pr-4 bg-card border border-border/60 rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
                             />
                         </div>
                         <button
                             onClick={() => setShowCreateForm(true)}
-                            className="p-4 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                            className="h-11 w-11 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center justify-center flex-shrink-0"
                             title="Add New Vendor"
                         >
-                            <Plus className="w-6 h-6" />
+                            <Plus className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -335,7 +335,7 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
                                 <LoadingSpinner size="lg" />
                             </div>
                         ) : filteredVendors.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {filteredVendors.map((vendor) => (
                                     <motion.button
                                         key={vendor.id}
@@ -343,29 +343,29 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         onClick={() => onVendorSelected(vendor)}
-                                        className="text-left p-4 rounded-2xl border border-border/50 bg-card hover:border-primary/50 hover:shadow-lg transition-all group"
+                                        className="text-left p-3 sm:p-4 rounded-2xl border border-border/50 bg-card hover:border-primary/50 hover:shadow-md transition-all group"
                                     >
                                         <div className="flex items-start justify-between mb-2">
-                                            <div className="p-2 rounded-xl bg-secondary/50 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                                <Building2 className="w-5 h-5" />
+                                            <div className="w-9 h-9 rounded-xl bg-secondary/50 flex items-center justify-center text-foreground font-bold text-sm group-hover:bg-primary/10 group-hover:text-primary transition-colors flex-shrink-0">
+                                                {vendor.company.charAt(0)}
                                             </div>
                                             {vendor.gst_number && (
-                                                <div className="text-xs font-bold px-2 py-1 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
-                                                    Verified
+                                                <div className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
+                                                    GST
                                                 </div>
-                                            )}        </div>
-                                        <h3 className="font-bold text-lg text-foreground mb-1">{vendor.company}</h3>
-                                        <p className="text-sm text-muted-foreground mb-3">{vendor.name}</p>
-
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                <Phone className="w-3 h-3" />
-                                                {vendor.phone}
+                                            )}
+                                        </div>
+                                        <h3 className="font-bold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors truncate mb-0.5">{vendor.company}</h3>
+                                        <p className="text-xs text-foreground-muted truncate mb-2">{vendor.name}</p>
+                                        <div className="space-y-0.5">
+                                            <div className="flex items-center gap-1.5 text-xs text-foreground-muted/70">
+                                                <Phone className="w-3 h-3 flex-shrink-0" />
+                                                <span className="truncate">{vendor.phone}</span>
                                             </div>
                                             {vendor.email && (
-                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                    <Mail className="w-3 h-3" />
-                                                    {vendor.email}
+                                                <div className="flex items-center gap-1.5 text-xs text-foreground-muted/70">
+                                                    <Mail className="w-3 h-3 flex-shrink-0" />
+                                                    <span className="truncate">{vendor.email}</span>
                                                 </div>
                                             )}
                                         </div>

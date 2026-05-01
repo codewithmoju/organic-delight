@@ -26,15 +26,20 @@ export default function HeldCartsModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4"
                 onClick={(e) => e.target === e.currentTarget && onClose()}
             >
                 <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    className="w-full max-w-2xl bg-card rounded-2xl border border-border/50 shadow-xl overflow-hidden max-h-[80vh] flex flex-col"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                    className="w-full sm:max-w-2xl bg-card sm:rounded-2xl rounded-t-3xl border border-border/50 shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
                 >
+                    {/* Mobile drag handle */}
+                    <div className="flex justify-center pt-3 pb-1 sm:hidden flex-shrink-0">
+                        <div className="w-10 h-1 bg-border rounded-full" />
+                    </div>
                     {/* Header */}
                     <div className="p-6 border-b border-border/50 flex items-center justify-between bg-card z-10">
                         <div className="flex items-center gap-3">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { createCategory } from '../../lib/api/categories';
 import { useAuthStore } from '../../lib/store';
@@ -19,12 +19,10 @@ export default function InlineCategoryForm({ onCategoryCreated, onCancel }: Inli
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!name.trim() || !description.trim()) {
-            toast.error('Please fill in all fields');
+        if (!name.trim()) {
+            toast.error('Category name is required');
             return;
         }
-
         setIsSubmitting(true);
         try {
             const category = await createCategory({
@@ -32,12 +30,10 @@ export default function InlineCategoryForm({ onCategoryCreated, onCancel }: Inli
                 description: description.trim(),
                 created_by: user?.uid || 'unknown'
             });
-
-            toast.success('Category created successfully');
+            toast.success('Category created');
             onCategoryCreated(category.id, category.name);
         } catch (error: any) {
             toast.error(error.message || 'Failed to create category');
-            console.error(error);
         } finally {
             setIsSubmitting(false);
         }
@@ -48,70 +44,59 @@ export default function InlineCategoryForm({ onCategoryCreated, onCancel }: Inli
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-dark-800/50 border border-primary-500/30 rounded-lg p-4 mb-4"
+            className="overflow-hidden"
         >
-            <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold text-primary-400">Create New Category</h4>
-                <button
-                    onClick={onCancel}
-                    className="p-1 hover:bg-dark-700 rounded transition-colors"
-                >
-                    <X className="w-4 h-4 text-gray-400" />
-                </button>
-            </div>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-3">
+                <div className="flex items-center justify-between mb-2.5">
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider">New Category</h4>
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="p-1 rounded-lg hover:bg-secondary transition-colors text-foreground-muted hover:text-foreground"
+                    >
+                        <X className="w-3.5 h-3.5" />
+                    </button>
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-                <div>
+                <form onSubmit={handleSubmit} className="space-y-2">
                     <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Category name (e.g., Smartphones)"
-                        className="w-full input-dark text-sm"
+                        placeholder="Category name *"
+                        className="w-full h-9 px-3 rounded-lg bg-background border border-border/60 text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                         maxLength={50}
-                        required
+                        autoFocus
                     />
-                </div>
-
-                <div>
-                    <textarea
+                    <input
+                        type="text"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Brief description..."
-                        className="w-full input-dark text-sm resize-none"
-                        rows={2}
+                        placeholder="Description (optional)"
+                        className="w-full h-9 px-3 rounded-lg bg-background border border-border/60 text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                         maxLength={200}
-                        required
                     />
-                </div>
-
-                <div className="flex gap-2">
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="btn-secondary text-sm px-3 py-1.5"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="btn-primary text-sm px-3 py-1.5 flex items-center gap-2"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <LoadingSpinner size="sm" color="white" />
-                                Creating...
-                            </>
-                        ) : (
-                            <>
-                                <Plus className="w-3 h-3" />
-                                Create Category
-                            </>
-                        )}
-                    </button>
-                </div>
-            </form>
+                    <div className="flex gap-2 pt-1">
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            className="btn-secondary text-xs px-3 py-1.5 h-8"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting || !name.trim()}
+                            className="btn-primary text-xs px-3 py-1.5 h-8 flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                            {isSubmitting
+                                ? <LoadingSpinner size="sm" color="white" />
+                                : <><Check className="w-3 h-3" />Create</>
+                            }
+                        </button>
+                    </div>
+                </form>
+            </div>
         </motion.div>
     );
 }

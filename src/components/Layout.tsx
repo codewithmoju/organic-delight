@@ -21,7 +21,7 @@ export default function Layout() {
         <OfflineIndicator />
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="min-h-[calc(100vh-4rem)] px-4 pt-2 pb-4 sm:px-6 lg:px-8 lg:pt-2 lg:pb-8">
+        <main className="min-h-[calc(100vh-4rem)] px-3 pt-2 pb-4 sm:px-6 lg:px-8 lg:pt-2 lg:pb-8">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

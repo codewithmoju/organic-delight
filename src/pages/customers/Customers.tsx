@@ -22,19 +22,19 @@ function StatCard({ icon: Icon, label, value, accent, delay = 0 }: {
 }) {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-            className="relative overflow-hidden rounded-2xl bg-card border border-border/60 p-5 group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            transition={{ duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
+            className="relative overflow-hidden rounded-2xl bg-card border border-border/60 p-3 sm:p-5 group hover:shadow-md transition-all duration-300"
         >
-            <div className={`absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity ${accent}`} />
-            <div className="relative flex items-center gap-4">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${accent} bg-opacity-15`}>
-                    <Icon className="w-5 h-5" />
+            <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity ${accent}`} />
+            <div className="relative flex items-center gap-3">
+                <div className={`flex h-9 w-9 sm:h-11 sm:w-11 flex-shrink-0 items-center justify-center rounded-xl ${accent} bg-opacity-15`}>
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                    <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{label}</p>
-                    <p className="text-xl font-bold text-foreground mt-0.5">{value}</p>
+                <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground tracking-wide uppercase truncate">{label}</p>
+                    <p className="text-base sm:text-xl font-bold text-foreground mt-0.5 tabular-nums truncate">{value}</p>
                 </div>
             </div>
         </motion.div>
@@ -281,19 +281,19 @@ function AddCustomerForm({ onClose, onCreated }: {
 function EmptyState() {
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="card-theme border border-border/50 rounded-[2.5rem] flex flex-col items-center justify-center py-16 px-6"
+            className="flex flex-col items-center justify-center py-12 sm:py-16 px-6 text-center"
         >
             <motion.div
-                animate={{ y: [10, -4, 10] }}
+                animate={{ y: [6, -3, 6] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-16 h-16 rounded-2xl bg-secondary/60 flex items-center justify-center mb-4"
+                className="w-14 h-14 rounded-2xl bg-secondary/60 flex items-center justify-center mb-3"
             >
-                <Users className="w-8 h-8 text-muted-foreground/50" />
+                <Users className="w-7 h-7 text-muted-foreground/50" />
             </motion.div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">No customers yet</h3>
-            <p className="text-sm text-muted-foreground max-w-xs text-center">
+            <h3 className="text-base font-semibold text-foreground mb-1">No customers yet</h3>
+            <p className="text-sm text-muted-foreground max-w-xs">
                 Add your first customer to start tracking credit sales and payments
             </p>
         </motion.div>
@@ -393,15 +393,15 @@ export default function Customers() {
                             className="app-page-header"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/20">
-                                    <Users className="w-5 h-5 text-primary-foreground" />
+                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
+                                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                                 </div>
                                 <div>
                                     <h1 className="app-page-title">
                                         {t('customers.title', 'Customers')}
                                     </h1>
                                     <p className="app-page-subtitle">
-                                        {t('customers.subtitle', 'Manage customer credits (Udhaar) and profiles')}
+                                        {t('customers.subtitle', 'Manage customer credits and profiles')}
                                     </p>
                                 </div>
                             </div>
@@ -440,33 +440,33 @@ export default function Customers() {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.2 }}
-                            className="flex flex-col sm:flex-row gap-3"
+                            className="flex flex-col gap-2 sm:flex-row sm:gap-3"
                         >
                             <div className="relative flex-1">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                                 <input
                                     type="text"
                                     placeholder={t('customers.searchPlaceholder', 'Search by name or phone...')}
                                     value={searchQuery}
                                     onChange={e => handleSearch(e.target.value)}
-                                    className="w-full pl-11 pr-10 py-3 bg-card border border-border/60 rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all"
+                                    className="w-full h-11 pl-10 pr-10 bg-card border border-border/60 rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all"
                                 />
                                 {searchQuery && (
                                     <button
                                         onClick={() => handleSearch('')}
                                         className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-3.5 h-3.5" />
                                     </button>
                                 )}
                             </div>
 
-                            <div className="flex gap-1.5 bg-card border border-border/60 rounded-xl p-1.5">
+                            <div className="flex gap-1 bg-card border border-border/60 rounded-xl p-1">
                                 {filterOptions.map(opt => (
                                     <button
                                         key={opt.value}
                                         onClick={() => setFilterMode(opt.value as any)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap ${filterMode === opt.value
+                                        className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap ${filterMode === opt.value
                                             ? 'bg-primary/10 text-primary shadow-sm'
                                             : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                                             }`}

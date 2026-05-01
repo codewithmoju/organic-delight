@@ -155,49 +155,54 @@ export default function PaymentModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4"
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="w-full max-w-4xl bg-card rounded-2xl border border-border/50 shadow-xl overflow-hidden max-h-[90vh] flex flex-col md:flex-row"
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: '100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          className="w-full max-w-4xl bg-card sm:rounded-2xl rounded-t-3xl border border-border/50 shadow-xl overflow-hidden max-h-[95vh] flex flex-col md:flex-row"
         >
+          {/* Mobile drag handle */}
+          <div className="flex justify-center pt-3 pb-1 sm:hidden flex-shrink-0">
+            <div className="w-10 h-1 bg-border rounded-full" />
+          </div>
           {/* Left Panel - Payment Methods */}
-          <div className="md:w-80 shrink-0 p-6 border-b md:border-b-0 md:border-r border-border/50 bg-muted/10 space-y-6 overflow-y-auto custom-scrollbar">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">
-                {isRefund ? 'Refund' : 'Payment'}
-              </h2>
-              <p className="text-foreground-muted">
-                {isRefund
-                  ? `Refund amount: ${formatCurrency(Math.abs(total))}`
-                  : `Total Amount Due: ${formatCurrency(total)}`
-                }
-              </p>
-            </div>
+          <div className="md:w-72 lg:w-80 shrink-0 p-4 sm:p-6 border-b md:border-b-0 md:border-r border-border/50 bg-muted/10 space-y-4 overflow-y-auto custom-scrollbar max-h-[30vh] md:max-h-full">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-success-500/20 text-success-400">
-                  <Receipt className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground">Process Payment</h3>
-                  <p className="text-foreground-muted">Complete the transaction</p>
-                </div>
+              <div>
+                <h2 className="text-lg sm:text-2xl font-bold mb-1">
+                  {isRefund ? 'Refund' : 'Payment'}
+                </h2>
+                <p className="text-foreground-muted text-xs sm:text-sm">
+                  {isRefund
+                    ? `Refund amount: ${formatCurrency(Math.abs(total))}`
+                    : `Total Amount Due: ${formatCurrency(total)}`
+                  }
+                </p>
               </div>
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="p-2 rounded-lg bg-muted/50 text-foreground-muted hover:text-foreground hover:bg-muted transition-colors"
+                className="p-2 rounded-lg bg-muted/50 text-foreground-muted hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
               >
                 <X className="w-5 h-5" />
               </motion.button>
             </div>
+            <div className="hidden md:flex items-center space-x-3">
+              <div className="p-2 rounded-lg bg-success-500/20 text-success-400">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Process Payment</h3>
+                <p className="text-foreground-muted text-sm">Complete the transaction</p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
+          <div className="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto custom-scrollbar">
             {/* Order Summary */}
             <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
               <h4 className="text-foreground font-semibold mb-3">Order Summary</h4>
@@ -232,7 +237,7 @@ export default function PaymentModal({
             {/* Payment Method Selection */}
             <div>
               <h4 className="text-foreground font-semibold mb-4">Payment Method</h4>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 {availableMethods.map((method) => {
                   const Icon = iconMap[method.icon as keyof typeof iconMap] || Banknote;
                   return (
@@ -241,7 +246,7 @@ export default function PaymentModal({
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setPaymentMethod(method.type)}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 ${paymentMethod === method.type
+                      className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 ${paymentMethod === method.type
                         ? getMethodColor(method.type)
                         : 'border-border bg-muted/20 text-foreground-muted hover:border-foreground-muted/50'
                         }`}
@@ -329,14 +334,14 @@ export default function PaymentModal({
                 </div>
 
                 {/* Quick Amount Buttons */}
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {quickAmountButtons.map((button) => (
                     <motion.button
                       key={button.label}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setPaymentAmount(button.amount)}
-                      className="p-2 rounded-lg bg-muted/50 text-foreground-muted hover:bg-muted hover:text-foreground transition-colors text-sm"
+                      className="p-2.5 rounded-lg bg-muted/50 text-foreground-muted hover:bg-muted hover:text-foreground transition-colors text-sm font-medium"
                     >
                       {button.label}
                     </motion.button>
@@ -389,7 +394,7 @@ export default function PaymentModal({
 
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border/50 sticky bottom-0 bg-card pb-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border/50 sticky bottom-0 bg-card pb-safe">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -404,11 +409,11 @@ export default function PaymentModal({
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePayment}
                 disabled={isProcessing || (paymentMethod === 'cash' && changeAmount < 0 && !isRefund)}
-                className="w-full py-4 rounded-xl bg-success-600 hover:bg-success-700 text-white font-bold text-lg shadow-lg shadow-success-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
+                className="flex-1 py-3 sm:py-4 rounded-xl bg-success-600 hover:bg-success-700 text-white font-bold text-base sm:text-lg shadow-lg shadow-success-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
               >
                 {isProcessing ? (
                   <>
-                    <LoadingSpinner size="sm" />
+                    <LoadingSpinner size="sm" color="white" />
                     <span>Processing...</span>
                   </>
                 ) : (

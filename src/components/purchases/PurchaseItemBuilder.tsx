@@ -643,22 +643,22 @@ export default function PurchaseItemBuilder({
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 bg-secondary/20 p-3 rounded-lg">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 bg-secondary/20 p-3 rounded-xl">
                                         <div>
-                                            <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Quantity</p>
-                                            <p className="font-bold text-lg">{item.quantity}</p>
+                                            <p className="text-[10px] text-foreground-muted uppercase font-bold tracking-wider mb-1">Qty</p>
+                                            <p className="font-bold text-base">{item.quantity}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Unit Cost</p>
-                                            <p className="font-medium">Rs {item.purchase_rate.toFixed(2)}</p>
+                                            <p className="text-[10px] text-foreground-muted uppercase font-bold tracking-wider mb-1">Cost</p>
+                                            <p className="font-medium text-sm">Rs {item.purchase_rate.toFixed(2)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Selling Price</p>
-                                            <p className="font-medium">Rs {item.sale_rate.toFixed(2)}</p>
+                                            <p className="text-[10px] text-foreground-muted uppercase font-bold tracking-wider mb-1">Price</p>
+                                            <p className="font-medium text-sm">Rs {item.sale_rate.toFixed(2)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Line Total</p>
-                                            <p className="font-bold text-lg text-primary">Rs {calculateItemTotal(item).toFixed(2)}</p>
+                                            <p className="text-[10px] text-foreground-muted uppercase font-bold tracking-wider mb-1">Total</p>
+                                            <p className="font-bold text-sm text-primary tabular-nums">Rs {calculateItemTotal(item).toFixed(2)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -683,15 +683,15 @@ export default function PurchaseItemBuilder({
                         </motion.div>
                     ))}
 
-                    <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6 mt-6">
-                        <div className="flex justify-between items-end">
+                    <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 sm:p-5 mt-4">
+                        <div className="flex justify-between items-end gap-3">
                             <div>
-                                <p className="text-primary font-bold uppercase tracking-wider text-sm mb-1">Total Purchase Amount</p>
-                                <p className="text-sm text-muted-foreground">
-                                    {items.length} item{items.length !== 1 ? 's' : ''} • {items.reduce((sum, item) => sum + item.quantity, 0)} units total
+                                <p className="text-primary font-bold uppercase tracking-wider text-xs mb-1">Total Purchase Amount</p>
+                                <p className="text-xs text-foreground-muted">
+                                    {items.length} item{items.length !== 1 ? 's' : ''} · {items.reduce((sum, item) => sum + item.quantity, 0)} units
                                 </p>
                             </div>
-                            <p className="text-4xl font-bold text-primary">
+                            <p className="text-2xl sm:text-3xl font-bold text-primary tabular-nums flex-shrink-0">
                                 Rs {calculateGrandTotal().toFixed(2)}
                             </p>
                         </div>
@@ -699,18 +699,18 @@ export default function PurchaseItemBuilder({
                 </div>
             ) : (
                 !showItemForm && (
-                    <div className="text-center py-16 bg-card/30 border border-border/30 border-dashed rounded-[2rem] flex flex-col items-center justify-center group cursor-pointer hover:bg-card/50 transition-colors"
+                    <div className="text-center py-10 sm:py-14 bg-card/30 border border-border/30 border-dashed rounded-2xl flex flex-col items-center justify-center group cursor-pointer hover:bg-card/50 transition-colors"
                         onClick={() => setShowItemForm(true)}
                     >
-                        <div className="p-4 rounded-full bg-secondary/50 mb-4 group-hover:scale-110 transition-transform duration-300">
-                            <Plus className="w-8 h-8 text-muted-foreground" />
+                        <div className="p-3 rounded-full bg-secondary/50 mb-3 group-hover:scale-110 transition-transform duration-300">
+                            <Plus className="w-6 h-6 text-foreground-muted" />
                         </div>
-                        <h3 className="text-xl font-bold text-foreground mb-2">No Items Added Yet</h3>
-                        <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-                            Start building your purchase order by adding items. You can select existing products or create new ones.
+                        <h3 className="text-base font-bold text-foreground mb-1">No Items Added Yet</h3>
+                        <p className="text-sm text-foreground-muted max-w-xs mx-auto mb-4">
+                            Add items by selecting existing products or creating new ones.
                         </p>
-                        <button className="text-primary font-bold hover:underline flex items-center gap-2">
-                            Add Items Now <ArrowRight className="w-4 h-4" />
+                        <button className="text-primary font-bold hover:underline flex items-center gap-1.5 text-sm">
+                            Add Items <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
                 )

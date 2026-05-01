@@ -152,13 +152,18 @@ export default function VendorListModal({
                         className="fixed inset-0 z-50 bg-background/30 backdrop-blur-md"
                         onClick={onClose}
                     />
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pointer-events-none">
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="w-full h-full sm:w-[95vw] sm:h-[92vh] bg-card border border-border/50 shadow-2xl sm:rounded-[2.5rem] rounded-xl overflow-hidden flex flex-col pointer-events-auto"
+                            initial={{ y: '100%', opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: '100%', opacity: 0 }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            style={{ maxHeight: '92vh' }}
                         >
+                            {/* Mobile drag handle */}
+                            <div className="flex justify-center pt-3 pb-1 sm:hidden flex-shrink-0">
+                                <div className="w-10 h-1 bg-border rounded-full" />
+                            </div>
                             {/* Header */}
                             <div className="p-6 border-b border-border/50 bg-secondary/10 backdrop-blur-md relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
@@ -315,43 +320,46 @@ export default function VendorListModal({
                                         <p className="text-sm">Try adding a new vendor to get started.</p>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 gap-3">
+                                    <div className="grid grid-cols-1 gap-2">
                                         {vendors.map((vendor, index) => (
                                             <motion.div
                                                 key={vendor.id}
-                                                initial={{ opacity: 0, y: 10 }}
+                                                initial={{ opacity: 0, y: 8 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
+                                                transition={{ delay: index * 0.04 }}
                                                 onClick={() => mode === 'select' && onSelectVendor && onSelectVendor(vendor)}
-                                                className={`group p-4 rounded-[1.5rem] border border-border/50 bg-card hover:border-primary/50 hover:shadow-lg transition-all duration-300 relative overflow-hidden ${mode === 'select' ? 'cursor-pointer' : ''}`}
+                                                className={`group flex items-center gap-3 p-3 sm:p-4 rounded-2xl border border-border/50 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200 relative overflow-hidden ${mode === 'select' ? 'cursor-pointer' : ''}`}
                                             >
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full blur-xl -mr-6 -mt-6 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                                <div className="flex items-center justify-between relative z-10">
-                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                                                        <div className="w-12 h-12 rounded-2xl bg-secondary/50 flex items-center justify-center text-foreground font-bold text-lg group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                                            {vendor.company.charAt(0)}
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                                                                {vendor.company}
-                                                            </h4>
-                                                            <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                                                                <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {vendor.name}</span>
-                                                                <span className="hidden sm:inline">•</span>
-                                                                <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> {vendor.phone}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                {/* Avatar */}
+                                                <div className="w-10 h-10 rounded-xl bg-secondary/50 flex items-center justify-center text-foreground font-bold text-sm group-hover:bg-primary/10 group-hover:text-primary transition-colors flex-shrink-0">
+                                                    {vendor.company.charAt(0)}
+                                                </div>
 
-                                                    <div className="text-right pl-4">
-                                                        <p className={`text-lg font-bold ${vendor.outstanding_balance > 0 ? 'text-warning-500' : 'text-success-500'}`}>
-                                                            {formatCurrency(vendor.outstanding_balance)}
-                                                        </p>
-                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-                                                            Balance
-                                                        </p>
+                                                {/* Info */}
+                                                <div className="flex-1 min-w-0 relative z-10">
+                                                    <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                                                        {vendor.company}
+                                                    </h4>
+                                                    <div className="flex items-center gap-2 mt-0.5 text-xs text-foreground-muted">
+                                                        <span className="flex items-center gap-1 truncate">
+                                                            <User className="w-3 h-3 flex-shrink-0" />
+                                                            {vendor.name}
+                                                        </span>
+                                                        <span className="hidden sm:flex items-center gap-1">
+                                                            <Phone className="w-3 h-3 flex-shrink-0" />
+                                                            {vendor.phone}
+                                                        </span>
                                                     </div>
+                                                </div>
+
+                                                {/* Balance */}
+                                                <div className="text-right flex-shrink-0 relative z-10">
+                                                    <p className={`text-sm font-bold tabular-nums ${vendor.outstanding_balance > 0 ? 'text-warning-500' : 'text-success-500'}`}>
+                                                        {formatCurrency(vendor.outstanding_balance)}
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-widest">Balance</p>
                                                 </div>
                                             </motion.div>
                                         ))}

@@ -23,7 +23,10 @@ export default function LoadingSpinner({
   messageInterval = 2000
 }: LoadingSpinnerProps) {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [displayedMessage, setDisplayedMessage] = useState(text || messages[0] || 'Loading...');
+  const [displayedMessage, setDisplayedMessage] = useState(text || messages[0] || '');
+
+  // Whether to show any label at all — only when explicitly provided
+  const hasLabel = !!text || messages.length > 0;
 
   // Rotate through messages if provided
   useEffect(() => {
@@ -166,23 +169,25 @@ export default function LoadingSpinner({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-4">
+    <div className={`flex flex-col items-center justify-center ${hasLabel ? 'space-y-4' : ''}`}>
       {renderSpinner()}
       
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={displayedMessage}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-          className="text-center"
-        >
-          <p className={`text-sm font-medium ${textColorClasses[color]}`}>
-            {displayedMessage}
-          </p>
-        </motion.div>
-      </AnimatePresence>
+      {hasLabel && (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={displayedMessage}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="text-center"
+          >
+            <p className={`text-sm font-medium ${textColorClasses[color]}`}>
+              {displayedMessage}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
   );
 }

@@ -467,12 +467,16 @@ export default function POSInterface() {
     );
   }
 
+  // Mobile cart sheet state
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  const totalCartQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
   // ─── RENDER ───
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-[calc(100vh-5rem)] sm:h-[calc(100vh-8rem)]">
       {/* ─── Top Toolbar ─── */}
-      <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-        {/* Bill Type Badge */}
+      <div className="flex flex-wrap items-center gap-2 mb-3 flex-shrink-0">
+        {/* Bill Type Badge — hidden on xs to save space, shown from sm */}
         {selectedBillType && (
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -482,7 +486,7 @@ export default function POSInterface() {
               const idx = billTypes.findIndex(t => t.id === selectedBillType.id);
               setSelectedBillType(billTypes[(idx + 1) % billTypes.length]);
             }}
-            className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${!selectedBillType.affects_inventory
+            className={`hidden sm:flex px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${!selectedBillType.affects_inventory
               ? 'bg-warning-500/20 text-warning-700 dark:text-warning-400 border-warning-500/50'
               : 'bg-success-500/20 text-success-700 dark:text-success-400 border-success-500/50'
               }`}
@@ -492,12 +496,12 @@ export default function POSInterface() {
         )}
 
         {/* Search Bar */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted/50" />
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-foreground-muted/50" />
           <input
             ref={searchInputRef}
             type="text"
-            placeholder={t('pos.terminal.searchPlaceholder', 'Search products or scan barcode...')}
+            placeholder={t('pos.terminal.searchPlaceholder', 'Search or scan barcode...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -506,7 +510,7 @@ export default function POSInterface() {
                 setSearchQuery('');
               }
             }}
-            className="w-full pl-11 pr-4 py-3 bg-card border border-border/50 rounded-xl focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/40 text-base"
+            className="w-full pl-9 sm:pl-11 pr-4 py-2.5 sm:py-3 bg-card border border-border/50 rounded-xl focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/40 text-sm sm:text-base"
             autoFocus
           />
           {isSearching && (
@@ -521,48 +525,65 @@ export default function POSInterface() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsScannerOpen(!isScannerOpen)}
-          className={`p-3 rounded-xl transition-all border ${isScannerOpen
+          className={`p-2.5 sm:p-3 rounded-xl transition-all border ${isScannerOpen
             ? 'bg-success-500/20 text-success-400 border-success-500/50'
             : 'bg-card text-foreground-muted border-border/50 hover:border-primary-500/50'
             }`}
           title="Toggle Camera Scanner"
           aria-label="Toggle camera barcode scanner"
         >
-          {isScannerOpen ? <Camera className="w-5 h-5" /> : <Scan className="w-5 h-5" />}
+          {isScannerOpen ? <Camera className="w-4 h-4 sm:w-5 sm:h-5" /> : <Scan className="w-4 h-4 sm:w-5 sm:h-5" />}
         </motion.button>
 
-        {/* Quick Actions */}
+        {/* Return Mode Toggle — visible on all sizes */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsReturnMode(!isReturnMode)}
+          className={`p-2.5 sm:p-3 rounded-xl transition-all border ${isReturnMode
+            ? 'bg-error-500/20 text-error-400 border-error-500/50'
+            : 'bg-card text-foreground-muted border-border/50 hover:border-error-500/50'
+            }`}
+          title={isReturnMode ? 'Return Mode Active' : 'Enable Return Mode'}
+          aria-label={isReturnMode ? 'Disable return mode' : 'Enable return mode'}
+        >
+          <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+        </motion.button>
+
+        {/* Vendors — hidden on xs */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsVendorModalOpen(true)}
-          className="p-3 rounded-xl bg-card text-foreground-muted border border-border/50 hover:border-primary-500/50 transition-all"
+          className="hidden sm:flex p-2.5 sm:p-3 rounded-xl bg-card text-foreground-muted border border-border/50 hover:border-primary-500/50 transition-all"
           title="Vendors (F12)"
           aria-label="Open vendors list"
         >
-          <Building2 className="w-5 h-5" />
+          <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
 
+        {/* Shortcuts — hidden on mobile */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowShortcuts(!showShortcuts)}
-          className="p-3 rounded-xl bg-card text-foreground-muted border border-border/50 hover:border-primary-500/50 transition-all"
+          className="hidden md:flex p-2.5 sm:p-3 rounded-xl bg-card text-foreground-muted border border-border/50 hover:border-primary-500/50 transition-all"
           title="Keyboard Shortcuts"
           aria-label="Show keyboard shortcuts"
         >
-          <Keyboard className="w-5 h-5" />
+          <Keyboard className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
 
+        {/* New Transaction */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={startNewTransaction}
-          className="p-3 rounded-xl bg-primary-600 text-white border border-primary-500 hover:bg-primary-700 transition-all"
+          className="p-2.5 sm:p-3 rounded-xl bg-primary-600 text-white border border-primary-500 hover:bg-primary-700 transition-all"
           title="New Transaction"
           aria-label="Start new transaction"
         >
-          <RotateCcw className="w-5 h-5" />
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
       </div>
 
@@ -603,8 +624,7 @@ export default function POSInterface() {
       {/* ─── Two-Panel Layout ─── */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* ─── LEFT: Product Grid ─── */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Search Results / Product Grid */}
+        <div className="flex-1 flex flex-col min-w-0">          {/* Search Results / Product Grid */}
           <div className="flex-1 overflow-y-auto pr-1">
             {searchQuery.trim() ? (
               // Search results
@@ -620,75 +640,89 @@ export default function POSInterface() {
                     <p className="text-foreground-muted/50 text-sm mt-1">Try a different search term or scan a barcode</p>
                   </motion.div>
                 ) : (
-                  <div className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-3">
                     {searchResults.map((product, index) => (
                       <motion.div
                         key={product.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.03 }}
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => product.stock > 0 && handleProductSelect(product)}
-                        className={`relative p-4 rounded-xl border transition-all cursor-pointer group ${product.stock === 0 && !isReturnMode
-                          ? 'bg-muted/20 border-border/30 opacity-60 cursor-not-allowed'
-                          : 'bg-card border-border/50 hover:border-primary-500/50 hover:shadow-md'
-                          }`}
+                        className={`relative flex flex-col rounded-xl border transition-all ${
+                          product.stock === 0 && !isReturnMode
+                            ? 'bg-muted/20 border-border/30 opacity-60'
+                            : 'bg-card border-border/50 hover:border-primary-500/50 hover:shadow-md'
+                        }`}
                       >
-                        {/* Product Name */}
-                        <h4 className="text-foreground font-semibold text-sm truncate mb-1">
-                          {product.name}
-                        </h4>
+                        {/* Tappable main area */}
+                        <button
+                          onClick={() => (product.stock > 0 || isReturnMode) && handleProductSelect(product)}
+                          disabled={product.stock === 0 && !isReturnMode}
+                          className="flex-1 text-left p-3 sm:p-4 disabled:cursor-not-allowed"
+                          aria-label={`Add ${product.name} to cart`}
+                        >
+                          {/* Product Name */}
+                          <h4 className="text-foreground font-semibold text-sm truncate mb-0.5">
+                            {product.name}
+                          </h4>
 
-                        {/* Category */}
-                        {product.category && (
-                          <span className="text-foreground-muted/50 text-xs">{product.category}</span>
-                        )}
+                          {/* Category */}
+                          {product.category && (
+                            <span className="text-foreground-muted/50 text-xs block truncate mb-2">
+                              {product.category}
+                            </span>
+                          )}
 
-                        {/* Price + Stock Row */}
-                        <div className="flex items-end justify-between mt-3">
-                          <span className="text-primary-400 font-bold text-lg">
+                          {/* Price */}
+                          <span className="text-primary-500 font-bold text-base block">
                             {formatCurrency(product.price)}
                           </span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.stock === 0
-                            ? 'bg-error-500/20 text-error-400'
-                            : product.stock <= 5
-                              ? 'bg-warning-500/20 text-warning-400'
-                              : 'bg-success-500/20 text-success-400'
-                            }`}>
+
+                          {/* Stock badge */}
+                          <span className={`inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${
+                            product.stock === 0
+                              ? 'bg-error-500/20 text-error-400'
+                              : product.stock <= 5
+                                ? 'bg-warning-500/20 text-warning-400'
+                                : 'bg-success-500/20 text-success-400'
+                          }`}>
                             {product.stock} {t('common.inStock', 'in stock')}
                           </span>
-                        </div>
+                        </button>
 
-                        {/* Add overlay */}
+                        {/* Bottom action row — always visible, no overlay */}
                         {(product.stock > 0 || isReturnMode) && (
-                          <div className="absolute inset-0 rounded-xl bg-primary-500/0 group-hover:bg-primary-500/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-                            <div className="flex gap-2 pointer-events-auto">
-                              {/* Quick Access Toggle */}
-                              <button
-                                aria-label={settings?.quick_access_items?.includes(product.id) ? `Remove ${product.name} from Quick Access` : `Add ${product.name} to Quick Access`}
-                                onClick={(e) => toggleQuickAccess(e, product)}
-                                className={`p-2 rounded-full shadow-lg transition-colors ${settings?.quick_access_items?.includes(product.id)
-                                  ? 'bg-yellow-400 text-white hover:bg-yellow-500'
-                                  : 'bg-white text-gray-400 hover:text-yellow-400'
-                                  }`}
-                                title={settings?.quick_access_items?.includes(product.id) ? "Remove from Quick Access" : "Add to Quick Access"}
-                              >
-                                <Star className={`w-5 h-5 ${settings?.quick_access_items?.includes(product.id) ? 'fill-current' : ''}`} />
-                              </button>
+                          <div className="flex items-center justify-between px-3 pb-3 gap-2">
+                            {/* Quick Access star — small, unobtrusive */}
+                            <button
+                              aria-label={
+                                settings?.quick_access_items?.includes(product.id)
+                                  ? `Remove ${product.name} from Quick Access`
+                                  : `Add ${product.name} to Quick Access`
+                              }
+                              onClick={(e) => toggleQuickAccess(e, product)}
+                              className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                                settings?.quick_access_items?.includes(product.id)
+                                  ? 'text-yellow-500 bg-yellow-500/10'
+                                  : 'text-foreground-muted/40 hover:text-yellow-500 hover:bg-yellow-500/10'
+                              }`}
+                            >
+                              <Star className={`w-4 h-4 ${settings?.quick_access_items?.includes(product.id) ? 'fill-current' : ''}`} />
+                            </button>
 
-                              {/* Add to Cart */}
-                              <button
-                                aria-label={isReturnMode ? `Return ${product.name}` : `Add ${product.name} to cart`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleProductSelect(product);
-                                }}
-                                className="bg-primary-600 hover:bg-primary-700 text-white rounded-full p-2 shadow-lg"
-                              >
-                                {isReturnMode ? <Minus className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                              </button>
-                            </div>
+                            {/* Add / Return button */}
+                            <button
+                              aria-label={isReturnMode ? `Return ${product.name}` : `Add ${product.name} to cart`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleProductSelect(product);
+                              }}
+                              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold transition-colors"
+                            >
+                              {isReturnMode
+                                ? <><Minus className="w-3.5 h-3.5" /> Return</>
+                                : <><Plus className="w-3.5 h-3.5" /> Add</>
+                              }
+                            </button>
                           </div>
                         )}
                       </motion.div>
@@ -720,7 +754,7 @@ export default function POSInterface() {
                       <Star className="w-4 h-4" />
                       <span className="text-xs font-semibold uppercase tracking-wider">Quick Access</span>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-left">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 text-left">
                       {quickAccessItems.map((product) => (
                         <motion.button
                           key={product.id}
@@ -779,8 +813,9 @@ export default function POSInterface() {
           </div>
         </div>
 
-        {/* ─── RIGHT: Cart Panel ─── */}
-        <div className="w-[340px] xl:w-[380px] flex-shrink-0 flex flex-col bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+        {/* ─── RIGHT: Cart Panel — desktop sidebar / mobile bottom sheet ─── */}
+        {/* Desktop sidebar */}
+        <div className="hidden lg:flex w-[340px] xl:w-[380px] flex-shrink-0 flex-col bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
           {/* Cart Header */}
           <div className="p-4 border-b border-border/50 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
@@ -1051,6 +1086,192 @@ export default function POSInterface() {
           </div>
         </div>
       </div>
+
+      {/* ─── Mobile: Floating Cart FAB ─── */}
+      <div className="lg:hidden fixed bottom-6 right-4 z-40" style={{ bottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsMobileCartOpen(true)}
+          className="relative flex items-center gap-2 px-4 sm:px-5 py-3 sm:py-3.5 rounded-2xl bg-success-600 text-white font-bold shadow-xl shadow-success-600/30"
+          aria-label="Open cart"
+        >
+          <CartIcon className="w-5 h-5" />
+          {totalCartQty > 0 ? (
+            <span>{t('pos.terminal.charge', 'Charge')} {formatCurrency(Math.abs(total))}</span>
+          ) : (
+            <span>{t('pos.cart.shoppingCart', 'Cart')}</span>
+          )}
+          {totalCartQty > 0 && (
+            <span className="absolute -top-2 -right-2 bg-white text-success-700 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center shadow">
+              {totalCartQty}
+            </span>
+          )}
+        </motion.button>
+      </div>
+
+      {/* ─── Mobile: Cart Bottom Sheet ─── */}
+      <AnimatePresence>
+        {isMobileCartOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="lg:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              onClick={() => setIsMobileCartOpen(false)}
+            />
+            {/* Sheet */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl border-t border-border/50 shadow-2xl flex flex-col"
+              style={{ maxHeight: '90vh' }}
+            >
+              {/* Sheet handle */}
+              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                <div className="w-10 h-1 bg-border rounded-full" />
+              </div>
+
+              {/* Cart Header */}
+              <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-primary-500/20 text-primary-400">
+                    <CartIcon className="w-4 h-4" />
+                  </div>
+                  <span className="font-semibold text-foreground">{t('pos.cart.shoppingCart', 'Cart')}</span>
+                  {cartItems.length > 0 && (
+                    <span className="bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      {totalCartQty}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Online indicator */}
+                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-medium ${isOnline
+                    ? 'bg-success-500/10 border-success-500/20 text-success-700 dark:text-success-400'
+                    : 'bg-error-500/10 border-error-500/20 text-error-700 dark:text-error-400'
+                    }`}>
+                    {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                    {isOnline ? 'Online' : 'Offline'}
+                  </div>
+                  <button
+                    onClick={() => setIsMobileCartOpen(false)}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    aria-label="Close cart"
+                  >
+                    <X className="w-5 h-5 text-foreground-muted" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Customer badge */}
+              {selectedCustomer && (
+                <div className="px-4 py-2 border-b border-border/50 bg-accent-500/5 flex items-center justify-between flex-shrink-0">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-3.5 h-3.5 text-accent-400" />
+                    <span className="text-foreground font-medium truncate">{selectedCustomer.name}</span>
+                    <span className="text-accent-400 text-xs">({formatCurrency(selectedCustomer.outstanding_balance)} due)</span>
+                  </div>
+                  <button onClick={() => setIsCustomerModalOpen(true)} className="text-xs text-foreground-muted hover:text-foreground">Change</button>
+                </div>
+              )}
+
+              {/* Cart items */}
+              <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+                {cartItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4 opacity-50">
+                      <div className="w-10 h-10 border-2 border-dashed border-foreground-muted/50 rounded-lg" />
+                    </div>
+                    <h3 className="text-foreground font-medium mb-1">{t('pos.cart.cartEmpty', 'Cart is empty')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('pos.cart.startScanning', 'Add products from the grid')}</p>
+                  </div>
+                ) : (
+                  <div className="p-3 space-y-2">
+                    {cartItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 shadow-sm">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-foreground font-medium text-sm truncate">{item.name}</h4>
+                          <span className="text-foreground-muted/60 text-xs">{formatCurrency(item.unit_price)} / {item.unit || 'each'}</span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/30">
+                          <button
+                            aria-label={`Decrease quantity of ${item.name}`}
+                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                            className="p-2 rounded-md text-foreground-muted hover:bg-white hover:text-primary-600 transition-all"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="w-8 text-center font-bold text-sm tabular-nums">{item.quantity}</span>
+                          <button
+                            aria-label={`Increase quantity of ${item.name}`}
+                            onClick={() => {
+                              if (item.quantity < item.available_stock) updateQuantity(item.id, item.quantity + 1);
+                              else toast.warning(`Only ${item.available_stock} available`);
+                            }}
+                            disabled={item.quantity >= item.available_stock}
+                            className="p-2 rounded-md text-foreground-muted hover:bg-white hover:text-primary-600 transition-all disabled:opacity-30"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div className="text-right min-w-[64px]">
+                          <div className="text-primary-500 font-bold text-sm tabular-nums">{formatCurrency(item.line_total)}</div>
+                        </div>
+                        <button
+                          aria-label={`Remove ${item.name} from cart`}
+                          onClick={() => removeFromCart(item.id)}
+                          className="p-1.5 rounded-lg text-foreground-muted/40 hover:text-error-500 hover:bg-error-500/10 transition-all"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Summary + Charge */}
+              <div className="border-t border-border/50 bg-muted/10 p-4 flex-shrink-0 pb-safe">
+                {cartItems.length > 0 && (
+                  <div className="space-y-1.5 mb-4 text-sm">
+                    <div className="flex justify-between text-foreground-muted">
+                      <span>{t('pos.cart.subtotal', 'Subtotal')}</span>
+                      <span className="text-foreground">{formatCurrency(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-foreground-muted">
+                      <span>{t('pos.cart.tax', 'Tax')} ({(settings.tax_rate * 100).toFixed(1)}%)</span>
+                      <span className="text-foreground">{formatCurrency(taxAmount)}</span>
+                    </div>
+                    <div className="border-t border-border/50 pt-2 flex justify-between items-center">
+                      <span className="font-semibold text-foreground text-base">{t('pos.cart.total', 'Total')}</span>
+                      <span className="font-bold text-primary-400 text-xl">{formatCurrency(total)}</span>
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={() => { setIsMobileCartOpen(false); setIsPaymentModalOpen(true); }}
+                  disabled={cartItems.length === 0}
+                  className={`w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${cartItems.length > 0
+                    ? 'bg-success-600 hover:bg-success-700 text-white shadow-lg shadow-success-600/20'
+                    : 'bg-muted/30 text-foreground-muted/40 cursor-not-allowed'
+                    }`}
+                >
+                  <Receipt className="w-5 h-5" />
+                  {cartItems.length > 0
+                    ? `${total < 0 ? t('common.refund', 'Refund') : t('pos.terminal.charge', 'Charge')} ${formatCurrency(Math.abs(total))}`
+                    : t('pos.terminal.addItemsToStart', 'Add items to start')
+                  }
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ─── Modals ─── */}
       <PaymentModal

@@ -1141,6 +1141,27 @@
     "sendReminder": "Send Payment Reminder",
     "loading": "Loading customers..."
   },
+  "loading": {
+    "initializing": "Initializing StockSuite...",
+    "authenticating": "Authenticating your session...",
+    "loadingData": "Loading your data...",
+    "almostReady": "Almost ready...",
+    "tips": {
+      "title": "Did you know?",
+      "list": [
+        "Use the POS barcode scanner to ring up items in seconds — just press the camera icon.",
+        "Hold a cart mid-sale and resume it later using the Hold Cart feature.",
+        "Set reorder points on items to get low-stock alerts before you run out.",
+        "The dashboard auto-refreshes metrics after every POS transaction.",
+        "You can switch bill types (Regular, Quotation, etc.) right from the POS toolbar.",
+        "Credit sales are tracked per customer — check their ledger anytime.",
+        "Export your sales reports to review performance trends over time.",
+        "Use keyboard shortcuts in the POS: F5 for new sale, F9 to pay, F8 to switch bill type.",
+        "Quick Access items let you pin your best-sellers for one-tap checkout.",
+        "Offline mode queues transactions and syncs automatically when you reconnect."
+      ]
+    }
+  },
   "vendors": {
     "title": "Vendors",
     "subtitle": "Manage your suppliers and outstanding balances",

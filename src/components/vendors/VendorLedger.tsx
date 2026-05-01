@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
     ArrowLeft,
     Building2,
@@ -24,7 +25,6 @@ import { formatCurrency } from '../../lib/utils/notifications';
 import { exportToCSV } from '../../lib/utils/export';
 import LedgerSkeleton from './LedgerSkeleton';
 import RecordPaymentModal from './RecordPaymentModal';
-import AnimatedCard from '../ui/AnimatedCard';
 import VendorLedgerPDF from './VendorLedgerPDF';
 import EmptyState from '../ui/EmptyState';
 
@@ -202,156 +202,223 @@ export default function VendorLedger() {
     ];
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
+        <div className="space-y-4 sm:space-y-6">
+            {/* ── Header ── */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/vendors')}
-                        className="p-3 rounded-2xl bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-300 group"
+                        className="p-2.5 rounded-xl bg-secondary/50 text-foreground-muted hover:bg-secondary hover:text-foreground transition-all group flex-shrink-0"
                     >
-                        <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
                     </button>
-                    <div>
-                        <h1 className="text-3xl font-bold text-foreground">{vendor.company}</h1>
-                        <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                            <span className="flex items-center gap-1 text-sm font-medium bg-secondary/30 px-2 py-0.5 rounded-lg">
-                                <Building2 className="w-3.5 h-3.5" />
+                    <div className="min-w-0">
+                        <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{vendor.company}</h1>
+                        <div className="flex items-center gap-2 text-foreground-muted mt-0.5 flex-wrap">
+                            <span className="flex items-center gap-1 text-xs font-medium bg-secondary/40 px-2 py-0.5 rounded-lg">
+                                <Building2 className="w-3 h-3" />
                                 {vendor.name}
                             </span>
-                            <span className="text-muted-foreground/50">•</span>
-                            <span className="text-sm">Vendor Ledger</span>
+                            <span className="text-xs text-foreground-muted/50">Vendor Ledger</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                     <button
                         onClick={handleExport}
-                        className="btn-secondary flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-sm hover:bg-muted/50 transition-colors"
                         disabled={ledger.length === 0}
-                        title="Export as CSV"
+                        className="btn-secondary flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm disabled:opacity-50"
                     >
-                        <Download className="w-4 h-4" /> CSV
+                        <Download className="w-4 h-4" />
+                        <span className="hidden sm:inline">CSV</span>
                     </button>
                     <button
                         onClick={handlePrint}
-                        className="btn-secondary flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-sm hover:bg-muted/50 transition-colors"
                         disabled={ledger.length === 0}
-                        title="Export as PDF"
+                        className="btn-secondary flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm disabled:opacity-50"
                     >
-                        <Printer className="w-4 h-4" /> PDF
+                        <Printer className="w-4 h-4" />
+                        <span className="hidden sm:inline">PDF</span>
                     </button>
                     <button
                         onClick={() => setIsPaymentModalOpen(true)}
-                        className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl shadow-lg shadow-primary/20"
+                        className="btn-primary flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm"
                     >
-                        <DollarSign className="w-4 h-4" /> Record Payment
+                        <DollarSign className="w-4 h-4" />
+                        <span>Record Payment</span>
                     </button>
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* ── Stats — 1 col mobile, 3 col sm+ ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 {stats.map((stat, i) => (
-                    <AnimatedCard key={i} delay={i * 0.1}>
-                        <div className="card-theme p-6 rounded-[2.5rem] border border-border/50 h-full relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-                            <div className={`absolute top-0 right-0 w-32 h-32 opacity-10 rounded-full blur-3xl -mr-10 -mt-10 ${stat.bg.replace('/10', '')}`} />
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.08 }}
+                        className="card-theme p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border/50 relative overflow-hidden group hover:shadow-md transition-all duration-300"
+                    >
+                        <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-15 ${stat.bg}`} />
 
-                            <div className="flex justify-between items-start mb-4 relative z-10">
-                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{stat.label}</p>
-                                <div className={`p-2 rounded-xl ${stat.bg} ${stat.color}`}>
-                                    <stat.icon className="w-5 h-5" />
-                                </div>
+                        {/* Mobile: horizontal layout */}
+                        <div className="flex items-center gap-3 sm:block relative z-10">
+                            <div className={`p-2.5 rounded-xl ${stat.bg} flex-shrink-0 sm:mb-3`}>
+                                <stat.icon className={`w-5 h-5 ${stat.color}`} />
                             </div>
-
-                            <div className="relative z-10">
-                                <h3 className={`text-3xl font-bold tracking-tight ${stat.color} group-hover:scale-105 transition-transform duration-300 origin-left`}>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wide truncate">{stat.label}</p>
+                                <h3 className={`text-lg sm:text-2xl font-bold tracking-tight mt-0.5 ${stat.color} tabular-nums`}>
                                     {stat.value}
                                 </h3>
                             </div>
                         </div>
-                    </AnimatedCard>
+                    </motion.div>
                 ))}
             </div>
 
-            {/* Ledger Table */}
-            <AnimatedCard delay={0.4}>
-                <div className="card-theme p-0 rounded-[2.5rem] border border-border/50 overflow-hidden shadow-xl">
-                    <div className="p-8 border-b border-border/30 bg-secondary/10 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-xl font-bold text-foreground">Transaction History</h3>
-                            <p className="text-sm text-muted-foreground mt-1">Detailed log of all purchases and payments</p>
-                        </div>
-                        <div className="bg-background/50 px-4 py-2 rounded-xl text-xs font-mono text-muted-foreground border border-border/30">
-                            {ledger.length} ENTRIES
-                        </div>
+            {/* ── Ledger card ── */}
+            <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="card-theme rounded-2xl sm:rounded-[2rem] border border-border/50 overflow-hidden shadow-sm"
+            >
+                {/* Card header */}
+                <div className="px-4 sm:px-6 py-4 border-b border-border/30 bg-secondary/10 flex items-center justify-between gap-3">
+                    <div>
+                        <h3 className="text-base sm:text-lg font-bold text-foreground">Transaction History</h3>
+                        <p className="text-xs text-foreground-muted mt-0.5">All purchases and payments</p>
                     </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="bg-secondary/20">
-                                    <th className="px-8 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Date</th>
-                                    <th className="px-8 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Type</th>
-                                    <th className="px-8 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Reference</th>
-                                    <th className="px-8 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Description</th>
-                                    <th className="px-8 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</th>
-                                    <th className="px-8 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Balance Impact</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/30">
-                                {ledger.map((entry) => (
-                                    <tr key={entry.id} className="hover:bg-secondary/30 transition-colors group">
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center gap-2 text-foreground font-medium">
-                                                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                                                {entry.date.toLocaleDateString()}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide inline-flex items-center gap-1.5 ${entry.type === 'purchase'
-                                                ? 'bg-primary/10 text-primary border border-primary/20'
-                                                : 'bg-success-500/10 text-success-500 border border-success-500/20'
-                                                }`}>
-                                                <div className={`w-1.5 h-1.5 rounded-full ${entry.type === 'purchase' ? 'bg-primary' : 'bg-success-500'}`} />
-                                                {entry.type}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5 text-muted-foreground font-mono text-xs">
-                                            {entry.reference}
-                                        </td>
-                                        <td className="px-8 py-5 text-foreground text-sm max-w-xs truncate">
-                                            {entry.description}
-                                        </td>
-                                        <td className="px-8 py-5 text-right font-bold text-foreground text-sm">
-                                            {formatCurrency(entry.amount)}
-                                        </td>
-                                        <td className={`px-8 py-5 text-right font-bold text-sm ${entry.balance_change > 0 ? 'text-destructive' : 'text-success-500'
-                                            }`}>
-                                            <span className="bg-secondary/30 px-2 py-1 rounded-lg">
-                                                {entry.balance_change > 0 ? '+' : ''}{formatCurrency(entry.balance_change)}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {ledger.length === 0 && (
-                                    <tr>
-                                        <td colSpan={6} className="px-6 py-10">
-                                            <EmptyState
-                                                icon={FileText}
-                                                title="No transactions found"
-                                                description="This vendor has no recorded history yet."
-                                                className="max-w-2xl mx-auto shadow-none"
-                                            />
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                    <div className="bg-background/60 px-3 py-1.5 rounded-xl text-xs font-mono text-foreground-muted border border-border/40 flex-shrink-0">
+                        {ledger.length} entries
                     </div>
                 </div>
-            </AnimatedCard>
+
+                {ledger.length === 0 ? (
+                    <div className="py-16 px-4">
+                        <EmptyState
+                            icon={FileText}
+                            title="No transactions yet"
+                            description="This vendor has no recorded history."
+                        />
+                    </div>
+                ) : (
+                    <>
+                        {/* ── Mobile card list (< sm) ── */}
+                        <div className="sm:hidden divide-y divide-border/30">
+                            {ledger.map((entry) => (
+                                <div key={entry.id} className="flex items-start gap-3 px-4 py-3 hover:bg-secondary/20 transition-colors">
+                                    {/* Type icon */}
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                                        entry.type === 'purchase'
+                                            ? 'bg-primary/10 text-primary'
+                                            : 'bg-success-500/10 text-success-500'
+                                    }`}>
+                                        {entry.type === 'purchase'
+                                            ? <Receipt className="w-4 h-4" />
+                                            : <DollarSign className="w-4 h-4" />
+                                        }
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md ${
+                                                entry.type === 'purchase'
+                                                    ? 'bg-primary/10 text-primary'
+                                                    : 'bg-success-500/10 text-success-500'
+                                            }`}>
+                                                {entry.type}
+                                            </span>
+                                            <span className="text-xs text-foreground-muted">{entry.date.toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-sm text-foreground mt-1 truncate">{entry.description}</p>
+                                        <p className="text-xs font-mono text-foreground-muted/60 mt-0.5">{entry.reference}</p>
+                                    </div>
+
+                                    <div className="text-right flex-shrink-0">
+                                        <p className="text-sm font-bold text-foreground tabular-nums">{formatCurrency(entry.amount)}</p>
+                                        <p className={`text-xs font-semibold tabular-nums mt-0.5 ${entry.balance_change > 0 ? 'text-error-500' : 'text-success-500'}`}>
+                                            {entry.balance_change > 0 ? '+' : ''}{formatCurrency(entry.balance_change)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* ── Desktop table (≥ sm) ── */}
+                        <div className="hidden sm:block overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="bg-secondary/20 border-b border-border/30">
+                                        <th className="px-5 lg:px-6 py-3.5 text-xs font-bold text-foreground-muted uppercase tracking-wider">Date</th>
+                                        <th className="px-5 lg:px-6 py-3.5 text-xs font-bold text-foreground-muted uppercase tracking-wider">Type</th>
+                                        <th className="px-5 lg:px-6 py-3.5 text-xs font-bold text-foreground-muted uppercase tracking-wider hidden lg:table-cell">Reference</th>
+                                        <th className="px-5 lg:px-6 py-3.5 text-xs font-bold text-foreground-muted uppercase tracking-wider">Description</th>
+                                        <th className="px-5 lg:px-6 py-3.5 text-xs font-bold text-foreground-muted uppercase tracking-wider text-right">Amount</th>
+                                        <th className="px-5 lg:px-6 py-3.5 text-xs font-bold text-foreground-muted uppercase tracking-wider text-right">Impact</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/20">
+                                    {ledger.map((entry) => (
+                                        <tr key={entry.id} className="hover:bg-secondary/20 transition-colors">
+                                            <td className="px-5 lg:px-6 py-3.5">
+                                                <div className="flex items-center gap-1.5 text-foreground-muted text-sm whitespace-nowrap">
+                                                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                                                    {entry.date.toLocaleDateString()}
+                                                </div>
+                                            </td>
+                                            <td className="px-5 lg:px-6 py-3.5">
+                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide inline-flex items-center gap-1 ${
+                                                    entry.type === 'purchase'
+                                                        ? 'bg-primary/10 text-primary border border-primary/20'
+                                                        : 'bg-success-500/10 text-success-500 border border-success-500/20'
+                                                }`}>
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${entry.type === 'purchase' ? 'bg-primary' : 'bg-success-500'}`} />
+                                                    {entry.type}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 lg:px-6 py-3.5 text-foreground-muted font-mono text-xs hidden lg:table-cell">
+                                                {entry.reference}
+                                            </td>
+                                            <td className="px-5 lg:px-6 py-3.5 text-foreground text-sm max-w-[200px] truncate">
+                                                {entry.description}
+                                            </td>
+                                            <td className="px-5 lg:px-6 py-3.5 text-right font-bold text-foreground text-sm tabular-nums whitespace-nowrap">
+                                                {formatCurrency(entry.amount)}
+                                            </td>
+                                            <td className={`px-5 lg:px-6 py-3.5 text-right font-bold text-sm tabular-nums whitespace-nowrap ${
+                                                entry.balance_change > 0 ? 'text-error-500' : 'text-success-500'
+                                            }`}>
+                                                <span className="bg-secondary/30 px-2 py-0.5 rounded-lg">
+                                                    {entry.balance_change > 0 ? '+' : ''}{formatCurrency(entry.balance_change)}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
+
+                {/* Footer summary */}
+                {ledger.length > 0 && (
+                    <div className="px-4 sm:px-6 py-3 border-t border-border/30 bg-secondary/10 flex items-center justify-between gap-3">
+                        <span className="text-xs text-foreground-muted">
+                            {ledger.length} transaction{ledger.length !== 1 ? 's' : ''}
+                        </span>
+                        <div className="flex items-center gap-4 text-sm">
+                            <span className="text-foreground-muted text-xs">Outstanding:</span>
+                            <span className={`font-bold tabular-nums ${(displayVendor?.outstanding_balance || 0) > 0 ? 'text-warning-500' : 'text-success-500'}`}>
+                                {formatCurrency(displayVendor?.outstanding_balance || 0)}
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </motion.div>
 
             <RecordPaymentModal
                 isOpen={isPaymentModalOpen}
