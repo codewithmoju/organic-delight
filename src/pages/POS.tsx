@@ -1,10 +1,21 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingCart, BarChart3, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+
+// Eagerly load the terminal — it's the default view
 import POSInterface from '../components/pos/POSInterface';
-import SalesReports from '../components/pos/SalesReports';
-import POSSettings from '../components/pos/POSSettings';
+
+// Lazy-load heavy sub-views that are not visible on initial load
+const SalesReports = lazy(() => import('../components/pos/SalesReports'));
+const POSSettings = lazy(() => import('../components/pos/POSSettings'));
+
+const SubViewFallback = () => (
+  <div className="min-h-[40vh] flex items-center justify-center">
+    <LoadingSpinner size="lg" />
+  </div>
+);
 
 type POSView = 'interface' | 'reports' | 'settings';
 
@@ -64,16 +75,19 @@ export default function POS() {
       </motion.div>
 
       {/* View Content */}
-      <motion.div
-        key={activeView}
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
-      >
+      <div>
         {activeView === 'interface' && <POSInterface />}
-        {activeView === 'reports' && <SalesReports />}
-        {activeView === 'settings' && <POSSettings />}
-      </motion.div>
+        {activeView === 'reports' && (
+          <Suspense fallback={<SubViewFallback />}>
+            <SalesReports />
+          </Suspense>
+        )}
+        {activeView === 'settings' && (
+          <Suspense fallback={<SubViewFallback />}>
+            <POSSettings />
+          </Suspense>
+        )}
+      </div>
     </div>
   );
 }

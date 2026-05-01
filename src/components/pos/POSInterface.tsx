@@ -526,6 +526,7 @@ export default function POSInterface() {
             : 'bg-card text-foreground-muted border-border/50 hover:border-primary-500/50'
             }`}
           title="Toggle Camera Scanner"
+          aria-label="Toggle camera barcode scanner"
         >
           {isScannerOpen ? <Camera className="w-5 h-5" /> : <Scan className="w-5 h-5" />}
         </motion.button>
@@ -537,6 +538,7 @@ export default function POSInterface() {
           onClick={() => setIsVendorModalOpen(true)}
           className="p-3 rounded-xl bg-card text-foreground-muted border border-border/50 hover:border-primary-500/50 transition-all"
           title="Vendors (F12)"
+          aria-label="Open vendors list"
         >
           <Building2 className="w-5 h-5" />
         </motion.button>
@@ -547,6 +549,7 @@ export default function POSInterface() {
           onClick={() => setShowShortcuts(!showShortcuts)}
           className="p-3 rounded-xl bg-card text-foreground-muted border border-border/50 hover:border-primary-500/50 transition-all"
           title="Keyboard Shortcuts"
+          aria-label="Show keyboard shortcuts"
         >
           <Keyboard className="w-5 h-5" />
         </motion.button>
@@ -557,6 +560,7 @@ export default function POSInterface() {
           onClick={startNewTransaction}
           className="p-3 rounded-xl bg-primary-600 text-white border border-primary-500 hover:bg-primary-700 transition-all"
           title="New Transaction"
+          aria-label="Start new transaction"
         >
           <RotateCcw className="w-5 h-5" />
         </motion.button>
@@ -943,6 +947,7 @@ export default function POSInterface() {
                       {/* Quantity Stepper */}
                       <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/30">
                         <button
+                          aria-label={`Decrease quantity of ${item.name}`}
                           onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                           className="p-1.5 rounded-md text-foreground-muted hover:bg-white hover:text-primary-600 hover:shadow-sm transition-all"
                         >
@@ -950,6 +955,7 @@ export default function POSInterface() {
                         </button>
                         <input
                           type="number"
+                          aria-label={`Quantity of ${item.name}`}
                           value={item.quantity}
                           onChange={(e) => {
                             const val = parseInt(e.target.value);
@@ -965,6 +971,7 @@ export default function POSInterface() {
                           className="w-12 bg-transparent text-foreground font-bold text-sm text-center tabular-nums focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <button
+                          aria-label={`Increase quantity of ${item.name}`}
                           onClick={() => {
                             if (item.quantity < item.available_stock) {
                               updateQuantity(item.id, item.quantity + 1);
@@ -988,6 +995,7 @@ export default function POSInterface() {
 
                       {/* Remove */}
                       <button
+                        aria-label={`Remove ${item.name} from cart`}
                         onClick={() => removeFromCart(item.id)}
                         className="p-1.5 rounded-lg text-foreground-muted/40 hover:text-error-500 hover:bg-error-500/10 transition-all opacity-0 group-hover:opacity-100"
                       >
