@@ -1,32 +1,32 @@
 export default function CategorySkeleton() {
-    return (
-        <div className="card-theme p-6 rounded-[2.5rem] relative overflow-hidden h-full border border-border/50">
-            {/* Header Skeleton */}
-            <div className="flex justify-between items-start mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-secondary/50 animate-pulse" />
-                <div className="w-8 h-8 rounded-lg bg-secondary/50 animate-pulse" />
-            </div>
-
-            {/* Title & Badge Skeleton */}
-            <div className="space-y-3 mb-6">
-                <div className="h-7 w-3/4 bg-secondary/50 rounded-lg animate-pulse" />
-                <div className="h-5 w-1/3 bg-secondary/30 rounded-md animate-pulse" />
-            </div>
-
-            {/* Description Skeleton */}
-            <div className="space-y-2 mb-6">
-                <div className="h-4 w-full bg-secondary/30 rounded animate-pulse" />
-                <div className="h-4 w-2/3 bg-secondary/30 rounded animate-pulse" />
-            </div>
-
-            {/* Footer / Stats Skeleton */}
-            <div className="mt-auto pt-4 border-t border-border/30 flex items-center gap-3">
-                <div className="w-5 h-5 rounded bg-secondary/50 animate-pulse" />
-                <div className="h-5 w-20 bg-secondary/50 rounded animate-pulse" />
-            </div>
-
-            {/* Decorative Blob Skeleton */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+  return (
+    <div className="card-theme rounded-2xl sm:rounded-[2rem] relative overflow-hidden flex flex-col border border-border/50 animate-pulse">
+      {/* Info area */}
+      <div className="p-3 sm:p-4 flex-1">
+        {/* Icon + count row */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="w-10 h-10 rounded-xl bg-secondary/50" />
+          <div className="w-10 h-5 rounded-lg bg-secondary/40" />
         </div>
-    );
+
+        {/* Title */}
+        <div className="h-4 w-3/4 bg-secondary/50 rounded-lg mb-2" />
+
+        {/* Description lines */}
+        <div className="space-y-1.5">
+          <div className="h-3 w-full bg-secondary/30 rounded" />
+          <div className="h-3 w-2/3 bg-secondary/30 rounded" />
+        </div>
+      </div>
+
+      {/* Action row */}
+      <div className="flex items-center justify-end gap-1.5 px-3 pb-3">
+        <div className="w-8 h-8 rounded-xl bg-secondary/40" />
+        <div className="w-8 h-8 rounded-xl bg-secondary/40" />
+      </div>
+
+      {/* Decorative blob */}
+      <div className="absolute top-0 right-0 w-20 h-20 bg-secondary/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
+    </div>
+  );
 }

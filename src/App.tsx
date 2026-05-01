@@ -9,7 +9,7 @@ import { getProfile } from './lib/api/auth';
 import { useAuthStore } from './lib/store';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
-import LoadingSpinner from './components/ui/LoadingSpinner';
+import AppLoader from './components/ui/AppLoader';
 import OfflineIndicator from './components/ui/OfflineIndicator';
 
 // Lazy load components for better performance
@@ -35,11 +35,9 @@ const NewPurchase = lazy(() => import('./pages/purchases/NewPurchase'));
 const VendorLedgerPage = lazy(() => import('./pages/vendors/VendorLedgerPage'));
 const CustomerLedger = lazy(() => import('./pages/customers/CustomerLedger'));
 
-// Simple loading fallback
+// Page-level loading fallback — uses the shared AppLoader
 const LoadingFallback = ({ text }: { text: string }) => (
-  <div className="min-h-[60vh] flex items-center justify-center">
-    <LoadingSpinner size="lg" text={text} />
-  </div>
+  <AppLoader label={text} />
 );
 
 function App() {

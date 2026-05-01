@@ -128,16 +128,21 @@ export default function CustomerSelector({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+                className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4"
                 onClick={(e) => e.target === e.currentTarget && onClose()}
             >
                 <motion.div
-                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full max-w-2xl bg-card rounded-2xl border border-border/60 shadow-2xl overflow-hidden max-h-[80vh] flex flex-col"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                    className="w-full sm:max-w-2xl bg-card sm:rounded-2xl rounded-t-3xl border border-border/60 shadow-2xl overflow-hidden flex flex-col"
+                    style={{ maxHeight: '90vh' }}
                 >
+                    {/* Mobile drag handle */}
+                    <div className="flex justify-center pt-3 pb-1 sm:hidden flex-shrink-0">
+                        <div className="w-10 h-1 bg-border rounded-full" />
+                    </div>
                     {/* Header */}
                     <div className="p-5 border-b border-border/40">
                         <div className="flex items-center justify-between mb-4">

@@ -299,30 +299,27 @@ export default function Items() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-6xl mx-auto"
       >
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-6 sm:mb-8 flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               {selectedItem ? t('items.editItem') : t('items.addItem')}
             </h1>
-            <p className="text-muted-foreground mt-2 text-lg">
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               {selectedItem ? t('items.updateItem') : t('items.createItem')}
             </p>
           </div>
           <button
             onClick={() => { setIsFormOpen(false); setSelectedItem(null); }}
-            className="p-3 bg-secondary/50 rounded-full hover:bg-secondary transition-colors"
+            className="p-2.5 bg-secondary/50 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
             title="Close"
           >
-            <Plus className="w-6 h-6 rotate-45 text-muted-foreground" />
+            <Plus className="w-5 h-5 rotate-45 text-muted-foreground" />
           </button>
         </div>
 
-        <div className="card-theme p-8 rounded-[2.5rem] shadow-2xl backdrop-blur-xl border border-white/20 dark:border-white/10 relative" style={{ contain: 'none' }}>
-          {/* Decorative Background Elements - Clipped */}
-          <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden pointer-events-none">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -ml-16 -mb-16" />
-          </div>
+        <div className="card-theme p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-xl border border-border/50 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/3 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none" />
 
           <div className="relative z-10">
             {selectedItem ? (
@@ -389,23 +386,23 @@ export default function Items() {
 
         {/* Filters and View Controls - Redesigned */}
         <div className="app-toolbar-surface p-2 sticky top-4 z-30">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-2">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-3 p-2">
             <div className="w-full lg:w-1/3 relative">
               <SearchInput
                 placeholder={t('items.searchPlaceholder')}
                 value={searchQuery}
                 onChange={setSearchQuery}
-                className="w-full h-12 bg-background/70 border border-border/50 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/50"
+                className="w-full h-11 bg-background/70 border border-border/50 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/50"
               />
             </div>
 
-            <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 px-2 lg:px-0 scrollbar-hide">
+            <div className="flex items-center gap-2 w-full lg:w-auto flex-wrap">
               {/* Category Filter */}
-              <div className="relative min-w-[200px]">
+              <div className="relative flex-1 min-w-[140px]">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full h-12 pl-4 pr-10 appearance-none bg-background/70 rounded-xl border border-border/50 shadow-sm focus:ring-2 focus:ring-primary/50 text-sm font-medium cursor-pointer"
+                  className="w-full h-11 pl-3 pr-8 appearance-none bg-background/70 rounded-xl border border-border/50 shadow-sm focus:ring-2 focus:ring-primary/50 text-sm font-medium cursor-pointer text-foreground"
                 >
                   <option value="">{t('items.allCategories')}</option>
                   {categories.map((category) => (
@@ -414,38 +411,38 @@ export default function Items() {
                     </option>
                   ))}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                  <List className="w-4 h-4" />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                  <List className="w-3.5 h-3.5" />
                 </div>
               </div>
 
-              <div className="h-8 w-px bg-border/50 mx-2 hidden lg:block" />
-
               {/* View Toggles */}
-              <div className="flex bg-background/70 rounded-xl p-1 shadow-sm border border-border/50">
+              <div className="flex bg-background/70 rounded-xl p-1 shadow-sm border border-border/50 flex-shrink-0">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2.5 rounded-xl transition-all duration-300 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-md scale-105' : 'text-muted-foreground hover:bg-secondary/50'}`}
+                  className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-secondary/50'}`}
                   title="Grid View"
                 >
-                  <LayoutGrid className="w-5 h-5" />
+                  <LayoutGrid className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('analysis')}
-                  className={`p-2.5 rounded-xl transition-all duration-300 ${viewMode === 'analysis' ? 'bg-primary text-primary-foreground shadow-md scale-105' : 'text-muted-foreground hover:bg-secondary/50'}`}
+                  className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'analysis' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-secondary/50'}`}
                   title="List View"
                 >
-                  <List className="w-5 h-5" />
+                  <List className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Low Stock Toggle */}
               <button
                 onClick={() => setShowLowStockOnly(!showLowStockOnly)}
-                className={`flex items-center gap-2 px-4 h-12 rounded-2xl transition-all duration-300 shadow-sm border ${showLowStockOnly ? 'bg-warning-500/10 border-warning-500 text-warning-600 dark:text-warning-400' : 'bg-white/80 dark:bg-dark-800/80 border-transparent text-muted-foreground hover:bg-secondary/50'}`}
+                className={`flex items-center gap-1.5 px-3 h-11 rounded-xl transition-all duration-200 border flex-shrink-0 ${showLowStockOnly
+                  ? 'bg-warning-500/10 border-warning-500/50 text-warning-600 dark:text-warning-400'
+                  : 'bg-background/70 border-border/50 text-muted-foreground hover:bg-secondary/50'}`}
               >
-                <AlertTriangle className={`w-5 h-5 ${showLowStockOnly ? 'animate-pulse' : ''}`} />
-                <span className="text-sm font-semibold whitespace-nowrap">{t('common.lowStock')}</span>
+                <AlertTriangle className={`w-4 h-4 ${showLowStockOnly ? 'animate-pulse' : ''}`} />
+                <span className="text-xs font-semibold whitespace-nowrap">{t('common.lowStock', 'Low Stock')}</span>
               </button>
             </div>
           </div>
@@ -458,7 +455,7 @@ export default function Items() {
           <motion.div
             layout
             data-tour="items-grid"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
           >
             <AnimatePresence>
               {pagination.paginatedData.map((item: any, index) => (
@@ -468,95 +465,71 @@ export default function Items() {
                   initial={{ opacity: 0, scale: 0.9, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                  className="card-theme p-6 rounded-[2.5rem] group cursor-pointer relative overflow-hidden flex flex-col justify-between h-full border border-border/50 hover:border-primary/30 hover:shadow-2xl transition-all duration-300"
-                  onClick={() => {
-                    setSelectedItem(item);
-                    setIsFormOpen(true);
-                  }}
+                  transition={{ duration: 0.3, delay: index * 0.04 }}
+                  className="card-theme rounded-2xl sm:rounded-[2rem] group relative overflow-hidden flex flex-col border border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300"
                 >
-                  {/* Decorative Background Gradient */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none group-hover:bg-primary/10 transition-colors" />
+                  {/* Decorative gradient */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-3xl -mr-12 -mt-12 pointer-events-none group-hover:bg-primary/10 transition-colors" />
 
-                  {/* Stock Status Badge (Absolute Top Right) */}
-                  <div className={`absolute top-5 right-5 z-20`}>
-                    <span className={`flex h-3 w-3 relative`}>
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(item.current_quantity || 0) === 0 ? 'bg-error-400' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'bg-warning-400' : 'bg-success-400'}`}></span>
-                      <span className={`relative inline-flex rounded-full h-3 w-3 ${(item.current_quantity || 0) === 0 ? 'bg-error-500' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'bg-warning-500' : 'bg-success-500'}`}></span>
+                  {/* Stock status dot */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <span className="flex h-2.5 w-2.5 relative">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(item.current_quantity || 0) === 0 ? 'bg-error-400' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'bg-warning-400' : 'bg-success-400'}`} />
+                      <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${(item.current_quantity || 0) === 0 ? 'bg-error-500' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'bg-warning-500' : 'bg-success-500'}`} />
                     </span>
                   </div>
 
-
-                  <div className="relative z-10 mb-6">
-                    <div className="flex flex-col gap-1 pr-8">
-                      <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-200 truncate leading-tight">
-                        {item.name}
-                      </h3>
-                      <p className="text-sm font-medium text-muted-foreground truncate bg-secondary/30 self-start px-2 py-0.5 rounded-lg border border-border/50">
-                        {item.category?.name || t('items.uncategorized')}
-                      </p>
-                    </div>
-
-                    <p className="text-muted-foreground/80 text-sm mt-4 line-clamp-2 h-10 leading-relaxed">
-                      {item.description || "No description provided."}
+                  {/* Tappable info area */}
+                  <button
+                    className="flex-1 text-left p-3 sm:p-4 pr-6"
+                    onClick={() => { setSelectedItem(item); setIsFormOpen(true); }}
+                  >
+                    <h3 className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors truncate leading-tight mb-0.5">
+                      {item.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground truncate bg-secondary/30 self-start px-1.5 py-0.5 rounded-md border border-border/40 inline-block mb-2">
+                      {item.category?.name || t('items.uncategorized')}
                     </p>
-                  </div>
 
-                  <div className="space-y-4 relative z-10">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-secondary/30 rounded-2xl p-3 border border-border/50">
-                        <span className="text-xs text-muted-foreground block mb-1 font-medium tracking-wide uppercase">{t('items.currentStock')}</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-lg font-bold ${(item.current_quantity || 0) === 0 ? 'text-error-500' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'text-warning-500' : 'text-success-500'}`}>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className="bg-secondary/30 rounded-xl p-2 border border-border/40">
+                        <span className="text-[10px] text-muted-foreground block font-medium uppercase tracking-wide">{t('items.currentStock', 'Stock')}</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className={`text-sm font-bold ${(item.current_quantity || 0) === 0 ? 'text-error-500' : (item.current_quantity || 0) <= (item.low_stock_threshold || 10) ? 'text-warning-500' : 'text-success-500'}`}>
                             {item.current_quantity || 0}
                           </span>
-                          <span className="text-xs text-muted-foreground font-medium">{item.unit || 'pcs'}</span>
+                          <span className="text-[10px] text-muted-foreground">{item.unit || 'pcs'}</span>
                         </div>
                       </div>
-                      <div className="bg-secondary/30 rounded-2xl p-3 border border-border/50">
-                        <span className="text-xs text-muted-foreground block mb-1 font-medium tracking-wide uppercase">{t('items.salePrice')}</span>
-                        <span className="text-lg font-bold text-foreground">
-                          {formatCurrency(item.unit_price || item.sale_rate || item.last_sale_rate || 0)}
+                      <div className="bg-secondary/30 rounded-xl p-2 border border-border/40">
+                        <span className="text-[10px] text-muted-foreground block font-medium uppercase tracking-wide">{t('items.salePrice', 'Price')}</span>
+                        <span className="text-sm font-bold text-foreground">
+                          {formatCurrency(item.unit_price || item.sale_rate || 0)}
                         </span>
                       </div>
                     </div>
+                  </button>
 
-                    {/* Quick SKU/Tag Info */}
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
-                      <span className="font-mono bg-secondary/50 px-1.5 py-0.5 rounded border border-border/30">ID: {item.sku || 'N/A'}</span>
-                      {item.last_transaction_date && (
-                        <span className="flex items-center gap-1 opacity-70">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(item.last_transaction_date)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Hover Actions */}
-                    <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedItem(item);
-                          setIsFormOpen(true);
-                        }}
-                        className="h-9 w-9 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90"
-                        title="Edit Details"
+                  {/* Always-visible action row */}
+                  <div className="flex items-center justify-between px-3 pb-3 gap-2">
+                    <span className="text-[10px] font-mono text-muted-foreground/60 bg-secondary/40 px-1.5 py-0.5 rounded border border-border/30 truncate max-w-[80px]">
+                      {item.sku || 'N/A'}
+                    </span>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedItem(item); setIsFormOpen(true); }}
+                        className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all"
+                        title="Edit"
                       >
-                        <Pencil className="h-4 w-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
                         onClick={(e) => { e.stopPropagation(); handleDeleteClick(item.id); }}
-                        className="h-9 w-9 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center hover:bg-destructive/90"
-                        title="Delete Product"
+                        className="h-8 w-8 rounded-xl bg-error-500/10 text-error-500 flex items-center justify-center hover:bg-error-500 hover:text-white transition-all"
+                        title="Delete"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </motion.button>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -629,7 +602,7 @@ export default function Items() {
                               if (e.key === 'Enter') handleInlinePriceUpdate(item.id);
                               if (e.key === 'Escape') setEditingPriceId(null);
                             }}
-                            className="input-dark w-24 text-right py-1 px-2 text-sm bg-white dark:bg-black border border-primary ring-2 ring-primary/20 rounded-md"
+                            className="w-20 text-right py-1 px-2 text-sm bg-background border border-primary ring-2 ring-primary/20 rounded-md text-foreground"
                             autoFocus
                             onClick={(e) => e.stopPropagation()}
                           />

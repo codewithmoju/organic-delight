@@ -182,46 +182,47 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="w-full max-w-4xl max-h-[90vh] bg-dark-900 rounded-2xl shadow-2xl border border-dark-700 flex flex-col"
+                    className="w-full max-w-4xl max-h-[90vh] bg-card rounded-2xl shadow-2xl border border-border/50 flex flex-col"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-dark-700">
+                    <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/50">
                         <div>
-                            <h2 className="text-2xl font-bold text-gradient">{t('purchases.newPurchase')}</h2>
-                            <p className="text-sm text-gray-400 mt-1">
+                            <h2 className="text-xl font-bold text-foreground">{t('purchases.newPurchase')}</h2>
+                            <p className="text-sm text-foreground-muted mt-0.5">
                                 {t('purchases.step', { current: currentStep, total: 3 })}: {
                                     currentStep === 1 ? t('purchases.selectVendor') :
-                                        currentStep === 2 ? t('purchases.addItems') :
-                                            t('purchases.reviewComplete')
+                                    currentStep === 2 ? t('purchases.addItems') :
+                                    t('purchases.reviewComplete')
                                 }
                             </p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-dark-700 rounded-lg transition-colors"
+                            className="p-2 hover:bg-secondary/50 rounded-xl transition-colors text-foreground-muted hover:text-foreground"
                         >
-                            <X className="w-6 h-6 text-gray-400" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="px-6 pt-4">
+                    <div className="px-4 sm:px-6 pt-4">
                         <div className="flex items-center justify-between mb-2">
                             {[1, 2, 3].map((step) => (
                                 <div
                                     key={step}
-                                    className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${step <= currentStep
-                                        ? 'border-primary-500 bg-primary-500 text-white'
-                                        : 'border-gray-600 text-gray-400'
-                                        }`}
+                                    className={`flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all text-sm font-bold ${
+                                        step <= currentStep
+                                            ? 'border-primary bg-primary text-white'
+                                            : 'border-border/60 text-foreground-muted'
+                                    }`}
                                 >
-                                    {step < currentStep ? <CheckCircle2 className="w-5 h-5" /> : step}
+                                    {step < currentStep ? <CheckCircle2 className="w-4 h-4" /> : step}
                                 </div>
                             ))}
                         </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="w-full bg-secondary/50 rounded-full h-1.5">
                             <motion.div
-                                className="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full"
+                                className="bg-primary h-1.5 rounded-full"
                                 initial={{ width: '33%' }}
                                 animate={{ width: `${(currentStep / 3) * 100}%` }}
                                 transition={{ duration: 0.3 }}
@@ -273,44 +274,41 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                     exit={{ opacity: 0, x: -20 }}
                                     className="space-y-6"
                                 >
-                                    <div className="bg-dark-800 rounded-lg p-6 border border-dark-700">
-                                        <h3 className="text-lg font-semibold text-white mb-4">{t('purchases.purchaseDetails')}</h3>
+                                    <div className="bg-card rounded-xl p-4 sm:p-5 border border-border/50">
+                                        <h3 className="text-base font-semibold text-foreground mb-4">{t('purchases.purchaseDetails')}</h3>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                                <label className="block text-xs font-semibold text-foreground-muted mb-1.5">
                                                     {t('purchases.purchaseDate')}
                                                 </label>
                                                 <div className="relative">
-                                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-muted pointer-events-none" />
                                                     <input
                                                         type="date"
                                                         value={purchaseDate}
                                                         onChange={(e) => setPurchaseDate(e.target.value)}
-                                                        className="w-full input-dark pl-10"
+                                                        className="w-full h-11 pl-10 pr-4 bg-background border border-border/60 rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                                                     />
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                                <label className="block text-xs font-semibold text-foreground-muted mb-1.5">
                                                     {t('purchases.billNumberOptional')}
                                                 </label>
-                                                <div className="relative">
-                                                    <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                    <input
-                                                        type="text"
-                                                        value={billNumber}
-                                                        onChange={(e) => setBillNumber(e.target.value)}
-                                                        placeholder={t('purchases.vendorInvoiceNumber')}
-                                                        className="w-full input-dark pl-10"
-                                                    />
-                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={billNumber}
+                                                    onChange={(e) => setBillNumber(e.target.value)}
+                                                    placeholder={t('purchases.vendorInvoiceNumber')}
+                                                    className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                                                />
                                             </div>
                                         </div>
 
                                         <div className="mt-4">
-                                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                            <label className="block text-xs font-semibold text-foreground-muted mb-2">
                                                 {t('purchases.paymentStatus')}
                                             </label>
                                             <div className="grid grid-cols-3 gap-2">
@@ -318,10 +316,11 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                                     <button
                                                         key={status}
                                                         onClick={() => setPaymentStatus(status)}
-                                                        className={`py-2 px-4 rounded-lg border-2 transition-all ${paymentStatus === status
-                                                            ? 'border-primary-500 bg-primary-500/20 text-primary-400'
-                                                            : 'border-dark-600 text-gray-400 hover:border-dark-500'
-                                                            }`}
+                                                        className={`py-2 text-xs font-semibold rounded-lg border-2 transition-all ${
+                                                            paymentStatus === status
+                                                                ? 'border-primary bg-primary/10 text-primary'
+                                                                : 'border-border/60 text-foreground-muted hover:border-border'
+                                                        }`}
                                                     >
                                                         {t(`purchases.${status}`)}
                                                     </button>
@@ -331,7 +330,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
 
                                         {paymentStatus === 'partial' && (
                                             <div className="mt-4">
-                                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                                <label className="block text-xs font-semibold text-foreground-muted mb-1.5">
                                                     {t('purchases.paidAmount')}
                                                 </label>
                                                 <input
@@ -339,48 +338,45 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                                     step="0.01"
                                                     value={paidAmount}
                                                     onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                                                    className="w-full input-dark"
+                                                    className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                                                     placeholder="0.00"
                                                 />
                                             </div>
                                         )}
 
                                         <div className="mt-4">
-                                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                            <label className="block text-xs font-semibold text-foreground-muted mb-1.5">
                                                 {t('purchases.notesOptional')}
                                             </label>
                                             <textarea
                                                 value={notes}
                                                 onChange={(e) => setNotes(e.target.value)}
                                                 rows={3}
-                                                className="w-full input-dark resize-none"
+                                                className="w-full px-4 py-3 bg-background border border-border/60 rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
                                                 placeholder={t('purchases.addNotes')}
                                             />
                                         </div>
                                     </div>
 
                                     {/* Summary Card */}
-                                    <div className="bg-primary-500/10 border border-primary-500/30 rounded-lg p-6">
-                                        <h3 className="text-lg font-semibold text-white mb-4">{t('purchases.orderSummary')}</h3>
-
+                                    <div className="bg-primary/8 border border-primary/20 rounded-xl p-4">
+                                        <h3 className="text-base font-semibold text-foreground mb-3">{t('purchases.orderSummary')}</h3>
                                         <div className="space-y-2 text-sm">
                                             <div className="flex justify-between">
-                                                <span className="text-gray-400">{t('vendors.title')}:</span>
-                                                <span className="text-white font-medium">{selectedVendor?.name}</span>
+                                                <span className="text-foreground-muted">{t('vendors.title')}:</span>
+                                                <span className="text-foreground font-medium truncate max-w-[160px] text-right">{selectedVendor?.name}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-gray-400">{t('pos.terminal.items')}:</span>
-                                                <span className="text-white">{purchaseItems.length}</span>
+                                                <span className="text-foreground-muted">{t('pos.terminal.items')}:</span>
+                                                <span className="text-foreground">{purchaseItems.length}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-gray-400">{t('purchases.totalUnits')}:</span>
-                                                <span className="text-white">{purchaseItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                                                <span className="text-foreground-muted">{t('purchases.totalUnits')}:</span>
+                                                <span className="text-foreground">{purchaseItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
                                             </div>
-                                            <div className="border-t border-primary-500/30 pt-2 mt-2">
-                                                <div className="flex justify-between text-lg">
-                                                    <span className="text-gray-300 font-semibold">{t('purchases.totalAmount')}:</span>
-                                                    <span className="text-primary-400 font-bold">{formatCurrency(calculateTotal())}</span>
-                                                </div>
+                                            <div className="border-t border-primary/20 pt-2 mt-2 flex justify-between">
+                                                <span className="font-semibold text-foreground">{t('purchases.totalAmount')}:</span>
+                                                <span className="text-primary font-bold tabular-nums">{formatCurrency(calculateTotal())}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -390,7 +386,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between p-6 border-t border-dark-700">
+                    <div className="flex items-center justify-between p-4 sm:p-6 border-t border-border/50">
                         <button
                             onClick={currentStep === 1 ? onClose : handleBack}
                             className="btn-secondary flex items-center gap-2"
@@ -411,7 +407,7 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="btn-primary flex items-center gap-2 min-w-[160px]"
+                                className="btn-primary flex items-center gap-2 min-w-[140px] disabled:opacity-50"
                             >
                                 {isSubmitting ? (
                                     <>

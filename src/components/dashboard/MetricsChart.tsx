@@ -1,4 +1,7 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, LineChart, Line,
+} from 'recharts';
 
 interface MetricsChartProps {
   data: Array<{
@@ -13,118 +16,83 @@ interface MetricsChartProps {
   isLoading?: boolean;
 }
 
+// Use CSS variables so colours respect light/dark theme
+const COLOR_IN  = 'rgb(var(--success))';   // green
+const COLOR_OUT = 'rgb(var(--error))';     // red
+const COLOR_REV = 'rgb(var(--primary))';   // orange
+
 export default function MetricsChart({ data, type, title, isLoading = false }: MetricsChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="glass-effect p-4 rounded-[2.5rem] border border-border min-w-[200px]">
-          <p className="text-foreground font-medium mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className={`text-sm ${entry.dataKey.includes('revenue') ? 'text-success-400' : 'text-primary'
-              }`}>
-              {entry.name}: {entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
+    if (!active || !payload?.length) return null;
+    return (
+      <div className="bg-card border border-border/60 rounded-xl p-3 shadow-lg text-sm min-w-[160px]">
+        <p className="font-semibold text-foreground mb-1.5">{label}</p>
+        {payload.map((entry: any, i: number) => (
+          <p key={i} style={{ color: entry.color }} className="text-xs">
+            {entry.name}: <span className="font-bold">{entry.value}</span>
+          </p>
+        ))}
+      </div>
+    );
   };
 
   if (isLoading) {
     return (
-      <div className="card-theme p-4 sm:p-6">
-        <div className="space-y-4">
-          <div className="h-6 bg-secondary rounded mb-6 w-1/3 animate-pulse" />
-          <div className="h-64 sm:h-80 bg-secondary rounded animate-pulse" />
-        </div>
+      <div className="card-theme p-4 sm:p-6 space-y-4">
+        <div className="h-5 bg-secondary/60 rounded w-1/3 animate-pulse" />
+        <div className="h-56 sm:h-72 bg-secondary/30 rounded-xl animate-pulse" />
       </div>
     );
   }
 
   if (!data || data.length === 0) {
     return (
-      <div className="card-theme p-4 sm:p-6 flex flex-col items-center justify-center h-[350px] text-center">
-        <div className="p-3 bg-secondary rounded-full mb-4">
-          <BarChart width={40} height={40} data={[{ v: 1 }, { v: 2 }, { v: 1 }]}> 
-            <Bar dataKey="v" fill="#cbd5e1" />
-          </BarChart>
+      <div className="card-theme p-4 sm:p-6 flex flex-col items-center justify-center min-h-[280px] text-center">
+        <div className="flex gap-1 mb-4">
+          {[40, 65, 30, 80, 50].map((h, i) => (
+            <div key={i} className="w-4 rounded-t bg-secondary/50" style={{ height: h }} />
+          ))}
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-1">No Data Available</h3>
-        <p className="text-muted-foreground text-sm">sales analytics will appear here once you have transactions.</p>
+        <h3 className="text-base font-semibold text-foreground mb-1">No Data Yet</h3>
+        <p className="text-sm text-muted-foreground">Sales analytics will appear once you have transactions.</p>
       </div>
-    )
+    );
   }
+
+  const axisProps = {
+    stroke: 'rgb(var(--foreground-muted))',
+    fontSize: 10,
+    tick: { fill: 'rgb(var(--foreground-muted))' },
+  };
+
+  const chartMargin = { top: 10, right: 10, left: -10, bottom: 0 };
 
   return (
     <div className="card-theme p-4 sm:p-6">
-      <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6 flex items-center">
-        <div className="w-2 h-6 bg-gradient-to-b from-primary to-accent rounded-full mr-3" />
+      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <div className="w-1.5 h-5 bg-gradient-to-b from-primary to-accent rounded-full" />
         {title}
       </h3>
 
-      <div className="h-64 sm:h-80 w-full">
+      <div className="h-52 sm:h-64 lg:h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           {type === 'bar' ? (
-            <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" opacity={0.5} />
-              <XAxis
-                dataKey="period"
-                stroke="rgb(var(--foreground-muted))"
-                fontSize={10}
-                tick={{ fill: 'rgb(var(--foreground-muted))' }}
-              />
-              <YAxis
-                stroke="rgb(var(--foreground-muted))"
-                fontSize={10}
-                tick={{ fill: 'rgb(var(--foreground-muted))' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar
-                dataKey="stockIn"
-                name="Stock In"
-                fill="#22c55e"
-                radius={[2, 2, 0, 0]}
-              />
-              <Bar
-                dataKey="stockOut"
-                name="Stock Out"
-                fill="#ef4444"
-                radius={[2, 2, 0, 0]}
-              />
+            <BarChart data={data} margin={chartMargin} barCategoryGap="30%">
+              <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" opacity={0.4} vertical={false} />
+              <XAxis dataKey="period" {...axisProps} />
+              <YAxis {...axisProps} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgb(var(--muted) / 0.3)' }} />
+              <Bar dataKey="stockIn"  name="Stock In"  fill={COLOR_IN}  radius={[3, 3, 0, 0]} />
+              <Bar dataKey="stockOut" name="Stock Out" fill={COLOR_OUT} radius={[3, 3, 0, 0]} />
             </BarChart>
           ) : (
-            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-
-              <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" opacity={0.5} />
-              <XAxis
-                dataKey="period"
-                stroke="rgb(var(--foreground-muted))"
-                fontSize={10}
-                tick={{ fill: 'rgb(var(--foreground-muted))' }}
-              />
-              <YAxis
-                stroke="rgb(var(--foreground-muted))"
-                fontSize={10}
-                tick={{ fill: 'rgb(var(--foreground-muted))' }}
-              />
+            <LineChart data={data} margin={chartMargin}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--border))" opacity={0.4} vertical={false} />
+              <XAxis dataKey="period" {...axisProps} />
+              <YAxis {...axisProps} />
               <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="revenueIn"
-                name="Revenue In"
-                stroke="#22c55e"
-                strokeWidth={3}
-                dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="revenueOut"
-                name="Revenue Out"
-                stroke="#3b82f6"
-                strokeWidth={3}
-                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-              />
+              <Line type="monotone" dataKey="revenueIn"  name="Revenue In"  stroke={COLOR_IN}  strokeWidth={2} dot={{ r: 3, fill: COLOR_IN }}  activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="revenueOut" name="Revenue Out" stroke={COLOR_REV} strokeWidth={2} dot={{ r: 3, fill: COLOR_REV }} activeDot={{ r: 5 }} />
             </LineChart>
           )}
         </ResponsiveContainer>

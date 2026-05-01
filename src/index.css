@@ -865,3 +865,16 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-dark-500;
 }
+
+/* Safe area padding for mobile devices (notch / home indicator) */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

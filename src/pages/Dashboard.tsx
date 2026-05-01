@@ -8,11 +8,10 @@ import { getDashboardMetricsAndTrends } from '../lib/api/dashboard';
 import StatCard from '../components/ui/StatCard';
 import RecentTransactions from '../components/dashboard/RecentTransactions';
 import TopProductCard from '../components/dashboard/TopProductCard';
-import { TimePeriod } from '../components/dashboard/TimePeriodFilter';
+import TimePeriodFilter, { TimePeriod } from '../components/dashboard/TimePeriodFilter';
 import { POSTransaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
-import ContextualLoader from '../components/ui/ContextualLoader';
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
 
 // Lazy-load the chart — it's below the fold and pulls in recharts (~400KB)
@@ -147,22 +146,29 @@ export default function Dashboard() {
       {/* Main Content (only show when not loading) */}
       {!isLoading && (
         <div className="relative">
-          {/* Contextual loader for metrics updates */}
-          <ContextualLoader
-            isLoading={isMetricsLoading}
-            context="dashboard"
-            variant="overlay"
-          />
 
           {/* Main Layout Grid */}
-          <div className="space-y-6 sm:space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="space-y-4 sm:space-y-6">
+
+            {/* Period filter row */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-bold text-foreground">
+                {t('dashboard.title', 'Dashboard')}
+              </h1>
+              <TimePeriodFilter
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={setSelectedPeriod}
+                isLoading={isMetricsLoading}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
               {/* Left Column - Metrics & Recent Orders (66%) */}
-              <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+              <div className="lg:col-span-2 space-y-4 sm:space-y-6">
 
                 {/* Metrics Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6" data-tour="dashboard-stats">
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4" data-tour="dashboard-stats">
                   {/* Featured Card - Revenue Earned */}
                   <StatCard
                     label={t('dashboard.metrics.revenueEarned')}
@@ -174,7 +180,7 @@ export default function Dashboard() {
                   />
 
                   {/* Secondary Metrics */}
-                  <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     <StatCard
                       label={t('dashboard.metrics.totalStockIn')}
                       value={metrics?.totalStockIn || 0}
@@ -191,7 +197,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Additional Metrics Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
                   <StatCard
                     label={t('dashboard.metrics.revenueSpent')}
                     value={formatCurrency(metrics?.revenueSpentOnStockIn || 0)}
@@ -213,12 +219,12 @@ export default function Dashboard() {
               </div>
 
               {/* Right Column - Analytics & Top Product (33%) */}
-              <div className="lg:col-span-1 space-y-6 sm:space-y-8">
+              <div className="lg:col-span-1 space-y-4 sm:space-y-6">
                 {/* Sales Analytics — lazy loaded, below the fold */}
                 <Suspense fallback={
-                  <div className="card-theme p-4 sm:p-6 h-[350px] animate-pulse">
-                    <div className="h-6 bg-secondary rounded w-1/3 mb-6" />
-                    <div className="h-64 bg-secondary rounded" />
+                  <div className="card-theme p-4 sm:p-6 h-[300px] animate-pulse rounded-[2.5rem]">
+                    <div className="h-5 bg-secondary/60 rounded w-1/3 mb-4" />
+                    <div className="h-52 bg-secondary/30 rounded-xl" />
                   </div>
                 }>
                   <MetricsChart
@@ -230,16 +236,14 @@ export default function Dashboard() {
                 </Suspense>
 
                 {/* Highest Selling Product */}
-                <div className="max-h-[300px]">
-                  <TopProductCard
-                    product={topProduct ? {
-                      name: topProduct.name,
-                      soldToday: topProduct.count,
-                      price: topProduct.price
-                    } : undefined}
-                    isLoading={isLoading}
-                  />
-                </div>
+                <TopProductCard
+                  product={topProduct ? {
+                    name: topProduct.name,
+                    soldToday: topProduct.count,
+                    price: topProduct.price
+                  } : undefined}
+                  isLoading={isLoading}
+                />
               </div>
 
             </div>

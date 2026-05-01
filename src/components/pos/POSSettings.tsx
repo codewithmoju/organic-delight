@@ -102,9 +102,9 @@ export default function POSSettings() {
           <div className="divide-y divide-border/30">
 
             {/* Barcode Scanner */}
-            <div className="p-5 flex items-center justify-between hover:bg-muted/20 transition-colors">
+            <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/20 transition-colors">
               <div className="flex items-start gap-4">
-                <div className={`mt-1 p-2 rounded-lg ${settings.barcode_scanner_enabled ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
+                <div className={`mt-1 p-2 rounded-lg flex-shrink-0 ${settings.barcode_scanner_enabled ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
                   <Camera className="w-5 h-5" />
                 </div>
                 <div>
@@ -112,7 +112,7 @@ export default function POSSettings() {
                   <p className="text-sm text-foreground-muted mt-0.5">Allow using the device camera to scan product barcodes</p>
                 </div>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer self-start sm:self-auto ml-14 sm:ml-0">
                 <input
                   type="checkbox"
                   checked={settings.barcode_scanner_enabled}
@@ -124,9 +124,9 @@ export default function POSSettings() {
             </div>
 
             {/* Auto-Print */}
-            <div className="p-5 flex items-center justify-between hover:bg-muted/20 transition-colors">
+            <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/20 transition-colors">
               <div className="flex items-start gap-4">
-                <div className={`mt-1 p-2 rounded-lg ${settings.auto_print_receipt ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
+                <div className={`mt-1 p-2 rounded-lg flex-shrink-0 ${settings.auto_print_receipt ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
                   <ScrollText className="w-5 h-5" />
                 </div>
                 <div>
@@ -134,7 +134,7 @@ export default function POSSettings() {
                   <p className="text-sm text-foreground-muted mt-0.5">Automatically trigger print dialog after a successful sale</p>
                 </div>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer self-start sm:self-auto ml-14 sm:ml-0">
                 <input
                   type="checkbox"
                   checked={settings.auto_print_receipt}
@@ -146,9 +146,9 @@ export default function POSSettings() {
             </div>
 
             {/* Thermal Printer */}
-            <div className="p-5 flex items-center justify-between hover:bg-muted/20 transition-colors">
+            <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/20 transition-colors">
               <div className="flex items-start gap-4">
-                <div className={`mt-1 p-2 rounded-lg ${settings.thermal_printer_enabled ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
+                <div className={`mt-1 p-2 rounded-lg flex-shrink-0 ${settings.thermal_printer_enabled ? 'bg-success-500/10 text-success-400' : 'bg-muted text-foreground-muted'}`}>
                   <Printer className="w-5 h-5" />
                 </div>
                 <div>
@@ -156,7 +156,7 @@ export default function POSSettings() {
                   <p className="text-sm text-foreground-muted mt-0.5">Format receipts for 80mm/58mm thermal printers</p>
                 </div>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer self-start sm:self-auto ml-14 sm:ml-0">
                 <input
                   type="checkbox"
                   checked={settings.thermal_printer_enabled}
@@ -170,7 +170,7 @@ export default function POSSettings() {
           </div>
 
           {/* Card Footer */}
-          <div className="p-4 bg-muted/10 border-t border-border/50 flex justify-between items-center">
+          <div className="p-4 bg-muted/10 border-t border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="text-xs text-foreground-muted">
               Changes are saved to this browser only.
             </div>
@@ -179,7 +179,7 @@ export default function POSSettings() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={!hasChanges || isSaving}
-              className={`btn-primary flex items-center gap-2 px-6 py-2.5 ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`btn-primary flex items-center justify-center gap-2 px-6 py-2.5 w-full sm:w-auto ${!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isSaving ? (
                 <>

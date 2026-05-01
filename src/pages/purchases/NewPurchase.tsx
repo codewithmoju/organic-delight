@@ -152,63 +152,63 @@ export default function NewPurchase() {
     ];
 
     return (
-        <div className="min-h-screen pb-20">
-            {/* Header */}
-            <div className="bg-card/50 backdrop-blur-xl border-b border-border/50 sticky top-0 z-40">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+        <div className="min-h-screen pb-24">
+            {/* ── Sticky Header ── */}
+            <div className="bg-card/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-40">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                             <button
                                 onClick={handleBack}
-                                className="p-2 rounded-xl hover:bg-secondary/50 transition-colors text-muted-foreground hover:text-foreground"
+                                className="p-2 rounded-xl hover:bg-secondary/50 transition-colors text-foreground-muted hover:text-foreground flex-shrink-0"
                             >
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
-                            <div>
-                                <h1 className="text-2xl font-bold text-foreground">
+                            <div className="min-w-0">
+                                <h1 className="text-base sm:text-xl font-bold text-foreground truncate">
                                     New Purchase Order
                                 </h1>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-xs text-foreground-muted hidden sm:block">
                                     Create a new stock-in record
                                 </p>
                             </div>
                         </div>
-                        <div className="text-right hidden sm:block">
-                            <div className="text-sm font-medium text-muted-foreground">Total Amount</div>
-                            <div className="text-2xl font-bold text-foreground">{formatCurrency(calculateTotal())}</div>
+                        <div className="text-right flex-shrink-0">
+                            <div className="text-xs font-medium text-foreground-muted">Total</div>
+                            <div className="text-lg sm:text-2xl font-bold text-foreground tabular-nums">{formatCurrency(calculateTotal())}</div>
                         </div>
                     </div>
 
-                    {/* Stepper */}
-                    <div className="mt-8 mb-2">
+                    {/* ── Stepper ── */}
+                    <div className="mt-4 mb-1">
                         <div className="flex items-center justify-between relative">
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-secondary rounded-full -z-10" />
+                            <div className="absolute left-0 top-5 w-full h-0.5 bg-secondary rounded-full -z-10" />
                             <div
-                                className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full -z-10 transition-all duration-500 ease-in-out"
+                                className="absolute left-0 top-5 h-0.5 bg-primary rounded-full -z-10 transition-all duration-500"
                                 style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
                             />
-
                             {steps.map((step) => {
                                 const isActive = step.id === currentStep;
                                 const isCompleted = step.id < currentStep;
                                 const Icon = step.icon;
-
                                 return (
-                                    <div key={step.id} className="flex flex-col items-center gap-2">
+                                    <div key={step.id} className="flex flex-col items-center gap-1.5">
                                         <motion.div
                                             initial={false}
                                             animate={{
                                                 scale: isActive ? 1.1 : 1,
-                                                backgroundColor: isActive || isCompleted ? 'hsl(var(--primary))' : 'hsl(var(--card))',
-                                                borderColor: isActive || isCompleted ? 'hsl(var(--primary))' : 'hsl(var(--border))'
+                                                backgroundColor: isActive || isCompleted ? 'rgb(var(--primary))' : 'rgb(var(--card))',
+                                                borderColor: isActive || isCompleted ? 'rgb(var(--primary))' : 'rgb(var(--border))'
                                             }}
-                                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center z-10 shadow-lg ${isActive || isCompleted ? 'text-primary-foreground' : 'text-muted-foreground'
-                                                }`}
+                                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center z-10 shadow-sm ${
+                                                isActive || isCompleted ? 'text-white' : 'text-foreground-muted'
+                                            }`}
                                         >
-                                            {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-5 h-5" />}
+                                            {isCompleted ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Icon className="w-4 h-4" />}
                                         </motion.div>
-                                        <span className={`text-xs font-semibold uppercase tracking-wider ${isActive ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
-                                            }`}>
+                                        <span className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-center max-w-[56px] sm:max-w-none leading-tight ${
+                                            isActive ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-foreground-muted'
+                                        }`}>
                                             {step.title}
                                         </span>
                                     </div>
@@ -219,32 +219,30 @@ export default function NewPurchase() {
                 </div>
             </div>
 
-            {/* Content Area */}
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* ── Content ── */}
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
                 <AnimatePresence mode="wait">
                     {/* Step 1: Vendor Selection */}
                     {currentStep === 1 && (
                         <motion.div
                             key="step1"
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className="space-y-6"
+                            exit={{ opacity: 0, y: -16 }}
+                            transition={{ duration: 0.25 }}
+                            className="space-y-4"
                         >
-                            <div className="card-theme p-8 rounded-[2rem] border border-border/50">
-                                <div className="max-w-xl mx-auto text-center mb-8">
-                                    <h2 className="text-2xl font-bold mb-2">Select a Vendor</h2>
-                                    <p className="text-muted-foreground">
-                                        Search for an existing vendor or add a new one to start your purchase order.
+                            <div className="card-theme p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-border/50">
+                                <div className="text-center mb-5">
+                                    <h2 className="text-lg sm:text-xl font-bold mb-1">Select a Vendor</h2>
+                                    <p className="text-sm text-foreground-muted">
+                                        Search for an existing vendor or add a new one.
                                     </p>
                                 </div>
-                                <div className="max-w-xl mx-auto">
-                                    <VendorSelector
-                                        onVendorSelected={setSelectedVendor}
-                                        selectedVendor={selectedVendor}
-                                    />
-                                </div>
+                                <VendorSelector
+                                    onVendorSelected={setSelectedVendor}
+                                    selectedVendor={selectedVendor}
+                                />
                             </div>
                         </motion.div>
                     )}
@@ -253,12 +251,12 @@ export default function NewPurchase() {
                     {currentStep === 2 && (
                         <motion.div
                             key="step2"
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
+                            exit={{ opacity: 0, y: -16 }}
+                            transition={{ duration: 0.25 }}
                         >
-                            <div className="card-theme p-6 rounded-[2rem] border border-border/50">
+                            <div className="card-theme p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border/50">
                                 <PurchaseItemBuilder
                                     categories={categories}
                                     onCategoriesUpdate={loadCategories}
@@ -273,127 +271,109 @@ export default function NewPurchase() {
                     {currentStep === 3 && (
                         <motion.div
                             key="step3"
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className="space-y-6"
+                            exit={{ opacity: 0, y: -16 }}
+                            transition={{ duration: 0.25 }}
+                            className="space-y-4"
                         >
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <div className="lg:col-span-2 space-y-6">
-                                    <div className="card-theme p-6 rounded-[2rem] border border-border/50">
-                                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                                            <Receipt className="w-5 h-5 text-primary" />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* Details */}
+                                <div className="md:col-span-2">
+                                    <div className="card-theme p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border/50">
+                                        <h3 className="text-base font-bold mb-4 flex items-center gap-2">
+                                            <Receipt className="w-4 h-4 text-primary" />
                                             Purchase Details
                                         </h3>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                                    Purchase Date
-                                                </label>
+                                                <label className="block text-xs font-semibold text-foreground-muted mb-1.5">Purchase Date</label>
                                                 <div className="relative">
-                                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-muted pointer-events-none" />
                                                     <input
                                                         type="date"
                                                         value={purchaseDate}
                                                         onChange={(e) => setPurchaseDate(e.target.value)}
-                                                        className="w-full pl-10 pr-4 py-3 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                        className="w-full h-11 pl-10 pr-4 bg-background border border-border/60 rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                                                     />
                                                 </div>
                                             </div>
-
                                             <div>
-                                                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                                    Vendor Invoice # (Optional)
-                                                </label>
+                                                <label className="block text-xs font-semibold text-foreground-muted mb-1.5">Invoice # (Optional)</label>
                                                 <input
                                                     type="text"
                                                     value={billNumber}
                                                     onChange={(e) => setBillNumber(e.target.value)}
                                                     placeholder="e.g., INV-2024-001"
-                                                    className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                    className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                                                 />
                                             </div>
-
                                             <div className="sm:col-span-2">
-                                                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                                    Notes
-                                                </label>
+                                                <label className="block text-xs font-semibold text-foreground-muted mb-1.5">Notes (Optional)</label>
                                                 <textarea
                                                     value={notes}
                                                     onChange={(e) => setNotes(e.target.value)}
                                                     rows={3}
-                                                    placeholder="Add any additional notes about this purchase..."
-                                                    className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                                                    placeholder="Add any additional notes..."
+                                                    className="w-full px-4 py-3 bg-background border border-border/60 rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div className="card-theme p-6 rounded-[2rem] border border-border/50 bg-secondary/10">
-                                        <h3 className="text-lg font-bold mb-6 text-foreground">Payment Summary</h3>
-
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-muted-foreground">Vendor</span>
-                                                <span className="font-medium text-foreground">{selectedVendor?.name}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-muted-foreground">Items Count</span>
-                                                <span className="font-medium text-foreground">{purchaseItems.length}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-muted-foreground">Total Units</span>
-                                                <span className="font-medium text-foreground">{purchaseItems.reduce((acc, item) => acc + item.quantity, 0)}</span>
-                                            </div>
-
-                                            <div className="pt-4 border-t border-border/50">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <span className="text-lg font-bold text-foreground">Total</span>
-                                                    <span className="text-2xl font-bold text-primary">{formatCurrency(calculateTotal())}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="pt-4">
-                                                <label className="block text-sm font-medium text-muted-foreground mb-3">
-                                                    Payment Status
-                                                </label>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {(['paid', 'partial', 'unpaid'] as const).map((status) => (
-                                                        <button
-                                                            key={status}
-                                                            onClick={() => setPaymentStatus(status)}
-                                                            className={`py-2 px-1 text-sm font-medium rounded-lg border transition-all ${paymentStatus === status
-                                                                ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
-                                                                : 'bg-background hover:bg-secondary border-border text-muted-foreground'
-                                                                }`}
-                                                        >
-                                                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {paymentStatus === 'partial' && (
-                                                <div className="pt-2">
-                                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                                        Amount Paid
-                                                    </label>
-                                                    <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">Rs</span>
-                                                        <input
-                                                            type="number"
-                                                            value={paidAmount}
-                                                            onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                                                            className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
+                                {/* Payment */}
+                                <div className="card-theme p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border/50">
+                                    <h3 className="text-base font-bold mb-4">Payment Summary</h3>
+                                    <div className="space-y-3 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-foreground-muted">Vendor</span>
+                                            <span className="font-semibold text-foreground truncate max-w-[120px] text-right">{selectedVendor?.company}</span>
                                         </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-foreground-muted">Items</span>
+                                            <span className="font-semibold">{purchaseItems.length}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-foreground-muted">Units</span>
+                                            <span className="font-semibold">{purchaseItems.reduce((a, i) => a + i.quantity, 0)}</span>
+                                        </div>
+                                        <div className="pt-3 border-t border-border/50 flex justify-between items-center">
+                                            <span className="font-bold">Total</span>
+                                            <span className="text-xl font-bold text-primary tabular-nums">{formatCurrency(calculateTotal())}</span>
+                                        </div>
+                                        <div className="pt-2">
+                                            <label className="block text-xs font-semibold text-foreground-muted mb-2">Payment Status</label>
+                                            <div className="grid grid-cols-3 gap-1.5">
+                                                {(['paid', 'partial', 'unpaid'] as const).map((status) => (
+                                                    <button
+                                                        key={status}
+                                                        onClick={() => setPaymentStatus(status)}
+                                                        className={`py-2 text-xs font-semibold rounded-lg border transition-all ${
+                                                            paymentStatus === status
+                                                                ? 'bg-primary text-white border-primary shadow-sm'
+                                                                : 'bg-background border-border/60 text-foreground-muted hover:border-primary/40'
+                                                        }`}
+                                                    >
+                                                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {paymentStatus === 'partial' && (
+                                            <div>
+                                                <label className="block text-xs font-semibold text-foreground-muted mb-1.5">Amount Paid</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground-muted pointer-events-none">Rs</span>
+                                                    <input
+                                                        type="number"
+                                                        value={paidAmount}
+                                                        onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                                                        className="w-full h-11 pl-9 pr-4 bg-background border border-border/60 rounded-xl text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -402,45 +382,40 @@ export default function NewPurchase() {
                 </AnimatePresence>
             </div>
 
-            {/* Bottom Floating Action Bar */}
-            <div className="fixed bottom-0 right-0 left-0 lg:left-20 p-4 bg-background/80 backdrop-blur-lg border-t border-border/50 z-40">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
+            {/* ── Bottom Action Bar ── */}
+            <div
+                className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-lg border-t border-border/50"
+                style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+            >
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
                     <button
                         onClick={handleBack}
-                        className="px-6 py-3 rounded-xl font-medium text-muted-foreground hover:bg-secondary/50 transition-colors"
+                        className="px-4 sm:px-6 py-2.5 rounded-xl font-medium text-sm text-foreground-muted hover:bg-secondary/50 transition-colors"
                     >
                         {currentStep === 1 ? 'Cancel' : 'Back'}
                     </button>
 
-                    <div className="flex items-center gap-4">
-                        {currentStep < 3 ? (
-                            <button
-                                onClick={handleNext}
-                                className="px-8 py-3 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
-                            >
-                                Next Step
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting}
-                                className="px-8 py-3 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <LoadingSpinner size="sm" color="white" />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="w-5 h-5" />
-                                        Complete Purchase
-                                    </>
-                                )}
-                            </button>
-                        )}
-                    </div>
+                    {currentStep < 3 ? (
+                        <button
+                            onClick={handleNext}
+                            className="px-6 sm:px-8 py-2.5 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 text-sm"
+                        >
+                            Next Step
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            className="px-6 sm:px-8 py-2.5 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2 text-sm disabled:opacity-50"
+                        >
+                            {isSubmitting ? (
+                                <><LoadingSpinner size="sm" color="white" />Processing…</>
+                            ) : (
+                                <><Save className="w-4 h-4" />Complete Purchase</>
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

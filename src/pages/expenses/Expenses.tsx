@@ -29,37 +29,25 @@ import SearchInput from '../../components/ui/SearchInput';
 // ============================================
 // STAT CARD COMPONENT
 // ============================================
-function StatCard({ icon: Icon, label, value, subtext, accent, delay = 0 }: {
-    icon: any; label: string; value: string; subtext?: string; accent: string; delay?: number;
+function StatCard({ icon: Icon, label, value, accent, delay = 0 }: {
+    icon: any; label: string; value: string; accent: string; delay?: number;
 }) {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-            className="group relative overflow-hidden rounded-2xl bg-card border border-border/60 p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            transition={{ duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
+            className="group relative overflow-hidden rounded-2xl bg-card border border-border/60 p-4 sm:p-5 hover:shadow-md transition-all duration-300"
         >
-            <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-10 group-hover:opacity-20 transition-opacity ${accent}`} />
-
-            <div className="relative">
-                <div className="flex justify-between items-start mb-4">
-                    <div>
-                        <p className="text-sm font-medium text-muted-foreground">{label}</p>
-                        <h3 className="text-2xl font-bold text-foreground mt-1 tracking-tight">{value}</h3>
-                    </div>
-                    <div className={`p-3 rounded-xl ${accent} bg-opacity-10 text-opacity-100`}>
-                        <Icon className={`w-5 h-5 ${accent.replace('bg-', 'text-')}`} />
-                    </div>
+            <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-15 group-hover:opacity-25 transition-opacity ${accent}`} />
+            <div className="relative flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl ${accent} bg-opacity-10 flex-shrink-0`}>
+                    <Icon className={`w-5 h-5 ${accent.replace('bg-', 'text-')}`} />
                 </div>
-                {subtext && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center gap-1">
-                            <ArrowUpRight className="w-3 h-3" />
-                            +2.5%
-                        </span>
-                        <span>from last month</span>
-                    </div>
-                )}
+                <div className="min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
+                    <h3 className="text-lg sm:text-xl font-bold text-foreground mt-0.5 tracking-tight tabular-nums truncate">{value}</h3>
+                </div>
             </div>
         </motion.div>
     );
@@ -212,49 +200,49 @@ export default function Expenses() {
     });
 
     return (
-        <div className="space-y-8 pb-10">
+        <div className="space-y-4 sm:space-y-6 pb-10">
             {isLoading ? <ExpenseSkeleton /> : (
                 <>
                     {/* ─── HEADER ─── */}
-                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
-                            <h1 className="text-3xl font-bold text-foreground tracking-tight">{t('expenses.title')}</h1>
-                            <p className="text-muted-foreground mt-1 text-lg">{t('expenses.subtitle', 'Manage and track your business spending')}</p>
+                            <h1 className="app-page-title">{t('expenses.title')}</h1>
+                            <p className="app-page-subtitle">{t('expenses.subtitle', 'Manage and track your business spending')}</p>
                         </div>
 
                         <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={{ scale: 1.04 }}
+                            whileTap={{ scale: 0.96 }}
                             onClick={() => setIsAddFormOpen(!isAddFormOpen)}
-                            className="btn-primary flex items-center gap-2 shadow-lg shadow-primary/20 px-6 py-2.5 rounded-xl font-semibold"
+                            className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold"
                         >
-                            <Plus className="w-5 h-5" />
+                            <Plus className="w-4 h-4" />
                             {t('expenses.recordExpense')}
                         </motion.button>
                     </div>
 
-                    {/* ─── STATS DASHBOARD ─── */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* ─── STATS — 3 cols on sm+ ─── */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                         <StatCard
                             icon={DollarSign}
                             label="Total Expenses (Monthly)"
                             value={summary ? formatCurrency(summary.totalExpenses) : formatCurrency(0)}
-                            accent="bg-red-500"
-                            delay={0.1}
+                            accent="bg-error-500"
+                            delay={0.05}
                         />
                         <StatCard
                             icon={PieChart}
                             label="Transaction Count"
                             value={summary?.expenseCount?.toString() || '0'}
-                            accent="bg-blue-500"
-                            delay={0.2}
+                            accent="bg-primary"
+                            delay={0.1}
                         />
                         <StatCard
                             icon={Wallet}
                             label="Top Category"
                             value={summary?.categoryBreakdown?.[0] ? t(`expenses.categories.${summary.categoryBreakdown[0].category}`) : 'N/A'}
                             accent="bg-purple-500"
-                            delay={0.3}
+                            delay={0.15}
                         />
                     </div>
 
@@ -262,60 +250,62 @@ export default function Expenses() {
                     <AnimatePresence>
                         {isAddFormOpen && (
                             <motion.div
-                                initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                                animate={{ height: 'auto', opacity: 1, marginTop: 24 }}
-                                exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                             >
-                                <div className="bg-card rounded-2xl border border-border/60 p-6 shadow-xl relative overflow-hidden">
-                                    {/* Background Decoration */}
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full pointer-events-none" />
+                                <div className="bg-card rounded-2xl border border-border/60 p-4 sm:p-5 shadow-sm relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full pointer-events-none" />
 
-                                    <div className="flex justify-between items-center mb-6 relative">
-                                        <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                                                <Plus className="w-4 h-4" />
+                                    <div className="flex justify-between items-center mb-4 relative">
+                                        <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                                                <Plus className="w-3.5 h-3.5" />
                                             </div>
                                             {t('expenses.recordNew')}
                                         </h3>
-                                        <button onClick={() => setIsAddFormOpen(false)} className="text-muted-foreground hover:text-foreground">
-                                            <MoreHorizontal className="w-5 h-5" />
+                                        <button
+                                            onClick={() => setIsAddFormOpen(false)}
+                                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                        >
+                                            <MoreHorizontal className="w-4 h-4" />
                                         </button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 relative">
-                                        <div className="col-span-1 sm:col-span-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 relative">
+                                        <div className="sm:col-span-2">
                                             <label className="text-xs font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wider">{t('expenses.form.description')}</label>
                                             <input
                                                 type="text"
-                                                className="w-full h-12 bg-secondary/50 border border-transparent rounded-xl px-4 text-foreground focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none placeholder:text-muted-foreground/50"
+                                                className="w-full h-11 bg-secondary/50 border border-transparent rounded-xl px-4 text-sm text-foreground focus:bg-background focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all outline-none placeholder:text-muted-foreground/50"
                                                 placeholder={t('expenses.form.descPlaceholder', 'e.g. Office Supplies')}
                                                 value={newExpense.description}
                                                 onChange={e => setNewExpense(prev => ({ ...prev, description: e.target.value }))}
                                                 autoFocus
                                             />
                                         </div>
-                                        <div className="space-y-1">
+                                        <div>
                                             <label className="text-xs font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wider">{t('expenses.form.amount')}</label>
                                             <div className="relative">
                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none z-10">PKR</span>
                                                 <input
                                                     type="number"
-                                                    className="w-full h-12 bg-secondary/50 border border-transparent rounded-xl pl-12 pr-4 text-foreground font-semibold focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+                                                    className="w-full h-11 bg-secondary/50 border border-transparent rounded-xl pl-12 pr-4 text-sm text-foreground font-semibold focus:bg-background focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                                                     placeholder="0.00"
                                                     value={newExpense.amount}
                                                     onChange={e => setNewExpense(prev => ({ ...prev, amount: e.target.value }))}
                                                 />
                                             </div>
                                         </div>
-                                        <div className="space-y-1">
+                                        <div>
                                             <CustomDatePicker
                                                 label={t('expenses.form.date')}
                                                 value={newExpense.expense_date}
                                                 onChange={(date) => setNewExpense(prev => ({ ...prev, expense_date: format(date, 'yyyy-MM-dd') }))}
                                             />
                                         </div>
-                                        <div className="space-y-1">
+                                        <div>
                                             <CustomSelect
                                                 label={t('expenses.form.category')}
                                                 value={newExpense.category}
@@ -323,11 +313,11 @@ export default function Expenses() {
                                                 options={EXPENSE_CATEGORIES.map(cat => ({
                                                     value: cat.value,
                                                     label: t(`expenses.categories.${cat.value}`) || cat.label,
-                                                    icon: <span className="text-lg">{cat.icon}</span>
+                                                    icon: <span className="text-base">{cat.icon}</span>
                                                 }))}
                                             />
                                         </div>
-                                        <div className="space-y-1">
+                                        <div>
                                             <CustomSelect
                                                 label={t('expenses.form.paymentMethod')}
                                                 value={newExpense.payment_method}
@@ -340,7 +330,8 @@ export default function Expenses() {
                                             />
                                         </div>
                                     </div>
-                                    <div className="flex justify-end gap-3 mt-6 relative">
+
+                                    <div className="flex justify-end gap-2 mt-4 relative">
                                         <button
                                             onClick={() => setIsAddFormOpen(false)}
                                             className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
@@ -351,11 +342,11 @@ export default function Expenses() {
                                         <button
                                             onClick={handleAddExpense}
                                             disabled={isSubmitting}
-                                            className="btn-primary px-6 py-2 rounded-lg text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            className="btn-primary px-5 py-2 rounded-lg text-sm disabled:opacity-50 flex items-center gap-2"
                                         >
-                                            {isSubmitting ? (
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            ) : null}
+                                            {isSubmitting && (
+                                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            )}
                                             {isSubmitting ? t('expenses.form.saving', 'Saving...') : t('expenses.form.save')}
                                         </button>
                                     </div>
@@ -364,17 +355,17 @@ export default function Expenses() {
                         )}
                     </AnimatePresence>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        <div className="lg:col-span-3 space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+                        <div className="lg:col-span-3 space-y-4">
                             {/* ─── FILTERS ─── */}
-                            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <SearchInput
                                     placeholder={t('common.search', 'Search expenses...')}
                                     value={searchTerm}
                                     onChange={setSearchTerm}
                                     className="flex-1"
                                 />
-                                <div className="w-full sm:w-64">
+                                <div className="w-full sm:w-52">
                                     <CustomSelect
                                         value={categoryFilter}
                                         onChange={setCategoryFilter}
@@ -383,7 +374,7 @@ export default function Expenses() {
                                             ...EXPENSE_CATEGORIES.map(cat => ({
                                                 value: cat.value,
                                                 label: t(`expenses.categories.${cat.value}`) || cat.label,
-                                                icon: <span className="text-lg">{cat.icon}</span>
+                                                icon: <span className="text-base">{cat.icon}</span>
                                             }))
                                         ]}
                                         icon={<Filter className="w-4 h-4" />}
@@ -394,125 +385,168 @@ export default function Expenses() {
                             {/* ─── EXPENSE LIST ─── */}
                             <div className="bg-card rounded-2xl border border-border/60 overflow-hidden shadow-sm">
                                 {expenses.length === 0 ? (
-                                    <div className="p-16 text-center">
-                                        <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <DollarSign className="w-10 h-10 text-muted-foreground/40" />
+                                    <div className="py-12 sm:py-16 text-center px-6">
+                                        <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <DollarSign className="w-8 h-8 text-muted-foreground/40" />
                                         </div>
-                                        <h3 className="text-lg font-semibold text-foreground">{t('expenses.noExpenses')}</h3>
+                                        <h3 className="text-base font-semibold text-foreground">{t('expenses.noExpenses')}</h3>
                                         <p className="text-muted-foreground text-sm mt-1">Record your first expense to get started</p>
                                     </div>
                                 ) : filteredExpenses.length === 0 ? (
-                                    <div className="p-12 text-center text-muted-foreground">
+                                    <div className="py-10 text-center text-sm text-muted-foreground">
                                         No expenses match your search
                                     </div>
                                 ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead>
-                                                <tr className="bg-secondary/30 border-b border-border/40">
-                                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('expenses.table.expense')}</th>
-                                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('expenses.table.category')}</th>
-                                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('expenses.table.date')}</th>
-                                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('expenses.table.method')}</th>
-                                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">{t('expenses.table.amount')}</th>
-                                                    <th className="px-6 py-4"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-border/30">
-                                                <AnimatePresence>
-                                                    {filteredExpenses.map((expense, index) => (
-                                                        <motion.tr
-                                                            key={expense.id}
-                                                            layout
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, x: -10 }}
-                                                            transition={{ delay: index * 0.05 }}
-                                                            className="group hover:bg-secondary/40 transition-colors"
-                                                        >
-                                                            <td className="px-6 py-4">
-                                                                <p className="font-semibold text-foreground text-sm">{expense.description}</p>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-secondary/60 text-xs font-medium text-foreground border border-border/40">
-                                                                    {EXPENSE_CATEGORIES.find(c => c.value === expense.category)?.icon}
-                                                                    {t(`expenses.categories.${expense.category}`) || EXPENSE_CATEGORIES.find(c => c.value === expense.category)?.label}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                                                    <Calendar className="w-3.5 h-3.5" />
+                                    <>
+                                        {/* ── Mobile card list (< sm) ── */}
+                                        <div className="sm:hidden divide-y divide-border/30">
+                                            <AnimatePresence>
+                                                {filteredExpenses.map((expense, index) => (
+                                                    <motion.div
+                                                        key={expense.id}
+                                                        layout
+                                                        initial={{ opacity: 0, y: 8 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, x: -8 }}
+                                                        transition={{ delay: index * 0.04 }}
+                                                        className="flex items-start gap-3 px-4 py-3"
+                                                    >
+                                                        <div className="w-9 h-9 rounded-xl bg-secondary/50 flex items-center justify-center text-base flex-shrink-0 mt-0.5">
+                                                            {EXPENSE_CATEGORIES.find(c => c.value === expense.category)?.icon}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-semibold text-foreground truncate">{expense.description}</p>
+                                                            <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                                                <span className="flex items-center gap-1">
+                                                                    <Calendar className="w-3 h-3" />
                                                                     {new Date(expense.expense_date).toLocaleDateString()}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-1.5 text-sm text-muted-foreground capitalize">
-                                                                    {expense.payment_method === 'cash' ? <Wallet className="w-3.5 h-3.5" /> :
-                                                                        expense.payment_method === 'digital' ? <CreditCard className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
-                                                                    {t(`expenses.form.methods.${expense.payment_method}`) || expense.payment_method.replace('_', ' ')}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-right">
-                                                                <span className="text-red-500 font-bold font-mono tracking-tight">{formatCurrency(expense.amount)}</span>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-right">
-                                                                <button
-                                                                    onClick={(e) => handleDeleteClick(expense.id, e)}
-                                                                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                                                    title={t('common.delete')}
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
-                                                            </td>
-                                                        </motion.tr>
-                                                    ))}
-                                                </AnimatePresence>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                                </span>
+                                                                <span className="capitalize">{expense.payment_method.replace('_', ' ')}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                                            <span className="text-sm font-bold text-error-500 tabular-nums">
+                                                                {formatCurrency(expense.amount)}
+                                                            </span>
+                                                            <button
+                                                                onClick={(e) => handleDeleteClick(expense.id, e)}
+                                                                className="p-1.5 text-muted-foreground/50 hover:text-error-500 hover:bg-error-500/10 rounded-lg transition-all"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </AnimatePresence>
+                                        </div>
+
+                                        {/* ── Desktop table (≥ sm) ── */}
+                                        <div className="hidden sm:block overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="bg-secondary/30 border-b border-border/40">
+                                                        <th className="px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('expenses.table.expense')}</th>
+                                                        <th className="px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('expenses.table.category')}</th>
+                                                        <th className="px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('expenses.table.date')}</th>
+                                                        <th className="px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('expenses.table.method')}</th>
+                                                        <th className="px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">{t('expenses.table.amount')}</th>
+                                                        <th className="px-5 py-3.5 w-10" />
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-border/30">
+                                                    <AnimatePresence>
+                                                        {filteredExpenses.map((expense, index) => (
+                                                            <motion.tr
+                                                                key={expense.id}
+                                                                layout
+                                                                initial={{ opacity: 0, y: 8 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                exit={{ opacity: 0, x: -8 }}
+                                                                transition={{ delay: index * 0.04 }}
+                                                                className="group hover:bg-secondary/30 transition-colors"
+                                                            >
+                                                                <td className="px-5 py-3.5">
+                                                                    <p className="font-semibold text-foreground text-sm">{expense.description}</p>
+                                                                </td>
+                                                                <td className="px-5 py-3.5">
+                                                                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-secondary/60 text-xs font-medium text-foreground border border-border/40">
+                                                                        {EXPENSE_CATEGORIES.find(c => c.value === expense.category)?.icon}
+                                                                        {t(`expenses.categories.${expense.category}`) || EXPENSE_CATEGORIES.find(c => c.value === expense.category)?.label}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-5 py-3.5">
+                                                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground whitespace-nowrap">
+                                                                        <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                                                                        {new Date(expense.expense_date).toLocaleDateString()}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-5 py-3.5 hidden lg:table-cell">
+                                                                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground capitalize">
+                                                                        {expense.payment_method === 'cash' ? <Wallet className="w-3.5 h-3.5" /> :
+                                                                            expense.payment_method === 'digital' ? <CreditCard className="w-3.5 h-3.5" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
+                                                                        {t(`expenses.form.methods.${expense.payment_method}`) || expense.payment_method.replace('_', ' ')}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-5 py-3.5 text-right">
+                                                                    <span className="text-error-500 font-bold font-mono tracking-tight tabular-nums">{formatCurrency(expense.amount)}</span>
+                                                                </td>
+                                                                <td className="px-5 py-3.5 text-right">
+                                                                    <button
+                                                                        onClick={(e) => handleDeleteClick(expense.id, e)}
+                                                                        className="p-1.5 text-muted-foreground hover:text-error-500 hover:bg-error-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                    </button>
+                                                                </td>
+                                                            </motion.tr>
+                                                        ))}
+                                                    </AnimatePresence>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         </div>
 
                         {/* ─── SIDE BREAKDOWN ─── */}
-                        <div className="space-y-6">
+                        <div>
                             {summary && (
-                                <div className="bg-card rounded-2xl border border-border/60 p-6 shadow-sm sticky top-6">
-                                    <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
-                                        <PieChart className="w-5 h-5 text-purple-500" />
+                                <div className="bg-card rounded-2xl border border-border/60 p-4 sm:p-5 shadow-sm lg:sticky lg:top-6">
+                                    <h3 className="text-sm sm:text-base font-bold text-foreground mb-4 flex items-center gap-2">
+                                        <PieChart className="w-4 h-4 text-purple-500" />
                                         {t('expenses.breakdown')}
                                     </h3>
-                                    <div className="space-y-5">
+                                    <div className="space-y-3.5">
                                         {summary.categoryBreakdown.map((cat: any, i: number) => (
                                             <motion.div
                                                 key={cat.category}
-                                                className="space-y-2"
-                                                initial={{ opacity: 0, x: 20 }}
+                                                className="space-y-1.5"
+                                                initial={{ opacity: 0, x: 12 }}
                                                 animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: 0.3 + (i * 0.1) }}
+                                                transition={{ delay: 0.2 + (i * 0.08) }}
                                             >
-                                                <div className="flex justify-between text-sm font-medium">
-                                                    <span className="text-muted-foreground flex items-center gap-1.5">
+                                                <div className="flex justify-between text-xs font-medium">
+                                                    <span className="text-muted-foreground flex items-center gap-1.5 truncate">
                                                         {EXPENSE_CATEGORIES.find(c => c.value === cat.category)?.icon}
-                                                        {t(`expenses.categories.${cat.category}`) || EXPENSE_CATEGORIES.find(c => c.value === cat.category)?.label}
+                                                        <span className="truncate">{t(`expenses.categories.${cat.category}`) || EXPENSE_CATEGORIES.find(c => c.value === cat.category)?.label}</span>
                                                     </span>
-                                                    <span className="text-foreground">{formatCurrency(cat.amount)}</span>
+                                                    <span className="text-foreground font-semibold tabular-nums ml-2 flex-shrink-0">{formatCurrency(cat.amount)}</span>
                                                 </div>
-                                                <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                                                <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
                                                     <motion.div
-                                                        className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                                                        className="h-full bg-gradient-to-r from-purple-500 to-primary rounded-full"
                                                         initial={{ width: 0 }}
                                                         animate={{ width: `${(cat.amount / summary.totalExpenses) * 100}%` }}
-                                                        transition={{ duration: 1, ease: 'easeOut' }}
+                                                        transition={{ duration: 0.8, ease: 'easeOut' }}
                                                     />
                                                 </div>
                                             </motion.div>
                                         ))}
+                                        {summary.categoryBreakdown.length === 0 && (
+                                            <p className="text-xs text-muted-foreground text-center py-3">No data to display</p>
+                                        )}
                                     </div>
-
-                                    {summary.categoryBreakdown.length === 0 && (
-                                        <p className="text-sm text-muted-foreground text-center py-4">No data to display</p>
-                                    )}
                                 </div>
                             )}
                         </div>

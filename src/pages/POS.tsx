@@ -48,14 +48,14 @@ export default function POS() {
         )}
 
         {/* View Selector */}
-        <div className={`flex app-toolbar-surface rounded-xl p-1 ${activeView === 'interface' ? '' : 'ml-auto'}`}>
+        <div className={`flex app-toolbar-surface rounded-xl p-1 flex-shrink-0 ${activeView === 'interface' ? '' : 'ml-auto'}`}>
           {views.map((view) => (
             <motion.button
               key={view.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveView(view.id)}
-              className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeView === view.id
+              className={`relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeView === view.id
                 ? 'text-white'
                 : 'text-foreground-muted hover:text-foreground hover:bg-muted/50'
                 }`}
@@ -67,7 +67,7 @@ export default function POS() {
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                 />
               )}
-              <view.icon className="w-4 h-4 relative z-10" />
+              <view.icon className="w-4 h-4 relative z-10 flex-shrink-0" />
               <span className="hidden sm:inline relative z-10">{view.label}</span>
             </motion.button>
           ))}

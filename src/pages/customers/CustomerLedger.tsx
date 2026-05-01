@@ -50,19 +50,19 @@ function StatCard({ icon: Icon, label, value, accent, delay = 0 }: {
 }) {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-            className="relative overflow-hidden rounded-2xl bg-card border border-border/60 p-5 group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+            transition={{ duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
+            className="relative overflow-hidden rounded-2xl bg-card border border-border/60 p-3 sm:p-5 group hover:shadow-md transition-all duration-300"
         >
-            <div className={`absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity ${accent}`} />
-            <div className="relative flex items-center gap-4">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${accent} bg-opacity-15`}>
-                    <Icon className="w-5 h-5" />
+            <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity ${accent}`} />
+            <div className="relative flex items-center gap-3">
+                <div className={`flex h-9 w-9 sm:h-11 sm:w-11 flex-shrink-0 items-center justify-center rounded-xl ${accent} bg-opacity-15`}>
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                    <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{label}</p>
-                    <p className="text-xl font-bold text-foreground mt-0.5">{value}</p>
+                <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground tracking-wide uppercase truncate">{label}</p>
+                    <p className="text-base sm:text-xl font-bold text-foreground mt-0.5 tabular-nums truncate">{value}</p>
                 </div>
             </div>
         </motion.div>
@@ -209,7 +209,7 @@ function RecordTransactionForm({ customer, onClose, onRecorded }: {
                     </div>
                     <div className="sm:col-span-2">
                         <label className="block text-xs font-medium text-muted-foreground mb-1.5">Notes / Reference</label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <input
                                 type="text"
                                 value={notes}
@@ -539,11 +539,11 @@ export default function CustomerLedger() {
                                 initial={{ opacity: 0, y: -16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                                className="bg-card rounded-2xl border border-border/60 p-6 shadow-sm"
+                                className="bg-card rounded-2xl border border-border/60 p-4 sm:p-6 shadow-sm"
                             >
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                                     {/* Avatar */}
-                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-xl flex-shrink-0 ${customer.outstanding_balance > 0
+                                    <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center font-bold text-lg sm:text-xl flex-shrink-0 ${customer.outstanding_balance > 0
                                         ? 'bg-[rgb(var(--error)/.12)] text-[rgb(var(--error))]'
                                         : 'bg-gradient-to-br from-primary/20 to-accent/20 text-primary'
                                         }`}>
@@ -551,27 +551,27 @@ export default function CustomerLedger() {
                                     </div>
 
                                     {/* Info */}
-                                    <div className="flex-1">
-                                        <h1 className="text-2xl font-bold text-foreground">{customer.name}</h1>
-                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-sm text-muted-foreground">
+                                    <div className="flex-1 min-w-0">
+                                        <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">{customer.name}</h1>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs sm:text-sm text-muted-foreground">
                                             <span className="flex items-center gap-1.5">
-                                                <Phone className="w-3.5 h-3.5" />
+                                                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                                 {customer.phone}
                                             </span>
                                             {customer.email && (
-                                                <span className="flex items-center gap-1.5">
+                                                <span className="hidden sm:flex items-center gap-1.5">
                                                     <Mail className="w-3.5 h-3.5" />
                                                     {customer.email}
                                                 </span>
                                             )}
                                             {customer.address && (
-                                                <span className="flex items-center gap-1.5">
+                                                <span className="hidden md:flex items-center gap-1.5">
                                                     <MapPin className="w-3.5 h-3.5" />
                                                     {customer.address}
                                                 </span>
                                             )}
                                             <span className="flex items-center gap-1.5">
-                                                <Calendar className="w-3.5 h-3.5" />
+                                                <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                                 Since {formatDate(parseDate(customer.created_at))}
                                             </span>
                                         </div>
@@ -581,17 +581,17 @@ export default function CustomerLedger() {
                                     <div className="flex gap-2 flex-shrink-0">
                                         <button
                                             onClick={handleExport}
-                                            className="p-2.5 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                            className="p-2 sm:p-2.5 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                                             title="Export CSV"
                                         >
-                                            <Download className="w-5 h-5" />
+                                            <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </button>
                                         <button
                                             onClick={handlePrint}
-                                            className="p-2.5 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                            className="p-2 sm:p-2.5 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                                             title="Export PDF"
                                         >
-                                            <Printer className="w-5 h-5" />
+                                            <Printer className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </button>
                                         <button
                                             onClick={() => setIsDeleteConfirmOpen(true)}

@@ -126,76 +126,76 @@ export default function SalesReports() {
   return (
     <div className="space-y-6">
       {/* Header Controls */}
-      <div className="flex justify-end mb-4">
+      <div className="flex flex-col sm:flex-row sm:justify-end gap-3 mb-4">
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="px-4 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground"
+          className="w-full sm:w-auto px-4 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground"
         />
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 sm:gap-6">
         <AnimatedCard delay={0.1}>
-          <div className="p-4 sm:p-6">
+          <div className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-foreground-muted text-sm mb-1">Total Sales</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-foreground-muted text-xs sm:text-sm mb-1">Total Sales</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">
                   {formatCurrency(salesReport?.total_sales || 0)}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-success-500/20 text-success-400">
-                <DollarSign className="w-6 h-6" />
+              <div className="p-2 sm:p-3 rounded-xl bg-success-500/20 text-success-400">
+                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
           </div>
         </AnimatedCard>
 
         <AnimatedCard delay={0.2}>
-          <div className="p-4 sm:p-6">
+          <div className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-foreground-muted text-sm mb-1">Transactions</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-foreground-muted text-xs sm:text-sm mb-1">Transactions</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">
                   {salesReport?.total_transactions || 0}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-primary-500/20 text-primary-400">
-                <TrendingUp className="w-6 h-6" />
+              <div className="p-2 sm:p-3 rounded-xl bg-primary-500/20 text-primary-400">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
           </div>
         </AnimatedCard>
 
         <AnimatedCard delay={0.3}>
-          <div className="p-4 sm:p-6">
+          <div className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-foreground-muted text-sm mb-1">Avg. Transaction</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-foreground-muted text-xs sm:text-sm mb-1">Avg. Transaction</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">
                   {formatCurrency(salesReport?.average_transaction || 0)}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-accent-500/20 text-accent-400">
-                <Users className="w-6 h-6" />
+              <div className="p-2 sm:p-3 rounded-xl bg-accent-500/20 text-accent-400">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
           </div>
         </AnimatedCard>
 
         <AnimatedCard delay={0.4}>
-          <div className="p-4 sm:p-6">
+          <div className="p-3 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-foreground-muted text-sm mb-1">Items Sold</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-foreground-muted text-xs sm:text-sm mb-1">Items Sold</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">
                   {salesReport?.top_selling_items.reduce((sum, item) => sum + item.quantity_sold, 0) || 0}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-warning-500/20 text-warning-400">
-                <Package className="w-6 h-6" />
+              <div className="p-2 sm:p-3 rounded-xl bg-warning-500/20 text-warning-400">
+                <Package className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
           </div>
@@ -206,13 +206,13 @@ export default function SalesReports() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Top Selling Items */}
         <AnimatedCard delay={0.5}>
-          <div className="p-6">
-            <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
+          <div className="p-4 sm:p-6">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6 flex items-center">
               <div className="w-2 h-6 bg-gradient-to-b from-primary-500 to-accent-500 rounded-full mr-3" />
               Top Selling Items
             </h3>
 
-            <div className="h-80">
+            <div className="h-56 sm:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={salesReport?.top_selling_items || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #374151)" opacity={0.3} />
@@ -235,13 +235,13 @@ export default function SalesReports() {
 
         {/* Payment Methods */}
         <AnimatedCard delay={0.6}>
-          <div className="p-6">
-            <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
+          <div className="p-4 sm:p-6">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6 flex items-center">
               <div className="w-2 h-6 bg-gradient-to-b from-success-500 to-warning-500 rounded-full mr-3" />
               Payment Methods
             </h3>
 
-            <div className="h-80">
+            <div className="h-56 sm:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -267,14 +267,42 @@ export default function SalesReports() {
 
       {/* Recent Transactions */}
       <AnimatedCard delay={0.7}>
-        <div className="p-6">
-          <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center">
+        <div className="p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4 sm:mb-6 flex items-center">
             <div className="w-2 h-6 bg-gradient-to-b from-warning-500 to-error-500 rounded-full mr-3" />
             Recent Transactions
           </h3>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          {/* Mobile card list */}
+          <div className="sm:hidden space-y-3">
+            {recentTransactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                onClick={() => setSelectedTransaction(transaction)}
+                className="p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-foreground font-semibold text-sm">{transaction.transaction_number}</span>
+                  <span className="text-primary-400 font-bold">{formatCurrency(transaction.total_amount)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-foreground-muted">
+                  <span>{new Date(transaction.created_at).toLocaleDateString()}</span>
+                  <span className={`px-2 py-0.5 rounded-full font-medium ${transaction.payment_method === 'cash'
+                    ? 'bg-success-500/20 text-success-400'
+                    : transaction.payment_method === 'card'
+                      ? 'bg-primary-500/20 text-primary-400'
+                      : 'bg-accent-500/20 text-accent-400'
+                    }`}>
+                    {transaction.payment_method}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto -mx-6 px-6">
+            <table className="w-full min-w-[520px]">
               <thead>
                 <tr className="border-b border-border/50">
                   <th className="text-left py-3 px-4 text-foreground-muted font-medium">Transaction #</th>
@@ -285,13 +313,10 @@ export default function SalesReports() {
                 </tr>
               </thead>
               <tbody>
-                {recentTransactions.map((transaction, index) => (
-                  <motion.tr
+                {recentTransactions.map((transaction) => (
+                  <tr
                     key={transaction.id}
                     onClick={() => setSelectedTransaction(transaction)}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
                     className="border-b border-border/30 hover:bg-muted/30 transition-colors cursor-pointer"
                   >
                     <td className="py-3 px-4 text-foreground font-medium">
@@ -316,7 +341,7 @@ export default function SalesReports() {
                     <td className="py-3 px-4 text-right text-primary-400 font-semibold">
                       {formatCurrency(transaction.total_amount)}
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -327,20 +352,26 @@ export default function SalesReports() {
       {/* Transaction Detail Modal */}
       <AnimatePresence>
         {selectedTransaction && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-2xl bg-card rounded-2xl border border-border/50 shadow-xl overflow-hidden"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="w-full sm:max-w-2xl bg-card sm:rounded-2xl rounded-t-3xl border border-border/50 shadow-xl overflow-hidden"
             >
-              <div className="p-6 border-b border-border/50 flex items-center justify-between">
+              {/* Mobile drag handle */}
+              <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                <div className="w-10 h-1 bg-border rounded-full" />
+              </div>
+
+              <div className="p-4 sm:p-6 border-b border-border/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400">
-                    <Receipt className="w-6 h-6" />
+                    <Receipt className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">Transaction Details</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-foreground">Transaction Details</h3>
                     <p className="text-sm text-foreground-muted">#{selectedTransaction.transaction_number}</p>
                   </div>
                 </div>
@@ -352,7 +383,7 @@ export default function SalesReports() {
                 </button>
               </div>
 
-              <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-4">
                   <div className="flex justify-between items-start text-sm">
                     <div>
@@ -408,17 +439,17 @@ export default function SalesReports() {
                 </div>
               </div>
 
-              <div className="p-6 bg-muted/20 flex gap-3">
+              <div className="p-4 sm:p-6 bg-muted/20 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setSelectedTransaction(null)}
-                  className="btn-secondary flex-1"
+                  className="btn-secondary flex-1 py-3"
                 >
                   Close
                 </button>
                 {selectedTransaction.status === 'completed' && isAdmin && (
                   <button
                     onClick={() => handleVoid(selectedTransaction.id)}
-                    className="btn-primary bg-error-600 hover:bg-error-700 border-error-600 flex items-center justify-center gap-2 flex-1"
+                    className="btn-primary bg-error-600 hover:bg-error-700 border-error-600 flex items-center justify-center gap-2 flex-1 py-3"
                   >
                     <RotateCcw className="w-4 h-4" />
                     Void Transaction

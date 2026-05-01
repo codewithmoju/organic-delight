@@ -56,13 +56,13 @@ function StatCard({ icon: Icon, label, value, accent, delay = 0 }: {
       {/* Accent glow */}
       <div className={`absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity ${accent}`} />
 
-      <div className="relative flex items-center gap-4">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${accent} bg-opacity-15`}>
-          <Icon className="w-5 h-5" />
+      <div className="relative flex items-center gap-3">
+        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${accent} bg-opacity-15`}>
+          <Icon className="w-4 h-4" />
         </div>
-        <div>
-          <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">{label}</p>
-          <p className="text-xl font-bold text-foreground mt-0.5">{value}</p>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase truncate">{label}</p>
+          <p className="text-base sm:text-xl font-bold text-foreground mt-0.5 truncate">{value}</p>
         </div>
       </div>
     </motion.div>
@@ -386,10 +386,10 @@ export default function Transactions() {
   // RENDER
   // ============================================
   return (
-    <div className="relative min-h-screen pb-8">
+    <div className="relative pb-8">
       {isLoading ? <TransactionSkeleton /> : (
         <>
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* ─── HEADER ─── */}
             <motion.div
               initial={{ opacity: 0, y: -16 }}
@@ -399,14 +399,14 @@ export default function Transactions() {
             >
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/20">
-                    <BarChart3 className="w-5 h-5 text-primary-foreground" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
+                    <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                       {t('transactions.activityLog', 'Activity Log')}
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {t('transactions.historySubtitle', 'Track every movement in your business')}
                     </p>
                   </div>
@@ -498,7 +498,7 @@ export default function Transactions() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="flex flex-col sm:flex-row gap-3"
+              className="flex flex-col gap-3"
             >
               {/* Search */}
               <div className="relative flex-1">
@@ -520,14 +520,33 @@ export default function Transactions() {
                 )}
               </div>
 
-              {/* Type filter (only on All tab) */}
-              {activeTab === 'all' && (
-                <div className="flex gap-1.5 bg-card border border-border/60 rounded-xl p-1.5">
-                  {typeFilterOptions.map(opt => (
+              {/* Filter pills row — wraps on mobile */}
+              <div className="flex flex-wrap gap-2">
+                {/* Type filter (only on All tab) */}
+                {activeTab === 'all' && (
+                  <div className="flex gap-1 bg-card border border-border/60 rounded-xl p-1">
+                    {typeFilterOptions.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setFilterType(opt.value as any)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap ${filterType === opt.value
+                          ? 'bg-primary/10 text-primary shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                          }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Date filter */}
+                <div className="flex gap-1 bg-card border border-border/60 rounded-xl p-1">
+                  {dateFilterOptions.map(opt => (
                     <button
                       key={opt.value}
-                      onClick={() => setFilterType(opt.value as any)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap ${filterType === opt.value
+                      onClick={() => setDateFilter(opt.value as any)}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap ${dateFilter === opt.value
                         ? 'bg-primary/10 text-primary shadow-sm'
                         : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                         }`}
@@ -536,22 +555,6 @@ export default function Transactions() {
                     </button>
                   ))}
                 </div>
-              )}
-
-              {/* Date filter */}
-              <div className="flex gap-1.5 bg-card border border-border/60 rounded-xl p-1.5">
-                {dateFilterOptions.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setDateFilter(opt.value as any)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap ${dateFilter === opt.value
-                      ? 'bg-primary/10 text-primary shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                      }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
               </div>
             </motion.div>
 
