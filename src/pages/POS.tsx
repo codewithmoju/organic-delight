@@ -63,7 +63,7 @@ export default function POS() {
               {activeView === view.id && (
                 <motion.div
                   layoutId="pos-tab-indicator"
-                  className="absolute inset-0 bg-primary-600 rounded-lg shadow-glow"
+                  className="absolute inset-0 bg-primary-700 rounded-lg shadow-glow"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                 />
               )}

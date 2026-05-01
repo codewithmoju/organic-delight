@@ -483,8 +483,8 @@ export default function POSInterface() {
               setSelectedBillType(billTypes[(idx + 1) % billTypes.length]);
             }}
             className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${!selectedBillType.affects_inventory
-              ? 'bg-warning-500/20 text-warning-400 border-warning-500/50'
-              : 'bg-success-500/20 text-success-400 border-success-500/50'
+              ? 'bg-warning-500/20 text-warning-700 dark:text-warning-400 border-warning-500/50'
+              : 'bg-success-500/20 text-success-700 dark:text-success-400 border-success-500/50'
               }`}
           >
             {selectedBillType.name}
@@ -666,6 +666,7 @@ export default function POSInterface() {
                             <div className="flex gap-2 pointer-events-auto">
                               {/* Quick Access Toggle */}
                               <button
+                                aria-label={settings?.quick_access_items?.includes(product.id) ? `Remove ${product.name} from Quick Access` : `Add ${product.name} to Quick Access`}
                                 onClick={(e) => toggleQuickAccess(e, product)}
                                 className={`p-2 rounded-full shadow-lg transition-colors ${settings?.quick_access_items?.includes(product.id)
                                   ? 'bg-yellow-400 text-white hover:bg-yellow-500'
@@ -678,6 +679,7 @@ export default function POSInterface() {
 
                               {/* Add to Cart */}
                               <button
+                                aria-label={isReturnMode ? `Return ${product.name}` : `Add ${product.name} to cart`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleProductSelect(product);
@@ -735,6 +737,7 @@ export default function POSInterface() {
                               {product.name}
                             </h4>
                             <button
+                              aria-label={`Remove ${product.name} from Quick Access`}
                               onClick={(e) => toggleQuickAccess(e, product)}
                               className="text-yellow-400 hover:text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
@@ -743,10 +746,10 @@ export default function POSInterface() {
                           </div>
 
                           <div className="flex items-center justify-between mt-2">
-                            <span className="text-primary-500 font-bold text-sm">
+                            <span className="text-primary-700 dark:text-primary-400 font-bold text-sm">
                               {formatCurrency(product.price)}
                             </span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${product.stock > 0 ? 'bg-success-500/10 text-success-500' : 'bg-error-500/10 text-error-500'
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${product.stock > 0 ? 'bg-success-500/20 text-success-700 dark:text-success-400' : 'bg-error-500/10 text-error-700 dark:text-error-400'
                               }`}>
                               {product.stock}
                             </span>
@@ -817,8 +820,8 @@ export default function POSInterface() {
               <div className="flex items-center gap-2">
                 {/* Offline Indicator */}
                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${isOnline
-                  ? 'bg-success-500/10 border-success-500/20 text-success-600'
-                  : 'bg-error-500/10 border-error-500/20 text-error-600'
+                  ? 'bg-success-500/10 border-success-500/20 text-success-700 dark:text-success-400'
+                  : 'bg-error-500/10 border-error-500/20 text-error-700 dark:text-error-400'
                   }`}>
                   {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
                   <span className="text-sm font-medium hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
@@ -841,7 +844,7 @@ export default function POSInterface() {
                 )}
 
                 <div className="flex items-center gap-2">
-                  <span className="bg-primary-500/10 text-primary-500 px-2 py-0.5 rounded text-xs font-medium">
+                  <span className="bg-primary-600 text-white px-2 py-0.5 rounded text-xs font-medium">
                     {cartItems.length} {t('pos.cart.items', 'items')}
                   </span>
 
@@ -915,12 +918,12 @@ export default function POSInterface() {
           {/* Cart Items (scrollable) */}
           <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
             {cartItems.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center p-8 text-center opacity-60">
-                <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
+              <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4 opacity-50">
                   <div className="w-10 h-10 border-2 border-dashed border-foreground-muted/50 rounded-lg"></div>
                 </div>
                 <h3 className="text-foreground font-medium mb-1">{t('pos.cart.cartEmpty', 'Cart is empty')}</h3>
-                <p className="text-sm text-foreground-muted max-w-[200px]">
+                <p className="text-sm text-muted-foreground max-w-[200px]">
                   {t('pos.cart.startScanning', 'Scan a barcode or search for products to add items')}
                 </p>
               </div>
