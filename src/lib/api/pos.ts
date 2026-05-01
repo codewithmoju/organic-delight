@@ -79,6 +79,13 @@ export async function createPOSTransaction(transactionData: {
 
   try {
     return await runTransaction(db, async (transaction) => {
+      // ── Phase 1: ALL reads first ──────────────────────────────────────────
+      const itemReads: Array<{
+        cartItem: CartItem;
+        itemRef: ReturnType<typeof doc>;
+        currentStock: number;
+      }> = [];
+
       if (affectsInventory) {
         for (const cartItem of transactionData.items) {
           const itemRef = doc(db, 'items', cartItem.item_id);
@@ -88,21 +95,17 @@ export async function createPOSTransaction(transactionData: {
             throw new Error(`Item ${cartItem.name} not found`);
           }
 
-          const itemData = itemDoc.data();
-          const currentStock = itemData.current_quantity ?? 0;
+          const currentStock = itemDoc.data().current_quantity ?? 0;
 
           if (currentStock < cartItem.quantity && !transactionData.is_return) {
             throw new Error(`Insufficient stock for ${cartItem.name}. Available: ${currentStock}`);
           }
 
-          const qtyChange = transactionData.is_return ? cartItem.quantity : -cartItem.quantity;
-          transaction.update(itemRef, {
-            current_quantity: currentStock + qtyChange,
-            updated_at: Timestamp.fromDate(new Date())
-          });
+          itemReads.push({ cartItem, itemRef, currentStock });
         }
       }
 
+      // ── Phase 2: ALL writes after all reads ───────────────────────────────
       const posTransactionRef = doc(collection(db, 'pos_transactions'));
       const posTransaction = constructTransaction(posTransactionRef.id);
       const { id, ...posDataSave } = posTransaction;
@@ -113,6 +116,14 @@ export async function createPOSTransaction(transactionData: {
       });
 
       if (affectsInventory) {
+        for (const { cartItem, itemRef, currentStock } of itemReads) {
+          const qtyChange = transactionData.is_return ? cartItem.quantity : -cartItem.quantity;
+          transaction.update(itemRef, {
+            current_quantity: currentStock + qtyChange,
+            updated_at: Timestamp.fromDate(new Date())
+          });
+        }
+
         for (const item of posTransaction.items) {
           const invTransRef = doc(collection(db, 'transactions'));
           transaction.set(invTransRef, {

@@ -27,12 +27,13 @@ export async function getCategories(): Promise<Category[]> {
       continue;
     }
 
-    // Get item count for this category
+    // Get item count for this category (exclude archived/soft-deleted items)
     const itemsRef = collection(db, 'items');
     const itemsQuery = query(
       itemsRef,
       where('category_id', '==', category.id),
-      where('created_by', '==', userId)
+      where('created_by', '==', userId),
+      where('is_archived', '!=', true)
     );
     const itemsSnapshot = await getDocs(itemsQuery);
     category.item_count = itemsSnapshot.size;
@@ -139,12 +140,13 @@ export async function deleteCategory(id: string): Promise<void> {
   const userId = requireCurrentUserId();
   await getCategoryById(id);
 
-  // Check if category has items
+  // Check if category has items (exclude archived/soft-deleted items)
   const itemsRef = collection(db, 'items');
   const itemsQuery = query(
     itemsRef,
     where('category_id', '==', id),
-    where('created_by', '==', userId)
+    where('created_by', '==', userId),
+    where('is_archived', '!=', true)
   );
   const itemsSnapshot = await getDocs(itemsQuery);
 
@@ -161,7 +163,8 @@ export async function getCategoryItemCount(categoryId: string): Promise<number> 
   const q = query(
     itemsRef,
     where('category_id', '==', categoryId),
-    where('created_by', '==', userId)
+    where('created_by', '==', userId),
+    where('is_archived', '!=', true)
   );
   const snapshot = await getDocs(q);
   return snapshot.size;

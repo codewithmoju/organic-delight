@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, DollarSign, Barcode, ChevronDown, ChevronUp, Box } from 'lucide-react';
+import { Save, Barcode, ChevronDown, ChevronUp, Box, Plus, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Category } from '../../lib/types';
 import { getUnits, createUnit, Unit } from '../../lib/api/units';
+import { createCategory } from '../../lib/api/categories';
 import CustomSelect from '../ui/CustomSelect';
 import { useAuthStore } from '../../lib/store';
 
@@ -25,6 +26,7 @@ interface QuickItemFormProps {
         created_by: string;
     }) => Promise<void>;
     onCancel: () => void;
+    onCategoryCreated?: (category: Category) => void;
 }
 
 interface QuickItemFormData {
@@ -39,7 +41,7 @@ interface QuickItemFormData {
     reorder_point: number | '';
 }
 
-export default function QuickItemForm({ categories, onSubmit, onCancel }: QuickItemFormProps) {
+export default function QuickItemForm({ categories, onSubmit, onCancel, onCategoryCreated }: QuickItemFormProps) {
     const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -47,6 +49,12 @@ export default function QuickItemForm({ categories, onSubmit, onCancel }: QuickI
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const user = useAuthStore(state => state.user);
     const profile = useAuthStore(state => state.profile);
+
+    // Inline category creation state
+    const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+    const [localCategories, setLocalCategories] = useState<Category[]>(categories);
 
     const [formData, setFormData] = useState<QuickItemFormData>({
         category_id: '',
@@ -68,6 +76,32 @@ export default function QuickItemForm({ categories, onSubmit, onCancel }: QuickI
     useEffect(() => {
         loadUnits();
     }, []);
+
+    // Keep localCategories in sync with parent categories prop
+    useEffect(() => {
+        setLocalCategories(categories);
+    }, [categories]);
+
+    const handleCreateCategory = async () => {
+        const name = newCategoryName.trim();
+        if (!name) return;
+        setIsCreatingCategory(true);
+        try {
+            const userId = user?.uid || profile?.id || 'unknown';
+            const newCat = await createCategory({ name, description: '', color: '#6366f1', created_by: userId });
+            const updatedCategories = [...localCategories, newCat];
+            setLocalCategories(updatedCategories);
+            updateFormData('category_id', newCat.id);
+            setNewCategoryName('');
+            setShowNewCategoryForm(false);
+            toast.success(`Category "${newCat.name}" created`);
+            onCategoryCreated?.(newCat);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to create category');
+        } finally {
+            setIsCreatingCategory(false);
+        }
+    };
 
     const handleUnitChange = async (val: string) => {
         const existingUnit = units.find(u => u.symbol === val);
@@ -167,11 +201,70 @@ export default function QuickItemForm({ categories, onSubmit, onCancel }: QuickI
                             label={t('items.form.category', 'Category') + " *"}
                             value={formData.category_id}
                             onChange={(value) => updateFormData('category_id', value)}
-                            options={categories.map(cat => ({ value: cat.id, label: cat.name }))}
+                            options={localCategories.map(cat => ({ value: cat.id, label: cat.name }))}
                             placeholder={t('items.form.selectCategory', 'Select Category')}
                             error={errors.category_id}
                             searchable
                         />
+                        {/* Inline new category creation */}
+                        <AnimatePresence>
+                            {showNewCategoryForm ? (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="mt-2 overflow-hidden"
+                                >
+                                    <div className="flex gap-2 items-center">
+                                        <input
+                                            type="text"
+                                            value={newCategoryName}
+                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') { e.preventDefault(); handleCreateCategory(); }
+                                                if (e.key === 'Escape') { setShowNewCategoryForm(false); setNewCategoryName(''); }
+                                            }}
+                                            placeholder="New category name..."
+                                            className="flex-1 h-9 px-3 rounded-lg bg-background border-2 border-primary/40 focus:border-primary/70 focus:ring-2 focus:ring-primary/10 text-sm transition-all"
+                                            autoFocus
+                                            disabled={isCreatingCategory}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleCreateCategory}
+                                            disabled={isCreatingCategory || !newCategoryName.trim()}
+                                            className="h-9 w-9 flex items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors flex-shrink-0"
+                                            title="Create category"
+                                        >
+                                            {isCreatingCategory ? (
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : (
+                                                <Check className="w-4 h-4" />
+                                            )}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setShowNewCategoryForm(false); setNewCategoryName(''); }}
+                                            className="h-9 w-9 flex items-center justify-center rounded-lg bg-secondary hover:bg-secondary/80 text-muted-foreground transition-colors flex-shrink-0"
+                                            title="Cancel"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.button
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    type="button"
+                                    onClick={() => setShowNewCategoryForm(true)}
+                                    className="mt-1.5 flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    {t('categories.addNew', 'Create new category')}
+                                </motion.button>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Unit */}
@@ -195,12 +288,12 @@ export default function QuickItemForm({ categories, onSubmit, onCancel }: QuickI
                     <div>
                         <label className="block text-sm font-semibold text-foreground/80 mb-2">{t('items.wizard.price.unitPrice', 'Sale Price')} *</label>
                         <div className="relative group">
-                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">PKR</span>
                             <input
                                 type="number"
                                 value={formData.unit_price}
                                 onChange={(e) => updateFormData('unit_price', e.target.value)}
-                                className={`w-full h-12 pl-10 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.unit_price ? 'border-error-500' : ''}`}
+                                className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.unit_price ? 'border-error-500' : ''}`}
                                 placeholder="0.00"
                                 min="0"
                                 step="0.01"

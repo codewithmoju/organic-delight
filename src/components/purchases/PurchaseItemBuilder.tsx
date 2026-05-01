@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Hash, Barcode as BarcodeIcon, DollarSign, X, Search, Package, ArrowRight, Pencil } from 'lucide-react';
+import { Plus, Trash2, Hash, Barcode as BarcodeIcon, X, Search, Package, ArrowRight, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Category, Item } from '../../lib/types';
 import { generateSKU } from '../../lib/utils/sku';
@@ -536,14 +536,14 @@ export default function PurchaseItemBuilder({
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-muted-foreground">Purchase Rate (Cost) *</label>
                                             <div className="relative">
-                                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">PKR</span>
                                                 <input
                                                     type="number"
                                                     min="0"
                                                     step="0.01"
                                                     value={newItem.purchase_rate || ''}
                                                     onChange={(e) => setNewItem(prev => ({ ...prev, purchase_rate: parseFloat(e.target.value) || 0 }))}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+                                                    className="w-full pl-12 pr-4 py-2.5 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
                                                 />
                                             </div>
                                         </div>
@@ -551,14 +551,14 @@ export default function PurchaseItemBuilder({
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-muted-foreground">Sale Rate (Price) *</label>
                                             <div className="relative">
-                                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">PKR</span>
                                                 <input
                                                     type="number"
                                                     min="0"
                                                     step="0.01"
                                                     value={newItem.sale_rate || ''}
                                                     onChange={(e) => setNewItem(prev => ({ ...prev, sale_rate: parseFloat(e.target.value) || 0 }))}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+                                                    className="w-full pl-12 pr-4 py-2.5 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
                                                 />
                                             </div>
                                         </div>

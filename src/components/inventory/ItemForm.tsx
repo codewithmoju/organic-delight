@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Category, EnhancedItem } from '../../lib/types';
 import { getUnits, createUnit, Unit } from '../../lib/api/units';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import { AlertCircle, DollarSign } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../lib/store';
 import CustomSelect from '../ui/CustomSelect';
 
@@ -234,14 +234,14 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
           Unit Price *
         </label>
         <div className="relative group">
-          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">PKR</span>
           <input
             type="number"
             step="0.01"
             name="unit_price"
             id="unit_price"
             defaultValue={initialData?.unit_price}
-            className={`w-full h-12 pl-10 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.unit_price ? 'border-error-500' : ''
+            className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.unit_price ? 'border-error-500' : ''
               }`}
             placeholder="0.00"
           />

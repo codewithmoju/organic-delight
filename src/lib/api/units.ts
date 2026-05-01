@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, writeBatch, query, orderBy, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, writeBatch, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export interface Unit {
@@ -25,17 +25,38 @@ export const DEFAULT_UNITS: Omit<Unit, 'id'>[] = [
 export async function getUnits(): Promise<Unit[]> {
     try {
         const unitsRef = collection(db, 'units');
-        const q = query(unitsRef, orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(unitsRef);
 
-        if (snapshot.empty) {
-            return DEFAULT_UNITS.map(unit => ({ id: unit.symbol.toLowerCase(), ...unit }));
-        }
+        // Build a map of Firestore units keyed by symbol (lowercase) for deduplication
+        const firestoreMap = new Map<string, Unit>();
+        snapshot.docs.forEach(d => {
+            const unit = { id: d.id, ...d.data() } as Unit;
+            firestoreMap.set(unit.symbol.toLowerCase(), unit);
+        });
 
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as Unit));
+        // Always start with the full defaults list, then overlay any Firestore versions
+        // and append any custom units that aren't in the defaults
+        const defaultSymbols = new Set(DEFAULT_UNITS.map(u => u.symbol.toLowerCase()));
+        const merged: Unit[] = DEFAULT_UNITS.map(u => {
+            const key = u.symbol.toLowerCase();
+            // Prefer Firestore version if it exists (may have been updated)
+            return firestoreMap.get(key) ?? { id: key, ...u };
+        });
+
+        // Append custom units not in the defaults list
+        firestoreMap.forEach((unit, key) => {
+            if (!defaultSymbols.has(key)) {
+                merged.push(unit);
+            }
+        });
+
+        // Sort: defaults by order, custom units at the end alphabetically
+        return merged.sort((a, b) => {
+            const orderA = a.order ?? 999;
+            const orderB = b.order ?? 999;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.name.localeCompare(b.name);
+        });
     } catch (error) {
         console.error('Error fetching units:', error);
         return DEFAULT_UNITS.map(unit => ({ id: unit.symbol.toLowerCase(), ...unit }));

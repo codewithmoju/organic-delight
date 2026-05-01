@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CreditCard, Banknote, Smartphone, Calculator, Receipt, CheckCircle, DollarSign, Tag } from 'lucide-react';
+import { X, CreditCard, Banknote, Smartphone, Calculator, Receipt, CheckCircle, Tag } from 'lucide-react';
 import { CartItem, POSSettings } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { getPaymentMethods, PaymentMethod } from '../../lib/api/paymentMethods';
@@ -140,9 +140,9 @@ export default function PaymentModal({
 
   const quickAmountButtons = [
     { label: 'Exact', amount: discountedTotal },
-    { label: '+$5', amount: discountedTotal + 5 },
-    { label: '+$10', amount: discountedTotal + 10 },
-    { label: '+$20', amount: discountedTotal + 20 },
+    { label: '+PKR 5', amount: discountedTotal + 5 },
+    { label: '+PKR 10', amount: discountedTotal + 10 },
+    { label: '+PKR 20', amount: discountedTotal + 20 },
   ];
 
   if (!isOpen) return null;
@@ -268,10 +268,10 @@ export default function PaymentModal({
                         {type.name}
                       </label>
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-muted/50" />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground-muted/50 pointer-events-none">PKR</span>
                         <input
                           type="number"
-                          className="w-full pl-10 px-4 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                          className="w-full pl-12 px-4 py-2.5 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
                           placeholder="0.00"
                           value={discountValues[type.slug] || ''}
                           onChange={e => setDiscountValues(prev => ({

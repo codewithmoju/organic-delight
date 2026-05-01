@@ -298,10 +298,10 @@ export default function Expenses() {
                                         <div className="space-y-1">
                                             <label className="text-xs font-semibold text-muted-foreground mb-1.5 block uppercase tracking-wider">{t('expenses.form.amount')}</label>
                                             <div className="relative">
-                                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none z-10" />
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none z-10">PKR</span>
                                                 <input
                                                     type="number"
-                                                    className="w-full h-12 bg-secondary/50 border border-transparent rounded-xl pl-10 pr-4 text-foreground font-semibold focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+                                                    className="w-full h-12 bg-secondary/50 border border-transparent rounded-xl pl-12 pr-4 text-foreground font-semibold focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none"
                                                     placeholder="0.00"
                                                     value={newExpense.amount}
                                                     onChange={e => setNewExpense(prev => ({ ...prev, amount: e.target.value }))}

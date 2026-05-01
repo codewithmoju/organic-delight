@@ -115,7 +115,7 @@ export interface DashboardMetrics {
 }
 
 export const SUPPORTED_CURRENCIES = [
-  { code: 'PKR', symbol: '₨', name: 'Pakistani Rupee', flag: '🇵🇰' },
+  { code: 'PKR', symbol: 'PKR ', name: 'Pakistani Rupee', flag: '🇵🇰' },
 ];
 
 export const SUPPORTED_UNITS = [

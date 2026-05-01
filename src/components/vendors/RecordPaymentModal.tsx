@@ -150,7 +150,7 @@ export default function RecordPaymentModal({
                                         Amount to Pay
                                     </label>
                                     <div className="relative">
-                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">PKR</span>
                                         <input
                                             type="number"
                                             required
@@ -159,7 +159,7 @@ export default function RecordPaymentModal({
                                             inputMode="decimal"
                                             value={paymentData.amount}
                                             onChange={(e) => setPaymentData(prev => ({ ...prev, amount: e.target.value }))}
-                                            className="input-theme pl-10 w-full"
+                                            className="input-theme pl-12 w-full"
                                             placeholder="0.00"
                                         />
                                     </div>

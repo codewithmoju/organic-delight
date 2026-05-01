@@ -343,6 +343,10 @@ export default function Items() {
                   setIsFormOpen(false);
                   setSelectedItem(null);
                 }}
+                onCategoryCreated={(newCat) => {
+                  setCategories(prev => [...prev, newCat]);
+                  localStorage.setItem(CATEGORIES_CACHE_KEY, JSON.stringify([...categories, newCat]));
+                }}
               />
             )}
           </div>

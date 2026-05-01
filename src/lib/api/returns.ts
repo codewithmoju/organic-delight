@@ -21,7 +21,7 @@ export async function processPOSReturn(returnData: {
     const returnNumber = `RET${Date.now().toString().slice(-8)}`;
 
     return await runTransaction(db, async (transaction) => {
-        // 1. Get original transaction
+        // ── Phase 1: ALL reads first ──────────────────────────────────────────
         const transactionRef = doc(db, 'pos_transactions', returnData.original_transaction_id);
         const transactionDoc = await transaction.get(transactionRef);
 
@@ -31,7 +31,24 @@ export async function processPOSReturn(returnData: {
 
         const posTransaction = transactionDoc.data() as POSTransaction;
 
-        // 2. Create the return record
+        // Read all item docs so we can update stock
+        const itemReads: Array<{
+            itemRef: ReturnType<typeof doc>;
+            currentStock: number;
+            returnItem: ReturnItem;
+        }> = [];
+
+        for (const item of returnData.items) {
+            const itemRef = doc(db, 'items', item.item_id);
+            const itemDoc = await transaction.get(itemRef);
+            itemReads.push({
+                itemRef,
+                currentStock: itemDoc.exists() ? (itemDoc.data().current_quantity ?? 0) : 0,
+                returnItem: item
+            });
+        }
+
+        // ── Phase 2: ALL writes after all reads ───────────────────────────────
         const returnRef = doc(collection(db, 'pos_returns'));
         const posReturn: Omit<POSReturn, 'id'> = {
             return_number: returnNumber,
@@ -50,8 +67,7 @@ export async function processPOSReturn(returnData: {
             created_at: Timestamp.fromDate(new Date())
         });
 
-        // 3. Update original transaction status if it's a full return
-        // Check if all items are returned
+        // Update original transaction status if all items are returned
         const returnedItemIds = returnData.items.map(i => i.item_id);
         const allItemsReturned = posTransaction.items.every(item => returnedItemIds.includes(item.item_id));
 
@@ -62,15 +78,22 @@ export async function processPOSReturn(returnData: {
             });
         }
 
-        // 4. Update Inventory (restock returned items)
-        for (const item of returnData.items) {
+        // Restock returned items and create inventory log records
+        for (const { itemRef, currentStock, returnItem } of itemReads) {
+            // Update item stock
+            transaction.update(itemRef, {
+                current_quantity: currentStock + returnItem.quantity_to_return,
+                updated_at: Timestamp.fromDate(new Date())
+            });
+
+            // Create inventory transaction log
             const inventoryTransactionRef = doc(collection(db, 'transactions'));
             transaction.set(inventoryTransactionRef, {
-                item_id: item.item_id,
+                item_id: returnItem.item_id,
                 type: 'stock_in',
-                quantity: item.quantity_to_return,
-                unit_price: item.unit_price,
-                total_value: item.refund_amount,
+                quantity: returnItem.quantity_to_return,
+                unit_price: returnItem.unit_price,
+                total_value: returnItem.refund_amount,
                 transaction_date: Timestamp.fromDate(new Date()),
                 supplier_customer: 'Customer Return',
                 reference_number: returnNumber,
@@ -91,6 +114,7 @@ export async function processPOSReturn(returnData: {
  */
 export async function voidTransaction(transactionId: string, reason: string, userId: string): Promise<void> {
     return await runTransaction(db, async (transaction) => {
+        // ── Phase 1: ALL reads first ──────────────────────────────────────────
         const transactionRef = doc(db, 'pos_transactions', transactionId);
         const transactionDoc = await transaction.get(transactionRef);
 
@@ -104,7 +128,26 @@ export async function voidTransaction(transactionId: string, reason: string, use
             throw new Error('Transaction already voided/cancelled');
         }
 
-        // 1. Update status
+        // Read all item docs to restock them
+        const itemReads: Array<{
+            itemRef: ReturnType<typeof doc>;
+            currentStock: number;
+            item: (typeof posTransaction.items)[number];
+        }> = [];
+
+        if (posTransaction.affects_inventory !== false) {
+            for (const item of posTransaction.items) {
+                const itemRef = doc(db, 'items', item.item_id);
+                const itemDoc = await transaction.get(itemRef);
+                itemReads.push({
+                    itemRef,
+                    currentStock: itemDoc.exists() ? (itemDoc.data().current_quantity ?? 0) : 0,
+                    item
+                });
+            }
+        }
+
+        // ── Phase 2: ALL writes after all reads ───────────────────────────────
         transaction.update(transactionRef, {
             status: 'voided',
             void_reason: reason,
@@ -112,8 +155,14 @@ export async function voidTransaction(transactionId: string, reason: string, use
             voided_by: userId
         });
 
-        // 2. Reverse Inventory
-        for (const item of posTransaction.items) {
+        for (const { itemRef, currentStock, item } of itemReads) {
+            // Restock the item
+            transaction.update(itemRef, {
+                current_quantity: currentStock + item.quantity,
+                updated_at: Timestamp.fromDate(new Date())
+            });
+
+            // Create inventory reversal log
             const inventoryTransactionRef = doc(collection(db, 'transactions'));
             transaction.set(inventoryTransactionRef, {
                 item_id: item.item_id,
