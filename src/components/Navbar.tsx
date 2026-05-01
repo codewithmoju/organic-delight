@@ -169,12 +169,12 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           <div className="relative">
             <button
               ref={buttonRef}
+              id="user-menu-button"
               type="button"
               className="flex items-center gap-x-3 rounded-full hover:bg-secondary/50 transition-colors duration-200 p-1 pr-3"
               onClick={handleProfileClick}
               aria-expanded={showUserMenu}
               aria-haspopup="true"
-              aria-label="Open user menu"
             >
               <img
                 className="h-9 w-9 rounded-full bg-secondary object-cover ring-2 ring-background"

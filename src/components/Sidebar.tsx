@@ -147,7 +147,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         }}
         role="navigation"
         aria-label="Main navigation"
-        aria-hidden={!isDesktop && !isOpen ? 'true' : 'false'}
+        {...(!isDesktop && !isOpen ? { inert: '' } : {})}
       >
         <div className="flex flex-col h-full w-full">
           {/* Header */}
@@ -183,9 +183,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   animate={{
                     opacity: isExpanded ? 1 : 0,
                     height: isExpanded ? 'auto' : 0,
-                    marginBottom: isExpanded ? 4 : 0
                   }}
-                  className="px-4 text-[10px] font-bold uppercase tracking-wider text-white/50 truncate"
+                  transition={{ duration: 0.2 }}
+                  className="px-4 text-[10px] font-bold uppercase tracking-wider text-white/50 truncate overflow-hidden"
+                  style={{ paddingBottom: isExpanded ? 4 : 0 }}
                 >
                   {group.title}
                 </motion.h3>
@@ -219,10 +220,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                             <motion.span
                               animate={{
                                 opacity: isExpanded ? 1 : 0,
-                                width: isExpanded ? 'auto' : 0,
-                                marginLeft: isExpanded ? 12 : 0
+                                x: isExpanded ? 0 : -8,
                               }}
-                              className="font-medium text-sm"
+                              transition={{ duration: 0.2 }}
+                              className="font-medium text-sm ml-3"
                             >
                               {item.label}
                             </motion.span>

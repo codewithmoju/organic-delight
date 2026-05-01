@@ -72,7 +72,7 @@ export default function LanguageSelector({
           className="flex items-center space-x-2 p-2 rounded-lg hover:bg-dark-700/50 transition-colors"
         >
           <span className="text-xl">{currentLanguage.flag}</span>
-          <span className="text-sm font-medium text-gray-300 hidden sm:inline">
+          <span className="text-sm font-medium text-foreground hidden sm:inline">
             {currentLanguage.code.toUpperCase()}
           </span>
           <ChevronDown className="w-4 h-4 text-gray-400" />
