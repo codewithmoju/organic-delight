@@ -72,26 +72,26 @@ export default function PersonalSettings() {
         >
             {/* Header */}
             <motion.div variants={itemVariants}>
-                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground-muted flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500">
-                        <Shield className="w-6 h-6" />
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500 flex-shrink-0">
+                        <Shield className="w-5 h-5" />
                     </div>
                     Personal Profile
                 </h2>
-                <p className="text-foreground-muted mt-2 ml-14">Manage your personal details and preferences</p>
+                <p className="text-foreground-muted mt-1 text-sm ml-12">Manage your personal details and preferences</p>
             </motion.div>
 
             {/* Form Card */}
             <motion.div
                 variants={itemVariants}
-                className="p-6 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-md transition-all duration-300"
+                className="p-4 sm:p-6 rounded-2xl bg-card border border-border/50 shadow-sm"
             >
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Full Name */}
-                        <div className="space-y-2">
-                            <label htmlFor="full_name" className="text-sm font-medium text-foreground-muted flex items-center gap-2">
-                                <User className="w-4 h-4 text-primary-500" />
+                        <div className="space-y-1.5">
+                            <label htmlFor="full_name" className="text-xs font-semibold text-foreground-muted flex items-center gap-2 uppercase tracking-wider">
+                                <User className="w-3.5 h-3.5 text-primary" />
                                 Full Name
                             </label>
                             <input
@@ -99,15 +99,15 @@ export default function PersonalSettings() {
                                 id="full_name"
                                 value={formData.full_name}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                                className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all text-foreground placeholder:text-foreground-muted/50 text-sm"
                                 placeholder="John Doe"
                             />
                         </div>
 
                         {/* Phone Number */}
-                        <div className="space-y-2">
-                            <label htmlFor="phone_number" className="text-sm font-medium text-foreground-muted flex items-center gap-2">
-                                <Phone className="w-4 h-4 text-success-500" />
+                        <div className="space-y-1.5">
+                            <label htmlFor="phone_number" className="text-xs font-semibold text-foreground-muted flex items-center gap-2 uppercase tracking-wider">
+                                <Phone className="w-3.5 h-3.5 text-success-500" />
                                 Phone Number
                             </label>
                             <input
@@ -115,15 +115,15 @@ export default function PersonalSettings() {
                                 id="phone_number"
                                 value={formData.phone_number}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                                className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all text-foreground placeholder:text-foreground-muted/50 text-sm"
                                 placeholder="+1 234 567 890"
                             />
                         </div>
 
                         {/* Company */}
-                        <div className="space-y-2">
-                            <label htmlFor="company" className="text-sm font-medium text-foreground-muted flex items-center gap-2">
-                                <Building2 className="w-4 h-4 text-purple-500" />
+                        <div className="space-y-1.5">
+                            <label htmlFor="company" className="text-xs font-semibold text-foreground-muted flex items-center gap-2 uppercase tracking-wider">
+                                <Building2 className="w-3.5 h-3.5 text-purple-500" />
                                 Company
                             </label>
                             <input
@@ -131,15 +131,15 @@ export default function PersonalSettings() {
                                 id="company"
                                 value={formData.company}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                                className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all text-foreground placeholder:text-foreground-muted/50 text-sm"
                                 placeholder="Acme Inc."
                             />
                         </div>
 
                         {/* Address */}
-                        <div className="space-y-2">
-                            <label htmlFor="address" className="text-sm font-medium text-foreground-muted flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-error-500" />
+                        <div className="space-y-1.5">
+                            <label htmlFor="address" className="text-xs font-semibold text-foreground-muted flex items-center gap-2 uppercase tracking-wider">
+                                <MapPin className="w-3.5 h-3.5 text-error-500" />
                                 Address
                             </label>
                             <input
@@ -147,34 +147,27 @@ export default function PersonalSettings() {
                                 id="address"
                                 value={formData.address}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-foreground placeholder-foreground-muted/50"
+                                className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all text-foreground placeholder:text-foreground-muted/50 text-sm"
                                 placeholder="123 Main St, City, Country"
                             />
                         </div>
                     </div>
 
                     {/* Save Button */}
-                    <div className="flex justify-end pt-4 border-t border-border/50">
+                    <div className="flex justify-end pt-3 border-t border-border/50">
                         <button
                             type="submit"
                             disabled={isSaving || !hasChanges}
-                            className={`
-                flex items-center gap-2 px-8 py-3 rounded-xl shadow-lg transition-all duration-300
-                ${hasChanges
-                                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-primary-500/20 hover:shadow-primary-500/40 hover:-translate-y-0.5'
-                                    : 'bg-secondary text-foreground-muted cursor-not-allowed'}
-              `}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl shadow-sm transition-all duration-200 text-sm font-semibold ${
+                                hasChanges
+                                    ? 'bg-primary text-white shadow-primary/20 hover:opacity-90'
+                                    : 'bg-secondary text-foreground-muted cursor-not-allowed'
+                            }`}
                         >
                             {isSaving ? (
-                                <>
-                                    <LoadingSpinner size="sm" color="white" />
-                                    <span>Saving...</span>
-                                </>
+                                <><LoadingSpinner size="sm" color="white" /><span>Saving...</span></>
                             ) : (
-                                <>
-                                    <Save className="w-5 h-5" />
-                                    <span>Save Changes</span>
-                                </>
+                                <><Save className="w-4 h-4" /><span>Save Changes</span></>
                             )}
                         </button>
                     </div>

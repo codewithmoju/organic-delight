@@ -26,26 +26,26 @@ export default function Settings() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 pb-16">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500/10 via-transparent to-transparent p-8 border border-border/50"
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary/8 via-transparent to-transparent p-5 sm:p-7 border border-border/50"
       >
         <div className="relative z-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1.5 tracking-tight">
             {t('settings.title')}
           </h1>
-          <p className="text-foreground-muted text-lg max-w-2xl">
+          <p className="text-foreground-muted text-sm sm:text-base max-w-2xl">
             {t('settings.subtitle')}
           </p>
         </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/8 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       </motion.div>
 
-      {/* Tabs */}
-      <div className="flex p-1 space-x-1 bg-card/50 backdrop-blur-xl rounded-xl border border-border/50 w-fit">
+      {/* Tabs — full width on mobile */}
+      <div className="flex p-1 gap-1 bg-card/60 backdrop-blur-xl rounded-xl border border-border/50">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -53,15 +53,15 @@ export default function Settings() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as 'personal' | 'business')}
               className={`
-                relative px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2
-                ${isActive ? 'text-primary-foreground shadow-lg' : 'text-foreground-muted hover:text-foreground'}
+                relative flex-1 sm:flex-none px-4 sm:px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2
+                ${isActive ? 'text-white shadow-lg' : 'text-foreground-muted hover:text-foreground'}
               `}
             >
               {isActive && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-primary-500 rounded-lg"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  className="absolute inset-0 bg-primary rounded-lg"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                 />
               )}
               <span className="relative z-10 flex items-center gap-2">
