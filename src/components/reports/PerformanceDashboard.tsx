@@ -58,23 +58,23 @@ export default function PerformanceDashboard() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* ─── HEADER ─── */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                        <div className="p-2 bg-accent/10 rounded-xl">
-                            <Award className="w-6 h-6 text-accent" />
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2.5">
+                        <div className="p-2 bg-accent/10 rounded-xl flex-shrink-0">
+                            <Award className="w-5 h-5 text-accent" />
                         </div>
                         Product Performance
                     </h2>
-                    <p className="text-muted-foreground mt-1 ml-1">Discover your most profitable and popular items</p>
+                    <p className="text-foreground-muted text-sm mt-1 ml-11">Discover your most profitable and popular items</p>
                 </div>
 
-                <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <div className="relative flex-shrink-0">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     <select
                         value={timeRange}
                         onChange={(e) => setTimeRange(Number(e.target.value))}
-                        className="appearance-none bg-card border border-border/60 hover:border-primary/50 text-foreground py-2.5 pl-10 pr-10 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer font-medium"
+                        className="appearance-none bg-card border border-border/60 hover:border-primary/50 text-foreground h-11 pl-10 pr-8 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer font-medium text-sm"
                     >
                         <option value={7}>Last 7 Days</option>
                         <option value={30}>Last 30 Days</option>
@@ -83,17 +83,17 @@ export default function PerformanceDashboard() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Top Performers Chart */}
                 <AnimatedCard delay={0.1} className="h-full">
-                    <div className="p-6 h-full flex flex-col">
-                        <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                            <div className="p-1.5 bg-green-500/10 rounded-lg">
-                                <TrendingUp className="w-5 h-5 text-green-500" />
+                    <div className="p-4 sm:p-6 h-full flex flex-col">
+                        <h3 className="text-base sm:text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                            <div className="p-1.5 bg-success-500/10 rounded-lg">
+                                <TrendingUp className="w-4 h-4 text-success-500" />
                             </div>
-                            Profitability Leaders <span className="text-sm font-normal text-muted-foreground ml-1">(Top 5)</span>
+                            Profitability Leaders <span className="text-xs font-normal text-muted-foreground ml-1">(Top 5)</span>
                         </h3>
-                        <div className="flex-1 min-h-[300px]">
+                        <div className="flex-1 min-h-[240px] sm:min-h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={top10} layout="vertical" margin={{ left: 0, right: 30 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} horizontal={true} vertical={false} />
@@ -113,14 +113,14 @@ export default function PerformanceDashboard() {
 
                 {/* Profit Contribution Pie */}
                 <AnimatedCard delay={0.2} className="h-full">
-                    <div className="p-6 h-full flex flex-col">
-                        <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+                    <div className="p-4 sm:p-6 h-full flex flex-col">
+                        <h3 className="text-base sm:text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                             <div className="p-1.5 bg-primary/10 rounded-lg">
-                                <Target className="w-5 h-5 text-primary" />
+                                <Target className="w-4 h-4 text-primary" />
                             </div>
                             Profit Contribution Share
                         </h3>
-                        <div className="flex-1 min-h-[300px] relative">
+                        <div className="flex-1 min-h-[240px] sm:min-h-[300px] relative">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -150,35 +150,35 @@ export default function PerformanceDashboard() {
                 </AnimatedCard>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div className="lg:col-span-2">
                     <AnimatedCard delay={0.3} className="h-full overflow-hidden">
-                        <div className="p-6">
-                            <h3 className="text-xl font-bold text-foreground mb-6">Performance Details</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                        <div className="p-4 sm:p-6">
+                            <h3 className="text-base sm:text-lg font-bold text-foreground mb-4">Performance Details</h3>
+                            <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
+                                <table className="w-full text-left border-collapse min-w-[360px]">
                                     <thead>
                                         <tr className="border-b border-border/40">
-                                            <th className="pb-4 pl-4 text-muted-foreground font-semibold text-xs uppercase tracking-wider">Product</th>
-                                            <th className="pb-4 text-muted-foreground font-semibold text-xs uppercase tracking-wider text-center">Qty</th>
-                                            <th className="pb-4 text-muted-foreground font-semibold text-xs uppercase tracking-wider text-right">Profit</th>
-                                            <th className="pb-4 pr-4 text-muted-foreground font-semibold text-xs uppercase tracking-wider text-right">Margin</th>
+                                            <th className="pb-3 pl-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider">Product</th>
+                                            <th className="pb-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider text-center">Qty</th>
+                                            <th className="pb-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider text-right">Profit</th>
+                                            <th className="pb-3 pr-3 text-muted-foreground font-semibold text-xs uppercase tracking-wider text-right hidden sm:table-cell">Margin</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/30">
                                         {data.slice(0, 8).map((p, idx) => (
                                             <tr key={idx} className="group hover:bg-secondary/30 transition-colors">
-                                                <td className="py-3 pl-4 text-foreground font-medium text-sm">{p.name}</td>
-                                                <td className="py-3 text-center text-muted-foreground text-sm">
+                                                <td className="py-2.5 pl-3 text-foreground font-medium text-sm truncate max-w-[140px]">{p.name}</td>
+                                                <td className="py-2.5 text-center text-muted-foreground text-sm">
                                                     <span className="bg-secondary/50 px-2 py-0.5 rounded-md text-xs">{p.quantity}</span>
                                                 </td>
-                                                <td className="py-3 text-right font-bold text-green-500 font-mono text-sm">{formatCurrency(p.profit)}</td>
-                                                <td className="py-3 pr-4 text-right">
+                                                <td className="py-2.5 text-right font-bold text-success-500 font-mono text-sm tabular-nums">{formatCurrency(p.profit)}</td>
+                                                <td className="py-2.5 pr-3 text-right hidden sm:table-cell">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <div className="w-16 h-1.5 bg-secondary rounded-full overflow-hidden">
+                                                        <div className="w-12 h-1.5 bg-secondary rounded-full overflow-hidden">
                                                             <div className="h-full bg-accent rounded-full" style={{ width: `${Math.min(p.margin, 100)}%` }} />
                                                         </div>
-                                                        <span className="text-xs font-medium text-accent">{p.margin.toFixed(1)}%</span>
+                                                        <span className="text-xs font-medium text-accent tabular-nums">{p.margin.toFixed(1)}%</span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -191,25 +191,25 @@ export default function PerformanceDashboard() {
                 </div>
 
                 <div>
-                    <AnimatedCard delay={0.4} className="h-full border-red-500/20 bg-gradient-to-br from-card to-red-500/5">
-                        <div className="p-6">
-                            <h3 className="text-xl font-bold text-red-500 mb-6 flex items-center gap-2">
-                                <Info className="w-5 h-5" />
+                    <AnimatedCard delay={0.4} className="h-full border-error-500/20 bg-gradient-to-br from-card to-error-500/5">
+                        <div className="p-4 sm:p-6">
+                            <h3 className="text-base sm:text-lg font-bold text-error-500 mb-4 flex items-center gap-2">
+                                <Info className="w-4 h-4" />
                                 Underperformers
                             </h3>
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {bottom5.map((p, idx) => (
-                                    <div key={idx} className="p-4 rounded-xl bg-card/50 border border-red-500/10 hover:border-red-500/30 transition-colors">
-                                        <p className="text-foreground font-medium mb-2 text-sm">{p.name}</p>
+                                    <div key={idx} className="p-3 rounded-xl bg-card/50 border border-error-500/10 hover:border-error-500/30 transition-colors">
+                                        <p className="text-foreground font-medium mb-1.5 text-sm truncate">{p.name}</p>
                                         <div className="flex justify-between items-end">
-                                            <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-1 rounded">{p.quantity} sold</span>
-                                            <span className="text-red-500 font-bold text-sm">{formatCurrency(p.profit)} profit</span>
+                                            <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded">{p.quantity} sold</span>
+                                            <span className="text-error-500 font-bold text-sm tabular-nums">{formatCurrency(p.profit)}</span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-8 p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-                                <p className="text-xs text-red-400 italic">
+                            <div className="mt-5 p-3 bg-error-500/8 rounded-xl border border-error-500/20">
+                                <p className="text-xs text-error-400 italic leading-relaxed">
                                     "Consider discounting these items to free up warehouse space and improve cash flow."
                                 </p>
                             </div>
