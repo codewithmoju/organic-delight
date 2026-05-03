@@ -7,9 +7,11 @@ import { auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getProfile } from './lib/api/auth';
 import { useAuthStore, clearSessionCaches } from './lib/store';
+import { resolveActiveOrganization } from './lib/auth/orgResolver';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLoader from './components/ui/AppLoader';
+import type { Permission } from './lib/types/org';
 import OfflineIndicator from './components/ui/OfflineIndicator';
 
 // Lazy load components for better performance
@@ -18,6 +20,7 @@ const Register = lazy(() => import('./pages/auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const MultiStepRegister = lazy(() => import('./pages/auth/MultiStepRegister'));
 const EmailVerification = lazy(() => import('./pages/auth/EmailVerification'));
+const AcceptInvite = lazy(() => import('./pages/auth/AcceptInvite'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const POS = lazy(() => import('./pages/POS'));
 const Items = lazy(() => import('./pages/inventory/Items'));
@@ -44,11 +47,31 @@ const StockTransfer = lazy(() => import('./pages/inventory/StockTransfer'));
 const BarcodeLabels = lazy(() => import('./pages/inventory/BarcodeLabels'));
 const AuditLogPage = lazy(() => import('./pages/settings/AuditLogPage'));
 const LocationsPage = lazy(() => import('./pages/settings/LocationsPage'));
+const TeamPage = lazy(() => import('./pages/settings/TeamPage'));
+const InvitePage = lazy(() => import('./pages/settings/InvitePage'));
+const OrgSettingsPage = lazy(() => import('./pages/settings/OrgSettingsPage'));
 
 // Page-level loading fallback — uses the shared AppLoader
 const LoadingFallback = ({ text }: { text: string }) => (
   <AppLoader label={text} />
 );
+
+// Wraps a lazy-loaded page with Suspense + optional permission guard
+function Page({ component: Component, text, permission }: {
+  component: React.LazyExoticComponent<React.ComponentType>;
+  text: string;
+  permission?: Permission;
+}) {
+  const content = (
+    <Suspense fallback={<LoadingFallback text={text} />}>
+      <Component />
+    </Suspense>
+  );
+  if (permission) {
+    return <ProtectedRoute requiredPermission={permission}>{content}</ProtectedRoute>;
+  }
+  return content;
+}
 
 function App() {
   const { setUser, setProfile, setInitialized } = useAuthStore();
@@ -69,11 +92,15 @@ function App() {
 
       setUser(user);
       if (user) {
-        try {
-          const profile = await getProfile(user);
-          setProfile(profile);
-        } catch (error) {
-          console.error('Error fetching profile:', error);
+        // Run profile + org resolution in parallel — neither depends on the other
+        const [profileResult] = await Promise.allSettled([
+          getProfile(user),
+          resolveActiveOrganization(user.uid),
+        ]);
+        if (profileResult.status === 'fulfilled') {
+          setProfile(profileResult.value);
+        } else {
+          console.error('Error fetching profile:', profileResult.reason);
           setProfile(null);
         }
       } else {
@@ -148,138 +175,42 @@ function App() {
                 <EmailVerification />
               </Suspense>
             } />
+            <Route path="/accept-invite" element={
+              <Suspense fallback={<LoadingFallback text="Loading invite..." />}>
+                <AcceptInvite />
+              </Suspense>
+            } />
 
             <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route path="/" element={
-                <Suspense fallback={<LoadingFallback text="Loading dashboard" />}>
-                  <Dashboard />
-                </Suspense>
-              } />
-              <Route path="/pos" element={
-                <Suspense fallback={<LoadingFallback text="Loading POS system" />}>
-                  <POS />
-                </Suspense>
-              } />
-              <Route path="/inventory/categories" element={
-                <Suspense fallback={<LoadingFallback text="Loading categories" />}>
-                  <Categories />
-                </Suspense>
-              } />
-              <Route path="/inventory/items" element={
-                <Suspense fallback={<LoadingFallback text="Loading items" />}>
-                  <Items />
-                </Suspense>
-              } />
-              <Route path="/inventory/alerts" element={
-                <Suspense fallback={<LoadingFallback text="Loading alerts" />}>
-                  <Alerts />
-                </Suspense>
-              } />
-              <Route path="/vendors" element={
-                <Suspense fallback={<LoadingFallback text="Loading vendors" />}>
-                  <Vendors />
-                </Suspense>
-              } />
-              <Route path="/vendors/:id/ledger" element={
-                <Suspense fallback={<LoadingFallback text="Loading ledger" />}>
-                  <VendorLedgerPage />
-                </Suspense>
-              } />
-              <Route path="/purchases/new" element={
-                <Suspense fallback={<LoadingFallback text="Loading new purchase" />}>
-                  <NewPurchase />
-                </Suspense>
-              } />
-              <Route path="/purchases" element={
-                <Suspense fallback={<LoadingFallback text="Loading purchases" />}>
-                  <Purchases />
-                </Suspense>
-              } />
-              <Route path="/purchases/:id" element={
-                <Suspense fallback={<LoadingFallback text="Loading purchase" />}>
-                  <Purchases />
-                </Suspense>
-              } />
-              <Route path="/purchases/:id/return" element={
-                <Suspense fallback={<LoadingFallback text="Loading return" />}>
-                  <PurchaseReturnPage />
-                </Suspense>
-              } />
-              <Route path="/customers" element={
-                <Suspense fallback={<LoadingFallback text="Loading customers" />}>
-                  <Customers />
-                </Suspense>
-              } />
-              <Route path="/customers/:id/ledger" element={
-                <Suspense fallback={<LoadingFallback text="Loading customer ledger" />}>
-                  <CustomerLedger />
-                </Suspense>
-              } />
-              <Route path="/expenses" element={
-                <Suspense fallback={<LoadingFallback text="Loading expenses" />}>
-                  <Expenses />
-                </Suspense>
-              } />
-              <Route path="/transactions" element={
-                <Suspense fallback={<LoadingFallback text="Loading transactions" />}>
-                  <Transactions />
-                </Suspense>
-              } />
-              <Route path="/reports/performance" element={
-                <Suspense fallback={<LoadingFallback text="Loading performance analytics" />}>
-                  <PerformancePage />
-                </Suspense>
-              } />
-              <Route path="/inventory/valuation" element={
-                <Suspense fallback={<LoadingFallback text="Calculating valuation" />}>
-                  <ValuationPage />
-                </Suspense>
-              } />
-              <Route path="/reports" element={
-                <Suspense fallback={<LoadingFallback text="Loading reports" />}>
-                  <ReportsPage />
-                </Suspense>
-              } />
-              <Route path="/inventory/adjustments" element={
-                <Suspense fallback={<LoadingFallback text="Loading adjustments" />}>
-                  <StockAdjustments />
-                </Suspense>
-              } />
-              <Route path="/inventory/count" element={
-                <Suspense fallback={<LoadingFallback text="Loading inventory count" />}>
-                  <InventoryCount />
-                </Suspense>
-              } />
-              <Route path="/inventory/expiry" element={
-                <Suspense fallback={<LoadingFallback text="Loading expiry tracking" />}>
-                  <ExpiryTracking />
-                </Suspense>
-              } />
-              <Route path="/inventory/transfer" element={
-                <Suspense fallback={<LoadingFallback text="Loading stock transfer" />}>
-                  <StockTransfer />
-                </Suspense>
-              } />
-              <Route path="/inventory/barcodes" element={
-                <Suspense fallback={<LoadingFallback text="Loading barcode labels" />}>
-                  <BarcodeLabels />
-                </Suspense>
-              } />
-              <Route path="/settings" element={
-                <Suspense fallback={<LoadingFallback text="Loading settings" />}>
-                  <Settings />
-                </Suspense>
-              } />
-              <Route path="/settings/audit" element={
-                <Suspense fallback={<LoadingFallback text="Loading audit log" />}>
-                  <AuditLogPage />
-                </Suspense>
-              } />
-              <Route path="/settings/locations" element={
-                <Suspense fallback={<LoadingFallback text="Loading locations" />}>
-                  <LocationsPage />
-                </Suspense>
-              } />
+              <Route path="/" element={<Page component={Dashboard} text="Loading dashboard" permission="dashboard.view" />} />
+              <Route path="/pos" element={<Page component={POS} text="Loading POS system" permission="pos.access" />} />
+              <Route path="/inventory/categories" element={<Page component={Categories} text="Loading categories" permission="categories.view" />} />
+              <Route path="/inventory/items" element={<Page component={Items} text="Loading items" permission="inventory.view" />} />
+              <Route path="/inventory/alerts" element={<Page component={Alerts} text="Loading alerts" permission="inventory.view" />} />
+              <Route path="/vendors" element={<Page component={Vendors} text="Loading vendors" permission="vendors.view" />} />
+              <Route path="/vendors/:id/ledger" element={<Page component={VendorLedgerPage} text="Loading ledger" permission="vendors.view" />} />
+              <Route path="/purchases/new" element={<Page component={NewPurchase} text="Loading new purchase" permission="procurement.create" />} />
+              <Route path="/purchases" element={<Page component={Purchases} text="Loading purchases" permission="procurement.view" />} />
+              <Route path="/purchases/:id" element={<Page component={Purchases} text="Loading purchase" permission="procurement.view" />} />
+              <Route path="/purchases/:id/return" element={<Page component={PurchaseReturnPage} text="Loading return" permission="procurement.view" />} />
+              <Route path="/customers" element={<Page component={Customers} text="Loading customers" permission="customers.view" />} />
+              <Route path="/customers/:id/ledger" element={<Page component={CustomerLedger} text="Loading customer ledger" permission="customers.view" />} />
+              <Route path="/expenses" element={<Page component={Expenses} text="Loading expenses" permission="expenses.view" />} />
+              <Route path="/transactions" element={<Page component={Transactions} text="Loading transactions" permission="inventory.view" />} />
+              <Route path="/reports/performance" element={<Page component={PerformancePage} text="Loading performance analytics" permission="reports.performance" />} />
+              <Route path="/inventory/valuation" element={<Page component={ValuationPage} text="Calculating valuation" permission="inventory.view" />} />
+              <Route path="/reports" element={<Page component={ReportsPage} text="Loading reports" permission="reports.view" />} />
+              <Route path="/inventory/adjustments" element={<Page component={StockAdjustments} text="Loading adjustments" permission="inventory.adjust_stock" />} />
+              <Route path="/inventory/count" element={<Page component={InventoryCount} text="Loading inventory count" permission="inventory.view" />} />
+              <Route path="/inventory/expiry" element={<Page component={ExpiryTracking} text="Loading expiry tracking" permission="inventory.view" />} />
+              <Route path="/inventory/transfer" element={<Page component={StockTransfer} text="Loading stock transfer" permission="inventory.transfer" />} />
+              <Route path="/inventory/barcodes" element={<Page component={BarcodeLabels} text="Loading barcode labels" permission="inventory.view" />} />
+              <Route path="/settings" element={<Page component={Settings} text="Loading settings" permission="settings.view" />} />
+              <Route path="/settings/audit" element={<Page component={AuditLogPage} text="Loading audit log" permission="audit.view" />} />
+              <Route path="/settings/locations" element={<Page component={LocationsPage} text="Loading locations" permission="settings.view" />} />
+              <Route path="/settings/team" element={<Page component={TeamPage} text="Loading team" permission="settings.team" />} />
+              <Route path="/settings/invite" element={<Page component={InvitePage} text="Loading invite" permission="settings.invites" />} />
+              <Route path="/settings/organization" element={<Page component={OrgSettingsPage} text="Loading org settings" permission="settings.org" />} />
             </Route>
           </Routes>
         </TourProvider>

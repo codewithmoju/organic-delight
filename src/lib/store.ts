@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { auth as firebaseAuth } from './firebase';
 import { signOut as firebaseSignOut, User } from 'firebase/auth';
 import { Profile } from './types';
+import type { Organization, OrganizationMember } from './types/org';
 import { clearKnownSessionStorage, createScopedZustandStorage } from './utils/storageScope';
 import { invalidateItemsCache } from './api/items';
 import { clearTransactionsCache } from './api/transactions';
@@ -12,9 +13,13 @@ interface AuthState {
   user: User | null;
   profile: Profile | null;
   isInitialized: boolean;
+  activeOrganization: Organization | null;
+  membership: OrganizationMember | null;
   setUser: (user: User | null) => void;
   setProfile: (profile: Profile | null) => void;
   setInitialized: (initialized: boolean) => void;
+  setActiveOrganization: (org: Organization | null) => void;
+  setMembership: (member: OrganizationMember | null) => void;
   signOut: () => Promise<void>;
 }
 
@@ -31,9 +36,13 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       profile: null,
       isInitialized: false,
+      activeOrganization: null,
+      membership: null,
       setUser: (user) => set({ user }),
       setProfile: (profile) => set({ profile }),
       setInitialized: (isInitialized) => set({ isInitialized }),
+      setActiveOrganization: (activeOrganization) => set({ activeOrganization }),
+      setMembership: (membership) => set({ membership }),
       signOut: async () => {
         const uid =
           firebaseAuth.currentUser?.uid ??
@@ -42,13 +51,13 @@ export const useAuthStore = create<AuthState>()(
           null;
         await firebaseSignOut(firebaseAuth);
         clearSessionCaches(uid ?? undefined);
-        set({ user: null, profile: null });
+        set({ user: null, profile: null, activeOrganization: null, membership: null });
       },
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => createScopedZustandStorage()),
-      partialize: (state) => ({ profile: state.profile }),
+      partialize: (state) => ({ profile: state.profile, activeOrganization: state.activeOrganization }),
     }
   )
 );
