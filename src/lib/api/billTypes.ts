@@ -1,6 +1,7 @@
 import { collection, getDocs, doc, writeBatch, query } from 'firebase/firestore';
 import { db } from '../firebase';
 import { BillType } from '../types';
+import { getOrgSettings } from './orgSettings';
 
 export const DEFAULT_BILL_TYPES: Omit<BillType, 'id'>[] = [
     {
@@ -39,6 +40,17 @@ export async function getBillTypes(): Promise<BillType[]> {
             id: doc.id,
             ...doc.data()
         } as BillType));
+
+        // Append org-specific custom bill types
+        const orgSettings = await getOrgSettings();
+        if (orgSettings.custom_bill_types) {
+            const existingCodes = new Set(types.map(t => t.code));
+            for (const customType of orgSettings.custom_bill_types) {
+                if (!existingCodes.has(customType.code)) {
+                    types.push({ id: `org_${customType.code}`, ...customType });
+                }
+            }
+        }
 
         // Sort so default is first, then active ones
         return types.sort((a, _b) => (a.is_default ? -1 : 1));

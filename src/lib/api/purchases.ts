@@ -16,6 +16,7 @@ import { db } from '../firebase';
 import { Purchase, PurchaseItem } from '../types';
 import { generatePurchaseNumber } from './vendors';
 import { requireCurrentUserId } from './userScope';
+import { stampOrgId, getOrgScopeFilter } from './orgScope';
 
 // ============================================
 // PURCHASE CRUD OPERATIONS
@@ -72,7 +73,8 @@ export async function createPurchase(purchaseData: {
         purchase_date: purchaseData.purchase_date,
         created_at: new Date(),
         created_by: userId,
-        notes: purchaseData.notes || null
+        notes: purchaseData.notes || null,
+        ...stampOrgId({}),
     });
 
     try {
@@ -127,7 +129,8 @@ export async function createPurchase(purchaseData: {
                     created_at: Timestamp.fromDate(new Date()),
                     purchase_id: purchaseRef.id,
                     expiry_date: data.expiry_date ? Timestamp.fromDate(data.expiry_date) : null,
-                    shelf_location: data.shelf_location || null
+                    shelf_location: data.shelf_location || null,
+                    ...stampOrgId({}),
                 });
 
                 // Update item
@@ -198,7 +201,8 @@ export async function createPurchase(purchaseData: {
                     created_at: Timestamp.fromDate(new Date()),
                     purchase_id: purchaseRef.id,
                     expiry_date: item.expiry_date ? Timestamp.fromDate(item.expiry_date) : null,
-                    shelf_location: item.shelf_location || null
+                    shelf_location: item.shelf_location || null,
+                    ...stampOrgId({}),
                 });
             }
 
@@ -238,9 +242,9 @@ export function auditPurchaseCreated(purchase: { id: string; purchase_number: st
  * I will implement getPurchases matching the file purpose)
  */
 export async function getPurchases(startDate?: Date, endDate?: Date): Promise<Purchase[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const purchasesRef = collection(db, 'purchases');
-    let q = query(purchasesRef, where('created_by', '==', userId), orderBy('purchase_date', 'desc'));
+    let q = query(purchasesRef, where(scope.field, '==', scope.value), orderBy('purchase_date', 'desc'));
 
     if (startDate) {
         q = query(q, where('purchase_date', '>=', Timestamp.fromDate(startDate)));
@@ -277,11 +281,11 @@ export async function getPurchase(id: string): Promise<Purchase | null> {
 }
 
 export async function getPurchasesByVendor(vendorId: string): Promise<Purchase[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const purchasesRef = collection(db, 'purchases');
     const q = query(
         purchasesRef,
-        where('created_by', '==', userId),
+        where(scope.field, '==', scope.value),
         where('vendor_id', '==', vendorId),
         orderBy('purchase_date', 'desc')
     );

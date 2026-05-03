@@ -14,6 +14,7 @@ import {
 import { db } from '../firebase';
 import { Vendor, VendorPayment } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
+import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
 
 // ============================================
 // VENDOR CRUD OPERATIONS
@@ -23,12 +24,12 @@ import { requireCurrentUserId, assertOwnership } from './userScope';
  * Get all vendors with their outstanding balances
  */
 export async function getVendors(): Promise<Vendor[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     try {
         const vendorsRef = collection(db, 'vendors');
         // Simplified query: remove 'is_active' filter from server query to avoid index requirement
         // We'll filter client-side instead.
-        const q = query(vendorsRef, where('created_by', '==', userId), orderBy('name'));
+        const q = query(vendorsRef, where(scope.field, '==', scope.value), orderBy('name'));
         const snapshot = await getDocs(q);
 
         const vendors = snapshot.docs.map(doc => ({
@@ -53,9 +54,9 @@ export async function getVendors(): Promise<Vendor[]> {
  * Get all vendors including inactive ones
  */
 export async function getAllVendors(): Promise<Vendor[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const vendorsRef = collection(db, 'vendors');
-    const q = query(vendorsRef, where('created_by', '==', userId), orderBy('name'));
+    const q = query(vendorsRef, where(scope.field, '==', scope.value), orderBy('name'));
     const snapshot = await getDocs(q);
 
     return snapshot.docs.map(doc => ({
@@ -110,7 +111,8 @@ export async function createVendor(vendorData: {
         total_purchases: 0,
         is_active: true,
         created_at: Timestamp.fromDate(new Date()),
-        updated_at: Timestamp.fromDate(new Date())
+        updated_at: Timestamp.fromDate(new Date()),
+        ...stampOrgId({}),
     };
 
     const docRef = await addDoc(vendorsRef, newVendor);
@@ -214,11 +216,11 @@ export async function deleteVendor(vendorId: string): Promise<void> {
  * Get vendor payment history (ledger)
  */
 export async function getVendorLedger(vendorId: string): Promise<VendorPayment[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const paymentsRef = collection(db, 'vendor_payments');
     const q = query(
         paymentsRef,
-        where('created_by', '==', userId),
+        where(scope.field, '==', scope.value),
         where('vendor_id', '==', vendorId),
         orderBy('payment_date', 'desc')
     );
@@ -268,10 +270,11 @@ export async function recordVendorPayment(paymentData: {
         // Create payment record
         const paymentRef = doc(collection(db, 'vendor_payments'));
         const paymentRecord = {
-            ...paymentData,
+            ...stripUndefined(paymentData),
             created_by: userId,
             payment_date: Timestamp.fromDate(paymentData.payment_date),
-            created_at: Timestamp.fromDate(new Date())
+            created_at: Timestamp.fromDate(new Date()),
+            ...stampOrgId({}),
         };
 
         transaction.set(paymentRef, paymentRecord);

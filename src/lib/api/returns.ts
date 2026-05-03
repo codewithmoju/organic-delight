@@ -7,6 +7,7 @@ import {
 import { db } from '../firebase';
 import { POSReturn, ReturnItem, POSTransaction } from '../types';
 import { assertOwnership, requireCurrentUserId } from './userScope';
+import { stampOrgId } from './orgScope';
 
 /**
  * Process a full or partial return for a POS transaction
@@ -65,7 +66,8 @@ export async function processPOSReturn(returnData: {
             refund_method: returnData.refund_method,
             reason: returnData.reason,
             created_at: new Date(),
-            created_by: userId
+            created_by: userId,
+            ...stampOrgId({}),
         };
 
         transaction.set(returnRef, {
@@ -107,7 +109,8 @@ export async function processPOSReturn(returnData: {
                 created_by: userId,
                 created_at: Timestamp.fromDate(new Date()),
                 pos_return_id: returnRef.id,
-                pos_transaction_id: returnData.original_transaction_id
+                pos_transaction_id: returnData.original_transaction_id,
+                ...stampOrgId({}),
             });
         }
 
@@ -187,7 +190,8 @@ export async function voidTransaction(transactionId: string, reason: string, _us
                 notes: `Voided Transaction #${posTransaction.transaction_number}. Reason: ${reason}`,
                 created_by: currentUserId,
                 created_at: Timestamp.fromDate(new Date()),
-                pos_transaction_id: transactionId
+                pos_transaction_id: transactionId,
+                ...stampOrgId({}),
             });
         }
     });

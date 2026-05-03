@@ -1,6 +1,7 @@
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { requireCurrentUserId } from './userScope';
+import { getOrgScopeFilter } from './orgScope';
 
 // Sales by product: aggregate POS transactions by item
 export async function getSalesByProduct(startDate: Date, endDate: Date) {
@@ -40,12 +41,13 @@ export async function getSalesByProduct(startDate: Date, endDate: Date) {
 export async function getSalesByCategory(startDate: Date, endDate: Date) {
   const userId = requireCurrentUserId();
   // Get all items to map item_id -> category
-  const itemsSnap = await getDocs(query(collection(db, 'items'), where('created_by', '==', userId)));
+  const scope = getOrgScopeFilter();
+  const itemsSnap = await getDocs(query(collection(db, 'items'), where(scope.field, '==', scope.value)));
   const categoryMap: Record<string, string> = {};
   itemsSnap.docs.forEach(d => { categoryMap[d.id] = d.data().category_id || 'Uncategorized'; });
 
   // Get categories for names
-  const catsSnap = await getDocs(query(collection(db, 'categories'), where('created_by', '==', userId)));
+  const catsSnap = await getDocs(query(collection(db, 'categories'), where(scope.field, '==', scope.value)));
   const catNames: Record<string, string> = {};
   catsSnap.docs.forEach(d => { catNames[d.id] = d.data().name || d.id; });
 
@@ -76,6 +78,7 @@ export async function getSalesByCategory(startDate: Date, endDate: Date) {
 // P&L statement
 export async function getProfitLossStatement(startDate: Date, endDate: Date) {
   const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
 
   const [txSnap, expSnap, purchSnap] = await Promise.all([
     getDocs(query(
@@ -86,13 +89,13 @@ export async function getProfitLossStatement(startDate: Date, endDate: Date) {
     )),
     getDocs(query(
       collection(db, 'expenses'),
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('expense_date', '>=', Timestamp.fromDate(startDate)),
       where('expense_date', '<=', Timestamp.fromDate(endDate))
     )),
     getDocs(query(
       collection(db, 'purchases'),
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('purchase_date', '>=', Timestamp.fromDate(startDate)),
       where('purchase_date', '<=', Timestamp.fromDate(endDate))
     )),
@@ -172,11 +175,12 @@ export async function getInventoryAging(days: number = 30) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
 
+  const scope = getOrgScopeFilter();
   const [itemsSnap, txSnap] = await Promise.all([
-    getDocs(query(collection(db, 'items'), where('created_by', '==', userId))),
+    getDocs(query(collection(db, 'items'), where(scope.field, '==', scope.value))),
     getDocs(query(
       collection(db, 'transactions'),
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('type', '==', 'stock_out'),
       where('transaction_date', '>=', Timestamp.fromDate(cutoff))
     )),
@@ -200,8 +204,8 @@ export async function getInventoryAging(days: number = 30) {
 
 // Customer credit aging
 export async function getCustomerCreditAging() {
-  const userId = requireCurrentUserId();
-  const snap = await getDocs(query(collection(db, 'customers'), where('created_by', '==', userId)));
+  const scope = getOrgScopeFilter();
+  const snap = await getDocs(query(collection(db, 'customers'), where(scope.field, '==', scope.value)));
   return snap.docs
     .map(d => ({ id: d.id, ...d.data(), created_at: d.data().created_at?.toDate?.() || new Date(), updated_at: d.data().updated_at?.toDate?.() || new Date() }))
     .filter((c: any) => c.is_active !== false && c.outstanding_balance > 0)
@@ -210,8 +214,8 @@ export async function getCustomerCreditAging() {
 
 // Vendor payment aging
 export async function getVendorPaymentAging() {
-  const userId = requireCurrentUserId();
-  const snap = await getDocs(query(collection(db, 'vendors'), where('created_by', '==', userId)));
+  const scope = getOrgScopeFilter();
+  const snap = await getDocs(query(collection(db, 'vendors'), where(scope.field, '==', scope.value)));
   return snap.docs
     .map(d => ({ id: d.id, ...d.data(), created_at: d.data().created_at?.toDate?.() || new Date(), updated_at: d.data().updated_at?.toDate?.() || new Date() }))
     .filter((v: any) => v.is_active !== false && v.outstanding_balance > 0)

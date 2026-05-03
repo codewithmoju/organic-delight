@@ -18,6 +18,15 @@ import { db } from '../firebase';
 import { CartItem, BarcodeProduct, POSTransaction, POSSettings, BillType, SalesReport } from '../types';
 import { DEFAULT_POS_SETTINGS } from '../constants/defaults';
 import { requireCurrentUserId, assertOwnership } from './userScope';
+import { stampOrgId, getOrgScopeFilter } from './orgScope';
+
+function resolveBasePrice(data: any): number {
+  return Number(data?.base_price ?? data?.purchase_rate ?? data?.average_unit_cost ?? 0) || 0;
+}
+
+function resolveSellingPrice(data: any): number {
+  return Number(data?.selling_price ?? data?.unit_price ?? data?.sale_rate ?? 0) || 0;
+}
 
 // POS Transaction Management
 export async function createPOSTransaction(transactionData: {
@@ -74,7 +83,8 @@ export async function createPOSTransaction(transactionData: {
     bill_type: transactionData.bill_type?.code || 'regular',
     affects_inventory: affectsInventory,
     affects_accounting: affectsAccounting,
-    is_return: transactionData.is_return || false
+    is_return: transactionData.is_return || false,
+    ...stampOrgId({}),
   });
 
   try {
@@ -137,7 +147,8 @@ export async function createPOSTransaction(transactionData: {
             reference_type: 'pos_sale',
             notes: `POS ${transactionData.is_return ? 'Return' : 'Sale'} - ${transactionNumber}`,
             created_by: userId,
-            created_at: Timestamp.fromDate(new Date())
+            created_at: Timestamp.fromDate(new Date()),
+            ...stampOrgId({}),
           });
         }
       }
@@ -179,7 +190,8 @@ export async function createPOSTransaction(transactionData: {
             reference_type: 'pos_sale',
             notes: `POS ${transactionData.is_return ? 'Return' : 'Sale'} (Offline) - ${transactionNumber}`,
             created_by: userId,
-            created_at: Timestamp.fromDate(new Date())
+            created_at: Timestamp.fromDate(new Date()),
+            ...stampOrgId({}),
           });
         }
       }
@@ -254,8 +266,10 @@ export async function cancelPOSTransaction(transactionId: string, reason: string
         supplier_customer: 'Return/Cancellation',
         reference_number: `CANCEL-${posTransaction.transaction_number}`,
         notes: `Cancelled POS Transaction - ${reason}`,
+        created_by: userId,
         created_at: Timestamp.fromDate(new Date()),
-        pos_transaction_id: transactionId
+        pos_transaction_id: transactionId,
+        ...stampOrgId({}),
       });
 
       if (posTransaction.affects_inventory !== false) {
@@ -270,12 +284,12 @@ export async function cancelPOSTransaction(transactionId: string, reason: string
 
 // Barcode Product Lookup
 export async function getProductByBarcode(barcode: string): Promise<BarcodeProduct | null> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   try {
     const itemsRef = collection(db, 'items');
     const q = query(
       itemsRef,
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('barcode', '==', String(barcode)),
       limit(1)
     );
@@ -292,7 +306,9 @@ export async function getProductByBarcode(barcode: string): Promise<BarcodeProdu
       id: itemDoc.id,
       name: itemData.name,
       barcode: itemData.barcode,
-      price: itemData.unit_price || itemData.sale_rate || 0,
+      price: resolveSellingPrice(itemData),
+      selling_price: resolveSellingPrice(itemData),
+      base_price: resolveBasePrice(itemData),
       stock: currentStock,
       category: itemData.category?.name
     };
@@ -318,7 +334,7 @@ export async function getItemCurrentStock(itemId: string): Promise<number> {
 
 // Search products
 export async function searchProducts(searchQuery: string): Promise<BarcodeProduct[]> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const normalizedQuery = String(searchQuery || '').trim();
   if (!normalizedQuery) {
     return [];
@@ -327,7 +343,7 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
   const itemsRef = collection(db, 'items');
   const exactBarcodeQuery = query(
     itemsRef,
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     where('barcode', '==', normalizedQuery),
     limit(10)
   );
@@ -342,7 +358,9 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
         id: itemDoc.id,
         name: String(itemData.name || ''),
         barcode: String(itemData.barcode || ''),
-        price: itemData.unit_price || itemData.sale_rate || 0,
+        price: resolveSellingPrice(itemData),
+        selling_price: resolveSellingPrice(itemData),
+        base_price: resolveBasePrice(itemData),
         stock: itemData.current_quantity ?? 0,
         category: itemData.category?.name
       } as BarcodeProduct;
@@ -353,7 +371,7 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
     return barcodeMatches.slice(0, 20);
   }
 
-  const q = query(itemsRef, where('created_by', '==', userId), limit(250));
+  const q = query(itemsRef, where(scope.field, '==', scope.value), limit(250));
   const snapshot = await getDocs(q);
 
   const products: BarcodeProduct[] = [];
@@ -361,7 +379,7 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
 
   for (const itemDoc of snapshot.docs) {
     const itemData = itemDoc.data() as any;
-    if (itemData.created_by !== userId || itemData.is_archived === true) {
+    if (itemData.is_archived === true) {
       continue;
     }
 
@@ -379,7 +397,9 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
         id: itemDoc.id,
         name,
         barcode,
-        price: itemData.unit_price || itemData.sale_rate || 0,
+        price: resolveSellingPrice(itemData),
+        selling_price: resolveSellingPrice(itemData),
+        base_price: resolveBasePrice(itemData),
         stock: itemData.current_quantity ?? 0,
         category: itemData.category?.name
       });
@@ -431,7 +451,9 @@ export async function getQuickAccessProducts(itemIds: string[]): Promise<Barcode
           id: snap.id,
           name: data.name,
           barcode: data.barcode,
-          price: data.unit_price || data.sale_rate || 0,
+          price: resolveSellingPrice(data),
+          selling_price: resolveSellingPrice(data),
+          base_price: resolveBasePrice(data),
           stock: data.current_quantity || 0,
           category: data.category_id
         } as BarcodeProduct;
@@ -520,9 +542,9 @@ export async function addBarcodeToItem(itemId: string, barcode: string): Promise
 
 // Get items with barcodes
 export async function getItemsWithBarcodes(): Promise<BarcodeProduct[]> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where('created_by', '==', userId));
+  const q = query(itemsRef, where(scope.field, '==', scope.value));
   const snapshot = await getDocs(q);
 
   return snapshot.docs
@@ -533,7 +555,9 @@ export async function getItemsWithBarcodes(): Promise<BarcodeProduct[]> {
       id: doc.id,
       name: data.name,
       barcode: data.barcode,
-      price: data.unit_price || data.sale_rate || 0,
+      price: resolveSellingPrice(data),
+      selling_price: resolveSellingPrice(data),
+      base_price: resolveBasePrice(data),
       stock: data.current_quantity || 0,
       category: data.category_id
     };

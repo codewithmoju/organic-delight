@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getCurrentUserId } from './userScope';
+import { getOrgIdOrNull, getOrgScopeFilter } from './orgScope';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,8 @@ export async function logAudit(params: {
     const userId = getCurrentUserId();
     if (!userId) return;
 
+    const orgId = getOrgIdOrNull();
+
     await addDoc(collection(db, 'audit_logs'), {
       user_id: userId,
       user_name: params.user_name || null,
@@ -65,6 +68,7 @@ export async function logAudit(params: {
       details: params.details || null,
       metadata: params.metadata || null,
       created_at: Timestamp.fromDate(new Date()),
+      ...(orgId ? { organization_id: orgId } : {}),
     });
   } catch (err) {
     // Audit logging must never break the main flow
@@ -86,7 +90,8 @@ export async function getAuditLogs(filters: AuditFilters = {}): Promise<AuditEnt
 
   try {
     const ref = collection(db, 'audit_logs');
-    let q = query(ref, where('user_id', '==', userId), orderBy('created_at', 'desc'));
+    const scope = getOrgScopeFilter();
+    let q = query(ref, where(scope.field, '==', scope.value), orderBy('created_at', 'desc'));
 
     if (filters.limitCount) {
       q = query(q, limit(filters.limitCount));

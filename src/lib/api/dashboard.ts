@@ -11,6 +11,7 @@ import { TimePeriod } from '../../components/dashboard/TimePeriodFilter';
 import { getDateRangeForPeriod } from '../utils/dateFilters';
 import { DashboardMetrics } from '../types';
 import { requireCurrentUserId } from './userScope';
+import { getOrgScopeFilter } from './orgScope';
 import { readScopedJSON, writeScopedJSON, removeScopedKey } from '../utils/storageScope';
 
 // In-memory cache for dashboard data
@@ -65,9 +66,10 @@ export async function getDashboardMetricsAndTrends(period: TimePeriod): Promise<
 
   const { start, end } = getDateRangeForPeriod(period);
 
+  const scope = getOrgScopeFilter();
   const q = query(
     collection(db, 'transactions'),
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     where('transaction_date', '>=', Timestamp.fromDate(start)),
     where('transaction_date', '<=', Timestamp.fromDate(end)),
     orderBy('transaction_date', 'desc')
@@ -154,7 +156,8 @@ export async function getStockLevels() {
     return persisted;
   }
 
-  const itemsSnapshot = await getDocs(query(collection(db, 'items'), where('created_by', '==', userId)));
+  const scope = getOrgScopeFilter();
+  const itemsSnapshot = await getDocs(query(collection(db, 'items'), where(scope.field, '==', scope.value)));
 
   const stockLevels: any[] = [];
   for (const itemDoc of itemsSnapshot.docs) {
@@ -197,21 +200,22 @@ export async function getDashboardWidgetData(period: TimePeriod) {
   const { start, end } = getDateRangeForPeriod(period);
 
   // ── Parallel fetches ──────────────────────────────────────────────────
+  const scope = getOrgScopeFilter();
   const [expensesSnap, purchasesSnap, vendorsSnap, customersSnap] = await Promise.all([
     getDocs(query(
       collection(db, 'expenses'),
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('expense_date', '>=', Timestamp.fromDate(start)),
       where('expense_date', '<=', Timestamp.fromDate(end))
     )),
     getDocs(query(
       collection(db, 'purchases'),
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('purchase_date', '>=', Timestamp.fromDate(start)),
       where('purchase_date', '<=', Timestamp.fromDate(end))
     )),
-    getDocs(query(collection(db, 'vendors'), where('created_by', '==', userId), orderBy('outstanding_balance', 'desc'))),
-    getDocs(query(collection(db, 'customers'), where('created_by', '==', userId), orderBy('outstanding_balance', 'desc'))),
+    getDocs(query(collection(db, 'vendors'), where(scope.field, '==', scope.value), orderBy('outstanding_balance', 'desc'))),
+    getDocs(query(collection(db, 'customers'), where(scope.field, '==', scope.value), orderBy('outstanding_balance', 'desc'))),
   ]);
 
   // ── Expenses ──────────────────────────────────────────────────────────

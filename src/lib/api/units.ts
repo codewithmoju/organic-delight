@@ -1,5 +1,6 @@
 import { collection, getDocs, doc, writeBatch, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { getOrgSettings } from './orgSettings';
 
 export interface Unit {
     id: string;
@@ -49,6 +50,17 @@ export async function getUnits(): Promise<Unit[]> {
                 merged.push(unit);
             }
         });
+
+        // Append org-specific custom units
+        const orgSettings = await getOrgSettings();
+        if (orgSettings.custom_units) {
+            const existingSymbols = new Set(merged.map(u => u.symbol.toLowerCase()));
+            for (const customUnit of orgSettings.custom_units) {
+                if (!existingSymbols.has(customUnit.symbol.toLowerCase())) {
+                    merged.push({ id: `org_${customUnit.symbol.toLowerCase()}`, ...customUnit, order: customUnit.order ?? 200 });
+                }
+            }
+        }
 
         // Sort: defaults by order, custom units at the end alphabetically
         return merged.sort((a, b) => {

@@ -8,6 +8,7 @@ import {
 import { db } from '../firebase';
 import { Transaction } from '../types';
 import { requireCurrentUserId } from './userScope';
+import { getOrgScopeFilter } from './orgScope';
 
 export interface ValuationBatch {
     quantity: number;
@@ -29,14 +30,14 @@ export interface ItemValuation {
  * or LIFO (Last-In First-Out) methods.
  */
 export async function calculateInventoryValuation(method: 'FIFO' | 'LIFO' = 'FIFO') {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     // 1. Get all movements
     const transactionsRef = collection(db, 'transactions');
     const itemsRef = collection(db, 'items');
 
     const [itemsSnap, transactionsSnap] = await Promise.all([
-        getDocs(query(itemsRef, where('created_by', '==', userId), orderBy('name', 'asc'))),
-        getDocs(query(transactionsRef, where('created_by', '==', userId), orderBy('transaction_date', 'asc')))
+        getDocs(query(itemsRef, where(scope.field, '==', scope.value), orderBy('name', 'asc'))),
+        getDocs(query(transactionsRef, where(scope.field, '==', scope.value), orderBy('transaction_date', 'asc')))
     ]);
 
     const itemsMap = new Map();

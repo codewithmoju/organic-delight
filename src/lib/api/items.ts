@@ -18,6 +18,7 @@ import {
 import { db } from '../firebase';
 import { Item, StockLevel } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
+import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
 
 // Simple cache for frequently accessed data
 const itemsCache = new Map<string, { data: any; timestamp: number }>();
@@ -31,14 +32,36 @@ function isCacheValid(timestamp: number): boolean {
   return Date.now() - timestamp < CACHE_DURATION;
 }
 
+function derivePricing(data: any): { base_price: number; selling_price: number } {
+  const base_price = Number(
+    data?.base_price ??
+    data?.purchase_rate ??
+    data?.average_unit_cost ??
+    0
+  ) || 0;
+  const selling_price = Number(
+    data?.selling_price ??
+    data?.unit_price ??
+    data?.sale_rate ??
+    0
+  ) || 0;
+  return { base_price, selling_price };
+}
+
 function mapItemSnapshot(docSnapshot: DocumentSnapshot): Item {
   const data = docSnapshot.data() as any;
+  const { base_price, selling_price } = derivePricing(data);
   return {
     id: docSnapshot.id,
     ...data,
     current_quantity: data.current_quantity ?? 0,
     average_unit_cost: data.average_unit_cost ?? 0,
     total_value: (data.current_quantity ?? 0) * (data.average_unit_cost ?? 0),
+    base_price,
+    selling_price,
+    unit_price: selling_price,
+    sale_rate: selling_price,
+    purchase_rate: base_price,
     created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now()),
     updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : new Date(data.updated_at || Date.now())
   } as Item;
@@ -77,12 +100,12 @@ async function hydrateItemCategories(items: Item[]): Promise<Item[]> {
 }
 
 async function fetchAllItems(categoryId?: string): Promise<Item[]> {
-  const userId = requireCurrentUserId();
-  let itemsQuery = query(collection(db, 'items'), where('created_by', '==', userId));
+  const scope = getOrgScopeFilter();
+  let itemsQuery = query(collection(db, 'items'), where(scope.field, '==', scope.value));
   if (categoryId) {
     itemsQuery = query(
       collection(db, 'items'),
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('category_id', '==', categoryId)
     );
   }
@@ -104,7 +127,6 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
   if (cached && isCacheValid(cached.timestamp)) {
     return cached.data;
   }
-
   const allItems = await fetchAllItems();
   const items = limitCount ? allItems.slice(0, limitCount) : allItems;
   const result = { items, lastDoc: null };
@@ -179,6 +201,8 @@ export async function createItem(itemData: {
   reorder_point?: number;
   purchase_rate?: number;
   sale_rate?: number;
+  base_price?: number;
+  selling_price?: number;
   created_by: string;
 }): Promise<Item> {
   const userId = requireCurrentUserId();
@@ -186,9 +210,10 @@ export async function createItem(itemData: {
 
   // Check for duplicate item names within the same category
   const itemsRef = collection(db, 'items');
+  const scope = getOrgScopeFilter();
   const existingQuery = query(
     itemsRef,
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     where('category_id', '==', itemData.category_id),
     where('name', '==', itemData.name.trim())
   );
@@ -198,22 +223,28 @@ export async function createItem(itemData: {
     throw new Error('An item with this name already exists in this category');
   }
 
+  const basePrice = Number(itemData.base_price ?? itemData.purchase_rate ?? 0) || 0;
+  const sellingPrice = Number(itemData.selling_price ?? itemData.unit_price ?? itemData.sale_rate ?? 0) || 0;
+
   const docRef = await addDoc(collection(db, 'items'), {
     ...itemData,
     name: itemData.name.trim(),
     unit: itemData.unit || 'pcs',
-    unit_price: itemData.unit_price || itemData.sale_rate || 0,
+    unit_price: sellingPrice,
+    selling_price: sellingPrice,
+    base_price: basePrice,
     barcode: itemData.barcode || null,
     sku: itemData.sku || null,
     supplier: itemData.supplier || null,
     location: itemData.location || null,
     reorder_point: itemData.reorder_point || 10,
-    purchase_rate: itemData.purchase_rate || 0,
-    sale_rate: itemData.sale_rate || 0,
+    purchase_rate: basePrice,
+    sale_rate: sellingPrice,
     created_by: userId,
     is_archived: false,
     created_at: Timestamp.fromDate(new Date()),
-    updated_at: Timestamp.fromDate(new Date())
+    updated_at: Timestamp.fromDate(new Date()),
+    ...stampOrgId({}),
   });
 
   console.log('Item created with ID:', docRef.id);
@@ -235,6 +266,8 @@ export async function updateItem(id: string, itemData: {
   reorder_point?: number;
   purchase_rate?: number;
   sale_rate?: number;
+  base_price?: number;
+  selling_price?: number;
 }): Promise<Item> {
   const userId = requireCurrentUserId();
   // Check for duplicate item names if name or category is being updated
@@ -244,9 +277,10 @@ export async function updateItem(id: string, itemData: {
     const newCategoryId = itemData.category_id || currentItem.category_id;
 
     const itemsRef = collection(db, 'items');
+    const scope = getOrgScopeFilter();
     const existingQuery = query(
       itemsRef,
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('category_id', '==', newCategoryId),
       where('name', '==', newName)
     );
@@ -262,9 +296,40 @@ export async function updateItem(id: string, itemData: {
   const docRef = doc(db, 'items', id);
   const currentDoc = await getDoc(docRef);
   assertOwnership(currentDoc.exists() ? currentDoc.data() : null, 'Item');
+  const currentData = currentDoc.exists() ? currentDoc.data() : {};
+
+  const hasAnyPriceUpdate =
+    itemData.base_price !== undefined ||
+    itemData.selling_price !== undefined ||
+    itemData.unit_price !== undefined ||
+    itemData.sale_rate !== undefined ||
+    itemData.purchase_rate !== undefined;
+  const basePrice = Number(
+    itemData.base_price ??
+    itemData.purchase_rate ??
+    currentData?.base_price ??
+    currentData?.purchase_rate ??
+    0
+  ) || 0;
+  const sellingPrice = Number(
+    itemData.selling_price ??
+    itemData.unit_price ??
+    itemData.sale_rate ??
+    currentData?.selling_price ??
+    currentData?.unit_price ??
+    currentData?.sale_rate ??
+    0
+  ) || 0;
 
   const updateData = {
-    ...itemData,
+    ...stripUndefined(itemData),
+    ...(hasAnyPriceUpdate ? {
+      base_price: basePrice,
+      selling_price: sellingPrice,
+      purchase_rate: basePrice,
+      sale_rate: sellingPrice,
+      unit_price: sellingPrice,
+    } : {}),
     ...(itemData.name && { name: itemData.name.trim() }),
     updated_at: Timestamp.fromDate(new Date())
   };
@@ -283,10 +348,11 @@ export async function deleteItem(id: string): Promise<void> {
 
   // Check if item has transactions
   const transactionsRef = collection(db, 'transactions');
+  const scope = getOrgScopeFilter();
   const transactionsQuery = query(
     transactionsRef,
     where('item_id', '==', id),
-    where('created_by', '==', userId)
+    where(scope.field, '==', scope.value)
   );
   const transactionsSnapshot = await getDocs(transactionsQuery);
 
@@ -307,12 +373,12 @@ export async function deleteItem(id: string): Promise<void> {
 }
 
 export async function getItemStockLevel(itemId: string): Promise<StockLevel | null> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
     where('item_id', '==', itemId),
-    where('created_by', '==', userId)
+    where(scope.field, '==', scope.value)
   );
   const snapshot = await getDocs(q);
 
@@ -374,14 +440,14 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
 }
 
 export async function searchItems(searchQuery: string, categoryId?: string): Promise<Item[]> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const itemsRef = collection(db, 'items');
-  let q = query(itemsRef, where('created_by', '==', userId), limit(300));
+  let q = query(itemsRef, where(scope.field, '==', scope.value), limit(300));
 
   if (categoryId) {
     q = query(
       itemsRef,
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('category_id', '==', categoryId),
       limit(300)
     );
@@ -419,9 +485,9 @@ export async function searchItems(searchQuery: string, categoryId?: string): Pro
 }
 export async function reconcileAllItemsStock(): Promise<{ updated: number; failed: number }> {
   try {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const itemsRef = collection(db, 'items');
-    const snapshot = await getDocs(query(itemsRef, where('created_by', '==', userId)));
+    const snapshot = await getDocs(query(itemsRef, where(scope.field, '==', scope.value)));
     let updatedCount = 0;
     let failedCount = 0;
 
@@ -502,6 +568,7 @@ export async function adjustItemStock(
     created_by: userId,
     created_at: Timestamp.fromDate(new Date()),
     adjustment_type: type,
+    ...stampOrgId({}),
   });
 
   // Invalidate cache so updated quantity is reflected

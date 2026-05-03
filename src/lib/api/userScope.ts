@@ -2,6 +2,7 @@ import { auth } from '../firebase';
 import { useAuthStore } from '../store';
 import { TENANT_ISOLATION_MONITOR_COMPAT, TENANT_ISOLATION_STRICT } from '../constants/tenant';
 import { logAudit } from './auditLog';
+import { getOrgIdOrNull } from './orgScope';
 
 const legacyFallbackAuditSeen = new Set<string>();
 
@@ -33,6 +34,7 @@ export function requireCurrentUserId(): string {
 
 /**
  * Returns true if the document is owned by the current user.
+ * - If org scoping is enabled and doc has organization_id, checks org membership.
  * - If the document has no created_by field (legacy data), treat as owned.
  * - Only returns false when created_by is explicitly set to a DIFFERENT user.
  */
@@ -40,6 +42,13 @@ export function isOwnedByCurrentUser(data: Record<string, any> | undefined): boo
   if (!data) return false;
   const userId = getCurrentUserId();
   if (!userId) return false;
+
+  // Org-scoped ownership: check organization_id
+  const orgId = getOrgIdOrNull();
+  if (orgId && data.organization_id) {
+    return data.organization_id === orgId;
+  }
+
   if (TENANT_ISOLATION_STRICT) {
     if (!data.created_by || data.created_by !== userId) return false;
     return true;
@@ -60,6 +69,22 @@ export function assertOwnership(data: Record<string, any> | undefined, resourceN
   if (!data) throw new Error(`${resourceName} not found`);
   const userId = getCurrentUserId();
   if (!userId) throw new Error('User not authenticated');
+
+  // Org-scoped ownership: check organization_id
+  const orgId = getOrgIdOrNull();
+  if (orgId && data.organization_id) {
+    if (data.organization_id !== orgId) {
+      void logAudit({
+        action: 'security',
+        resource: 'tenant',
+        details: `assertOwnership denied (org): ${resourceName}`,
+        metadata: { expected_org: orgId, doc_org: data.organization_id },
+      });
+      throw new Error(`${resourceName} not found`);
+    }
+    return;
+  }
+
   if (TENANT_ISOLATION_STRICT) {
     if (!data.created_by || data.created_by !== userId) {
       void logAudit({
@@ -91,6 +116,16 @@ export function assertCashierOwnership(data: Record<string, any> | undefined, re
   if (!data) throw new Error(`${resourceName} not found`);
   const userId = getCurrentUserId();
   if (!userId) throw new Error('User not authenticated');
+
+  // Org-scoped ownership: check organization_id first
+  const orgId = getOrgIdOrNull();
+  if (orgId && data.organization_id) {
+    if (data.organization_id !== orgId) {
+      throw new Error(`${resourceName} not found`);
+    }
+    return;
+  }
+
   const owner = data.cashier_id ?? data.created_by;
   if (owner && owner !== userId) {
     throw new Error(`${resourceName} not found`);

@@ -13,11 +13,12 @@ import {
 import { db } from '../firebase';
 import { Category } from '../types';
 import { requireCurrentUserId } from './userScope';
+import { stampOrgId, getOrgScopeFilter } from './orgScope';
 
 export async function getCategories(): Promise<Category[]> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const categoriesRef = collection(db, 'categories');
-  const q = query(categoriesRef, where('created_by', '==', userId), orderBy('name'));
+  const q = query(categoriesRef, where(scope.field, '==', scope.value), orderBy('name'));
   const snapshot = await getDocs(q);
 
   const categories = [];
@@ -29,7 +30,7 @@ export async function getCategories(): Promise<Category[]> {
     const itemsQuery = query(
       itemsRef,
       where('category_id', '==', category.id),
-      where('created_by', '==', userId),
+      where(scope.field, '==', scope.value),
       where('is_archived', '!=', true)
     );
     const itemsSnapshot = await getDocs(itemsQuery);
@@ -67,10 +68,11 @@ export async function createCategory(categoryData: {
   const userId = requireCurrentUserId();
   // Check for duplicate category names
   const categoriesRef = collection(db, 'categories');
+  const scope = getOrgScopeFilter();
   const existingQuery = query(
     categoriesRef,
     where('name', '==', categoryData.name.trim()),
-    where('created_by', '==', userId)
+    where(scope.field, '==', scope.value)
   );
   const existingSnapshot = await getDocs(existingQuery);
 
@@ -84,7 +86,8 @@ export async function createCategory(categoryData: {
     name: categoryData.name.trim(),
     color: categoryData.color || '#6366f1',
     created_at: new Date(),
-    updated_at: new Date()
+    updated_at: new Date(),
+    ...stampOrgId({}),
   });
 
   return {
@@ -108,10 +111,11 @@ export async function updateCategory(id: string, categoryData: {
   // Check for duplicate category names if name is being updated
   if (categoryData.name) {
     const categoriesRef = collection(db, 'categories');
+    const scope = getOrgScopeFilter();
     const existingQuery = query(
       categoriesRef,
       where('name', '==', categoryData.name.trim()),
-      where('created_by', '==', userId)
+      where(scope.field, '==', scope.value)
     );
     const existingSnapshot = await getDocs(existingQuery);
 
@@ -139,10 +143,11 @@ export async function deleteCategory(id: string): Promise<void> {
 
   // Check if category has items (exclude archived/soft-deleted items)
   const itemsRef = collection(db, 'items');
+  const scope = getOrgScopeFilter();
   const itemsQuery = query(
     itemsRef,
     where('category_id', '==', id),
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     where('is_archived', '!=', true)
   );
   const itemsSnapshot = await getDocs(itemsQuery);
@@ -155,12 +160,12 @@ export async function deleteCategory(id: string): Promise<void> {
 }
 
 export async function getCategoryItemCount(categoryId: string): Promise<number> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const itemsRef = collection(db, 'items');
   const q = query(
     itemsRef,
     where('category_id', '==', categoryId),
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     where('is_archived', '!=', true)
   );
   const snapshot = await getDocs(q);

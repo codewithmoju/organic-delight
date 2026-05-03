@@ -15,13 +15,18 @@ import { db } from '../firebase';
 import { Item } from '../types';
 import { invalidateItemsCache } from './items';
 import { requireCurrentUserId } from './userScope';
+import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
 
 export async function createItemWithInitialStock(itemData: {
   name: string;
   description: string;
   category_id: string;
   unit?: string;
-  unit_price: number;
+  unit_price?: number;
+  selling_price?: number;
+  base_price?: number;
+  sale_rate?: number;
+  purchase_rate?: number;
   barcode?: string;
   sku?: string;
   supplier?: string;
@@ -33,7 +38,8 @@ export async function createItemWithInitialStock(itemData: {
 
   // Check for duplicates only within current user's scope.
   const itemsRef = collection(db, 'items');
-  const existingSnapshot = await getDocs(query(itemsRef, where('created_by', '==', userId)));
+  const scope = getOrgScopeFilter();
+  const existingSnapshot = await getDocs(query(itemsRef, where(scope.field, '==', scope.value)));
 
   const normalizedName = itemData.name.trim().toLowerCase();
   const normalizedBarcode = (itemData.barcode || '').trim();
@@ -73,18 +79,27 @@ export async function createItemWithInitialStock(itemData: {
     }
   }
 
+  const basePrice = Number(itemData.base_price ?? itemData.purchase_rate ?? 0) || 0;
+  const sellingPrice = Number(itemData.selling_price ?? itemData.unit_price ?? itemData.sale_rate ?? 0) || 0;
+
   const now = new Date();
   const itemRef = doc(collection(db, 'items'));
   const itemDoc = {
-    ...itemData,
+    ...stripUndefined(itemData),
     created_by: userId,
     name: itemData.name.trim(),
     unit: itemData.unit || 'pcs',
     is_archived: false,
+    base_price: basePrice,
+    selling_price: sellingPrice,
+    purchase_rate: basePrice,
+    sale_rate: sellingPrice,
+    unit_price: sellingPrice,
     created_at: Timestamp.fromDate(now),
     updated_at: Timestamp.fromDate(now),
     current_quantity: initialStock || 0,
-    total_value: (initialStock || 0) * itemData.unit_price
+    total_value: (initialStock || 0) * sellingPrice,
+    ...stampOrgId({}),
   };
 
   const batch = writeBatch(db);
@@ -96,14 +111,15 @@ export async function createItemWithInitialStock(itemData: {
       item_id: itemRef.id,
       type: 'stock_in',
       quantity: initialStock,
-      unit_price: itemData.unit_price,
-      total_value: initialStock * itemData.unit_price,
+      unit_price: basePrice,
+      total_value: initialStock * basePrice,
       transaction_date: Timestamp.fromDate(now),
       supplier_customer: itemData.supplier || 'Initial Stock',
       reference_number: `INIT-${itemRef.id.slice(-6).toUpperCase()}`,
       notes: 'Initial stock entry during product creation',
       created_by: userId,
-      created_at: Timestamp.fromDate(now)
+      created_at: Timestamp.fromDate(now),
+      ...stampOrgId({})
     });
   }
 
@@ -123,10 +139,10 @@ export async function createItemWithInitialStock(itemData: {
 }
 
 export async function getItemByBarcode(barcode: string): Promise<Item | null> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('created_by', '==', userId), where('barcode', '==', barcode));
+    const q = query(itemsRef, where(scope.field, '==', scope.value), where('barcode', '==', barcode));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
@@ -155,10 +171,10 @@ export async function getItemByBarcode(barcode: string): Promise<Item | null> {
 }
 
 export async function getItemByProductId(productId: string): Promise<Item | null> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('created_by', '==', userId), where('sku', '==', productId));
+    const q = query(itemsRef, where(scope.field, '==', scope.value), where('sku', '==', productId));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
@@ -187,10 +203,10 @@ export async function getItemByProductId(productId: string): Promise<Item | null
 }
 
 export async function searchItemsEnhanced(searchQuery: string, searchType: 'name' | 'barcode' | 'sku' = 'name'): Promise<Item[]> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('created_by', '==', userId), orderBy('name'));
+    const q = query(itemsRef, where(scope.field, '==', scope.value), orderBy('name'));
 
     const snapshot = await getDocs(q);
 

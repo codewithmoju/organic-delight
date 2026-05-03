@@ -14,6 +14,7 @@ import {
 import { db } from '../firebase';
 import { Expense, ExpenseCategory } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
+import { stampOrgId, getOrgScopeFilter } from './orgScope';
 import { stripUndefined } from '../utils/firestore';
 
 // ============================================
@@ -36,17 +37,20 @@ export async function recordExpense(expenseData: {
     const userId = requireCurrentUserId();
     const expensesRef = collection(db, 'expenses');
 
-    const newExpense: Record<string, any> = stripUndefined({
-        category: expenseData.category,
-        description: expenseData.description,
-        amount: expenseData.amount,
-        payment_method: expenseData.payment_method,
-        created_by: userId,
-        expense_date: Timestamp.fromDate(expenseData.expense_date),
-        created_at: Timestamp.fromDate(new Date()),
-        reference_number: expenseData.reference_number || null,
-        notes: expenseData.notes || null,
-    });
+    const newExpense: Record<string, any> = {
+        ...stripUndefined({
+            category: expenseData.category,
+            description: expenseData.description,
+            amount: expenseData.amount,
+            payment_method: expenseData.payment_method,
+            created_by: userId,
+            expense_date: Timestamp.fromDate(expenseData.expense_date),
+            created_at: Timestamp.fromDate(new Date()),
+            reference_number: expenseData.reference_number || null,
+            notes: expenseData.notes || null,
+        }),
+        ...stampOrgId({}),
+    };
 
     const docRef = await addDoc(expensesRef, newExpense);
 
@@ -73,9 +77,9 @@ export async function recordExpense(expenseData: {
  * Get expenses for a date range
  */
 export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Expense[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const expensesRef = collection(db, 'expenses');
-    let q = query(expensesRef, where('created_by', '==', userId), orderBy('expense_date', 'desc'));
+    let q = query(expensesRef, where(scope.field, '==', scope.value), orderBy('expense_date', 'desc'));
 
     if (startDate) {
         q = query(q, where('expense_date', '>=', Timestamp.fromDate(startDate)));
@@ -106,11 +110,11 @@ export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Exp
  * Get expenses by category
  */
 export async function getExpensesByCategory(category: ExpenseCategory): Promise<Expense[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const expensesRef = collection(db, 'expenses');
     const q = query(
         expensesRef,
-        where('created_by', '==', userId),
+        where(scope.field, '==', scope.value),
         where('category', '==', category),
         orderBy('expense_date', 'desc')
     );

@@ -15,6 +15,7 @@ import {
 import { db } from '../firebase';
 import { Transaction } from '../types';
 import { requireCurrentUserId } from './userScope';
+import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
 
 // Cache for transaction data
 const transactionsCache = new Map<string, { data: any; timestamp: number }>();
@@ -24,7 +25,7 @@ function isCacheValid(timestamp: number): boolean {
   return Date.now() - timestamp < CACHE_DURATION;
 }
 export async function getTransactions(limitCount?: number, lastDoc?: DocumentSnapshot) {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const cacheKey = `transactions-${limitCount || 'all'}-${lastDoc?.id || 'start'}`;
   const cached = transactionsCache.get(cacheKey);
 
@@ -35,7 +36,7 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
   const transactionsRef = collection(db, 'transactions');
   let q = query(
     transactionsRef,
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     orderBy('transaction_date', 'desc')
   );
 
@@ -70,7 +71,7 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
         const itemsSnapshot = await getDocs(
           query(
             collection(db, 'items'),
-            where('created_by', '==', userId),
+            where(scope.field, '==', scope.value),
             where('__name__', 'in', chunk)
           )
         );
@@ -93,7 +94,7 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
           const catsSnapshot = await getDocs(
             query(
               collection(db, 'categories'),
-              where('created_by', '==', userId),
+              where(scope.field, '==', scope.value),
               where('__name__', 'in', chunk)
             )
           );
@@ -152,11 +153,11 @@ export function clearTransactionsCache() {
 }
 
 export async function getTransactionsByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     where('transaction_date', '>=', Timestamp.fromDate(startDate)),
     where('transaction_date', '<=', Timestamp.fromDate(endDate)),
     orderBy('transaction_date', 'desc')
@@ -183,7 +184,7 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
       const itemsSnapshot = await getDocs(
         query(
           collection(db, 'items'),
-          where('created_by', '==', userId),
+          where(scope.field, '==', scope.value),
           where('__name__', 'in', chunk)
         )
       );
@@ -232,11 +233,12 @@ export async function createTransaction(transactionData: {
   }
 
   const docRef = await addDoc(collection(db, 'transactions'), {
-    ...transactionData,
+    ...stripUndefined(transactionData),
     created_by: userId,
     total_value,
     transaction_date: Timestamp.fromDate(transactionData.transaction_date),
     created_at: new Date(),
+    ...stampOrgId({}),
   });
 
   const newTransaction: any = {
@@ -258,11 +260,11 @@ export async function createTransaction(transactionData: {
 }
 
 export async function getTransactionsByItem(itemId: string): Promise<Transaction[]> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     where('item_id', '==', itemId),
     orderBy('transaction_date', 'desc')
   );
@@ -277,11 +279,11 @@ export async function getTransactionsByItem(itemId: string): Promise<Transaction
 }
 
 export async function getTransactionsForPeriod(startDate: Date, endDate: Date): Promise<Transaction[]> {
-  const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
-    where('created_by', '==', userId),
+    where(scope.field, '==', scope.value),
     where('transaction_date', '>=', Timestamp.fromDate(startDate)),
     where('transaction_date', '<=', Timestamp.fromDate(endDate)),
     orderBy('transaction_date', 'desc')
@@ -309,7 +311,7 @@ export async function getTransactionsForPeriod(startDate: Date, endDate: Date): 
       const itemsSnapshot = await getDocs(
         query(
           collection(db, 'items'),
-          where('created_by', '==', userId),
+          where(scope.field, '==', scope.value),
           where('__name__', 'in', chunk)
         )
       );

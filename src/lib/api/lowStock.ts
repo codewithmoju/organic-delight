@@ -11,16 +11,17 @@ import {
 import { db } from '../firebase';
 import { Item, EnhancedItem } from '../types';
 import { requireCurrentUserId } from './userScope';
+import { getOrgScopeFilter } from './orgScope';
 
 /**
  * Get all items where current stock is at or below the threshold
  */
 export async function getLowStockItems(): Promise<EnhancedItem[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const itemsRef = collection(db, 'items');
     const q = query(
         itemsRef,
-        where('created_by', '==', userId),
+        where(scope.field, '==', scope.value),
         where('is_archived', '!=', true)
     );
     const snapshot = await getDocs(q);
@@ -51,11 +52,11 @@ export async function getLowStockItems(): Promise<EnhancedItem[]> {
  * Helper to get current stock for an item
  */
 async function getItemCurrentStock(itemId: string): Promise<number> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const transactionsRef = collection(db, 'transactions');
     const q = query(
         transactionsRef,
-        where('created_by', '==', userId),
+        where(scope.field, '==', scope.value),
         where('item_id', '==', itemId)
     );
     const snapshot = await getDocs(q);

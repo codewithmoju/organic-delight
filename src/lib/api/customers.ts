@@ -14,6 +14,7 @@ import {
 import { db } from '../firebase';
 import { Customer, CustomerPayment } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
+import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
 // ============================================
 // CUSTOMER CRUD OPERATIONS
 // ============================================
@@ -22,13 +23,13 @@ import { requireCurrentUserId, assertOwnership } from './userScope';
  * Get all active customers
  */
 export async function getCustomers(): Promise<Customer[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     try {
         const customersRef = collection(db, 'customers');
         // Filter server-side for active customers
         const q = query(
             customersRef,
-            where('created_by', '==', userId),
+            where(scope.field, '==', scope.value),
             where('is_active', '==', true),
             orderBy('name')
         );
@@ -48,7 +49,7 @@ export async function getCustomers(): Promise<Customer[]> {
             console.warn('Index required for active customer filtering. Falling back to client-side filter.');
             const q = query(
                 collection(db, 'customers'),
-                where('created_by', '==', userId),
+                where(scope.field, '==', scope.value),
                 orderBy('name')
             );
             const snapshot = await getDocs(q);
@@ -68,9 +69,9 @@ export async function getCustomers(): Promise<Customer[]> {
  * Get all customers including inactive
  */
 export async function getAllCustomers(): Promise<Customer[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const customersRef = collection(db, 'customers');
-    const q = query(customersRef, where('created_by', '==', userId), orderBy('name'));
+    const q = query(customersRef, where(scope.field, '==', scope.value), orderBy('name'));
     const snapshot = await getDocs(q);
 
     return snapshot.docs.map(doc => ({
@@ -117,13 +118,14 @@ export async function createCustomer(customerData: {
     const customersRef = collection(db, 'customers');
 
     const newCustomer = {
-        ...customerData,
+        ...stripUndefined(customerData),
         created_by: userId,
         outstanding_balance: 0,
         total_purchases: 0,
         is_active: true,
         created_at: Timestamp.fromDate(new Date()),
-        updated_at: Timestamp.fromDate(new Date())
+        updated_at: Timestamp.fromDate(new Date()),
+        ...stampOrgId({}),
     };
 
     const docRef = await addDoc(customersRef, newCustomer);
@@ -203,11 +205,11 @@ export async function deleteCustomer(customerId: string): Promise<void> {
  * Get customer payment history (ledger)
  */
 export async function getCustomerLedger(customerId: string): Promise<CustomerPayment[]> {
-    const userId = requireCurrentUserId();
+    const scope = getOrgScopeFilter();
     const paymentsRef = collection(db, 'customer_payments');
     const q = query(
         paymentsRef,
-        where('created_by', '==', userId),
+        where(scope.field, '==', scope.value),
         where('customer_id', '==', customerId)
     );
     try {
@@ -298,7 +300,8 @@ export async function recordCustomerTransaction(transactionData: {
                 created_at: Timestamp.fromDate(new Date()),
                 reference_number: transactionData.reference_number || null,
                 notes: transactionData.notes || null,
-                created_by: transactionData.created_by
+                created_by: transactionData.created_by,
+                ...stampOrgId({}),
             };
 
             paymentRecord.created_by = userId;

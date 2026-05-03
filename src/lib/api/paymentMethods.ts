@@ -7,6 +7,7 @@ import {
     doc
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { getOrgSettings } from './orgSettings';
 
 export interface PaymentMethod {
     id: string;
@@ -39,10 +40,19 @@ export async function getPaymentMethods(): Promise<PaymentMethod[]> {
             return DEFAULT_PAYMENT_METHODS.map(m => ({ ...m, type: m.type as 'cash' | 'card' | 'digital' }));
         }
 
-        return snapshot.docs.map(doc => ({
+        const methods = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         } as PaymentMethod));
+
+        // Filter out org-disabled payment methods
+        const orgSettings = await getOrgSettings();
+        if (orgSettings.disabled_payment_methods?.length) {
+            const disabled = new Set(orgSettings.disabled_payment_methods);
+            return methods.filter(m => !disabled.has(m.id));
+        }
+
+        return methods;
     } catch (error) {
         console.error('Error fetching payment methods:', error);
         return DEFAULT_PAYMENT_METHODS.map(m => ({ ...m, type: m.type as 'cash' | 'card' | 'digital' }));

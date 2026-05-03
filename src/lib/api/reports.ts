@@ -15,6 +15,7 @@ import { DailyOperationsReport } from '../types';
 import { getExpenses, getCashExpenses } from './expenses';
 import { getPurchases } from './purchases';
 import { requireCurrentUserId } from './userScope';
+import { getOrgScopeFilter } from './orgScope';
 
 // ============================================
 // DAILY OPERATIONS REPORT
@@ -94,10 +95,11 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
     const returnsRef = collection(db, 'pos_returns');
     let totalReturns = 0;
     let returnsCount = 0;
+    const scope = getOrgScopeFilter();
 
     try {
         const returnsSnapshot = await getDocs(
-            query(returnsRef, where('created_by', '==', userId), orderBy('created_at', 'desc'))
+            query(returnsRef, where(scope.field, '==', scope.value), orderBy('created_at', 'desc'))
         );
         const dayReturns = returnsSnapshot.docs
             .map(doc => ({
@@ -129,7 +131,7 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
     try {
         const vendorPaymentsRef = collection(db, 'vendor_payments');
         const vpSnapshot = await getDocs(
-            query(vendorPaymentsRef, where('created_by', '==', userId), orderBy('payment_date', 'desc'))
+            query(vendorPaymentsRef, where(scope.field, '==', scope.value), orderBy('payment_date', 'desc'))
         );
         const dayVP = vpSnapshot.docs
             .map(doc => ({
@@ -150,7 +152,7 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
     try {
         const customerPaymentsRef = collection(db, 'customer_payments');
         const cpSnapshot = await getDocs(
-            query(customerPaymentsRef, where('created_by', '==', userId), orderBy('payment_date', 'desc'))
+            query(customerPaymentsRef, where(scope.field, '==', scope.value), orderBy('payment_date', 'desc'))
         );
         const dayCP = cpSnapshot.docs
             .map(doc => ({
