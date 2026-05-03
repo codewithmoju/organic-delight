@@ -1194,5 +1194,474 @@
       "createFailed": "Failed to create vendor",
       "unsavedDiscarded": "Unsaved vendor details were discarded"
     }
+  },
+  "stockAdjustments": {
+    "title": "Stock Adjustments",
+    "subtitle": "Adjust, write-off, or correct inventory quantities",
+    "searchPlaceholder": "Search items by name or SKU...",
+    "noItems": "No items found",
+    "noItemsSearch": "Try a different search term",
+    "noItemsEmpty": "Add items to your inventory first",
+    "adjustButton": "Adjust",
+    "form": {
+      "adjustmentType": "Adjustment Type",
+      "quantity": "Quantity",
+      "quantityHint": "(+ add / − remove)",
+      "quantityPlaceholder": "e.g. -5 or 10",
+      "reason": "Reason",
+      "reasonPlaceholder": "e.g. Damaged goods",
+      "cancel": "Cancel",
+      "apply": "Apply Adjustment",
+      "applying": "Saving...",
+      "types": {
+        "adjustment": "Adjustment",
+        "write_off": "Write-off",
+        "count_correction": "Count Correction"
+      }
+    },
+    "messages": {
+      "reasonRequired": "Reason is required",
+      "quantityRequired": "Enter a non-zero quantity",
+      "notAuthenticated": "Not authenticated",
+      "success": "Stock adjusted for {{name}}",
+      "error": "Failed to adjust stock",
+      "loadError": "Failed to load items"
+    }
+  },
+  "inventoryCount": {
+    "title": "Inventory Count",
+    "subtitle": "Compare physical count vs system count",
+    "startCount": "Start Count",
+    "loading": "Loading...",
+    "readyTitle": "Ready to count?",
+    "readyDescription": "Click \"Start Count\" to load all inventory items and enter physical quantities.",
+    "stats": {
+      "totalItems": "Total Items",
+      "itemsWithVariance": "Items with Variance",
+      "totalVarianceValue": "Total Variance Value"
+    },
+    "table": {
+      "item": "Item",
+      "systemQty": "System Qty",
+      "physicalCount": "Physical Count",
+      "variance": "Variance",
+      "enterCount": "Enter count",
+      "ok": "OK"
+    },
+    "applyAll": "Apply All Corrections ({{count}})",
+    "applying": "Applying...",
+    "messages": {
+      "loadError": "Failed to load items",
+      "notAuthenticated": "Not authenticated",
+      "noVariances": "No variances to correct",
+      "success": "Applied {{count}} correction(s) successfully",
+      "partialError": "{{success}} succeeded, {{failed}} failed"
+    }
+  },
+  "expiryTracking": {
+    "title": "Expiry Tracking",
+    "subtitle": "Monitor batch expiry dates across your inventory",
+    "exportCsv": "Export CSV",
+    "noItems": "No items found",
+    "noItemsAll": "No purchase items have expiry dates recorded",
+    "noItemsFiltered": "No items in the \"{{tab}}\" category",
+    "tabs": {
+      "all": "All",
+      "expired": "Expired",
+      "expiringSoon": "Expiring Soon",
+      "ok": "OK"
+    },
+    "status": {
+      "expired": "Expired",
+      "critical": "< 7 days",
+      "warning": "< 30 days",
+      "ok": "OK"
+    },
+    "table": {
+      "itemName": "Item Name",
+      "batchLot": "Batch/Lot",
+      "expiryDate": "Expiry Date",
+      "daysUntilExpiry": "Days Until Expiry",
+      "status": "Status",
+      "daysAgo": "{{days}}d ago",
+      "days": "{{days}}d"
+    },
+    "messages": {
+      "loadError": "Failed to load purchase data",
+      "exportError": "No data to export",
+      "exportSuccess": "Exported successfully"
+    }
+  },
+  "stockTransfer": {
+    "title": "Stock Transfer",
+    "subtitle": "Move stock between locations",
+    "newTransfer": "New Transfer",
+    "recentTransfers": "Recent Transfers",
+    "noTransfers": "No transfers recorded yet",
+    "form": {
+      "fromLocation": "From Location",
+      "fromPlaceholder": "e.g. Warehouse A",
+      "toLocation": "To Location",
+      "toPlaceholder": "e.g. Store Front",
+      "item": "Item",
+      "itemSearch": "Search item...",
+      "quantity": "Quantity",
+      "quantityPlaceholder": "e.g. 50",
+      "available": "Available: {{count}}",
+      "notes": "Notes",
+      "notesPlaceholder": "Optional notes...",
+      "transfer": "Transfer Stock",
+      "transferring": "Transferring..."
+    },
+    "messages": {
+      "notAuthenticated": "Not authenticated",
+      "fromRequired": "From Location is required",
+      "toRequired": "To Location is required",
+      "itemRequired": "Please select an item",
+      "quantityRequired": "Enter a valid positive quantity",
+      "insufficientStock": "Insufficient stock. Available: {{count}}",
+      "success": "Transferred {{qty}} units from {{from}} to {{to}}",
+      "error": "Transfer failed"
+    }
+  },
+  "barcodeLabels": {
+    "title": "Barcode & QR Labels",
+    "subtitle": "Generate and print barcodes or QR codes for inventory items",
+    "labelsPerRow": "Labels/row:",
+    "print": "Print",
+    "printCount": "Print ({{count}})",
+    "preview": "Preview",
+    "noBarcode": "No barcode",
+    "selectItem": "Select an item to preview",
+    "noItems": "No items found",
+    "searchPlaceholder": "Search items, SKU, barcode...",
+    "selectionSummary": "{{items}} item(s) selected · {{labels}} label(s)",
+    "clearAll": "Clear all",
+    "downloadBarcode": "Download Barcode PNG",
+    "downloadQr": "Download QR PNG",
+    "typeBarcode": "Barcode",
+    "typeQr": "QR Code",
+    "sku": "SKU:",
+    "barcode": "Barcode:",
+    "price": "Price:",
+    "messages": {
+      "selectFirst": "Select at least one item",
+      "printing": "Printing {{count}} label(s)",
+      "downloadSuccess": "Downloaded {{type}}",
+      "loadError": "Failed to load items"
+    }
+  },
+  "reportsPage": {
+    "title": "Reports",
+    "subtitle": "Financial insights, aging analysis, and business intelligence",
+    "from": "From",
+    "to": "To",
+    "refresh": "Refresh",
+    "exportCsv": "Export CSV",
+    "noData": "No data for the selected period",
+    "tabs": {
+      "salesProduct": "Sales by Product",
+      "salesCategory": "Sales by Category",
+      "pnl": "P&L Statement",
+      "tax": "Tax Report",
+      "inventoryAging": "Inventory Aging",
+      "customerAging": "Customer Aging",
+      "vendorAging": "Vendor Aging"
+    },
+    "salesProduct": {
+      "totalRevenue": "Total Revenue",
+      "totalUnitsSold": "Total Units Sold",
+      "topProduct": "Top Product",
+      "productBreakdown": "Product Breakdown",
+      "table": {
+        "productName": "Product Name",
+        "unitsSold": "Units Sold",
+        "revenue": "Revenue",
+        "cost": "Cost",
+        "profit": "Profit",
+        "margin": "Margin %"
+      }
+    },
+    "salesCategory": {
+      "totalRevenue": "Total Revenue",
+      "categories": "Categories",
+      "revenueByCategory": "Revenue by Category",
+      "categoryBreakdown": "Category Breakdown",
+      "table": {
+        "category": "Category",
+        "unitsSold": "Units Sold",
+        "revenue": "Revenue",
+        "percentOfTotal": "% of Total"
+      }
+    },
+    "pnl": {
+      "title": "Profit & Loss Statement",
+      "subtitle": "Income, costs, and operating result",
+      "income": "Income",
+      "grossRevenue": "Gross Revenue",
+      "lessDiscounts": "Less: Discounts",
+      "lessReturns": "Less: Returns",
+      "netRevenue": "Net Revenue",
+      "costOfGoods": "Cost of Goods",
+      "cogs": "Cost of Goods Sold",
+      "grossProfit": "Gross Profit",
+      "grossMargin": "Gross Margin",
+      "operatingExpenses": "Operating Expenses",
+      "noExpenses": "No expenses recorded",
+      "uncategorized": "Uncategorized",
+      "totalExpenses": "Total Expenses",
+      "operatingProfit": "Operating Profit",
+      "operatingLoss": "Operating Loss",
+      "taxCollected": "Tax Collected",
+      "totalPurchases": "Total Purchases",
+      "noData": "No financial data for the selected period",
+      "errors": {
+        "loadError": "Failed to load P&L statement"
+      }
+    },
+    "tax": {
+      "totalTaxCollected": "Total Tax Collected",
+      "taxableRevenue": "Taxable Revenue",
+      "effectiveTaxRate": "Effective Tax Rate",
+      "transactions": "{{count}} transactions",
+      "taxByMethod": "Tax by Payment Method",
+      "errors": {
+        "loadError": "Failed to load tax report"
+      }
+    },
+    "inventoryAging": {
+      "stagnantFor": "Stagnant for:",
+      "days": "{{count}} days",
+      "stagnantItems": "Stagnant Items",
+      "notSoldIn": "Not sold in {{days}}+ days",
+      "totalValueAtRisk": "Total Value at Risk",
+      "stagnantInventory": "Stagnant Inventory",
+      "noStagnant": "No stagnant items found for {{days}}+ days",
+      "table": {
+        "itemName": "Item Name",
+        "qty": "Qty",
+        "value": "Value",
+        "daysNotSold": "Days Not Sold"
+      },
+      "errors": {
+        "loadError": "Failed to load inventory aging"
+      }
+    },
+    "customerAging": {
+      "customersWithBalance": "Customers with Balance",
+      "totalOwedToYou": "Total Owed to You",
+      "customerCreditBalances": "Customer Credit Balances",
+      "noCustomers": "No customers with outstanding balances",
+      "view": "View",
+      "table": {
+        "customerName": "Customer Name",
+        "phone": "Phone",
+        "outstandingBalance": "Outstanding Balance",
+        "ledger": "Ledger"
+      },
+      "errors": {
+        "loadError": "Failed to load customer aging"
+      }
+    },
+    "vendorAging": {
+      "vendorsWithBalance": "Vendors with Balance",
+      "totalYouOwe": "Total You Owe",
+      "vendorPaymentBalances": "Vendor Payment Balances",
+      "noVendors": "No vendors with outstanding balances",
+      "view": "View",
+      "table": {
+        "vendorName": "Vendor Name",
+        "company": "Company",
+        "outstandingBalance": "Outstanding Balance",
+        "ledger": "Ledger"
+      },
+      "errors": {
+        "loadError": "Failed to load vendor aging"
+      }
+    }
+  },
+  "auditLog": {
+    "title": "Audit Log",
+    "subtitle": "Track all critical actions performed in the system",
+    "searchPlaceholder": "Search by resource, action, details...",
+    "allActions": "All Actions",
+    "allResources": "All Resources",
+    "entries": "{{count}} entries",
+    "clearFilters": "Clear filters",
+    "exportCsv": "Export CSV",
+    "noEntries": "No audit entries found",
+    "noEntriesEmpty": "Audit events will appear here as actions are performed",
+    "noEntriesFiltered": "No entries match your current filters",
+    "actions": {
+      "create": "Created",
+      "update": "Updated",
+      "delete": "Deleted",
+      "login": "Login",
+      "logout": "Logout",
+      "sale": "Sale",
+      "purchase": "Purchase",
+      "payment": "Payment",
+      "adjustment": "Adjustment",
+      "return": "Return",
+      "export": "Export",
+      "security": "Security"
+    },
+    "resources": {
+      "item": "Item",
+      "category": "Category",
+      "customer": "Customer",
+      "vendor": "Vendor",
+      "expense": "Expense",
+      "purchase": "Purchase",
+      "pos_transaction": "POS Sale",
+      "user": "User",
+      "settings": "Settings",
+      "report": "Report",
+      "tenant": "Tenant"
+    },
+    "messages": {
+      "loadError": "Failed to load audit logs",
+      "exportError": "No data to export",
+      "exportSuccess": "Audit log exported"
+    }
+  },
+  "locations": {
+    "title": "Locations & Branches",
+    "subtitle": "Manage your store locations and branches",
+    "addLocation": "Add Location",
+    "newLocation": "New Location",
+    "noLocations": "No locations yet",
+    "noLocationsDescription": "Add your first location to get started",
+    "namePlaceholder": "e.g. Main Store, Warehouse A",
+    "addressPlaceholder": "Optional address",
+    "nameLabel": "Name",
+    "addressLabel": "Address",
+    "defaultBadge": "Default",
+    "activeBadge": "Active",
+    "switchButton": "Switch",
+    "setDefault": "Set as default",
+    "cancel": "Cancel",
+    "add": "Add",
+    "deleteTitle": "Delete Location",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "messages": {
+      "nameRequired": "Location name is required",
+      "added": "Location \"{{name}}\" added",
+      "updated": "Location updated",
+      "deleted": "\"{{name}}\" deleted",
+      "cannotDeleteOnly": "Cannot delete the only location",
+      "nameRequired2": "Name is required"
+    }
+  },
+  "shift": {
+    "openShift": "Open Shift",
+    "closeShift": "Close Shift",
+    "openingFloat": "Opening Float (Cash in Drawer)",
+    "skip": "Skip",
+    "enterFloat": "Enter the opening cash float",
+    "actualCash": "Actual Cash in Drawer *",
+    "notes": "Notes (Optional)",
+    "notesPlaceholder": "Any notes about this shift...",
+    "cashVariance": "Cash Variance",
+    "summary": {
+      "openingFloat": "Opening Float",
+      "totalSales": "Total Sales",
+      "transactions": "Transactions",
+      "expectedCash": "Expected Cash"
+    },
+    "statusBar": {
+      "openShift": "Open Shift",
+      "close": "Close"
+    },
+    "openedAt": "Opened {{time}} · {{duration}} ago"
+  },
+  "splitPayment": {
+    "title": "Split Payment",
+    "totalDue": "Total due:",
+    "payment": "Payment {{number}}",
+    "addMethod": "Add another payment method",
+    "totalDueLabel": "Total Due",
+    "totalEntered": "Total Entered",
+    "remaining": "Remaining",
+    "changeDue": "Change Due",
+    "cancel": "Cancel",
+    "completePayment": "Complete Payment",
+    "processing": "Processing…",
+    "methods": {
+      "cash": "Cash",
+      "card": "Card",
+      "digital": "Digital"
+    }
+  },
+  "purchases": {
+    "title": "Purchases",
+    "subtitle": "Manage purchases from vendors",
+    "newPurchase": "New Purchase",
+    "purchaseDetails": "Purchase Details",
+    "selectVendor": "Select Vendor",
+    "addItems": "Add Items",
+    "purchaseDate": "Purchase Date",
+    "invoiceNumber": "Invoice Number",
+    "paymentStatus": "Payment Status",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "partial": "Partial",
+    "step": "Step {{current}} of {{total}}",
+    "reviewComplete": "Review & Complete",
+    "billNumber": "Bill Number",
+    "billNumberOptional": "Bill Number (Optional)",
+    "vendorInvoiceNumber": "Vendor Invoice Number",
+    "paidAmount": "Paid Amount",
+    "notes": "Notes",
+    "notesOptional": "Notes (Optional)",
+    "addNotes": "Add any additional notes...",
+    "orderSummary": "Order Summary",
+    "totalUnits": "Total Units",
+    "totalAmount": "Total Amount",
+    "completePurchase": "Complete Purchase",
+    "creating": "Creating...",
+    "list": {
+      "title": "Purchase History",
+      "subtitle": "All purchase orders from vendors",
+      "searchPlaceholder": "Search by purchase # or vendor...",
+      "allStatuses": "All Statuses",
+      "noPurchases": "No purchases found",
+      "noPurchasesDescription": "Create your first purchase to see it here",
+      "table": {
+        "purchaseNumber": "Purchase #",
+        "vendor": "Vendor",
+        "date": "Date",
+        "items": "Items",
+        "total": "Total",
+        "paid": "Paid",
+        "pending": "Pending",
+        "status": "Status",
+        "actions": "Actions"
+      }
+    },
+    "return": {
+      "title": "Purchase Return",
+      "subtitle": "Return items to vendor",
+      "selectItems": "Select items to return",
+      "returnQuantity": "Return Qty",
+      "reason": "Reason",
+      "reasonPlaceholder": "Reason for return...",
+      "processReturn": "Process Return",
+      "processing": "Processing...",
+      "messages": {
+        "success": "Return processed successfully",
+        "error": "Failed to process return",
+        "selectItems": "Select at least one item to return",
+        "reasonRequired": "Reason is required"
+      }
+    },
+    "messages": {
+      "selectVendor": "Please select a vendor",
+      "addItems": "Please add at least one item",
+      "success": "Purchase created successfully",
+      "error": "Failed to create purchase",
+      "loadError": "Failed to load categories"
+    }
   }
 }

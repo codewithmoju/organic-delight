@@ -1,14 +1,18 @@
-import { Menu, User, LogOut, Settings, ChevronDown } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Menu, User, LogOut, Settings, ChevronDown, Building2, Check } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuthStore } from '../lib/store';
+import { switchOrganization } from '../lib/auth/orgResolver';
 import Logo from './ui/Logo';
 import SearchInput from './ui/SearchInput';
 import LanguageSelector from './ui/LanguageSelector';
 import { SimpleThemeToggle } from './ui/ThemeToggle';
 import NotificationCenter from './ui/NotificationCenter';
 import LocationSelector from './ui/LocationSelector';
+import type { OrganizationMember } from '../lib/types/org';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -19,9 +23,16 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const navigate = useNavigate();
   const profile = useAuthStore((state) => state.profile);
   const signOut = useAuthStore((state) => state.signOut);
+  const activeOrganization = useAuthStore((state) => state.activeOrganization);
+  const setActiveOrganization = useAuthStore((state) => state.setActiveOrganization);
+  const setMembership = useAuthStore((state) => state.setMembership);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showOrgMenu, setShowOrgMenu] = useState(false);
+  const [userOrgs, setUserOrgs] = useState<OrganizationMember[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const orgDropdownRef = useRef<HTMLDivElement>(null);
+  const orgButtonRef = useRef<HTMLButtonElement>(null);
 
   // Click outside functionality to close dropdown
   useEffect(() => {
@@ -34,10 +45,18 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       ) {
         setShowUserMenu(false);
       }
+      if (
+        orgDropdownRef.current &&
+        orgButtonRef.current &&
+        !orgDropdownRef.current.contains(event.target as Node) &&
+        !orgButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowOrgMenu(false);
+      }
     }
 
     // Add event listener when dropdown is open
-    if (showUserMenu) {
+    if (showUserMenu || showOrgMenu) {
       document.addEventListener('mousedown', handleClickOutside as any);
       document.addEventListener('touchstart', handleClickOutside as any);
     }
@@ -47,7 +66,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       document.removeEventListener('mousedown', handleClickOutside as any);
       document.removeEventListener('touchstart', handleClickOutside as any);
     };
-  }, [showUserMenu]);
+  }, [showUserMenu, showOrgMenu]);
 
   // Close dropdown on escape key
   useEffect(() => {
@@ -67,6 +86,29 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     };
   }, [showUserMenu]);
 
+  // Fetch user's orgs when org menu opens
+  useEffect(() => {
+    if (!showOrgMenu || !profile?.id) return;
+    const q = query(
+      collection(db, 'organization_members'),
+      where('user_id', '==', profile.id),
+      where('status', '==', 'active')
+    );
+    getDocs(q).then((snap: any) => {
+      const orgs = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as OrganizationMember[];
+      setUserOrgs(orgs);
+    }).catch(() => {});
+  }, [showOrgMenu, profile?.id]);
+
+  const handleOrgSwitch = useCallback(async (orgId: string) => {
+    setShowOrgMenu(false);
+    try {
+      await switchOrganization(orgId);
+    } catch (err) {
+      console.error('Failed to switch organization:', err);
+    }
+  }, []);
+
   const handleProfileClick = () => {
     setShowUserMenu(!showUserMenu);
   };
@@ -77,7 +119,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   return (
-    <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 bg-transparent px-4 sm:gap-x-6 sm:px-6 lg:px-8 transition-colors duration-300">
+    <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 bg-background/80 backdrop-blur-xl px-4 sm:gap-x-6 sm:px-6 lg:px-8 transition-colors duration-300 border-b border-border/30">
       {/* Mobile menu button */}
       <button
         type="button"
@@ -89,17 +131,17 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       </button>
 
       {/* Mobile logo */}
-      <div className="lg:hidden flex items-center gap-2">
+      <div className="lg:hidden flex items-center gap-2 min-w-0 overflow-hidden">
         <Logo size="sm" />
         {profile?.business_logo && (
           <img
             src={profile.business_logo}
             alt={profile.business_name || 'Business'}
-            className="h-8 w-8 object-contain rounded"
+            className="h-8 w-8 object-contain rounded flex-shrink-0"
           />
         )}
         {profile?.business_name && (
-          <span className="text-sm font-semibold text-foreground truncate max-w-[120px]">
+          <span className="text-sm font-semibold text-foreground truncate max-w-[100px]">
             {profile.business_name}
           </span>
         )}
@@ -120,6 +162,58 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         <div className="flex items-center gap-x-3 sm:gap-x-4 ml-auto">
           {/* Location selector */}
           <LocationSelector />
+
+          {/* Org switcher — only shown when org scoping is active */}
+          {activeOrganization && (
+            <div className="relative">
+              <button
+                ref={orgButtonRef}
+                type="button"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors duration-200 text-sm font-medium"
+                onClick={() => setShowOrgMenu(!showOrgMenu)}
+                aria-expanded={showOrgMenu}
+                aria-haspopup="true"
+              >
+                <Building2 className="w-4 h-4 text-muted-foreground" />
+                <span className="hidden sm:inline truncate max-w-[120px]">{activeOrganization.name}</span>
+                <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${showOrgMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showOrgMenu && (
+                <div
+                  ref={orgDropdownRef}
+                  className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl glass-effect border border-border shadow-lg"
+                  role="menu"
+                >
+                  <div className="py-2">
+                    {userOrgs.length <= 1 ? (
+                      <div className="px-4 py-2 text-xs text-muted-foreground">
+                        {activeOrganization.name}
+                      </div>
+                    ) : (
+                      userOrgs.map((org) => (
+                        <button
+                          key={org.id}
+                          onClick={() => handleOrgSwitch(org.organization_id)}
+                          className={`flex w-full items-center justify-between px-4 py-2.5 text-sm transition-colors duration-150 ${
+                            org.organization_id === activeOrganization.id
+                              ? 'bg-secondary text-foreground font-medium'
+                              : 'text-foreground hover:bg-secondary'
+                          }`}
+                          role="menuitem"
+                        >
+                          <span className="truncate">{org.organization_id}</span>
+                          {org.organization_id === activeOrganization.id && (
+                            <Check className="w-4 h-4 text-primary" />
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Language selector */}
           <div className="hidden sm:block">

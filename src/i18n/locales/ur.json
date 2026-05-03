@@ -1,4 +1,4 @@
-{
+﻿{
     "common": {
         "loading": "لوڈ ہو رہا ہے...",
         "error": "خرابی",
@@ -1181,6 +1181,405 @@
         "کوئیک ایکسیس آئٹمز سے اپنے بہترین فروخت ہونے والے آئٹمز پن کریں۔",
         "آف لائن موڈ ٹرانزیکشنز قطار میں رکھتا ہے اور دوبارہ کنیکٹ ہونے پر سنک کرتا ہے۔"
       ]
+    }
+  },
+  "stockAdjustments": {
+    "title": "اسٹاک ایڈجسٹمنٹ",
+    "subtitle": "انوینٹری کی مقداریں ایڈجسٹ، رائٹ آف، یا درست کریں",
+    "searchPlaceholder": "نام یا SKU سے اشیاء تلاش کریں...",
+    "noItems": "کوئی اشیاء نہیں ملیں",
+    "noItemsSearch": "مختلف تلاش کی اصطلاح آزمائیں",
+    "noItemsEmpty": "پہلے اپنی انوینٹری میں اشیاء شامل کریں",
+    "adjustButton": "ایڈجسٹ کریں",
+    "form": {
+      "adjustmentType": "ایڈجسٹمنٹ کی قسم",
+      "quantity": "مقدار",
+      "quantityHint": "(+ شامل / − نکالیں)",
+      "quantityPlaceholder": "مثلاً -5 یا 10",
+      "reason": "وجہ",
+      "reasonPlaceholder": "مثلاً خراب سامان",
+      "cancel": "منسوخ",
+      "apply": "ایڈجسٹمنٹ لاگو کریں",
+      "applying": "محفوظ ہو رہا ہے...",
+      "types": {
+        "adjustment": "ایڈجسٹمنٹ",
+        "write_off": "رائٹ آف",
+        "count_correction": "گنتی کی درستگی"
+      }
+    },
+    "messages": {
+      "reasonRequired": "وجہ درکار ہے",
+      "quantityRequired": "غیر صفر مقدار درج کریں",
+      "notAuthenticated": "تصدیق نہیں ہوئی",
+      "success": "{{name}} کا اسٹاک ایڈجسٹ ہو گیا",
+      "error": "اسٹاک ایڈجسٹ کرنے میں ناکامی",
+      "loadError": "اشیاء لوڈ کرنے میں ناکامی"
+    }
+  },
+  "inventoryCount": {
+    "title": "انوینٹری گنتی",
+    "subtitle": "جسمانی گنتی بمقابلہ سسٹم گنتی کا موازنہ کریں",
+    "startCount": "گنتی شروع کریں",
+    "loading": "لوڈ ہو رہا ہے...",
+    "readyTitle": "گنتی کے لیے تیار ہیں؟",
+    "readyDescription": "تمام انوینٹری آئٹمز لوڈ کرنے اور جسمانی مقداریں درج کرنے کے لیے \"گنتی شروع کریں\" کلک کریں۔",
+    "stats": {
+      "totalItems": "کل اشیاء",
+      "itemsWithVariance": "فرق والی اشیاء",
+      "totalVarianceValue": "کل فرق کی قیمت"
+    },
+    "table": {
+      "item": "شے",
+      "systemQty": "سسٹم مقدار",
+      "physicalCount": "جسمانی گنتی",
+      "variance": "فرق",
+      "enterCount": "گنتی درج کریں",
+      "ok": "ٹھیک"
+    },
+    "applyAll": "تمام درستگیاں لاگو کریں ({{count}})",
+    "applying": "لاگو ہو رہا ہے...",
+    "messages": {
+      "loadError": "اشیاء لوڈ کرنے میں ناکامی",
+      "notAuthenticated": "تصدیق نہیں ہوئی",
+      "noVariances": "درست کرنے کے لیے کوئی فرق نہیں",
+      "success": "{{count}} درستگی(اں) کامیابی سے لاگو ہوئیں",
+      "partialError": "{{success}} کامیاب، {{failed}} ناکام"
+    }
+  },
+  "expiryTracking": {
+    "title": "میعاد ختم ہونے کی ٹریکنگ",
+    "subtitle": "اپنی انوینٹری میں بیچ کی میعاد ختم ہونے کی تاریخوں کی نگرانی کریں",
+    "exportCsv": "CSV ایکسپورٹ کریں",
+    "noItems": "کوئی اشیاء نہیں ملیں",
+    "noItemsAll": "کسی خریداری کی شے میں میعاد ختم ہونے کی تاریخ درج نہیں",
+    "noItemsFiltered": "\"{{tab}}\" زمرے میں کوئی اشیاء نہیں",
+    "tabs": {
+      "all": "سب",
+      "expired": "میعاد ختم",
+      "expiringSoon": "جلد ختم ہونے والی",
+      "ok": "ٹھیک"
+    },
+    "status": {
+      "expired": "میعاد ختم",
+      "critical": "7 دن سے کم",
+      "warning": "30 دن سے کم",
+      "ok": "ٹھیک"
+    },
+    "table": {
+      "itemName": "شے کا نام",
+      "batchLot": "بیچ/لاٹ",
+      "expiryDate": "میعاد ختم ہونے کی تاریخ",
+      "daysUntilExpiry": "میعاد ختم ہونے تک دن",
+      "status": "حیثیت",
+      "daysAgo": "{{days}} دن پہلے",
+      "days": "{{days}} دن"
+    },
+    "messages": {
+      "loadError": "خریداری کا ڈیٹا لوڈ کرنے میں ناکامی",
+      "exportError": "ایکسپورٹ کرنے کے لیے کوئی ڈیٹا نہیں",
+      "exportSuccess": "کامیابی سے ایکسپورٹ ہو گیا"
+    }
+  },
+  "stockTransfer": {
+    "title": "اسٹاک ٹرانسفر",
+    "subtitle": "مقامات کے درمیان اسٹاک منتقل کریں",
+    "newTransfer": "نئی منتقلی",
+    "recentTransfers": "حالیہ منتقلیاں",
+    "noTransfers": "ابھی کوئی منتقلی ریکارڈ نہیں",
+    "form": {
+      "fromLocation": "کہاں سے",
+      "fromPlaceholder": "مثلاً گودام A",
+      "toLocation": "کہاں تک",
+      "toPlaceholder": "مثلاً اسٹور فرنٹ",
+      "item": "شے",
+      "itemSearch": "شے تلاش کریں...",
+      "quantity": "مقدار",
+      "quantityPlaceholder": "مثلاً 50",
+      "available": "دستیاب: {{count}}",
+      "notes": "نوٹس",
+      "notesPlaceholder": "اختیاری نوٹس...",
+      "transfer": "اسٹاک منتقل کریں",
+      "transferring": "منتقل ہو رہا ہے..."
+    },
+    "messages": {
+      "notAuthenticated": "تصدیق نہیں ہوئی",
+      "fromRequired": "کہاں سے مقام درکار ہے",
+      "toRequired": "کہاں تک مقام درکار ہے",
+      "itemRequired": "براہ کرم ایک شے منتخب کریں",
+      "quantityRequired": "درست مثبت مقدار درج کریں",
+      "insufficientStock": "ناکافی اسٹاک۔ دستیاب: {{count}}",
+      "success": "{{qty}} یونٹس {{from}} سے {{to}} منتقل ہو گئے",
+      "error": "منتقلی ناکام"
+    }
+  },
+  "barcodeLabels": {
+    "title": "بارکوڈ اور QR لیبلز",
+    "subtitle": "انوینٹری اشیاء کے لیے بارکوڈ یا QR کوڈ بنائیں اور پرنٹ کریں",
+    "labelsPerRow": "لیبلز/قطار:",
+    "print": "پرنٹ کریں",
+    "printCount": "پرنٹ کریں ({{count}})",
+    "preview": "پیش نظارہ",
+    "noBarcode": "کوئی بارکوڈ نہیں",
+    "selectItem": "پیش نظارہ کے لیے ایک شے منتخب کریں",
+    "noItems": "کوئی اشیاء نہیں ملیں",
+    "searchPlaceholder": "اشیاء، SKU، بارکوڈ تلاش کریں...",
+    "selectionSummary": "{{items}} شے(اں) منتخب · {{labels}} لیبل(ز)",
+    "clearAll": "سب صاف کریں",
+    "downloadBarcode": "بارکوڈ PNG ڈاؤن لوڈ کریں",
+    "downloadQr": "QR PNG ڈاؤن لوڈ کریں",
+    "typeBarcode": "بارکوڈ",
+    "typeQr": "QR کوڈ",
+    "sku": "SKU:",
+    "barcode": "بارکوڈ:",
+    "price": "قیمت:",
+    "messages": {
+      "selectFirst": "کم از کم ایک شے منتخب کریں",
+      "printing": "{{count}} لیبل(ز) پرنٹ ہو رہے ہیں",
+      "downloadSuccess": "{{type}} ڈاؤن لوڈ ہو گیا",
+      "loadError": "اشیاء لوڈ کرنے میں ناکامی"
+    }
+  },
+  "reportsPage": {
+    "title": "رپورٹس",
+    "subtitle": "مالی بصیرت، عمر رسیدہ تجزیہ، اور کاروباری ذہانت",
+    "from": "سے",
+    "to": "تک",
+    "refresh": "ریفریش",
+    "exportCsv": "CSV ایکسپورٹ کریں",
+    "noData": "منتخب مدت کے لیے کوئی ڈیٹا نہیں",
+    "tabs": {
+      "salesProduct": "مصنوعات کے مطابق فروخت",
+      "salesCategory": "زمرے کے مطابق فروخت",
+      "pnl": "منافع و نقصان",
+      "tax": "ٹیکس رپورٹ",
+      "inventoryAging": "انوینٹری عمر",
+      "customerAging": "گاہک عمر",
+      "vendorAging": "سپلائر عمر"
+    },
+    "salesProduct": {
+      "totalRevenue": "کل آمدنی",
+      "totalUnitsSold": "کل فروخت شدہ یونٹس",
+      "topProduct": "سب سے اوپر مصنوعات",
+      "productBreakdown": "مصنوعات کی تفصیل",
+      "table": {
+        "productName": "مصنوعات کا نام",
+        "unitsSold": "فروخت شدہ یونٹس",
+        "revenue": "آمدنی",
+        "cost": "لاگت",
+        "profit": "منافع",
+        "margin": "مارجن %"
+      }
+    },
+    "salesCategory": {
+      "totalRevenue": "کل آمدنی",
+      "categories": "زمرے",
+      "revenueByCategory": "زمرے کے مطابق آمدنی",
+      "categoryBreakdown": "زمرے کی تفصیل",
+      "table": {
+        "category": "زمرہ",
+        "unitsSold": "فروخت شدہ یونٹس",
+        "revenue": "آمدنی",
+        "percentOfTotal": "کل کا %"
+      }
+    },
+    "pnl": {
+      "title": "منافع و نقصان کا بیان",
+      "subtitle": "آمدنی، اخراجات، اور آپریٹنگ نتیجہ",
+      "income": "آمدنی",
+      "grossRevenue": "مجموعی آمدنی",
+      "lessDiscounts": "منہا: رعایتیں",
+      "lessReturns": "منہا: واپسیاں",
+      "netRevenue": "خالص آمدنی",
+      "costOfGoods": "سامان کی لاگت",
+      "cogs": "فروخت شدہ سامان کی لاگت",
+      "grossProfit": "مجموعی منافع",
+      "grossMargin": "مجموعی مارجن",
+      "operatingExpenses": "آپریٹنگ اخراجات",
+      "noExpenses": "کوئی اخراجات ریکارڈ نہیں",
+      "uncategorized": "غیر زمرہ بند",
+      "totalExpenses": "کل اخراجات",
+      "operatingProfit": "آپریٹنگ منافع",
+      "operatingLoss": "آپریٹنگ نقصان",
+      "taxCollected": "وصول شدہ ٹیکس",
+      "totalPurchases": "کل خریداری",
+      "noData": "منتخب مدت کے لیے کوئی مالی ڈیٹا نہیں",
+      "errors": {
+        "loadError": "منافع و نقصان کا بیان لوڈ کرنے میں ناکامی"
+      }
+    },
+    "tax": {
+      "totalTaxCollected": "کل وصول شدہ ٹیکس",
+      "taxableRevenue": "قابل ٹیکس آمدنی",
+      "effectiveTaxRate": "مؤثر ٹیکس کی شرح",
+      "transactions": "{{count}} لین دین",
+      "taxByMethod": "ادائیگی کے طریقے کے مطابق ٹیکس",
+      "errors": {
+        "loadError": "ٹیکس رپورٹ لوڈ کرنے میں ناکامی"
+      }
+    },
+    "inventoryAging": {
+      "stagnantFor": "جمود کی مدت:",
+      "days": "{{count}} دن",
+      "stagnantItems": "جامد اشیاء",
+      "notSoldIn": "{{days}}+ دنوں میں فروخت نہیں ہوئیں",
+      "totalValueAtRisk": "خطرے میں کل قیمت",
+      "stagnantInventory": "جامد انوینٹری",
+      "noStagnant": "{{days}}+ دنوں کے لیے کوئی جامد اشیاء نہیں ملیں",
+      "table": {
+        "itemName": "شے کا نام",
+        "qty": "مقدار",
+        "value": "قیمت",
+        "daysNotSold": "فروخت نہ ہونے کے دن"
+      },
+      "errors": {
+        "loadError": "انوینٹری عمر لوڈ کرنے میں ناکامی"
+      }
+    },
+    "customerAging": {
+      "customersWithBalance": "بقایا والے گاہک",
+      "totalOwedToYou": "آپ کو واجب الادا کل",
+      "customerCreditBalances": "گاہک کریڈٹ بیلنس",
+      "noCustomers": "بقایا رقم والے کوئی گاہک نہیں",
+      "view": "دیکھیں",
+      "table": {
+        "customerName": "گاہک کا نام",
+        "phone": "فون",
+        "outstandingBalance": "بقایا رقم",
+        "ledger": "لیجر"
+      },
+      "errors": {
+        "loadError": "گاہک عمر لوڈ کرنے میں ناکامی"
+      }
+    },
+    "vendorAging": {
+      "vendorsWithBalance": "بقایا والے سپلائرز",
+      "totalYouOwe": "آپ کی کل واجب الادا رقم",
+      "vendorPaymentBalances": "سپلائر ادائیگی بیلنس",
+      "noVendors": "بقایا رقم والے کوئی سپلائرز نہیں",
+      "view": "دیکھیں",
+      "table": {
+        "vendorName": "سپلائر کا نام",
+        "company": "کمپنی",
+        "outstandingBalance": "بقایا رقم",
+        "ledger": "لیجر"
+      },
+      "errors": {
+        "loadError": "سپلائر عمر لوڈ کرنے میں ناکامی"
+      }
+    }
+  },
+  "auditLog": {
+    "title": "آڈٹ لاگ",
+    "subtitle": "سسٹم میں کیے گئے تمام اہم اعمال کو ٹریک کریں",
+    "searchPlaceholder": "وسیلہ، عمل، تفصیلات سے تلاش کریں...",
+    "allActions": "تمام اعمال",
+    "allResources": "تمام وسائل",
+    "entries": "{{count}} اندراجات",
+    "clearFilters": "فلٹر صاف کریں",
+    "exportCsv": "CSV ایکسپورٹ کریں",
+    "noEntries": "کوئی آڈٹ اندراجات نہیں ملیں",
+    "noEntriesEmpty": "اعمال انجام دینے پر آڈٹ واقعات یہاں ظاہر ہوں گے",
+    "noEntriesFiltered": "آپ کے موجودہ فلٹرز سے کوئی اندراجات مماثل نہیں",
+    "actions": {
+      "create": "بنایا گیا",
+      "update": "اپ ڈیٹ ہوا",
+      "delete": "حذف ہوا",
+      "login": "لاگ ان",
+      "logout": "لاگ آؤٹ",
+      "sale": "فروخت",
+      "purchase": "خریداری",
+      "payment": "ادائیگی",
+      "adjustment": "ایڈجسٹمنٹ",
+      "return": "واپسی",
+      "export": "ایکسپورٹ",
+      "security": "سیکیورٹی"
+    },
+    "resources": {
+      "item": "شے",
+      "category": "زمرہ",
+      "customer": "گاہک",
+      "vendor": "سپلائر",
+      "expense": "اخراجات",
+      "purchase": "خریداری",
+      "pos_transaction": "POS فروخت",
+      "user": "صارف",
+      "settings": "ترتیبات",
+      "report": "رپورٹ",
+      "tenant": "ٹیننٹ"
+    },
+    "messages": {
+      "loadError": "آڈٹ لاگز لوڈ کرنے میں ناکامی",
+      "exportError": "ایکسپورٹ کرنے کے لیے کوئی ڈیٹا نہیں",
+      "exportSuccess": "آڈٹ لاگ ایکسپورٹ ہو گیا"
+    }
+  },
+  "locations": {
+    "title": "مقامات اور شاخیں",
+    "subtitle": "اپنے اسٹور کے مقامات اور شاخوں کا انتظام کریں",
+    "addLocation": "مقام شامل کریں",
+    "newLocation": "نیا مقام",
+    "noLocations": "ابھی کوئی مقامات نہیں",
+    "noLocationsDescription": "شروع کرنے کے لیے اپنا پہلا مقام شامل کریں",
+    "namePlaceholder": "مثلاً مرکزی اسٹور، گودام A",
+    "addressPlaceholder": "اختیاری پتہ",
+    "nameLabel": "نام",
+    "addressLabel": "پتہ",
+    "defaultBadge": "ڈیفالٹ",
+    "activeBadge": "فعال",
+    "switchButton": "تبدیل کریں",
+    "setDefault": "ڈیفالٹ کے طور پر سیٹ کریں",
+    "cancel": "منسوخ",
+    "add": "شامل کریں",
+    "deleteTitle": "مقام حذف کریں",
+    "deleteMessage": "کیا آپ واقعی \"{{name}}\" کو حذف کرنا چاہتے ہیں؟ یہ واپس نہیں کیا جا سکتا۔",
+    "deleteConfirm": "حذف کریں",
+    "messages": {
+      "nameRequired": "مقام کا نام درکار ہے",
+      "added": "مقام \"{{name}}\" شامل ہو گیا",
+      "updated": "مقام اپ ڈیٹ ہو گیا",
+      "deleted": "\"{{name}}\" حذف ہو گیا",
+      "cannotDeleteOnly": "واحد مقام کو حذف نہیں کیا جا سکتا",
+      "nameRequired2": "نام درکار ہے"
+    }
+  },
+  "shift": {
+    "openShift": "شفٹ کھولیں",
+    "closeShift": "شفٹ بند کریں",
+    "openingFloat": "ابتدائی نقد (دراز میں نقد)",
+    "skip": "چھوڑیں",
+    "enterFloat": "ابتدائی نقد فلوٹ درج کریں",
+    "actualCash": "دراز میں اصل نقد *",
+    "notes": "نوٹس (اختیاری)",
+    "notesPlaceholder": "اس شفٹ کے بارے میں کوئی نوٹس...",
+    "cashVariance": "نقد فرق",
+    "summary": {
+      "openingFloat": "ابتدائی فلوٹ",
+      "totalSales": "کل فروخت",
+      "transactions": "لین دین",
+      "expectedCash": "متوقع نقد"
+    },
+    "statusBar": {
+      "openShift": "شفٹ کھولیں",
+      "close": "بند کریں"
+    },
+    "openedAt": "{{time}} پر کھولی گئی · {{duration}} پہلے"
+  },
+  "splitPayment": {
+    "title": "تقسیم شدہ ادائیگی",
+    "totalDue": "کل واجب الادا:",
+    "payment": "ادائیگی {{number}}",
+    "addMethod": "ادائیگی کا اور طریقہ شامل کریں",
+    "totalDueLabel": "کل واجب الادا",
+    "totalEntered": "کل درج شدہ",
+    "remaining": "باقی",
+    "changeDue": "واپسی",
+    "cancel": "منسوخ",
+    "completePayment": "ادائیگی مکمل کریں",
+    "processing": "پروسیس ہو رہا ہے...",
+    "methods": {
+      "cash": "نقد",
+      "card": "کارڈ",
+      "digital": "ڈیجیٹل"
     }
   }
 }

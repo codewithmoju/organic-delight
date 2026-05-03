@@ -21,11 +21,15 @@ import {
   Barcode,
   Shield,
   MapPin,
+  UserCog,
 } from 'lucide-react';
 import Logo from './ui/Logo';
 import { useTranslation } from 'react-i18next';
 import { SimpleThemeToggle } from './ui/ThemeToggle';
 import { useIsDesktop } from '../hooks/useMediaQuery';
+import { can } from '../lib/auth/permissions';
+import { useAuthStore } from '../lib/store';
+import type { Permission } from '../lib/types/org';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -37,53 +41,59 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const isDesktop = useIsDesktop();
   const isExpanded = isHovered || !isDesktop;
+  const activeOrganization = useAuthStore((state) => state.activeOrganization);
+  const orgActive = !!activeOrganization;
 
   const navGroups = [
     {
       title: t('navigation.groups.foundation'),
       items: [
-        { to: '/', icon: LayoutDashboard, label: t('navigation.dashboard') },
-        { to: '/pos', icon: ShoppingCart, label: t('navigation.pointOfSale') },
+        { to: '/', icon: LayoutDashboard, label: t('navigation.dashboard'), permission: 'dashboard.view' as Permission },
+        { to: '/pos', icon: ShoppingCart, label: t('navigation.pointOfSale'), permission: 'pos.access' as Permission },
       ]
     },
     {
       title: t('navigation.groups.inventoryHub'),
       items: [
-        { to: '/inventory/items', icon: Package, label: t('navigation.inventoryManager') },
-        { to: '/inventory/categories', icon: FolderOpen, label: t('navigation.categories') },
-        { to: '/inventory/valuation', icon: Wallet, label: t('navigation.warehouseValue') },
-        { to: '/inventory/adjustments', icon: SlidersHorizontal, label: 'Adjustments' },
-        { to: '/inventory/count', icon: ClipboardList, label: 'Count' },
-        { to: '/inventory/expiry', icon: CalendarClock, label: 'Expiry' },
-        { to: '/inventory/barcodes', icon: Barcode, label: 'Barcodes' },
+        { to: '/inventory/items', icon: Package, label: t('navigation.inventoryManager'), permission: 'inventory.view' as Permission },
+        { to: '/inventory/categories', icon: FolderOpen, label: t('navigation.categories'), permission: 'categories.view' as Permission },
+        { to: '/inventory/valuation', icon: Wallet, label: t('navigation.warehouseValue'), permission: 'inventory.view' as Permission },
+        { to: '/inventory/adjustments', icon: SlidersHorizontal, label: 'Adjustments', permission: 'inventory.adjust_stock' as Permission },
+        { to: '/inventory/count', icon: ClipboardList, label: 'Count', permission: 'inventory.view' as Permission },
+        { to: '/inventory/expiry', icon: CalendarClock, label: 'Expiry', permission: 'inventory.view' as Permission },
+        { to: '/inventory/barcodes', icon: Barcode, label: 'Barcodes', permission: 'inventory.view' as Permission },
       ]
     },
     {
       title: t('navigation.groups.procurement'),
       items: [
-        { to: '/vendors', icon: Building2, label: t('navigation.vendors') },
-        { to: '/purchases', icon: ShoppingBag, label: t('navigation.purchases', 'Purchases') },
+        { to: '/vendors', icon: Building2, label: t('navigation.vendors'), permission: 'vendors.view' as Permission },
+        { to: '/purchases', icon: ShoppingBag, label: t('navigation.purchases', 'Purchases'), permission: 'procurement.view' as Permission },
       ]
     },
     {
       title: t('navigation.groups.salesCrm'),
       items: [
-        { to: '/customers', icon: Users, label: t('navigation.customers') },
-        { to: '/transactions', icon: ArrowUpDown, label: t('navigation.activityLog') },
+        { to: '/customers', icon: Users, label: t('navigation.customers'), permission: 'customers.view' as Permission },
+        { to: '/transactions', icon: ArrowUpDown, label: t('navigation.activityLog'), permission: 'inventory.view' as Permission },
       ]
     },
     {
       title: t('navigation.groups.insights'),
       items: [
-        { to: '/expenses', icon: Wallet, label: t('navigation.expenses') },
-        { to: '/reports/performance', icon: BarChart3, label: t('navigation.performance') },
-        { to: '/reports', icon: FileText, label: t('navigation.reports', 'Reports') },
-        { to: '/settings/audit', icon: Shield, label: 'Audit Log' },
-        { to: '/settings/locations', icon: MapPin, label: 'Locations' },
-        { to: '/settings', icon: Settings, label: t('navigation.settings') },
+        { to: '/expenses', icon: Wallet, label: t('navigation.expenses'), permission: 'expenses.view' as Permission },
+        { to: '/reports/performance', icon: BarChart3, label: t('navigation.performance'), permission: 'reports.performance' as Permission },
+        { to: '/reports', icon: FileText, label: t('navigation.reports', 'Reports'), permission: 'reports.view' as Permission },
+        { to: '/settings/audit', icon: Shield, label: 'Audit Log', permission: 'audit.view' as Permission },
+        { to: '/settings/locations', icon: MapPin, label: 'Locations', permission: 'settings.view' as Permission },
+        { to: '/settings/team', icon: UserCog, label: 'Team', permission: 'settings.team' as Permission },
+        { to: '/settings', icon: Settings, label: t('navigation.settings'), permission: 'settings.view' as Permission },
       ]
     }
-  ];
+  ].map(group => ({
+    ...group,
+    items: orgActive ? group.items.filter(item => can(item.permission)) : group.items,
+  })).filter(group => group.items.length > 0);
 
   // Handle escape key to close sidebar on mobile
   React.useEffect(() => {
@@ -171,8 +181,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <Logo size="md" showText={false} className="text-white" />
               </div>
               <motion.div
-                animate={{ opacity: isExpanded ? 1 : 0 }}
-                className="flex flex-col min-w-0"
+                initial={false}
+                animate={{ opacity: isExpanded ? 1 : 0, width: isExpanded ? 'auto' : 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col min-w-0 overflow-hidden"
               >
                 <span className="text-lg font-bold text-white whitespace-nowrap">
                   StockSuit
@@ -194,6 +206,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             {navGroups.map((group, groupIndex) => (
               <div key={group.title} className="space-y-1">
                 <motion.h3
+                  initial={false}
                   animate={{
                     opacity: isExpanded ? 1 : 0,
                     height: isExpanded ? 'auto' : 0,
@@ -218,6 +231,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     >
                       <NavLink
                         to={item.to}
+                        end={item.to === '/reports' || item.to === '/settings'}
                         onClick={() => {
                           if (!isDesktop) onClose();
                         }}
@@ -232,12 +246,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                           <>
                             <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
                             <motion.span
+                              initial={false}
                               animate={{
                                 opacity: isExpanded ? 1 : 0,
                                 x: isExpanded ? 0 : -8,
                               }}
                               transition={{ duration: 0.2 }}
-                              className="font-medium text-sm ml-3"
+                              className="font-medium text-sm ml-3 whitespace-nowrap overflow-hidden"
                             >
                               {item.label}
                             </motion.span>
@@ -258,8 +273,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <SimpleThemeToggle />
             </div>
             <motion.div
+              initial={false}
               animate={{ opacity: isExpanded ? 1 : 0 }}
-              className="text-xs text-muted-foreground text-center space-y-1"
+              transition={{ duration: 0.2 }}
+              className="text-xs text-muted-foreground text-center space-y-1 overflow-hidden"
             >
               <div>
                 {t('navigation.poweredBy')}
