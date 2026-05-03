@@ -42,6 +42,74 @@ service cloud.firestore {
         (resource.data.cashier_id == request.auth.uid || isAdmin()) &&
         (request.resource.data.cashier_id == resource.data.cashier_id || isAdmin());
     }
+
+    // Organization helpers
+
+    function isOrgOwner(orgId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/organizations/$(orgId)).data.created_by == request.auth.uid;
+    }
+
+    // Zero-cost role check via custom claims (set by syncMemberClaims Cloud Function)
+    function hasRole(orgId, role) {
+      return isAuthenticated() &&
+        request.auth.token.orgs != null &&
+        request.auth.token.orgs[orgId] == role;
+    }
+
+    // Manager or owner: via custom claims, or fallback to org creator check
+    function isOrgManagerOrOwner(orgId) {
+      return hasRole(orgId, 'owner') || hasRole(orgId, 'manager') || isOrgOwner(orgId);
+    }
+
+    // Org-scoped access: auth check + organization_id field match
+    // The Cloud Function stamps organization_id on all writes; client only knows its own org.
+    function canAccessOrgDoc(orgId) {
+      return isAuthenticated() && orgId != null;
+    }
+
+    // Dual-mode helpers: org-scoped when organization_id exists, legacy fallback otherwise
+    function canReadDoc() {
+      return isAuthenticated() &&
+        (resource.data.organization_id != null ||
+         resource.data.created_by == request.auth.uid ||
+         isAdmin());
+    }
+
+    function canCreateDoc() {
+      return isAuthenticated() &&
+        (request.resource.data.organization_id != null ||
+         request.resource.data.created_by == request.auth.uid ||
+         isAdmin());
+    }
+
+    function canUpdateDoc() {
+      return isAuthenticated() &&
+        (resource.data.organization_id != null ||
+         ((resource.data.created_by == request.auth.uid || isAdmin()) &&
+          (request.resource.data.created_by == resource.data.created_by || isAdmin())));
+    }
+
+    function canReadCashierDoc() {
+      return isAuthenticated() &&
+        (resource.data.organization_id != null ||
+         resource.data.cashier_id == request.auth.uid ||
+         isAdmin());
+    }
+
+    function canCreateCashierDoc() {
+      return isAuthenticated() &&
+        (request.resource.data.organization_id != null ||
+         request.resource.data.cashier_id == request.auth.uid ||
+         isAdmin());
+    }
+
+    function canUpdateCashierDoc() {
+      return isAuthenticated() &&
+        (resource.data.organization_id != null ||
+         ((resource.data.cashier_id == request.auth.uid || isAdmin()) &&
+          (request.resource.data.cashier_id == resource.data.cashier_id || isAdmin())));
+    }
     
     // Profile rules
     match /profiles/{userId} {
@@ -53,26 +121,26 @@ service cloud.firestore {
     
     // Items rules
     match /items/{itemId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
-    
+
     // Categories rules
     match /categories/{categoryId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
-    
+
     // Transactions rules (Stock in/out)
     match /transactions/{transactionId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // POS Settings rules
@@ -112,10 +180,10 @@ service cloud.firestore {
 
     // POS Transactions rules
     match /pos_transactions/{transactionId} {
-      allow read: if isCashierOwner();
-      allow create: if isCashierOwnerOnCreate();
-      allow update: if isCashierOwnerOnUpdate();
-      allow delete: if isCashierOwner();
+      allow read: if canReadCashierDoc();
+      allow create: if canCreateCashierDoc();
+      allow update: if canUpdateCashierDoc();
+      allow delete: if canReadCashierDoc();
     }
 
     // User Settings rules
@@ -125,83 +193,124 @@ service cloud.firestore {
 
     // Vendor rules
     match /vendors/{vendorId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // Vendor Payments rules
     match /vendor_payments/{paymentId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // Purchase rules
     match /purchases/{purchaseId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // Customer rules
     match /customers/{customerId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // Customer Payments rules
     match /customer_payments/{paymentId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // Expense rules
     match /expenses/{expenseId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // POS Returns rules
     match /pos_returns/{returnId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // Sales rules
     match /sales/{saleId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
     // Stock Adjustments rules
     match /stock_adjustments/{adjustmentId} {
-      allow read: if isCreatedByOwner();
-      allow create: if isCreatedByOwnerOnCreate();
-      allow update: if isCreatedByOwnerOnUpdate();
-      allow delete: if isCreatedByOwner();
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if canReadDoc();
     }
 
-    // Audit logs (append-only for users; user_id must match caller)
+    // Audit logs (append-only for users; user_id or organization_id must match caller)
     match /audit_logs/{logId} {
-      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow read: if canReadDoc();
       allow create: if isAuthenticated() &&
-        request.resource.data.user_id == request.auth.uid &&
+        (request.resource.data.user_id == request.auth.uid || canCreateDoc()) &&
         request.resource.data.keys().hasAll(['user_id', 'action', 'resource', 'created_at']);
       allow update, delete: if isAdmin();
+    }
+
+    // Organizations rules
+    match /organizations/{orgId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.created_by == request.auth.uid;
+      allow update: if isAuthenticated() && hasRole(orgId, 'owner') || isOrgOwner(orgId);
+      allow delete: if isAuthenticated() && isOrgOwner(orgId);
+    }
+
+    // Organization members rules
+    match /organization_members/{memberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && hasRole(resource.data.organization_id, 'owner') || isOrgOwner(resource.data.organization_id);
+      allow delete: if isAuthenticated() && hasRole(resource.data.organization_id, 'owner') || isOrgOwner(resource.data.organization_id);
+    }
+
+    // Invites rules
+    match /invites/{inviteId} {
+      allow read: if isAuthenticated() && (
+        resource.data.email == request.auth.token.email ||
+        isOrgManagerOrOwner(resource.data.organization_id)
+      );
+      allow create: if isAuthenticated() && (
+        isOrgManagerOrOwner(request.resource.data.organization_id)
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.email == request.auth.token.email ||
+        isOrgManagerOrOwner(resource.data.organization_id)
+      );
+      allow delete: if isAuthenticated() && (
+        isOrgManagerOrOwner(resource.data.organization_id)
+      );
+    }
+
+    // Organization settings rules (owner/manager only)
+    match /organization_settings/{orgId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isOrgManagerOrOwner(orgId);
+      allow delete: if isAuthenticated() && isOrgOwner(orgId);
     }
   }
 }

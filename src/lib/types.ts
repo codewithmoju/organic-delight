@@ -12,6 +12,7 @@ export interface Item {
   created_at: Date;
   updated_at: Date;
   created_by: string;
+  organization_id?: string;
   is_archived?: boolean;
   category?: Category;
   // Stock tracking fields (calculated from transactions)
@@ -23,6 +24,8 @@ export interface Item {
   unit?: string; // Unit of measurement (e.g., 'kg', 'pcs')
 
   // Pricing and Location
+  base_price?: number;
+  selling_price?: number;
   purchase_rate?: number;
   sale_rate?: number;
   location?: string | ItemLocation;
@@ -42,6 +45,7 @@ export interface Category {
   created_at: Date;
   updated_at: Date;
   created_by: string;
+  organization_id?: string;
   color?: string;
   item_count?: number;
 }
@@ -59,6 +63,7 @@ export interface Transaction {
   notes?: string;
   created_at: Date;
   created_by: string;
+  organization_id?: string;
   item?: Item;
 }
 
@@ -149,6 +154,7 @@ export interface POSTransaction {
   payment_amount: number;
   change_amount: number;
   cashier_id: string;
+  organization_id?: string;
   customer_name?: string | null;
   customer_phone?: string | null;
   created_at: Date;
@@ -185,6 +191,9 @@ export interface CartItem {
   barcode?: string;
   sku?: string;
   unit_price: number;
+  base_price?: number;
+  default_selling_price?: number;
+  is_price_overridden?: boolean;
   quantity: number;
   line_total: number;
   available_stock: number;
@@ -198,6 +207,8 @@ export interface BarcodeProduct {
   barcode: string;
   sku?: string;
   price: number;
+  base_price?: number;
+  selling_price?: number;
   stock: number;
   category?: string;
   unit?: string;
@@ -264,6 +275,7 @@ export interface Vendor {
   created_at: Date;
   updated_at: Date;
   created_by: string;
+  organization_id?: string;
   is_active: boolean;
 }
 
@@ -277,6 +289,7 @@ export interface VendorPayment {
   payment_date: Date;
   created_at: Date;
   created_by: string;
+  organization_id?: string;
 }
 
 // ============================================
@@ -300,6 +313,7 @@ export interface Purchase {
   purchase_date: Date;
   created_at: Date;
   created_by: string;
+  organization_id?: string;
   notes?: string | null;
   // Delivery tracking
   delivery_status?: 'pending' | 'partial' | 'received';
@@ -341,6 +355,7 @@ export interface Customer {
   created_at: Date;
   updated_at: Date;
   created_by: string;
+  organization_id?: string;
   is_active: boolean;
 }
 
@@ -355,6 +370,7 @@ export interface CustomerPayment {
   payment_date: Date;
   created_at: Date;
   created_by: string;
+  organization_id?: string;
 }
 
 // ============================================
@@ -369,6 +385,8 @@ export interface EnhancedItem extends Item {
   barcode?: string;                // For POS scanning (EAN-13, UPC, etc.)
 
   // Dual pricing system
+  base_price?: number;             // Cost/reference floor price
+  selling_price?: number;          // Current selling price (canonical)
   purchase_rate?: number;          // Last cost from vendor
   sale_rate?: number;              // Current selling price
   unit_price?: number;             // Deprecated: use sale_rate instead
@@ -406,6 +424,7 @@ export interface Expense {
   notes?: string;
   created_at: Date;
   created_by: string;
+  organization_id?: string;
 }
 
 export type ExpenseCategory =
@@ -477,6 +496,7 @@ export interface POSReturn {
   reason: string;
   created_at: Date;
   created_by: string;
+  organization_id?: string;
 }
 
 // ============================================
