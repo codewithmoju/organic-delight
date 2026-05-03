@@ -18,6 +18,7 @@ import PaginationControls from '../../components/ui/PaginationControls';
 import { PageSkeleton, TableSkeleton } from '../../components/ui/SkeletonLoader';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
+import { readScopedRaw, readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 const ITEMS_CACHE_KEY = 'inventory_items_cache';
 const CATEGORIES_CACHE_KEY = 'inventory_categories_cache';
@@ -28,7 +29,7 @@ export default function Items() {
   // Initialize from cache to provide instant feedback
   const [items, setItems] = useState<EnhancedItem[]>(() => {
     try {
-      const cached = localStorage.getItem(ITEMS_CACHE_KEY);
+      const cached = readScopedRaw(ITEMS_CACHE_KEY, ITEMS_CACHE_KEY);
       if (cached) {
         return JSON.parse(cached, (key, value) => {
           if (['created_at', 'updated_at', 'last_transaction_date'].includes(key)) {
@@ -45,7 +46,7 @@ export default function Items() {
 
   const [categories, setCategories] = useState<Category[]>(() => {
     try {
-      const cached = localStorage.getItem(CATEGORIES_CACHE_KEY);
+      const cached = readScopedRaw(CATEGORIES_CACHE_KEY, CATEGORIES_CACHE_KEY);
       if (cached) {
         return JSON.parse(cached, (key, value) => {
           if (['created_at', 'updated_at'].includes(key)) return new Date(value);
@@ -60,7 +61,7 @@ export default function Items() {
 
   const [filteredItems, setFilteredItems] = useState<EnhancedItem[]>([]);
   // Use cache presence to determine initial loading state
-  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem(ITEMS_CACHE_KEY));
+  const [isLoading, setIsLoading] = useState(() => readScopedRaw(ITEMS_CACHE_KEY, ITEMS_CACHE_KEY) == null);
   const [selectedItem, setSelectedItem] = useState<EnhancedItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,10 +91,10 @@ export default function Items() {
       const LAST_SYNC_KEY = 'stock_last_sync_timestamp';
       const SYNC_COOLDOWN = 60 * 60 * 1000; // 1 hour
 
-      const lastSync = localStorage.getItem(LAST_SYNC_KEY);
+      const lastSync = readScopedJSON<number>(LAST_SYNC_KEY, 0, undefined, LAST_SYNC_KEY);
       const now = Date.now();
 
-      if (!lastSync || now - parseInt(lastSync) > SYNC_COOLDOWN) {
+      if (!lastSync || now - lastSync > SYNC_COOLDOWN) {
         console.log('Running automatic stock synchronization...');
         try {
           const result = await reconcileAllItemsStock();
@@ -101,7 +102,7 @@ export default function Items() {
             toast.success(`Automatically synced ${result.updated} items`, { duration: 3000 });
             loadData(false);
           }
-          localStorage.setItem(LAST_SYNC_KEY, now.toString());
+          writeScopedJSON(LAST_SYNC_KEY, now);
         } catch (error) {
           console.error('Auto sync failed:', error);
         }
@@ -128,8 +129,8 @@ export default function Items() {
       setCategories(categoriesData);
 
       // Update cache
-      localStorage.setItem(ITEMS_CACHE_KEY, JSON.stringify(loadedItems));
-      localStorage.setItem(CATEGORIES_CACHE_KEY, JSON.stringify(categoriesData));
+      writeScopedJSON(ITEMS_CACHE_KEY, loadedItems);
+      writeScopedJSON(CATEGORIES_CACHE_KEY, categoriesData);
 
     } catch (error) {
       toast.error('Failed to load data');
@@ -342,7 +343,7 @@ export default function Items() {
                 }}
                 onCategoryCreated={(newCat) => {
                   setCategories(prev => [...prev, newCat]);
-                  localStorage.setItem(CATEGORIES_CACHE_KEY, JSON.stringify([...categories, newCat]));
+                  writeScopedJSON(CATEGORIES_CACHE_KEY, [...categories, newCat]);
                 }}
               />
             )}

@@ -12,6 +12,8 @@ import {
 import EnhancedBarcodeScanner from './EnhancedBarcodeScanner';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import PaymentModal from './PaymentModal';
+import SplitPaymentModal, { SplitPaymentEntry } from './SplitPaymentModal';
+import { ShiftStatusBar, OpenShiftModal, CloseShiftModal, useShift } from './ShiftManager';
 import EnhancedReceiptGenerator from './EnhancedReceiptGenerator';
 import VendorListModal from '../vendors/VendorListModal';
 import CustomerSelector from '../customers/CustomerSelector';
@@ -26,10 +28,12 @@ import { useAuthStore } from '../../lib/store';
 import { usePOSShortcuts, POS_SHORTCUTS } from '../../hooks/useKeyboardShortcuts';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { usePOSCart } from '../../lib/hooks/usePOSCart';
+import { usePOSPermissions } from '../../lib/hooks/usePOSPermissions';
 import HeldCartsModal from './HeldCartsModal';
 import { Star, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { useOfflineQueue } from '../../hooks/useOfflineQueue';
+import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 export default function POSInterface() {
   const { t } = useTranslation();
@@ -49,15 +53,16 @@ export default function POSInterface() {
     discardHeldCart
   } = usePOSCart();
 
+  const { can, isAdmin, isManager, role } = usePOSPermissions();
+
   // Removed local cartItems state as it's now managed by the hook
 
-  const [settings, setSettings] = useState<POSSettings | null>(() => {
-    try {
-      const cached = localStorage.getItem('pos_settings_cache');
-      return cached ? JSON.parse(cached) : null;
-    } catch { return null; }
-  });
-  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('pos_settings_cache'));
+  const [settings, setSettings] = useState<POSSettings | null>(() =>
+    readScopedJSON<POSSettings | null>('pos_settings_cache', null, undefined, 'pos_settings_cache')
+  );
+  const [isLoading, setIsLoading] = useState(
+    () => readScopedJSON<POSSettings | null>('pos_settings_cache', null, undefined, 'pos_settings_cache') == null
+  );
 
   // Scanner
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -69,12 +74,9 @@ export default function POSInterface() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Bill types
-  const [billTypes, setBillTypes] = useState<BillType[]>(() => {
-    try {
-      const cached = localStorage.getItem('pos_bill_types_cache');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
+  const [billTypes, setBillTypes] = useState<BillType[]>(() =>
+    readScopedJSON<BillType[]>('pos_bill_types_cache', [], undefined, 'pos_bill_types_cache')
+  );
   const [selectedBillType, setSelectedBillType] = useState<BillType | null>(null);
 
   // Customer / Credit
@@ -83,13 +85,13 @@ export default function POSInterface() {
   const [isReturnMode, setIsReturnMode] = useState(false);
 
   // Quick Access Logic
-  const [quickAccessItems, setQuickAccessItems] = useState<BarcodeProduct[]>(() => {
-    try {
-      const cached = localStorage.getItem('pos_quick_access_cache');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [isLoadingQuickAccess, setIsLoadingQuickAccess] = useState(() => !localStorage.getItem('pos_quick_access_cache'));
+  const [quickAccessItems, setQuickAccessItems] = useState<BarcodeProduct[]>(() =>
+    readScopedJSON<BarcodeProduct[]>('pos_quick_access_cache', [], undefined, 'pos_quick_access_cache')
+  );
+  const [isLoadingQuickAccess, setIsLoadingQuickAccess] = useState(
+    () =>
+      readScopedJSON<BarcodeProduct[]>('pos_quick_access_cache', [], undefined, 'pos_quick_access_cache').length === 0
+  );
 
   // Offline Support
   const isOnline = useOnlineStatus();
@@ -115,6 +117,15 @@ export default function POSInterface() {
   const [completedTransaction, setCompletedTransaction] = useState<POSTransaction | null>(null);
   const [profitDiscount, setProfitDiscount] = useState(0);
   const [priceDiscount, setPriceDiscount] = useState(0);
+
+  // Split payment
+  const [isSplitPaymentOpen, setIsSplitPaymentOpen] = useState(false);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+
+  // Shift management
+  const { currentShift, openShift, updateShiftTotals, closeShift } = useShift();
+  const [isOpenShiftModalOpen, setIsOpenShiftModalOpen] = useState(false);
+  const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
 
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -192,7 +203,7 @@ export default function POSInterface() {
       }
 
       // Cache the result
-      localStorage.setItem('pos_bill_types_cache', JSON.stringify(activeTypes));
+      writeScopedJSON('pos_bill_types_cache', activeTypes);
 
     } catch (error) {
       console.error('Error loading bill types:', error);
@@ -212,7 +223,7 @@ export default function POSInterface() {
       const fetchedSettings = await getPOSSettings();
       if (fetchedSettings) {
         setSettings(fetchedSettings);
-        localStorage.setItem('pos_settings_cache', JSON.stringify(fetchedSettings));
+        writeScopedJSON('pos_settings_cache', fetchedSettings);
 
         // Fetch Quick Access Items
         if (fetchedSettings.quick_access_items && fetchedSettings.quick_access_items.length > 0) {
@@ -222,7 +233,7 @@ export default function POSInterface() {
           getQuickAccessProducts(fetchedSettings.quick_access_items)
             .then(items => {
               setQuickAccessItems(items);
-              localStorage.setItem('pos_quick_access_cache', JSON.stringify(items));
+              writeScopedJSON('pos_quick_access_cache', items);
             })
             .catch(err => console.error(err))
             .finally(() => setIsLoadingQuickAccess(false));
@@ -315,7 +326,7 @@ export default function POSInterface() {
     setSearchResults([]);
   };
 
-  const toggleQuickAccess = async (e: React.MouseEvent, product: BarcodeProduct) => {
+  const toggleQuickAccess = async (e: React.SyntheticEvent, product: BarcodeProduct) => {
     e.stopPropagation();
     try {
       const newIds = await toggleQuickAccessItem(product.id);
@@ -362,6 +373,9 @@ export default function POSInterface() {
 
     try {
       if (!selectedBillType) { toast.error('No bill type selected'); return; }
+      if (!isOnline && isCreditSale) {
+        throw new Error('Credit sales require internet connection to keep customer balances accurate');
+      }
 
       const transactionData = {
         items: cartItems.map(item => ({ ...item })), // Deep copy items
@@ -397,6 +411,18 @@ export default function POSInterface() {
       }
 
       if (isCreditSale && selectedCustomer && selectedBillType.affects_accounting) {
+        // Credit limit enforcement
+        if (selectedCustomer.credit_limit && selectedCustomer.credit_limit > 0) {
+          const newBalance = selectedCustomer.outstanding_balance + netTotal;
+          if (newBalance > selectedCustomer.credit_limit) {
+            toast.error(
+              `Credit limit exceeded for ${selectedCustomer.name}. ` +
+              `Limit: ${formatCurrency(selectedCustomer.credit_limit)}, ` +
+              `Current: ${formatCurrency(selectedCustomer.outstanding_balance)}`
+            );
+            throw new Error('Credit limit exceeded');
+          }
+        }
         await updateCustomerBalanceForSale(selectedCustomer.id, netTotal);
         toast.info(`Credit added to ${selectedCustomer.name}'s account`);
       }
@@ -408,6 +434,21 @@ export default function POSInterface() {
 
       // Clear dashboard cache to ensure metrics reflect new sale
       clearDashboardCache();
+
+      // Audit log
+      import('../../lib/api/auditLog').then(({ logAudit }) => {
+        logAudit({
+          action: 'sale',
+          resource: 'pos_transaction',
+          resource_id: newTransaction.id,
+          resource_name: newTransaction.transaction_number,
+          details: `${isReturnMode ? 'Return' : 'Sale'} of ${formatCurrency(netTotal)}`,
+          user_name: profile?.full_name,
+        });
+      });
+
+      // Update shift totals
+      updateShiftTotals(netTotal, totalDiscount, isReturnMode);
 
       if (newTransaction.transaction_number !== 'OFFLINE') {
         toast.success('Transaction completed!');
@@ -449,6 +490,21 @@ export default function POSInterface() {
     resetBillState();
   }
 
+  // ─── Split Payment ───
+  const handleSplitPaymentComplete = async (splits: SplitPaymentEntry[], change: number) => {
+    // Use the first split's method as the primary for the transaction record
+    const primaryMethod = splits[0]?.method ?? 'cash';
+    const totalPaid = splits.reduce((s, e) => s + e.amount, 0);
+    await handlePaymentComplete({
+      payment_method: primaryMethod,
+      payment_amount: totalPaid,
+      change_amount: change,
+      profit_discount: profitDiscount,
+      price_discount: priceDiscount,
+    });
+    setIsSplitPaymentOpen(false);
+  };
+
   // ─── Loading / Error ───
   if (isLoading) {
     return (
@@ -467,8 +523,6 @@ export default function POSInterface() {
     );
   }
 
-  // Mobile cart sheet state
-  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const totalCartQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // ─── RENDER ───
@@ -539,7 +593,13 @@ export default function POSInterface() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setIsReturnMode(!isReturnMode)}
+          onClick={() => {
+              if (!can('process_return')) {
+                toast.error('Manager or Admin access required to process returns');
+                return;
+              }
+              setIsReturnMode(!isReturnMode);
+            }}
           className={`p-2.5 sm:p-3 rounded-xl transition-all border ${isReturnMode
             ? 'bg-error-500/20 text-error-400 border-error-500/50'
             : 'bg-card text-foreground-muted border-border/50 hover:border-error-500/50'
@@ -585,6 +645,30 @@ export default function POSInterface() {
         >
           <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
+
+        {/* Shift Status */}
+        <ShiftStatusBar
+          shift={currentShift}
+          onOpenShift={() => setIsOpenShiftModalOpen(true)}
+          onCloseShift={() => {
+            if (!can('close_shift')) {
+              toast.error('Manager or Admin access required to close shift');
+              return;
+            }
+            setIsCloseShiftModalOpen(true);
+          }}
+        />
+
+        {/* Role badge */}
+        <span className={`hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border ${
+          isAdmin
+            ? 'bg-primary/10 text-primary border-primary/20'
+            : isManager
+            ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
+            : 'bg-secondary text-muted-foreground border-border/40'
+        }`}>
+          {role}
+        </span>
       </div>
 
       {/* Bill Type Warning */}
@@ -770,13 +854,21 @@ export default function POSInterface() {
                             <h4 className="font-medium text-sm text-foreground truncate max-w-[80%]" title={product.name}>
                               {product.name}
                             </h4>
-                            <button
+                            <span
+                              role="button"
+                              tabIndex={0}
                               aria-label={`Remove ${product.name} from Quick Access`}
                               onClick={(e) => toggleQuickAccess(e, product)}
-                              className="text-yellow-400 hover:text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleQuickAccess(e, product);
+                                }
+                              }}
+                              className="text-yellow-400 hover:text-yellow-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             >
                               <Star className="w-3 h-3 fill-current" />
-                            </button>
+                            </span>
                           </div>
 
                           <div className="flex items-center justify-between mt-2">
@@ -838,6 +930,10 @@ export default function POSInterface() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
+                    if (!can('credit_sale')) {
+                      toast.error('Manager or Admin access required for credit sales');
+                      return;
+                    }
                     setIsCreditSale(!isCreditSale);
                     if (!isCreditSale) setIsCustomerModalOpen(true);
                     else setSelectedCustomer(null);
@@ -939,6 +1035,17 @@ export default function POSInterface() {
                   <User className="w-3.5 h-3.5 text-accent-400" />
                   <span className="text-foreground font-medium truncate">{selectedCustomer.name}</span>
                   <span className="text-accent-400 text-xs">({formatCurrency(selectedCustomer.outstanding_balance)} due)</span>
+                  {selectedCustomer.credit_limit && selectedCustomer.credit_limit > 0 && (
+                    <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
+                      selectedCustomer.outstanding_balance >= selectedCustomer.credit_limit
+                        ? 'bg-error-500/20 text-error-500'
+                        : selectedCustomer.outstanding_balance >= selectedCustomer.credit_limit * 0.8
+                        ? 'bg-warning-500/20 text-warning-500'
+                        : 'bg-secondary text-muted-foreground'
+                    }`}>
+                      Limit: {formatCurrency(selectedCustomer.credit_limit)}
+                    </span>
+                  )}
                 </div>
                 <button
                   onClick={() => setIsCustomerModalOpen(true)}
@@ -1083,6 +1190,16 @@ export default function POSInterface() {
                 : t('pos.terminal.addItemsToStart', 'Add items to start')
               }
             </motion.button>
+
+            {/* Split payment shortcut */}
+            {cartItems.length > 0 && (
+              <button
+                onClick={() => setIsSplitPaymentOpen(true)}
+                className="w-full py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                Split Payment
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1323,6 +1440,43 @@ export default function POSInterface() {
         onConfirm={() => { clearCart(); setIsClearCartConfirmOpen(false); toast.info('Cart cleared'); }}
         onCancel={() => setIsClearCartConfirmOpen(false)}
       />
+
+      {/* Split Payment Modal */}
+      <SplitPaymentModal
+        isOpen={isSplitPaymentOpen}
+        onClose={() => setIsSplitPaymentOpen(false)}
+        totalDue={total}
+        settings={settings}
+        onPaymentComplete={handleSplitPaymentComplete}
+      />
+
+      {/* Shift Modals */}
+      <AnimatePresence>
+        {isOpenShiftModalOpen && (
+          <OpenShiftModal
+            onOpen={(float) => {
+              openShift(float, profile?.full_name || 'Cashier', profile?.id || 'unknown');
+              setIsOpenShiftModalOpen(false);
+              toast.success('Shift opened');
+            }}
+            onDismiss={() => setIsOpenShiftModalOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isCloseShiftModalOpen && currentShift && (
+          <CloseShiftModal
+            shift={currentShift}
+            onClose={(cash, notes) => {
+              closeShift(cash, notes);
+              setIsCloseShiftModalOpen(false);
+              toast.success('Shift closed successfully');
+            }}
+            onCancel={() => setIsCloseShiftModalOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Keyboard Shortcuts Modal */}
       <AnimatePresence>

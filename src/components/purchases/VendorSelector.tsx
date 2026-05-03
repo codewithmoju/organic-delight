@@ -7,6 +7,7 @@ import { getVendors, createVendor } from '../../lib/api/vendors';
 import { useAuthStore } from '../../lib/store';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 interface VendorSelectorProps {
     onVendorSelected: (vendor: Vendor) => void;
@@ -24,14 +25,13 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
         gst_number: ''
     };
     const [searchQuery, setSearchQuery] = useState('');
-    const [vendors, setVendors] = useState<Vendor[]>(() => {
-        try {
-            const cached = localStorage.getItem('vendors_cache');
-            return cached ? JSON.parse(cached) : [];
-        } catch { return []; }
-    });
+    const [vendors, setVendors] = useState<Vendor[]>(() =>
+        readScopedJSON<Vendor[]>('vendors_cache', [], undefined, 'vendors_cache')
+    );
     const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
-    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('vendors_cache'));
+    const [isLoading, setIsLoading] = useState(
+        () => readScopedJSON<Vendor[]>('vendors_cache', [], undefined, 'vendors_cache').length === 0
+    );
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const user = useAuthStore(state => state.user);
@@ -80,7 +80,7 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
         try {
             const data = await getVendors();
             setVendors(data);
-            localStorage.setItem('vendors_cache', JSON.stringify(data));
+            writeScopedJSON('vendors_cache', data);
             // Only update filtered if we are not searching
             if (!searchQuery.trim()) {
                 setFilteredVendors(data);

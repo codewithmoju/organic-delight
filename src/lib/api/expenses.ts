@@ -13,7 +13,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Expense, ExpenseCategory } from '../types';
-import { requireCurrentUserId } from './userScope';
+import { requireCurrentUserId, assertOwnership } from './userScope';
+import { stripUndefined } from '../utils/firestore';
 
 // ============================================
 // EXPENSE CRUD OPERATIONS
@@ -35,14 +36,30 @@ export async function recordExpense(expenseData: {
     const userId = requireCurrentUserId();
     const expensesRef = collection(db, 'expenses');
 
-    const newExpense = {
-        ...expenseData,
+    const newExpense: Record<string, any> = stripUndefined({
+        category: expenseData.category,
+        description: expenseData.description,
+        amount: expenseData.amount,
+        payment_method: expenseData.payment_method,
         created_by: userId,
         expense_date: Timestamp.fromDate(expenseData.expense_date),
-        created_at: Timestamp.fromDate(new Date())
-    };
+        created_at: Timestamp.fromDate(new Date()),
+        reference_number: expenseData.reference_number || null,
+        notes: expenseData.notes || null,
+    });
 
     const docRef = await addDoc(expensesRef, newExpense);
+
+    // Fire-and-forget audit log
+    import('./auditLog').then(({ logAudit }) => {
+      logAudit({
+        action: 'create',
+        resource: 'expense',
+        resource_id: docRef.id,
+        resource_name: expenseData.description,
+        details: `${expenseData.category} — PKR ${expenseData.amount}`,
+      });
+    });
 
     return {
         id: docRef.id,
@@ -58,7 +75,7 @@ export async function recordExpense(expenseData: {
 export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Expense[]> {
     const userId = requireCurrentUserId();
     const expensesRef = collection(db, 'expenses');
-    let q = query(expensesRef, orderBy('expense_date', 'desc'));
+    let q = query(expensesRef, where('created_by', '==', userId), orderBy('expense_date', 'desc'));
 
     if (startDate) {
         q = query(q, where('expense_date', '>=', Timestamp.fromDate(startDate)));
@@ -74,7 +91,7 @@ export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Exp
             ...doc.data(),
             expense_date: doc.data().expense_date?.toDate() || new Date(),
             created_at: doc.data().created_at?.toDate() || new Date()
-        })).filter(e => (e as Expense).created_by === userId) as Expense[];
+        })) as Expense[];
     } catch (error: any) {
         console.error('Error fetching expenses:', error);
         // Fallback to client-side filter if server-side fails (e.g. index issue)
@@ -93,6 +110,7 @@ export async function getExpensesByCategory(category: ExpenseCategory): Promise<
     const expensesRef = collection(db, 'expenses');
     const q = query(
         expensesRef,
+        where('created_by', '==', userId),
         where('category', '==', category),
         orderBy('expense_date', 'desc')
     );
@@ -103,7 +121,7 @@ export async function getExpensesByCategory(category: ExpenseCategory): Promise<
         ...doc.data(),
         expense_date: doc.data().expense_date?.toDate() || new Date(),
         created_at: doc.data().created_at?.toDate() || new Date()
-    })).filter(e => (e as Expense).created_by === userId) as Expense[];
+    })) as Expense[];
 }
 
 /**
@@ -129,16 +147,24 @@ export async function updateExpense(
     const userId = requireCurrentUserId();
     const expenseRef = doc(db, 'expenses', expenseId);
     const expenseSnap = await getDoc(expenseRef);
-    if (!expenseSnap.exists() || expenseSnap.data().created_by !== userId) {
+
+    if (!expenseSnap.exists()) {
         throw new Error('Expense not found');
     }
+    assertOwnership(expenseSnap.data(), 'Expense');
 
-    const updateData: any = { ...updates };
-    if (updates.expense_date) {
-        updateData.expense_date = Timestamp.fromDate(updates.expense_date);
+    // Build clean update payload — strip undefined, convert dates
+    const payload: Record<string, any> = {};
+    for (const [key, value] of Object.entries(updates)) {
+        if (value === undefined) continue;
+        if (key === 'expense_date' && value instanceof Date) {
+            payload[key] = Timestamp.fromDate(value);
+        } else {
+            payload[key] = value ?? null;
+        }
     }
 
-    await updateDoc(expenseRef, updateData);
+    await updateDoc(expenseRef, payload);
 }
 
 /**
@@ -148,9 +174,12 @@ export async function deleteExpense(expenseId: string): Promise<void> {
     const userId = requireCurrentUserId();
     const expenseRef = doc(db, 'expenses', expenseId);
     const expenseSnap = await getDoc(expenseRef);
-    if (!expenseSnap.exists() || expenseSnap.data().created_by !== userId) {
+
+    if (!expenseSnap.exists()) {
         throw new Error('Expense not found');
     }
+    assertOwnership(expenseSnap.data(), 'Expense');
+
     await deleteDoc(expenseRef);
 }
 

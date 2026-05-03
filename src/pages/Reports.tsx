@@ -8,28 +8,22 @@ import { getItems } from '../lib/api/items';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import { formatCurrency } from '../lib/utils/notifications';
 import ContextualLoader from '../components/ui/ContextualLoader';
+import { readScopedJSON, writeScopedJSON } from '../lib/utils/storageScope';
 
 export default function Reports() {
   const { t } = useTranslation();
-  const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>(() => {
-    try {
-      const cached = localStorage.getItem('reports_monthly_cache');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [topItems, setTopItems] = useState<any[]>(() => {
-    try {
-      const cached = localStorage.getItem('reports_top_items_cache');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [categoryDistribution, setCategoryDistribution] = useState<any[]>(() => {
-    try {
-      const cached = localStorage.getItem('reports_category_dist_cache');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('reports_monthly_cache'));
+  const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>(() =>
+    readScopedJSON<any[]>('reports_monthly_cache', [], undefined, 'reports_monthly_cache')
+  );
+  const [topItems, setTopItems] = useState<any[]>(() =>
+    readScopedJSON<any[]>('reports_top_items_cache', [], undefined, 'reports_top_items_cache')
+  );
+  const [categoryDistribution, setCategoryDistribution] = useState<any[]>(() =>
+    readScopedJSON<any[]>('reports_category_dist_cache', [], undefined, 'reports_category_dist_cache')
+  );
+  const [isLoading, setIsLoading] = useState(
+    () => readScopedJSON<any[]>('reports_monthly_cache', [], undefined, 'reports_monthly_cache').length === 0
+  );
 
   const COLORS = ['#3b82f6', '#d946ef', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -95,9 +89,9 @@ export default function Reports() {
       setTopItems(processedTopItems);
       setCategoryDistribution(processedCategory);
 
-      localStorage.setItem('reports_monthly_cache', JSON.stringify(processedMonthly));
-      localStorage.setItem('reports_top_items_cache', JSON.stringify(processedTopItems));
-      localStorage.setItem('reports_category_dist_cache', JSON.stringify(processedCategory));
+      writeScopedJSON('reports_monthly_cache', processedMonthly);
+      writeScopedJSON('reports_top_items_cache', processedTopItems);
+      writeScopedJSON('reports_category_dist_cache', processedCategory);
 
     } catch (error) {
       toast.error(t('reports.messages.loadError'));

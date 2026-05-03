@@ -6,6 +6,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { POSReturn, ReturnItem, POSTransaction } from '../types';
+import { assertOwnership, requireCurrentUserId } from './userScope';
 
 /**
  * Process a full or partial return for a POS transaction
@@ -18,6 +19,7 @@ export async function processPOSReturn(returnData: {
     reason: string;
     created_by: string;
 }): Promise<string> {
+    const userId = requireCurrentUserId();
     const returnNumber = `RET${Date.now().toString().slice(-8)}`;
 
     return await runTransaction(db, async (transaction) => {
@@ -30,6 +32,9 @@ export async function processPOSReturn(returnData: {
         }
 
         const posTransaction = transactionDoc.data() as POSTransaction;
+        if (posTransaction.cashier_id !== userId) {
+            throw new Error('Original transaction not found');
+        }
 
         // Read all item docs so we can update stock
         const itemReads: Array<{
@@ -41,6 +46,7 @@ export async function processPOSReturn(returnData: {
         for (const item of returnData.items) {
             const itemRef = doc(db, 'items', item.item_id);
             const itemDoc = await transaction.get(itemRef);
+            assertOwnership(itemDoc.exists() ? itemDoc.data() : null, 'Item');
             itemReads.push({
                 itemRef,
                 currentStock: itemDoc.exists() ? (itemDoc.data().current_quantity ?? 0) : 0,
@@ -59,7 +65,7 @@ export async function processPOSReturn(returnData: {
             refund_method: returnData.refund_method,
             reason: returnData.reason,
             created_at: new Date(),
-            created_by: returnData.created_by
+            created_by: userId
         };
 
         transaction.set(returnRef, {
@@ -98,7 +104,7 @@ export async function processPOSReturn(returnData: {
                 supplier_customer: 'Customer Return',
                 reference_number: returnNumber,
                 notes: `Return from Transaction #${posTransaction.transaction_number}. Reason: ${returnData.reason}`,
-                created_by: returnData.created_by,
+                created_by: userId,
                 created_at: Timestamp.fromDate(new Date()),
                 pos_return_id: returnRef.id,
                 pos_transaction_id: returnData.original_transaction_id
@@ -112,7 +118,8 @@ export async function processPOSReturn(returnData: {
 /**
  * Void a transaction entirely (similar to a full return but marked as voided)
  */
-export async function voidTransaction(transactionId: string, reason: string, userId: string): Promise<void> {
+export async function voidTransaction(transactionId: string, reason: string, _userId: string): Promise<void> {
+    const currentUserId = requireCurrentUserId();
     return await runTransaction(db, async (transaction) => {
         // ── Phase 1: ALL reads first ──────────────────────────────────────────
         const transactionRef = doc(db, 'pos_transactions', transactionId);
@@ -123,6 +130,9 @@ export async function voidTransaction(transactionId: string, reason: string, use
         }
 
         const posTransaction = transactionDoc.data() as POSTransaction;
+        if (posTransaction.cashier_id !== currentUserId) {
+            throw new Error('Transaction not found');
+        }
 
         if (posTransaction.status === 'voided' || posTransaction.status === 'cancelled') {
             throw new Error('Transaction already voided/cancelled');
@@ -139,6 +149,7 @@ export async function voidTransaction(transactionId: string, reason: string, use
             for (const item of posTransaction.items) {
                 const itemRef = doc(db, 'items', item.item_id);
                 const itemDoc = await transaction.get(itemRef);
+                assertOwnership(itemDoc.exists() ? itemDoc.data() : null, 'Item');
                 itemReads.push({
                     itemRef,
                     currentStock: itemDoc.exists() ? (itemDoc.data().current_quantity ?? 0) : 0,
@@ -152,7 +163,7 @@ export async function voidTransaction(transactionId: string, reason: string, use
             status: 'voided',
             void_reason: reason,
             voided_at: Timestamp.fromDate(new Date()),
-            voided_by: userId
+            voided_by: currentUserId
         });
 
         for (const { itemRef, currentStock, item } of itemReads) {
@@ -174,7 +185,7 @@ export async function voidTransaction(transactionId: string, reason: string, use
                 supplier_customer: 'Voided Transaction',
                 reference_number: `VOID-${posTransaction.transaction_number}`,
                 notes: `Voided Transaction #${posTransaction.transaction_number}. Reason: ${reason}`,
-                created_by: userId,
+                created_by: currentUserId,
                 created_at: Timestamp.fromDate(new Date()),
                 pos_transaction_id: transactionId
             });

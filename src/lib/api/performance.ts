@@ -31,6 +31,7 @@ export async function getProductPerformance(days: number = 30): Promise<ProductR
     try {
         const q = query(
             transactionsRef,
+            where('cashier_id', '==', userId),
             where('status', '==', 'completed'),
             where('created_at', '>=', Timestamp.fromDate(startDate))
         );
@@ -41,14 +42,18 @@ export async function getProductPerformance(days: number = 30): Promise<ProductR
             throw error;
         }
 
-        const fallbackQuery = query(transactionsRef, where('status', '==', 'completed'));
+        const fallbackQuery = query(
+            transactionsRef,
+            where('cashier_id', '==', userId),
+            where('status', '==', 'completed')
+        );
         const fallbackSnapshot = await getDocs(fallbackQuery);
         const minTime = startDate.getTime();
 
         const filteredDocs = fallbackSnapshot.docs.filter((doc) => {
             const data = doc.data() as any;
             const createdAt = data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || 0);
-            return data.cashier_id === userId && createdAt.getTime() >= minTime;
+            return createdAt.getTime() >= minTime;
         });
 
         snapshot = { docs: filteredDocs } as typeof fallbackSnapshot;
@@ -58,7 +63,6 @@ export async function getProductPerformance(days: number = 30): Promise<ProductR
 
     snapshot.docs.forEach(doc => {
         const t = doc.data() as POSTransaction;
-        if ((t as any).cashier_id !== userId) return;
         t.items.forEach(item => {
             if (!performance[item.item_name]) {
                 performance[item.item_name] = { qty: 0, revenue: 0, cost: 0 };

@@ -6,17 +6,28 @@ import { formatCurrency } from '../../lib/utils/notifications';
 import ValuationSkeleton from './ValuationSkeleton';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 export default function ValuationReport() {
     const { t } = useTranslation();
     const [method, setMethod] = useState<'FIFO' | 'LIFO'>('FIFO');
-    const [data, setData] = useState<{ items: ItemValuation[]; totalValue: number } | null>(() => {
-        try {
-            const cached = localStorage.getItem('valuation_cache');
-            return cached ? JSON.parse(cached) : null;
-        } catch { return null; }
-    });
-    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('valuation_cache'));
+    const [data, setData] = useState<{ items: ItemValuation[]; totalValue: number } | null>(() =>
+        readScopedJSON<{ items: ItemValuation[]; totalValue: number } | null>(
+            'valuation_cache',
+            null,
+            undefined,
+            'valuation_cache'
+        )
+    );
+    const [isLoading, setIsLoading] = useState(
+        () =>
+            readScopedJSON<{ items: ItemValuation[]; totalValue: number } | null>(
+                'valuation_cache',
+                null,
+                undefined,
+                'valuation_cache'
+            ) == null
+    );
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
@@ -30,7 +41,7 @@ export default function ValuationReport() {
         try {
             const result = await calculateInventoryValuation(method);
             setData(result);
-            localStorage.setItem('valuation_cache', JSON.stringify(result));
+            writeScopedJSON('valuation_cache', result);
         } catch (error) {
             console.error('Valuation error:', error);
             toast.error('Failed to calculate valuation');

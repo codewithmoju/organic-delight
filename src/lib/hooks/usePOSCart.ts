@@ -1,25 +1,24 @@
 import { useState, useCallback, useEffect } from 'react';
 import { CartItem, BarcodeProduct } from '../types';
 import { toast } from 'sonner';
+import { useAuthStore } from '../store';
+import { readScopedJSON, writeScopedJSON } from '../utils/storageScope';
 
 export function usePOSCart() {
+  const userId = useAuthStore((state) => state.user?.uid || state.profile?.id || null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   // Held Carts State
-  const [heldCarts, setHeldCarts] = useState<HeldCart[]>(() => {
-    try {
-      const saved = localStorage.getItem('pos_held_carts');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.error('Failed to load held carts', e);
-      return [];
-    }
-  });
+  const [heldCarts, setHeldCarts] = useState<HeldCart[]>([]);
+
+  useEffect(() => {
+    setHeldCarts(readScopedJSON<HeldCart[]>('pos_held_carts', [], userId || undefined, 'pos_held_carts'));
+  }, [userId]);
 
   // Persist held carts
   useEffect(() => {
-    localStorage.setItem('pos_held_carts', JSON.stringify(heldCarts));
-  }, [heldCarts]);
+    writeScopedJSON('pos_held_carts', heldCarts, userId || undefined);
+  }, [heldCarts, userId]);
 
   const addToCart = useCallback((product: BarcodeProduct, quantity: number = 1) => {
     // Only check stock if adding positive quantity

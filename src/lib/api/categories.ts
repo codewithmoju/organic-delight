@@ -17,15 +17,12 @@ import { requireCurrentUserId } from './userScope';
 export async function getCategories(): Promise<Category[]> {
   const userId = requireCurrentUserId();
   const categoriesRef = collection(db, 'categories');
-  const q = query(categoriesRef, orderBy('name'));
+  const q = query(categoriesRef, where('created_by', '==', userId), orderBy('name'));
   const snapshot = await getDocs(q);
 
   const categories = [];
   for (const docSnapshot of snapshot.docs) {
     const category = { id: docSnapshot.id, ...docSnapshot.data() } as Category;
-    if (category.created_by !== userId) {
-      continue;
-    }
 
     // Get item count for this category (exclude archived/soft-deleted items)
     const itemsRef = collection(db, 'items');

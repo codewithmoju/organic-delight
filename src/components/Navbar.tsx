@@ -1,4 +1,4 @@
-import { Bell, Menu, User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { Menu, User, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,8 @@ import Logo from './ui/Logo';
 import SearchInput from './ui/SearchInput';
 import LanguageSelector from './ui/LanguageSelector';
 import { SimpleThemeToggle } from './ui/ThemeToggle';
-import { getLowStockItems } from '../lib/api/lowStock';
+import NotificationCenter from './ui/NotificationCenter';
+import LocationSelector from './ui/LocationSelector';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -21,24 +22,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [lowStockCount, setLowStockCount] = useState(0);
-
-  // Load low stock alerts for the badge
-  useEffect(() => {
-    const checkStock = async () => {
-      try {
-        const items = await getLowStockItems();
-        setLowStockCount(items.length);
-      } catch (error) {
-        console.error('Stock check failed:', error);
-      }
-    };
-
-    checkStock();
-    // Re-check every 5 minutes
-    const interval = setInterval(checkStock, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Click outside functionality to close dropdown
   useEffect(() => {
@@ -135,6 +118,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-x-3 sm:gap-x-4 ml-auto">
+          {/* Location selector */}
+          <LocationSelector />
+
           {/* Language selector */}
           <div className="hidden sm:block">
             <LanguageSelector variant="compact" showSearch={false} />
@@ -145,22 +131,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             <SimpleThemeToggle />
           </div>
 
-          {/* Notifications button - Circular */}
-          <button
-            type="button"
-            onClick={() => navigate('/inventory/alerts')}
-            className="relative p-2.5 text-muted-foreground hover:text-foreground transition-colors duration-200 rounded-full bg-secondary hover:bg-secondary/80"
-            aria-label="View notifications"
-          >
-            <Bell className="h-5 w-5" />
-            {lowStockCount > 0 && (
-              <span className="absolute top-0 right-0 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error/75 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-error text-[8px] font-bold text-white items-center justify-center">
-                </span>
-              </span>
-            )}
-          </button>
+          {/* Notification Center */}
+          <NotificationCenter />
 
           {/* Divider */}
           <div className="hidden lg:block h-8 w-px bg-border mx-2" />

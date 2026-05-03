@@ -35,13 +35,13 @@ export async function calculateInventoryValuation(method: 'FIFO' | 'LIFO' = 'FIF
     const itemsRef = collection(db, 'items');
 
     const [itemsSnap, transactionsSnap] = await Promise.all([
-        getDocs(query(itemsRef, where('is_archived', '!=', true))),
-        getDocs(query(transactionsRef, orderBy('transaction_date', 'asc')))
+        getDocs(query(itemsRef, where('created_by', '==', userId), orderBy('name', 'asc'))),
+        getDocs(query(transactionsRef, where('created_by', '==', userId), orderBy('transaction_date', 'asc')))
     ]);
 
     const itemsMap = new Map();
     itemsSnap.docs
-        .filter(doc => doc.data().created_by === userId)
+        .filter(doc => doc.data().is_archived !== true)
         .forEach(doc => itemsMap.set(doc.id, doc.data().name));
 
     const inventory: { [key: string]: ValuationBatch[] } = {};
@@ -49,7 +49,6 @@ export async function calculateInventoryValuation(method: 'FIFO' | 'LIFO' = 'FIF
     // Process transactions sequentially to build batches
     transactionsSnap.docs.forEach(doc => {
         const t = doc.data() as Transaction;
-        if ((t as any).created_by !== userId) return;
         if (!itemsMap.has(t.item_id)) return;
         if (!inventory[t.item_id]) inventory[t.item_id] = [];
 

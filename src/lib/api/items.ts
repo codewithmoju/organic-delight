@@ -17,7 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Item, StockLevel } from '../types';
-import { requireCurrentUserId } from './userScope';
+import { requireCurrentUserId, assertOwnership } from './userScope';
 
 // Simple cache for frequently accessed data
 const itemsCache = new Map<string, { data: any; timestamp: number }>();
@@ -78,15 +78,18 @@ async function hydrateItemCategories(items: Item[]): Promise<Item[]> {
 
 async function fetchAllItems(categoryId?: string): Promise<Item[]> {
   const userId = requireCurrentUserId();
-  const snapshot = await getDocs(collection(db, 'items'));
+  let itemsQuery = query(collection(db, 'items'), where('created_by', '==', userId));
+  if (categoryId) {
+    itemsQuery = query(
+      collection(db, 'items'),
+      where('created_by', '==', userId),
+      where('category_id', '==', categoryId)
+    );
+  }
+  const snapshot = await getDocs(itemsQuery);
   let items = snapshot.docs
     .map(mapItemSnapshot)
-    .filter(item => item.is_archived !== true)
-    .filter(item => item.created_by === userId);
-
-  if (categoryId) {
-    items = items.filter(item => item.category_id === categoryId);
-  }
+    .filter(item => item.is_archived !== true);
 
   items = await hydrateItemCategories(items);
 
@@ -135,9 +138,7 @@ export async function getItem(id: string): Promise<Item> {
     updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
   } as Item;
 
-  if (item.created_by !== userId) {
-    throw new Error('Item not found');
-  }
+  assertOwnership(item, 'Item');
 
   // Get category data
   if (item.category_id) {
@@ -260,9 +261,7 @@ export async function updateItem(id: string, itemData: {
 
   const docRef = doc(db, 'items', id);
   const currentDoc = await getDoc(docRef);
-  if (!currentDoc.exists() || currentDoc.data().created_by !== userId) {
-    throw new Error('Item not found');
-  }
+  assertOwnership(currentDoc.exists() ? currentDoc.data() : null, 'Item');
 
   const updateData = {
     ...itemData,
@@ -280,9 +279,7 @@ export async function deleteItem(id: string): Promise<void> {
   const userId = requireCurrentUserId();
   const itemRef = doc(db, 'items', id);
   const itemDoc = await getDoc(itemRef);
-  if (!itemDoc.exists() || itemDoc.data().created_by !== userId) {
-    throw new Error('Item not found');
-  }
+  assertOwnership(itemDoc.exists() ? itemDoc.data() : null, 'Item');
 
   // Check if item has transactions
   const transactionsRef = collection(db, 'transactions');
@@ -310,8 +307,13 @@ export async function deleteItem(id: string): Promise<void> {
 }
 
 export async function getItemStockLevel(itemId: string): Promise<StockLevel | null> {
+  const userId = requireCurrentUserId();
   const transactionsRef = collection(db, 'transactions');
-  const q = query(transactionsRef, where('item_id', '==', itemId));
+  const q = query(
+    transactionsRef,
+    where('item_id', '==', itemId),
+    where('created_by', '==', userId)
+  );
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
@@ -374,10 +376,15 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
 export async function searchItems(searchQuery: string, categoryId?: string): Promise<Item[]> {
   const userId = requireCurrentUserId();
   const itemsRef = collection(db, 'items');
-  let q = query(itemsRef, where('is_archived', '!=', true), orderBy('name'));
+  let q = query(itemsRef, where('created_by', '==', userId), limit(300));
 
   if (categoryId) {
-    q = query(itemsRef, where('category_id', '==', categoryId), where('is_archived', '!=', true), orderBy('name'));
+    q = query(
+      itemsRef,
+      where('created_by', '==', userId),
+      where('category_id', '==', categoryId),
+      limit(300)
+    );
   }
 
   const snapshot = await getDocs(q);
@@ -396,7 +403,7 @@ export async function searchItems(searchQuery: string, categoryId?: string): Pro
   });
 
   // Client-side filtering for search (Firestore search is limited)
-  items = items.filter(item => item.created_by === userId);
+  items = items.filter(item => item.is_archived !== true);
 
   if (searchQuery) {
     const term = searchQuery.toLowerCase();
@@ -414,7 +421,7 @@ export async function reconcileAllItemsStock(): Promise<{ updated: number; faile
   try {
     const userId = requireCurrentUserId();
     const itemsRef = collection(db, 'items');
-    const snapshot = await getDocs(itemsRef);
+    const snapshot = await getDocs(query(itemsRef, where('created_by', '==', userId)));
     let updatedCount = 0;
     let failedCount = 0;
 
@@ -424,9 +431,6 @@ export async function reconcileAllItemsStock(): Promise<{ updated: number; faile
     let countInBatch = 0;
 
     for (const itemDoc of snapshot.docs) {
-      if (itemDoc.data().created_by !== userId) {
-        continue;
-      }
       try {
         const stockLevel = await getItemStockLevel(itemDoc.id);
         if (stockLevel) {
@@ -463,3 +467,43 @@ export async function reconcileAllItemsStock(): Promise<{ updated: number; faile
   }
 }
 
+
+
+export async function adjustItemStock(
+  itemId: string,
+  adjustment: number, // positive = add, negative = remove
+  reason: string,
+  type: 'adjustment' | 'write_off' | 'count_correction',
+  userId: string
+): Promise<void> {
+  const itemRef = doc(db, 'items', itemId);
+  const itemSnap = await getDoc(itemRef);
+  if (!itemSnap.exists()) throw new Error('Item not found');
+
+  const currentQty = itemSnap.data().current_quantity ?? 0;
+  const newQty = Math.max(0, currentQty + adjustment);
+
+  await updateDoc(itemRef, {
+    current_quantity: newQty,
+    updated_at: Timestamp.fromDate(new Date())
+  });
+
+  // Log the adjustment as a transaction
+  await addDoc(collection(db, 'transactions'), {
+    item_id: itemId,
+    type: adjustment >= 0 ? 'stock_in' : 'stock_out',
+    quantity: Math.abs(adjustment),
+    unit_price: itemSnap.data().purchase_rate || itemSnap.data().unit_price || 0,
+    total_value: Math.abs(adjustment) * (itemSnap.data().purchase_rate || itemSnap.data().unit_price || 0),
+    transaction_date: Timestamp.fromDate(new Date()),
+    supplier_customer: 'Stock Adjustment',
+    reference_number: `ADJ-${Date.now()}`,
+    notes: `${type.replace('_', ' ')}: ${reason}`,
+    created_by: userId,
+    created_at: Timestamp.fromDate(new Date()),
+    adjustment_type: type,
+  });
+
+  // Invalidate cache so updated quantity is reflected
+  invalidateItemsCache();
+}

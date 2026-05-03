@@ -4,6 +4,8 @@ import { Search, Check, Globe, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { SUPPORTED_LANGUAGES } from '../../i18n';
+import { auth } from '../../lib/firebase';
+import { getScopedStorageKey } from '../../lib/utils/storageScope';
 
 interface LanguageSelectorProps {
   variant?: 'dropdown' | 'menu' | 'compact';
@@ -45,7 +47,9 @@ export default function LanguageSelector({
       
       // Update user preference in profile if available
       try {
-        const authStorage = localStorage.getItem('auth-storage');
+        const uid = auth.currentUser?.uid;
+        const authKey = getScopedStorageKey('auth-storage', uid || undefined);
+        const authStorage = localStorage.getItem(authKey) ?? (uid ? null : localStorage.getItem('auth-storage'));
         if (authStorage) {
           const { state } = JSON.parse(authStorage);
           if (state?.profile) {

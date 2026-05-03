@@ -18,9 +18,15 @@ import { useReactToPrint } from 'react-to-print';
 import { POSSettings } from '../../lib/types';
 import { getPOSSettings } from '../../lib/api/pos';
 import { exportToCSV } from '../../lib/utils/export';
-import CustomerLedgerPDF from './CustomerLedgerPDF'; // Need to ensure import path is correct
+import CustomerLedgerPDF from './CustomerLedgerPDF';
 import { useRef } from 'react';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import CustomerCreditNote from '../../components/customers/CustomerCreditNote';
+import CustomerCommunicationLog from '../../components/customers/CustomerCommunicationLog';
+import CustomerLoyalty from '../../components/customers/CustomerLoyalty';
+import { usePagination } from '../../lib/hooks/usePagination';
+import PaginationControls from '../../components/ui/PaginationControls';
+import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 function parseDate(d: any): Date {
     if (!d) return new Date();
@@ -371,10 +377,12 @@ const IconLink = ({ Icon, className }: { Icon: any, className: string }) => <Ico
 export default function CustomerLedger() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [customer, setCustomer] = useState<Customer | null>(null);
-    const [payments, setPayments] = useState<CustomerPayment[]>([]);
-    const [creditSales, setCreditSales] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const cacheKey = id ? `customer_ledger_cache_${id}` : '';
+    const cached = id ? readScopedJSON<any>(cacheKey, null, undefined, cacheKey) : null;
+    const [customer, setCustomer] = useState<Customer | null>(cached?.customer ?? null);
+    const [payments, setPayments] = useState<CustomerPayment[]>(cached?.payments ?? []);
+    const [creditSales, setCreditSales] = useState<any[]>(cached?.creditSales ?? []);
+    const [isLoading, setIsLoading] = useState(() => !cached);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'payments' | 'credits'>('all');
     const [settings, setSettings] = useState<POSSettings | null>(null);
@@ -400,7 +408,8 @@ export default function CustomerLedger() {
     }, [id]);
 
     async function loadData() {
-        setIsLoading(true);
+        const hasWarmCache = !!cached;
+        if (!hasWarmCache) setIsLoading(true);
         try {
             // Load customer first - this is required
             const cust = await getCustomerById(id!);
@@ -424,11 +433,16 @@ export default function CustomerLedger() {
             ]);
             setPayments(ledger);
             setCreditSales(sales);
+            writeScopedJSON(cacheKey, {
+                customer: cust,
+                payments: ledger,
+                creditSales: sales
+            });
         } catch (error) {
             toast.error('Failed to load customer data');
             console.error(error);
         } finally {
-            setIsLoading(false);
+            if (!hasWarmCache) setIsLoading(false);
         }
     }
 
@@ -444,6 +458,8 @@ export default function CustomerLedger() {
 
         return entries.sort((a, b) => b._date.getTime() - a._date.getTime());
     }, [payments, creditSales, activeTab]);
+
+    const pagination = usePagination({ data: allEntries, defaultItemsPerPage: 25 });
 
     const totalPaid = useMemo(() => payments.reduce((s, p) => s + p.amount, 0), [payments]);
 
@@ -705,13 +721,27 @@ export default function CustomerLedger() {
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                     >
-                                        {allEntries.map((entry, i) => (
+                                        {pagination.paginatedData.map((entry, i) => (
                                             <LedgerEntry key={entry.id} entry={entry} type={entry._type} index={i} />
                                         ))}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </motion.div>
+                        {allEntries.length > 0 && (
+                            <div className="px-5 py-3 border border-border/30 rounded-xl bg-secondary/10">
+                                <PaginationControls
+                                    currentPage={pagination.currentPage}
+                                    totalPages={pagination.totalPages}
+                                    onPageChange={pagination.goToPage}
+                                    hasNextPage={pagination.hasNextPage}
+                                    hasPrevPage={pagination.hasPrevPage}
+                                    startIndex={pagination.startIndex}
+                                    endIndex={pagination.endIndex}
+                                    totalItems={pagination.totalItems}
+                                />
+                            </div>
+                        )}
                     </div>
                 </>
             )}
@@ -726,6 +756,31 @@ export default function CustomerLedger() {
                     />
                 )}
             </div>
+
+            {/* Credit Notes & Communication Log */}
+            {customer && !isLoading && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+                    <div className="bg-card rounded-2xl border border-border/60 p-5 shadow-sm">
+                        <CustomerLoyalty
+                            customerId={customer.id}
+                            onRedeemed={loadData}
+                        />
+                    </div>
+                    <div className="bg-card rounded-2xl border border-border/60 p-5 shadow-sm">
+                        <CustomerCreditNote
+                            customerId={customer.id}
+                            customerName={customer.name}
+                            onIssued={loadData}
+                        />
+                    </div>
+                    <div className="bg-card rounded-2xl border border-border/60 p-5 shadow-sm">
+                        <CustomerCommunicationLog
+                            customerId={customer.id}
+                            customerName={customer.name}
+                        />
+                    </div>
+                </div>
+            )}
 
             <ConfirmDialog
                 isOpen={isDeleteConfirmOpen}

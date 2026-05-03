@@ -4,15 +4,21 @@ import { Package, DollarSign, TrendingUp, ArrowUp, ArrowDown, AlertTriangle } fr
 import { toast } from 'sonner';
 import { getItems } from '../lib/api/items';
 import { getPOSTransactions } from '../lib/api/pos';
-import { getDashboardMetricsAndTrends } from '../lib/api/dashboard';
+import { getDashboardMetricsAndTrends, getDashboardWidgetData } from '../lib/api/dashboard';
 import StatCard from '../components/ui/StatCard';
 import RecentTransactions from '../components/dashboard/RecentTransactions';
 import TopProductCard from '../components/dashboard/TopProductCard';
 import TimePeriodFilter, { TimePeriod } from '../components/dashboard/TimePeriodFilter';
+import ProfitLossWidget from '../components/dashboard/ProfitLossWidget';
+import CashFlowWidget from '../components/dashboard/CashFlowWidget';
+import ExpenseBreakdownWidget from '../components/dashboard/ExpenseBreakdownWidget';
+import VendorPaymentAlerts from '../components/dashboard/VendorPaymentAlerts';
+import CustomerCreditWidget from '../components/dashboard/CustomerCreditWidget';
 import { POSTransaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
+import { readScopedJSON, writeScopedJSON } from '../lib/utils/storageScope';
 
 // Lazy-load the chart — it's below the fold and pulls in recharts (~400KB)
 const MetricsChart = lazy(() => import('../components/dashboard/MetricsChart'));
@@ -22,14 +28,11 @@ const LS_TRANSACTIONS = 'dashboard_transactions_cache';
 const LS_METRICS = 'dashboard_metrics_cache';
 
 function readCache<T>(key: string): T | null {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  return readScopedJSON<T | null>(key, null as T | null, undefined, key);
 }
 
 function writeCache(key: string, value: unknown) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* quota */ }
+  writeScopedJSON(key, value);
 }
 
 export default function Dashboard() {
@@ -42,7 +45,11 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<POSTransaction[]>(() => readCache<POSTransaction[]>(LS_TRANSACTIONS) ?? []);
   const [topProduct, setTopProduct] = useState<any>(null);
 
-  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem(LS_SUMMARY));
+  // Widget data
+  const [widgetData, setWidgetData] = useState<any>(null);
+  const [isWidgetsLoading, setIsWidgetsLoading] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(() => readCache(LS_SUMMARY) == null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +62,20 @@ export default function Dashboard() {
   // Load metrics + trends whenever period changes
   useEffect(() => {
     loadMetricsData();
+    loadWidgetData();
   }, [selectedPeriod]);
+
+  async function loadWidgetData() {
+    setIsWidgetsLoading(true);
+    try {
+      const data = await getDashboardWidgetData(selectedPeriod);
+      setWidgetData(data);
+    } catch (err) {
+      console.error('Error loading widget data:', err);
+    } finally {
+      setIsWidgetsLoading(false);
+    }
+  }
 
   async function loadInitialData(showLoading = true) {
     if (showLoading) setIsLoading(true);
@@ -247,6 +267,39 @@ export default function Dashboard() {
               </div>
 
             </div>
+
+            {/* ── New Widgets Row ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <ProfitLossWidget
+                revenue={metrics?.revenueEarnedFromStockOut || 0}
+                expenses={widgetData?.totalExpenses || 0}
+                purchases={widgetData?.totalPurchases || 0}
+                isLoading={isMetricsLoading || isWidgetsLoading}
+              />
+              <CashFlowWidget
+                cashIn={(metrics?.revenueEarnedFromStockOut || 0)}
+                cashOut={(widgetData?.totalExpenses || 0) + (widgetData?.vendorPaymentsOut || 0)}
+                isLoading={isMetricsLoading || isWidgetsLoading}
+              />
+              <ExpenseBreakdownWidget
+                breakdown={widgetData?.expenseBreakdown || []}
+                total={widgetData?.totalExpenses || 0}
+                isLoading={isWidgetsLoading}
+              />
+            </div>
+
+            {/* ── Alerts Row ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <VendorPaymentAlerts
+                vendors={widgetData?.vendors || []}
+                isLoading={isWidgetsLoading}
+              />
+              <CustomerCreditWidget
+                customers={widgetData?.customers || []}
+                isLoading={isWidgetsLoading}
+              />
+            </div>
+
           </div>
         </div>
       )}
