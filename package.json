@@ -16,10 +16,14 @@
     "tenant:strict:status": "node scripts/tenant-strict-rollout.mjs status",
     "tenant:strict:enable": "node scripts/tenant-strict-rollout.mjs enable",
     "tenant:strict:disable": "node scripts/tenant-strict-rollout.mjs disable",
-    "tenant:strict:checklist": "node scripts/tenant-strict-rollout.mjs checklist"
+    "tenant:strict:checklist": "node scripts/tenant-strict-rollout.mjs checklist",
+    "backfill:org-id": "node scripts/backfill-org-id.mjs",
+    "backfill:org-id:dry-run": "node scripts/backfill-org-id.mjs --dry-run",
+    "backfill:org-id:verify": "node scripts/backfill-org-id.mjs --verify"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
+    "@opentelemetry/api": "^1.9.1",
     "@types/w3c-web-usb": "^1.0.12",
     "clsx": "^2.1.1",
     "date-fns": "^3.3.1",
@@ -56,6 +60,7 @@
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
+    "firebase-admin": "^13.8.0",
     "globals": "^15.9.0",
     "jsdom": "^29.1.1",
     "postcss": "^8.4.35",
@@ -69,4 +74,3 @@
     "vitest": "^4.1.5"
   }
 }
-
