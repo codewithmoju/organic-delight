@@ -167,11 +167,16 @@ export default function Items() {
 
   const handleInlinePriceUpdate = async (itemId: string) => {
     const previousItems = [...items];
-    setItems(prevItems => prevItems.map(item => item.id === itemId ? { ...item, unit_price: editingPriceValue } : item));
+    setItems(prevItems => prevItems.map(item => item.id === itemId ? {
+      ...item,
+      selling_price: editingPriceValue,
+      unit_price: editingPriceValue,
+      sale_rate: editingPriceValue,
+    } : item));
     setEditingPriceId(null);
     toast.success(t('items.messages.priceUpdated', 'Price updated!'));
     try {
-      await updateItem(itemId, { unit_price: editingPriceValue });
+      await updateItem(itemId, { selling_price: editingPriceValue, unit_price: editingPriceValue, sale_rate: editingPriceValue });
     } catch (error: any) {
       setItems(previousItems);
       toast.error(t('items.messages.priceError', 'Failed to update price.'));
@@ -184,6 +189,8 @@ export default function Items() {
     category_id: string;
     unit?: string;
     unit_price?: number;
+    base_price?: number;
+    selling_price?: number;
     barcode?: string;
     sku?: string;
     supplier?: string;
@@ -202,7 +209,11 @@ export default function Items() {
       category_id: data.category_id,
       category: categoryData,
       unit: data.unit || 'pcs',
-      unit_price: data.unit_price || 0,
+      base_price: data.base_price || 0,
+      selling_price: data.selling_price || data.unit_price || 0,
+      unit_price: data.selling_price || data.unit_price || 0,
+      purchase_rate: data.base_price || 0,
+      sale_rate: data.selling_price || data.unit_price || 0,
       barcode: data.barcode,
       sku: data.sku,
       reorder_point: data.reorder_point || 10,
@@ -505,8 +516,11 @@ export default function Items() {
                       <div className="bg-secondary/30 rounded-xl p-2 border border-border/40">
                         <span className="text-[10px] text-muted-foreground block font-medium uppercase tracking-wide">{t('items.salePrice', 'Price')}</span>
                         <span className="text-sm font-bold text-foreground">
-                          {formatCurrency(item.unit_price || item.sale_rate || 0)}
+                          {formatCurrency(item.selling_price || item.unit_price || item.sale_rate || 0)}
                         </span>
+                        {(item.selling_price || item.unit_price || item.sale_rate || 0) < (item.base_price || item.purchase_rate || 0) && (
+                          <div className="text-[10px] text-warning-500 mt-1">Below base</div>
+                        )}
                       </div>
                     </div>
                   </button>
@@ -589,7 +603,7 @@ export default function Items() {
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingPriceId(item.id);
-                          setEditingPriceValue(item.unit_price || 0);
+                          setEditingPriceValue(item.selling_price || item.unit_price || 0);
                         }}
                       >
                         {editingPriceId === item.id ? (
@@ -609,7 +623,7 @@ export default function Items() {
                           />
                         ) : (
                           <span className="text-foreground font-bold cursor-pointer hover:text-primary transition-colors">
-                            {formatCurrency(item.unit_price || item.last_sale_rate || 0)}
+                            {formatCurrency(item.selling_price || item.unit_price || item.last_sale_rate || 0)}
                           </span>
                         )}
                       </td>

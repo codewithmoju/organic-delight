@@ -671,7 +671,12 @@ function InventoryAgingTab() {
     setLoading(true);
     getInventoryAging(d)
       .then(setData)
-      .catch(() => toast.error('Failed to load inventory aging'))
+      .catch((err) => {
+        console.error('Inventory aging error:', err);
+        toast.error(err?.message?.includes('index')
+          ? 'Missing Firestore index. Check console for the creation link.'
+          : 'Failed to load inventory aging');
+      })
       .finally(() => setLoading(false));
   }, []);
 

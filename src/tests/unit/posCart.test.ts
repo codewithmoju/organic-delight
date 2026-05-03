@@ -136,4 +136,29 @@ describe('usePOSCart', () => {
     expect(summary.totalItems).toBe(3);
     expect(summary.itemCount).toBe(2);
   });
+
+  it('updates unit price only for current cart line', () => {
+    const { result } = renderHook(() => usePOSCart());
+    act(() => {
+      result.current.addToCart(mockProduct, 2); // 200
+      result.current.addToCart(mockProduct2, 1); // 250
+    });
+    const firstId = result.current.cartItems[0].id;
+
+    act(() => result.current.updateUnitPrice(firstId, 80));
+
+    expect(result.current.cartItems[0].unit_price).toBe(80);
+    expect(result.current.cartItems[0].line_total).toBe(160);
+    expect(result.current.cartItems[1].unit_price).toBe(250);
+    expect(result.current.getCartSummary().subtotal).toBe(410);
+  });
+
+  it('marks item as overridden when price differs', () => {
+    const { result } = renderHook(() => usePOSCart());
+    act(() => result.current.addToCart(mockProduct, 1));
+    const itemId = result.current.cartItems[0].id;
+
+    act(() => result.current.updateUnitPrice(itemId, 90));
+    expect(result.current.cartItems[0].is_price_overridden).toBe(true);
+  });
 });

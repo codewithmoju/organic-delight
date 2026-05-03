@@ -15,6 +15,8 @@ interface QuickItemFormProps {
         name: string;
         description: string;
         category_id: string;
+        base_price: number;
+        selling_price: number;
         unit_price: number;
         unit: string;
         barcode?: string;
@@ -34,7 +36,8 @@ interface QuickItemFormData {
     name: string;
     description: string;
     unit: string;
-    unit_price: number | '';
+    base_price: number | '';
+    selling_price: number | '';
     total_stock: number | '';
     barcode: string;
     sku: string;
@@ -61,7 +64,8 @@ export default function QuickItemForm({ categories, onSubmit, onCancel, onCatego
         name: '',
         description: '',
         unit: 'pcs',
-        unit_price: '',
+        base_price: '',
+        selling_price: '',
         total_stock: '',
         barcode: '',
         sku: '',
@@ -133,7 +137,8 @@ export default function QuickItemForm({ categories, onSubmit, onCancel, onCatego
 
         if (!formData.name.trim()) newErrors.name = t('items.form.nameRequired', 'Product name is required');
         if (!formData.category_id) newErrors.category_id = t('items.wizard.errors.categoryRequired', 'Category is required');
-        if (!formData.unit_price || Number(formData.unit_price) <= 0) newErrors.unit_price = t('items.wizard.errors.priceRequired', 'Valid price is required');
+        if (formData.base_price === '' || Number(formData.base_price) < 0) newErrors.base_price = 'Valid base price is required';
+        if (formData.selling_price === '' || Number(formData.selling_price) <= 0) newErrors.selling_price = t('items.wizard.errors.priceRequired', 'Valid selling price is required');
         if (Number(formData.total_stock) < 0) newErrors.total_stock = t('items.wizard.errors.stockRequired', 'Stock cannot be negative');
 
         setErrors(newErrors);
@@ -154,7 +159,9 @@ export default function QuickItemForm({ categories, onSubmit, onCancel, onCatego
                 description: formData.description.trim() || formData.name.trim(), // Fallback description
                 category_id: formData.category_id,
                 unit: formData.unit,
-                unit_price: Number(formData.unit_price),
+                base_price: Number(formData.base_price),
+                selling_price: Number(formData.selling_price),
+                unit_price: Number(formData.selling_price),
                 sku: finalSku,
                 reorder_point: Number(formData.reorder_point) || 10,
                 initial_stock: Number(formData.total_stock) || 0,
@@ -284,22 +291,45 @@ export default function QuickItemForm({ categories, onSubmit, onCancel, onCatego
                         />
                     </div>
 
-                    {/* Price */}
+                    {/* Base Price */}
                     <div>
-                        <label className="block text-sm font-semibold text-foreground/80 mb-2">{t('items.wizard.price.unitPrice', 'Sale Price')} *</label>
+                        <label className="block text-sm font-semibold text-foreground/80 mb-2">Base Price *</label>
                         <div className="relative group">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">PKR</span>
                             <input
                                 type="number"
-                                value={formData.unit_price}
-                                onChange={(e) => updateFormData('unit_price', e.target.value)}
-                                className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.unit_price ? 'border-error-500' : ''}`}
+                                value={formData.base_price}
+                                onChange={(e) => updateFormData('base_price', e.target.value)}
+                                className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.base_price ? 'border-error-500' : ''}`}
                                 placeholder="0.00"
                                 min="0"
                                 step="0.01"
                             />
                         </div>
-                        {errors.unit_price && <p className="text-error-500 text-xs mt-1 font-medium ml-1">{errors.unit_price}</p>}
+                        {errors.base_price && <p className="text-error-500 text-xs mt-1 font-medium ml-1">{errors.base_price}</p>}
+                    </div>
+
+                    {/* Selling Price */}
+                    <div>
+                        <label className="block text-sm font-semibold text-foreground/80 mb-2">Selling Price *</label>
+                        <div className="relative group">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">PKR</span>
+                            <input
+                                type="number"
+                                value={formData.selling_price}
+                                onChange={(e) => updateFormData('selling_price', e.target.value)}
+                                className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.selling_price ? 'border-error-500' : ''}`}
+                                placeholder="0.00"
+                                min="0"
+                                step="0.01"
+                            />
+                        </div>
+                        {errors.selling_price && <p className="text-error-500 text-xs mt-1 font-medium ml-1">{errors.selling_price}</p>}
+                        {Number(formData.selling_price || 0) < Number(formData.base_price || 0) && (
+                            <p className="text-warning-500 text-xs mt-1 font-medium ml-1">
+                                Selling price is below base price
+                            </p>
+                        )}
                     </div>
 
                     {/* Initial Stock */}

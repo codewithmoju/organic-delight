@@ -18,13 +18,15 @@ interface ItemFormProps {
 export default function ItemForm({ initialData, categories, onSubmit, onCancel }: ItemFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [errors, setErrors] = useState<{ name?: string; description?: string; category_id?: string; unit_price?: string; unit?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; description?: string; category_id?: string; selling_price?: string; base_price?: string; unit?: string }>({});
   const user = useAuthStore(state => state.user);
   const profile = useAuthStore(state => state.profile);
 
   // State for controlled CustomSelect components
   const [categoryId, setCategoryId] = useState(initialData?.category_id || '');
   const [selectedUnit, setSelectedUnit] = useState(initialData?.unit || 'pcs');
+  const [basePriceInput, setBasePriceInput] = useState<number>(initialData?.base_price ?? initialData?.purchase_rate ?? 0);
+  const [sellingPriceInput, setSellingPriceInput] = useState<number>(initialData?.selling_price ?? initialData?.unit_price ?? initialData?.sale_rate ?? 0);
 
   const loadUnits = async () => {
     const unitsData = await getUnits();
@@ -63,10 +65,19 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
       const name = (formData.get('name') as string).trim();
       const description = (formData.get('description') as string).trim();
       // category_id and unit are now from state
-      const unit_price = parseFloat(formData.get('unit_price') as string);
+      const base_price = parseFloat(formData.get('base_price') as string);
+      const selling_price = parseFloat(formData.get('selling_price') as string);
 
       // Validation
       const newErrors: typeof errors = {};
+
+      if (!Number.isFinite(base_price) || base_price < 0) {
+        newErrors.base_price = 'Base price must be 0 or more';
+      }
+
+      if (!Number.isFinite(selling_price) || selling_price <= 0) {
+        newErrors.selling_price = 'Selling price must be greater than 0';
+      }
 
       if (!name) {
         newErrors.name = 'Item name is required';
@@ -100,7 +111,11 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
         description,
         category_id: categoryId,
         unit: selectedUnit,
-        unit_price,
+        base_price,
+        selling_price,
+        unit_price: selling_price,
+        purchase_rate: base_price,
+        sale_rate: selling_price,
         created_by: user?.uid || profile?.id || 'unknown'
       });
 
@@ -229,22 +244,52 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35 }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        <label htmlFor="unit_price" className="block text-sm font-semibold text-foreground/80 mb-2">
-          Unit Price *
+        <div>
+        <label htmlFor="base_price" className="block text-sm font-semibold text-foreground/80 mb-2">
+          Base Price *
         </label>
         <div className="relative group">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">PKR</span>
           <input
             type="number"
             step="0.01"
-            name="unit_price"
-            id="unit_price"
-            defaultValue={initialData?.unit_price}
-            className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.unit_price ? 'border-error-500' : ''
+            name="base_price"
+            id="base_price"
+            value={basePriceInput}
+            onChange={(e) => setBasePriceInput(parseFloat(e.target.value) || 0)}
+            min="0"
+            className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.base_price ? 'border-error-500' : ''
               }`}
             placeholder="0.00"
           />
+        </div>
+        {errors.base_price && <p className="text-error-500 text-xs mt-1 font-medium ml-1">{errors.base_price}</p>}
+        </div>
+
+        <div>
+        <label htmlFor="selling_price" className="block text-sm font-semibold text-foreground/80 mb-2">
+          Selling Price *
+        </label>
+        <div className="relative group">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">PKR</span>
+          <input
+            type="number"
+            step="0.01"
+            name="selling_price"
+            id="selling_price"
+            value={sellingPriceInput}
+            onChange={(e) => setSellingPriceInput(parseFloat(e.target.value) || 0)}
+            min="0"
+            className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.selling_price ? 'border-error-500' : ''}`}
+            placeholder="0.00"
+          />
+        </div>
+        {errors.selling_price && <p className="text-error-500 text-xs mt-1 font-medium ml-1">{errors.selling_price}</p>}
+        {sellingPriceInput < basePriceInput && (
+          <p className="text-warning-500 text-xs mt-1 font-medium ml-1">Selling price is below base price</p>
+        )}
         </div>
       </motion.div>
 

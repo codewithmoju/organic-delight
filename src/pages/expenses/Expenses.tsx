@@ -1,5 +1,5 @@
 import { format, subDays } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, Plus, PieChart, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -79,9 +79,9 @@ export default function Expenses() {
   // ── State ──────────────────────────────────────────────────────────────
   const [expenses, setExpenses] = useState<Expense[]>(() => {
     try {
-      const cached = localStorage.getItem('expenses_cache');
-      if (cached) {
-        return JSON.parse(cached, (key, value) => {
+      const raw = readScopedRaw('expenses_cache', 'expenses_cache');
+      if (raw) {
+        return JSON.parse(raw, (key, value) => {
           if (['created_at', 'updated_at', 'expense_date'].includes(key)) return new Date(value);
           return value;
         });
@@ -122,9 +122,17 @@ export default function Expenses() {
   const [activeCategories, setActiveCategories] = useState<ExpenseCategory[]>([]);
 
   // ── Data loading ───────────────────────────────────────────────────────
+  const isFirstLoad = useRef(true);
   useEffect(() => {
-    loadData(!expenses.length);
-  }, [dateRange]);
+    // First load: show spinner. Subsequent: debounce to avoid rapid refetches.
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      loadData(true);
+      return;
+    }
+    const timer = setTimeout(() => loadData(false), 400);
+    return () => clearTimeout(timer);
+  }, [dateRange.from?.getTime(), dateRange.to?.getTime()]);
 
   const loadData = async (showLoading = true) => {
     if (showLoading) setIsLoading(true);
@@ -137,6 +145,7 @@ export default function Expenses() {
       setSummary(summaryData);
     } catch (error) {
       console.error('Error loading expenses:', error);
+      toast.error(t('expenses.loadError', 'Failed to load expenses. Showing cached data.'));
     } finally {
       setIsLoading(false);
     }
@@ -156,11 +165,15 @@ export default function Expenses() {
     try {
       // Get the real record back (with Firestore ID) before updating UI
       const saved = await recordExpense({ ...formData, created_by: profile?.id || 'unknown' });
-      setExpenses(prev => [saved, ...prev]);
+      setExpenses(prev => {
+        const next = [saved, ...prev];
+        writeScopedJSON('expenses_cache', next);
+        return next;
+      });
       setIsFormOpen(false);
       toast.success(t('expenses.addSuccess', 'Expense recorded successfully'));
-      // Refresh summary in background
-      loadData(false);
+      // Refresh summary only (not full list) after short delay for Firestore consistency
+      setTimeout(() => loadData(false), 1500);
     } catch (error) {
       console.error('Error recording expense:', error);
       toast.error(t('expenses.addError', 'Failed to record expense. Please try again.'));
@@ -198,7 +211,7 @@ export default function Expenses() {
     try {
       await updateExpense(editingExpense.id, formData);
       toast.success(t('expenses.updateSuccess', 'Expense updated successfully'));
-      loadData(false);
+      setTimeout(() => loadData(false), 1500);
     } catch (error) {
       console.error('Error updating expense:', error);
       // Revert UI and re-open form
@@ -239,9 +252,13 @@ export default function Expenses() {
 
     try {
       await deleteExpense(id);
-      setExpenses(prev => prev.filter(e => e.id !== id));
+      setExpenses(prev => {
+        const next = prev.filter(e => e.id !== id);
+        writeScopedJSON('expenses_cache', next);
+        return next;
+      });
       toast.success(t('expenses.deleteSuccess', 'Expense deleted successfully'));
-      loadData(false);
+      setTimeout(() => loadData(false), 1500);
     } catch (error) {
       console.error('Error deleting expense:', error);
       toast.error(t('expenses.deleteError', 'Failed to delete expense'));

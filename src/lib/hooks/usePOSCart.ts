@@ -67,6 +67,9 @@ export function usePOSCart() {
           name: product.name,
           barcode: product.barcode,
           unit_price: product.price,
+          base_price: product.base_price ?? 0,
+          default_selling_price: product.selling_price ?? product.price,
+          is_price_overridden: false,
           quantity: effectiveQuantity,
           line_total: product.price * effectiveQuantity,
           available_stock: product.stock,
@@ -104,6 +107,19 @@ export function usePOSCart() {
 
   const removeFromCart = useCallback((cartItemId: string) => {
     setCartItems(prev => prev.filter(item => item.id !== cartItemId));
+  }, []);
+
+  const updateUnitPrice = useCallback((cartItemId: string, nextUnitPrice: number) => {
+    const safePrice = Number.isFinite(nextUnitPrice) ? Math.max(0, nextUnitPrice) : 0;
+    setCartItems(prev => prev.map(item => {
+      if (item.id !== cartItemId) return item;
+      return {
+        ...item,
+        unit_price: safePrice,
+        line_total: safePrice * item.quantity,
+        is_price_overridden: (item.default_selling_price ?? safePrice) !== safePrice
+      };
+    }));
   }, []);
 
   const clearCart = useCallback(() => {
@@ -161,6 +177,7 @@ export function usePOSCart() {
     heldCarts,
     addToCart,
     updateQuantity,
+    updateUnitPrice,
     removeFromCart,
     clearCart,
     holdCurrentCart,

@@ -63,13 +63,17 @@ export default function MetricsChart({ data, type, title, isLoading = false }: M
     stroke: 'rgb(var(--foreground-muted))',
     fontSize: 10,
     tick: { fill: 'rgb(var(--foreground-muted))' },
+    interval: 0,
+    angle: data.length > 6 ? -35 : 0,
+    textAnchor: data.length > 6 ? 'end' as const : 'middle' as const,
+    height: data.length > 6 ? 50 : 30,
   };
 
-  const chartMargin = { top: 10, right: 10, left: -10, bottom: 0 };
+  const chartMargin = { top: 20, right: 10, left: -10, bottom: 10 };
 
   return (
-    <div className="card-theme p-4 sm:p-6">
-      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+    <div className="card-theme p-4 sm:p-6 overflow-hidden">
+      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4 flex items-center gap-2 relative z-10">
         <div className="w-1.5 h-5 bg-gradient-to-b from-primary to-accent rounded-full" />
         {title}
       </h3>

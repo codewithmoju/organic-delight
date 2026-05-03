@@ -199,6 +199,8 @@ export default function VendorLedger() {
         exportToCSV(exportData, filename);
     };
 
+    const pagination = usePagination({ data: ledger, defaultItemsPerPage: 25 });
+
     if (isLoading) return <LedgerSkeleton />;
     if (!vendor) return null;
 
@@ -225,8 +227,6 @@ export default function VendorLedger() {
             bg: 'bg-accent-500/10'
         }
     ];
-
-    const pagination = usePagination({ data: ledger, defaultItemsPerPage: 25 });
 
     return (
         <div className="space-y-4 sm:space-y-6">

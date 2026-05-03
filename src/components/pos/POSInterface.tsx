@@ -7,7 +7,7 @@ import {
   Printer, Receipt, RotateCcw, Settings, FileText, CreditCard,
   Building2, User, Keyboard, Search, Plus, Package,
   Camera, Scan, ShoppingCart as CartIcon, Minus,
-  Trash2, X
+  Trash2, X, AlertTriangle
 } from 'lucide-react';
 import EnhancedBarcodeScanner from './EnhancedBarcodeScanner';
 import ConfirmDialog from '../ui/ConfirmDialog';
@@ -45,6 +45,7 @@ export default function POSInterface() {
     cartItems,
     addToCart,
     updateQuantity,
+    updateUnitPrice,
     removeFromCart,
     clearCart,
     heldCarts,
@@ -290,7 +291,9 @@ export default function POSInterface() {
           const enhancedItem = item as any;
           product = {
             id: item.id, name: item.name, barcode: enhancedItem.barcode || barcode,
-            price: enhancedItem.unit_price || enhancedItem.sale_rate || enhancedItem.last_sale_rate || 0,
+            price: enhancedItem.selling_price || enhancedItem.unit_price || enhancedItem.sale_rate || enhancedItem.last_sale_rate || 0,
+            selling_price: enhancedItem.selling_price || enhancedItem.unit_price || enhancedItem.sale_rate || enhancedItem.last_sale_rate || 0,
+            base_price: enhancedItem.base_price || enhancedItem.purchase_rate || enhancedItem.average_unit_cost || 0,
             stock: currentStock,
             category: item.category?.name, unit: enhancedItem.unit || 'pcs'
           };
@@ -1087,6 +1090,23 @@ export default function POSInterface() {
                         <span className="text-foreground-muted/60 text-xs">
                           {formatCurrency(item.unit_price)} / {item.unit || 'each'}
                         </span>
+                        <div className="mt-1.5">
+                          <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Edit price</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={item.unit_price}
+                            onChange={(e) => updateUnitPrice(item.id, parseFloat(e.target.value) || 0)}
+                            className="mt-1 w-24 px-2 py-1 text-xs rounded-md bg-background border border-border/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                          />
+                        </div>
+                        {item.unit_price < (item.base_price || 0) && (
+                          <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-warning-500">
+                            <AlertTriangle className="w-3 h-3" />
+                            Price below base ({formatCurrency(item.base_price || 0)})
+                          </div>
+                        )}
                       </div>
 
                       {/* Quantity Stepper */}
@@ -1314,6 +1334,23 @@ export default function POSInterface() {
                         <div className="flex-1 min-w-0">
                           <h4 className="text-foreground font-medium text-sm truncate">{item.name}</h4>
                           <span className="text-foreground-muted/60 text-xs">{formatCurrency(item.unit_price)} / {item.unit || 'each'}</span>
+                          <div className="mt-1.5">
+                            <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Edit price</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={item.unit_price}
+                              onChange={(e) => updateUnitPrice(item.id, parseFloat(e.target.value) || 0)}
+                              className="mt-1 w-24 px-2 py-1 text-xs rounded-md bg-background border border-border/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                            />
+                          </div>
+                          {item.unit_price < (item.base_price || 0) && (
+                            <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-warning-500">
+                              <AlertTriangle className="w-3 h-3" />
+                              Below base ({formatCurrency(item.base_price || 0)})
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5 border border-border/30">
                           <button
