@@ -11,12 +11,14 @@ import VendorListModal from '../../components/vendors/VendorListModal';
 import { toast } from 'sonner';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
+import VendorRating from '../../components/vendors/VendorRating';
+import { readScopedRaw, writeScopedJSON } from '../../lib/utils/storageScope';
 
 export default function Vendors() {
     const { t } = useTranslation();
     const [vendors, setVendors] = useState<Vendor[]>(() => {
         try {
-            const cached = localStorage.getItem('vendors_cache');
+            const cached = readScopedRaw('vendors_cache', 'vendors_cache');
             if (cached) {
                 return JSON.parse(cached, (key, value) => {
                     if (['created_at', 'updated_at'].includes(key)) return new Date(value);
@@ -29,7 +31,7 @@ export default function Vendors() {
         return [];
     });
     const [searchQuery, setSearchQuery] = useState('');
-    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('vendors_cache'));
+    const [isLoading, setIsLoading] = useState(() => readScopedRaw('vendors_cache', 'vendors_cache') == null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -45,7 +47,7 @@ export default function Vendors() {
             // await new Promise(resolve => setTimeout(resolve, 800));
             const data = await getVendors();
             setVendors(data);
-            localStorage.setItem('vendors_cache', JSON.stringify(data));
+            writeScopedJSON('vendors_cache', data);
         } catch (error: any) {
             console.error('Error loading vendors:', error);
             const msg = error.message?.includes('index')
@@ -208,15 +210,16 @@ export default function Vendors() {
 
                                         {/* Footer — always visible actions */}
                                         <div className="flex items-center justify-between pt-3 border-t border-border/30 relative z-10">
-                                            <div className="text-xs font-medium text-foreground-muted">
+                                            <div className="flex flex-col gap-1">
                                                 {vendor.total_purchases > 0 ? (
-                                                    <span className="flex items-center gap-1">
+                                                    <span className="flex items-center gap-1 text-xs font-medium text-foreground-muted">
                                                         <Wallet className="w-3 h-3" />
                                                         {formatCurrency(vendor.total_purchases)}
                                                     </span>
                                                 ) : (
-                                                    <span className="opacity-50">{t('vendors.noPurchasesYet')}</span>
+                                                    <span className="text-xs opacity-50">{t('vendors.noPurchasesYet')}</span>
                                                 )}
+                                                <VendorRating vendorId={vendor.id} size="sm" />
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <button

@@ -14,6 +14,13 @@ import {
   Users,
   ShoppingBag,
   Wallet,
+  FileText,
+  SlidersHorizontal,
+  ClipboardList,
+  CalendarClock,
+  Barcode,
+  Shield,
+  MapPin,
 } from 'lucide-react';
 import Logo from './ui/Logo';
 import { useTranslation } from 'react-i18next';
@@ -45,13 +52,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         { to: '/inventory/items', icon: Package, label: t('navigation.inventoryManager') },
         { to: '/inventory/categories', icon: FolderOpen, label: t('navigation.categories') },
         { to: '/inventory/valuation', icon: Wallet, label: t('navigation.warehouseValue') },
+        { to: '/inventory/adjustments', icon: SlidersHorizontal, label: 'Adjustments' },
+        { to: '/inventory/count', icon: ClipboardList, label: 'Count' },
+        { to: '/inventory/expiry', icon: CalendarClock, label: 'Expiry' },
+        { to: '/inventory/barcodes', icon: Barcode, label: 'Barcodes' },
       ]
     },
     {
       title: t('navigation.groups.procurement'),
       items: [
         { to: '/vendors', icon: Building2, label: t('navigation.vendors') },
-        { to: '/transactions?tab=purchases&action=new', icon: ShoppingBag, label: t('navigation.newPurchase') },
+        { to: '/purchases', icon: ShoppingBag, label: t('navigation.purchases', 'Purchases') },
       ]
     },
     {
@@ -66,6 +77,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       items: [
         { to: '/expenses', icon: Wallet, label: t('navigation.expenses') },
         { to: '/reports/performance', icon: BarChart3, label: t('navigation.performance') },
+        { to: '/reports', icon: FileText, label: t('navigation.reports', 'Reports') },
+        { to: '/settings/audit', icon: Shield, label: 'Audit Log' },
+        { to: '/settings/locations', icon: MapPin, label: 'Locations' },
         { to: '/settings', icon: Settings, label: t('navigation.settings') },
       ]
     }

@@ -5,15 +5,15 @@ import { getProductPerformance, ProductRanking } from '../../lib/api/performance
 import { formatCurrency } from '../../lib/utils/notifications';
 import AnimatedCard from '../ui/AnimatedCard';
 import PerformanceSkeleton from '../skeletons/PerformanceSkeleton';
+import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 export default function PerformanceDashboard() {
-    const [data, setData] = useState<ProductRanking[]>(() => {
-        try {
-            const cached = localStorage.getItem('performance_cache');
-            return cached ? JSON.parse(cached) : [];
-        } catch { return []; }
-    });
-    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('performance_cache'));
+    const [data, setData] = useState<ProductRanking[]>(() =>
+        readScopedJSON<ProductRanking[]>('performance_cache', [], undefined, 'performance_cache')
+    );
+    const [isLoading, setIsLoading] = useState(
+        () => readScopedJSON<ProductRanking[]>('performance_cache', [], undefined, 'performance_cache').length === 0
+    );
     const [timeRange, setTimeRange] = useState(30);
 
     useEffect(() => {
@@ -26,7 +26,7 @@ export default function PerformanceDashboard() {
         try {
             const rankings = await getProductPerformance(timeRange);
             setData(rankings);
-            localStorage.setItem('performance_cache', JSON.stringify(rankings));
+            writeScopedJSON('performance_cache', rankings);
         } catch (error) {
             console.error('Error:', error);
         } finally {

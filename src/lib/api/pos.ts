@@ -17,7 +17,7 @@ import {
 import { db } from '../firebase';
 import { CartItem, BarcodeProduct, POSTransaction, POSSettings, BillType, SalesReport } from '../types';
 import { DEFAULT_POS_SETTINGS } from '../constants/defaults';
-import { requireCurrentUserId } from './userScope';
+import { requireCurrentUserId, assertOwnership } from './userScope';
 
 // POS Transaction Management
 export async function createPOSTransaction(transactionData: {
@@ -195,7 +195,11 @@ export async function createPOSTransaction(transactionData: {
 export async function getPOSTransactions(limitCount?: number): Promise<POSTransaction[]> {
   const userId = requireCurrentUserId();
   const transactionsRef = collection(db, 'pos_transactions');
-  let q = query(transactionsRef, orderBy('created_at', 'desc'));
+  let q = query(
+    transactionsRef,
+    where('cashier_id', '==', userId),
+    orderBy('created_at', 'desc')
+  );
 
   if (limitCount) {
     q = query(q, limit(limitCount));
@@ -207,11 +211,12 @@ export async function getPOSTransactions(limitCount?: number): Promise<POSTransa
     id: doc.id,
     ...doc.data(),
     created_at: doc.data().created_at?.toDate() || new Date(doc.data().created_at)
-  })).filter(t => (t as POSTransaction).cashier_id === userId) as POSTransaction[];
+  })) as POSTransaction[];
 }
 
 // Cancel/Refund Transaction
 export async function cancelPOSTransaction(transactionId: string, reason: string): Promise<void> {
+  const userId = requireCurrentUserId();
   await runTransaction(db, async (transaction) => {
     const posTransactionRef = doc(db, 'pos_transactions', transactionId);
     const posTransactionDoc = await transaction.get(posTransactionRef);
@@ -221,6 +226,9 @@ export async function cancelPOSTransaction(transactionId: string, reason: string
     }
 
     const posTransaction = posTransactionDoc.data() as POSTransaction;
+    if (posTransaction.cashier_id !== userId) {
+      throw new Error('Transaction not found');
+    }
 
     if (posTransaction.status !== 'completed') {
       throw new Error('Transaction cannot be cancelled');
@@ -265,13 +273,14 @@ export async function getProductByBarcode(barcode: string): Promise<BarcodeProdu
   const userId = requireCurrentUserId();
   try {
     const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where('created_by', '==', userId));
+    const q = query(
+      itemsRef,
+      where('created_by', '==', userId),
+      where('barcode', '==', String(barcode)),
+      limit(1)
+    );
     const snapshot = await getDocs(q);
-
-    const itemDoc = snapshot.docs.find((docSnap) => {
-      const data = docSnap.data() as any;
-      return data.created_by === userId && data.is_archived !== true && String(data.barcode || '') === String(barcode);
-    });
+    const itemDoc = snapshot.docs.find((docSnap) => docSnap.data().is_archived !== true);
     if (!itemDoc) {
       return null;
     }
@@ -316,7 +325,35 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
   }
 
   const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where('created_by', '==', userId));
+  const exactBarcodeQuery = query(
+    itemsRef,
+    where('created_by', '==', userId),
+    where('barcode', '==', normalizedQuery),
+    limit(10)
+  );
+  const barcodeSnapshot = await getDocs(exactBarcodeQuery);
+  const barcodeMatches = barcodeSnapshot.docs
+    .map((itemDoc) => {
+      const itemData = itemDoc.data() as any;
+      if (itemData.is_archived === true) {
+        return null;
+      }
+      return {
+        id: itemDoc.id,
+        name: String(itemData.name || ''),
+        barcode: String(itemData.barcode || ''),
+        price: itemData.unit_price || itemData.sale_rate || 0,
+        stock: itemData.current_quantity ?? 0,
+        category: itemData.category?.name
+      } as BarcodeProduct;
+    })
+    .filter((item): item is BarcodeProduct => item !== null);
+
+  if (barcodeMatches.length > 0 || normalizedQuery.length < 2) {
+    return barcodeMatches.slice(0, 20);
+  }
+
+  const q = query(itemsRef, where('created_by', '==', userId), limit(250));
   const snapshot = await getDocs(q);
 
   const products: BarcodeProduct[] = [];
@@ -471,7 +508,11 @@ export async function getDailySalesReport(date: Date, cashierId?: string): Promi
 
 // Add barcode to item
 export async function addBarcodeToItem(itemId: string, barcode: string): Promise<void> {
-  await updateDoc(doc(db, 'items', itemId), {
+  const itemRef = doc(db, 'items', itemId);
+  const itemDoc = await getDoc(itemRef);
+  assertOwnership(itemDoc.exists() ? itemDoc.data() : null, 'Item');
+
+  await updateDoc(itemRef, {
     barcode,
     updated_at: Timestamp.fromDate(new Date())
   });

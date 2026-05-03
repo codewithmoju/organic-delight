@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Plus, Search, Phone, X,
     Mail, AlertCircle, UserCheck, ChevronRight,
-    CreditCard, DollarSign
+    CreditCard, DollarSign, Tag
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -13,6 +13,8 @@ import { getCustomers, searchCustomers, createCustomer, recordCustomerTransactio
 import { formatCurrency } from '../../lib/utils/notifications';
 import { useAuthStore } from '../../lib/store';
 import CustomerSkeleton from '../../components/skeletons/CustomerSkeleton';
+import CustomerGroupManager, { getGroups, CustomerGroup } from '../../components/customers/CustomerGroupManager';
+import { readScopedRaw, writeScopedJSON } from '../../lib/utils/storageScope';
 
 // ============================================
 // STAT CARD
@@ -127,7 +129,7 @@ function AddCustomerForm({ onClose, onCreated }: {
     onClose: () => void; onCreated: (c: Customer) => void;
 }) {
     const profile = useAuthStore(state => state.profile);
-    const [form, setForm] = useState({ name: '', phone: '', email: '', address: '', openingBalance: '' });
+    const [form, setForm] = useState({ name: '', phone: '', email: '', address: '', openingBalance: '', creditLimit: '', groupId: '' });
     const [isSaving, setIsSaving] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
@@ -143,6 +145,8 @@ function AddCustomerForm({ onClose, onCreated }: {
                 phone: form.phone.trim(),
                 email: form.email.trim() || undefined,
                 address: form.address.trim() || undefined,
+                credit_limit: parseFloat(form.creditLimit) || undefined,
+                group_id: form.groupId || undefined,
                 created_by: profile?.id || 'unknown'
             });
 
@@ -254,6 +258,36 @@ function AddCustomerForm({ onClose, onCreated }: {
                             Enter amount if the customer already owes money (Old Balance).
                         </p>
                     </div>
+
+                    {/* Credit Limit */}
+                    <div className="sm:col-span-1">
+                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">Credit Limit (Optional)</label>
+                        <div className="relative">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-xs">Rs</span>
+                            <input
+                                type="number"
+                                value={form.creditLimit}
+                                onChange={e => setForm(f => ({ ...f, creditLimit: e.target.value }))}
+                                placeholder="0 = no limit"
+                                className="w-full pl-8 pr-4 py-2.5 bg-background border border-border/60 rounded-xl text-sm font-bold text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Group */}
+                    <div className="sm:col-span-1">
+                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">Group (Optional)</label>
+                        <select
+                            value={form.groupId}
+                            onChange={e => setForm(f => ({ ...f, groupId: e.target.value }))}
+                            className="w-full h-11 px-3 bg-background border border-border/60 rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all"
+                        >
+                            <option value="">No group</option>
+                            {getGroups().map(g => (
+                                <option key={g.id} value={g.id}>{g.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4">
@@ -308,7 +342,7 @@ export default function Customers() {
     const navigate = useNavigate();
     const [customers, setCustomers] = useState<Customer[]>(() => {
         try {
-            const cached = localStorage.getItem('customers_cache');
+            const cached = readScopedRaw('customers_cache', 'customers_cache');
             if (cached) {
                 return JSON.parse(cached, (key, value) => {
                     if (['created_at', 'updated_at', 'last_transaction_date'].includes(key)) return new Date(value);
@@ -320,10 +354,12 @@ export default function Customers() {
         }
         return [];
     });
-    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('customers_cache'));
+    const [isLoading, setIsLoading] = useState(() => readScopedRaw('customers_cache', 'customers_cache') == null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddForm, setShowAddForm] = useState(false);
     const [filterMode, setFilterMode] = useState<'all' | 'credit' | 'clear'>('all');
+    const [showGroupManager, setShowGroupManager] = useState(false);
+    const [groups, setGroups] = useState<CustomerGroup[]>(getGroups);
 
     useEffect(() => {
         const hasCache = customers.length > 0;
@@ -335,7 +371,7 @@ export default function Customers() {
         try {
             const data = await getCustomers();
             setCustomers(data);
-            localStorage.setItem('customers_cache', JSON.stringify(data));
+            writeScopedJSON('customers_cache', data);
         } catch (error) {
             toast.error('Failed to load customers');
             console.error(error);
@@ -406,15 +442,24 @@ export default function Customers() {
                                 </div>
                             </div>
 
-                            <motion.button
-                                whileHover={{ scale: 1.03, y: -1 }}
-                                whileTap={{ scale: 0.97 }}
-                                onClick={() => setShowAddForm(true)}
-                                className="btn-primary flex items-center gap-2 shadow-lg shadow-primary/20 rounded-xl"
-                            >
-                                <Plus className="w-4 h-4" />
-                                {t('customers.addCustomer', 'Add Customer')}
-                            </motion.button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowGroupManager(true)}
+                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border/60 bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+                                >
+                                    <Tag className="w-4 h-4" />
+                                    Groups
+                                </button>
+                                <motion.button
+                                    whileHover={{ scale: 1.03, y: -1 }}
+                                    whileTap={{ scale: 0.97 }}
+                                    onClick={() => setShowAddForm(true)}
+                                    className="btn-primary flex items-center gap-2 shadow-lg shadow-primary/20 rounded-xl"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    {t('customers.addCustomer', 'Add Customer')}
+                                </motion.button>
+                            </div>
                         </motion.div>
 
                         {/* ─── STATS CARDS ─── */}
@@ -423,6 +468,13 @@ export default function Customers() {
                             <StatCard icon={AlertCircle} label="Udhaar Pending" value={formatCurrency(stats.totalPending)} accent="text-[rgb(var(--error))] bg-[rgb(var(--error)/.1)]" delay={0.1} />
                             <StatCard icon={CreditCard} label="With Credit" value={stats.withCredit} accent="text-[rgb(var(--warning))] bg-[rgb(var(--warning)/.1)]" delay={0.15} />
                             <StatCard icon={DollarSign} label="Total Purchases" value={formatCurrency(stats.totalPurchases)} accent="text-[rgb(var(--success))] bg-[rgb(var(--success)/.1)]" delay={0.2} />
+
+                        {/* Group Manager Modal */}
+                        <AnimatePresence>
+                            {showGroupManager && (
+                                <CustomerGroupManager onClose={() => { setShowGroupManager(false); setGroups(getGroups()); }} />
+                            )}
+                        </AnimatePresence>
                         </div>
 
                         {/* ─── ADD CUSTOMER FORM (SLIDE DOWN) ─── */}

@@ -8,6 +8,7 @@ import { Category } from '../../lib/types';
 import InlineCategoryForm from '../../components/inventory/InlineCategoryForm';
 import CategorySkeleton from '../../components/inventory/CategorySkeleton';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { readScopedRaw, writeScopedJSON } from '../../lib/utils/storageScope';
 
 interface CategoryWithCount extends Category {
   itemCount?: number;
@@ -23,7 +24,7 @@ export default function Categories() {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<CategoryWithCount[]>(() => {
     try {
-      const cached = localStorage.getItem('inventory_categories_cache');
+      const cached = readScopedRaw('inventory_categories_cache', 'inventory_categories_cache');
       if (cached) {
         return JSON.parse(cached, (key, value) => {
           if (['created_at', 'updated_at'].includes(key)) return new Date(value);
@@ -35,7 +36,9 @@ export default function Categories() {
     }
     return [];
   });
-  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('inventory_categories_cache'));
+  const [isLoading, setIsLoading] = useState(
+    () => readScopedRaw('inventory_categories_cache', 'inventory_categories_cache') == null
+  );
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryWithCount | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,7 +90,7 @@ export default function Categories() {
       const data = await getCategories();
       const enrichedData = data.map(cat => ({ ...cat, itemCount: cat.item_count || 0 }));
       setCategories(enrichedData);
-      localStorage.setItem('inventory_categories_cache', JSON.stringify(enrichedData));
+      writeScopedJSON('inventory_categories_cache', enrichedData);
     } catch (error) {
       toast.error(t('categories.messages.loadError', 'Failed to load categories'));
       console.error(error);

@@ -39,7 +39,10 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
     try {
         const q = query(
             posTransactionsRef,
+            where('cashier_id', '==', userId),
             where('status', '==', 'completed'),
+            where('created_at', '>=', Timestamp.fromDate(startOfDay)),
+            where('created_at', '<=', Timestamp.fromDate(endOfDay)),
             orderBy('created_at', 'desc')
         );
         posSnapshot = await getDocs(q);
@@ -49,15 +52,10 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
     }
 
     // Filter by date client-side
-    const dayTransactions = posSnapshot.docs
-        .map(doc => ({
-            ...doc.data(),
-            created_at: doc.data().created_at?.toDate() || new Date()
-        }))
-        .filter(t => {
-            const txDate = new Date(t.created_at);
-            return t.cashier_id === userId && txDate >= startOfDay && txDate <= endOfDay;
-        });
+    const dayTransactions = posSnapshot.docs.map(doc => ({
+        ...doc.data(),
+        created_at: doc.data().created_at?.toDate() || new Date()
+    }));
 
     // Calculate sales by payment method
     let cashSales = 0;
@@ -98,7 +96,9 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
     let returnsCount = 0;
 
     try {
-        const returnsSnapshot = await getDocs(query(returnsRef, orderBy('created_at', 'desc')));
+        const returnsSnapshot = await getDocs(
+            query(returnsRef, where('created_by', '==', userId), orderBy('created_at', 'desc'))
+        );
         const dayReturns = returnsSnapshot.docs
             .map(doc => ({
                 ...doc.data(),
@@ -121,14 +121,16 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
     const cashExpenses = await getCashExpenses(date);
 
     // Get purchases for the day
-    const purchases = await getPurchases({ start_date: startOfDay, end_date: endOfDay });
+    const purchases = await getPurchases(startOfDay, endOfDay);
     const totalPurchases = purchases.reduce((sum, p) => sum + p.total_amount, 0);
 
     // Get vendor payments for the day
     let vendorPayments = 0;
     try {
         const vendorPaymentsRef = collection(db, 'vendor_payments');
-        const vpSnapshot = await getDocs(query(vendorPaymentsRef, orderBy('payment_date', 'desc')));
+        const vpSnapshot = await getDocs(
+            query(vendorPaymentsRef, where('created_by', '==', userId), orderBy('payment_date', 'desc'))
+        );
         const dayVP = vpSnapshot.docs
             .map(doc => ({
                 ...doc.data(),
@@ -136,7 +138,7 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
             }))
             .filter(vp => {
                 const vpDate = new Date(vp.payment_date);
-                return vp.created_by === userId && vpDate >= startOfDay && vpDate <= endOfDay;
+                return vpDate >= startOfDay && vpDate <= endOfDay;
             });
         vendorPayments = dayVP.reduce((sum, vp) => sum + (vp.amount || 0), 0);
     } catch (error) {
@@ -147,7 +149,9 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
     let customerCollections = 0;
     try {
         const customerPaymentsRef = collection(db, 'customer_payments');
-        const cpSnapshot = await getDocs(query(customerPaymentsRef, orderBy('payment_date', 'desc')));
+        const cpSnapshot = await getDocs(
+            query(customerPaymentsRef, where('created_by', '==', userId), orderBy('payment_date', 'desc'))
+        );
         const dayCP = cpSnapshot.docs
             .map(doc => ({
                 ...doc.data(),
@@ -155,7 +159,7 @@ export async function generateDailyReport(date: Date): Promise<DailyOperationsRe
             }))
             .filter(cp => {
                 const cpDate = new Date(cp.payment_date);
-                return cp.created_by === userId && cpDate >= startOfDay && cpDate <= endOfDay;
+                return cpDate >= startOfDay && cpDate <= endOfDay;
             });
         customerCollections = dayCP.reduce((sum, cp) => sum + (cp.amount || 0), 0);
     } catch (error) {

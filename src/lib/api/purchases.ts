@@ -3,6 +3,7 @@ import {
     doc,
     getDocs,
     getDoc,
+    updateDoc,
     query,
     where,
     orderBy,
@@ -122,7 +123,7 @@ export async function createPurchase(purchaseData: {
                     supplier_customer: purchaseData.vendor_name,
                     reference_number: purchaseData.bill_number || purchaseNumber,
                     notes: `Purchase from ${purchaseData.vendor_name}${data.expiry_date ? ` (Exp: ${data.expiry_date.toLocaleDateString()})` : ''}`,
-                    created_by: purchaseData.created_by,
+                    created_by: userId,
                     created_at: Timestamp.fromDate(new Date()),
                     purchase_id: purchaseRef.id,
                     expiry_date: data.expiry_date ? Timestamp.fromDate(data.expiry_date) : null,
@@ -193,7 +194,7 @@ export async function createPurchase(purchaseData: {
                     supplier_customer: purchaseData.vendor_name,
                     reference_number: purchaseData.bill_number || purchaseNumber,
                     notes: `Purchase from ${purchaseData.vendor_name} (Descoked)`,
-                    created_by: purchaseData.created_by,
+                    created_by: userId,
                     created_at: Timestamp.fromDate(new Date()),
                     purchase_id: purchaseRef.id,
                     expiry_date: item.expiry_date ? Timestamp.fromDate(item.expiry_date) : null,
@@ -216,6 +217,19 @@ export async function createPurchase(purchaseData: {
     }
 }
 
+// ── Audit helper (called from NewPurchase page after createPurchase succeeds) ──
+export function auditPurchaseCreated(purchase: { id: string; purchase_number: string; vendor_name: string; total_amount: number }) {
+    import('./auditLog').then(({ logAudit }) => {
+        logAudit({
+            action: 'purchase',
+            resource: 'purchase',
+            resource_id: purchase.id,
+            resource_name: purchase.purchase_number,
+            details: `From ${purchase.vendor_name} — PKR ${purchase.total_amount}`,
+        });
+    });
+}
+
 /**
  * Get expenses for a date range
  * (Note: Function name says getExpenses but return type says Promise<Expense[]>. 
@@ -226,7 +240,7 @@ export async function createPurchase(purchaseData: {
 export async function getPurchases(startDate?: Date, endDate?: Date): Promise<Purchase[]> {
     const userId = requireCurrentUserId();
     const purchasesRef = collection(db, 'purchases');
-    let q = query(purchasesRef, orderBy('purchase_date', 'desc'));
+    let q = query(purchasesRef, where('created_by', '==', userId), orderBy('purchase_date', 'desc'));
 
     if (startDate) {
         q = query(q, where('purchase_date', '>=', Timestamp.fromDate(startDate)));
@@ -241,7 +255,7 @@ export async function getPurchases(startDate?: Date, endDate?: Date): Promise<Pu
         ...doc.data(),
         purchase_date: doc.data().purchase_date?.toDate() || new Date(),
         created_at: doc.data().created_at?.toDate() || new Date()
-    })).filter(p => (p as Purchase).created_by === userId) as Purchase[];
+    })) as Purchase[];
 }
 
 export async function getPurchase(id: string): Promise<Purchase | null> {
@@ -265,7 +279,12 @@ export async function getPurchase(id: string): Promise<Purchase | null> {
 export async function getPurchasesByVendor(vendorId: string): Promise<Purchase[]> {
     const userId = requireCurrentUserId();
     const purchasesRef = collection(db, 'purchases');
-    const q = query(purchasesRef, where('vendor_id', '==', vendorId), orderBy('purchase_date', 'desc'));
+    const q = query(
+        purchasesRef,
+        where('created_by', '==', userId),
+        where('vendor_id', '==', vendorId),
+        orderBy('purchase_date', 'desc')
+    );
     const snapshot = await getDocs(q);
 
     return snapshot.docs.map(doc => ({
@@ -273,5 +292,52 @@ export async function getPurchasesByVendor(vendorId: string): Promise<Purchase[]
         ...doc.data(),
         purchase_date: doc.data().purchase_date?.toDate() || new Date(),
         created_at: doc.data().created_at?.toDate() || new Date()
-    })).filter(p => (p as Purchase).created_by === userId) as Purchase[];
+    })) as Purchase[];
+}
+
+/**
+ * Update delivery status for a purchase.
+ * Supports full and partial delivery tracking.
+ */
+export async function updatePurchaseDelivery(
+    purchaseId: string,
+    deliveryData: {
+        delivery_status: 'pending' | 'partial' | 'received';
+        delivered_at?: Date;
+        delivery_notes?: string;
+        items?: Array<{ item_id: string; received_quantity: number }>;
+    }
+): Promise<void> {
+    const userId = requireCurrentUserId();
+    const purchaseRef = doc(db, 'purchases', purchaseId);
+    const purchaseSnap = await getDoc(purchaseRef);
+
+    if (!purchaseSnap.exists()) throw new Error('Purchase not found');
+    if (purchaseSnap.data().created_by !== userId) throw new Error('Purchase not found');
+
+    const updatePayload: Record<string, any> = {
+        delivery_status: deliveryData.delivery_status,
+        updated_at: Timestamp.fromDate(new Date()),
+    };
+
+    if (deliveryData.delivered_at) {
+        updatePayload.delivered_at = Timestamp.fromDate(deliveryData.delivered_at);
+    }
+    if (deliveryData.delivery_notes) {
+        updatePayload.delivery_notes = deliveryData.delivery_notes;
+    }
+
+    // Merge received quantities into items array if provided
+    if (deliveryData.items?.length) {
+        const currentItems = purchaseSnap.data().items || [];
+        const receivedMap = Object.fromEntries(
+            deliveryData.items.map(i => [i.item_id, i.received_quantity])
+        );
+        updatePayload.items = currentItems.map((item: any) => ({
+            ...item,
+            received_quantity: receivedMap[item.item_id] ?? item.received_quantity ?? 0,
+        }));
+    }
+
+    await updateDoc(purchaseRef, updatePayload);
 }

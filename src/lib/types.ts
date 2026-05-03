@@ -286,7 +286,7 @@ export interface VendorPayment {
 export interface Purchase {
   id: string;
   purchase_number: string;
-  bill_number?: string | null; // Vendor's bill number
+  bill_number?: string | null;
   vendor_id: string;
   vendor_name: string;
   items: PurchaseItem[];
@@ -301,6 +301,10 @@ export interface Purchase {
   created_at: Date;
   created_by: string;
   notes?: string | null;
+  // Delivery tracking
+  delivery_status?: 'pending' | 'partial' | 'received';
+  delivered_at?: Date | null;
+  delivery_notes?: string | null;
 }
 
 export interface PurchaseItem {
@@ -309,11 +313,15 @@ export interface PurchaseItem {
   item_name: string;
   barcode?: string | null;
   quantity: number;
-  purchase_rate: number; // Cost price from vendor
-  sale_rate: number;     // Selling price
+  received_quantity?: number; // for partial delivery tracking
+  purchase_rate: number;
+  sale_rate: number;
   expiry_date?: Date | null;
   shelf_location?: string | null;
   line_total: number;
+  batch_number?: string | null;
+  lot_number?: string | null;
+  serial_numbers?: string[] | null;
 }
 
 // ============================================
@@ -326,8 +334,10 @@ export interface Customer {
   phone: string;
   email?: string;
   address?: string;
-  outstanding_balance: number; // Amount customer owes (no limit)
+  outstanding_balance: number;
   total_purchases: number;
+  credit_limit?: number;        // 0 or undefined = no limit
+  group_id?: string;            // customer group/segment
   created_at: Date;
   updated_at: Date;
   created_by: string;
@@ -371,6 +381,14 @@ export interface EnhancedItem extends Item {
   // Stock management
   reorder_point?: number;          // Minimum stock level before reorder
   quantity?: number;               // Current stock quantity (calculated)
+
+  // Batch/Lot tracking
+  batch_number?: string;
+  lot_number?: string;
+
+  // Serial number tracking
+  serial_numbers?: string[]; // array of serial numbers for serialized items
+  is_serialized?: boolean;   // if true, track individual serial numbers
 }
 
 // ============================================

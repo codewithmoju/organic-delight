@@ -8,7 +8,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Vendor, Category } from '../../lib/types';
 import { getCategories } from '../../lib/api/categories';
-import { createPurchase } from '../../lib/api/purchases';
+import { createPurchase, auditPurchaseCreated } from '../../lib/api/purchases';
 import { createItem } from '../../lib/api/items';
 import { useAuthStore } from '../../lib/store';
 import { toast } from 'sonner';
@@ -109,7 +109,7 @@ export default function NewPurchase() {
             const total = calculateTotal();
             const paid = paymentStatus === 'paid' ? total : (paymentStatus === 'partial' ? paidAmount : 0);
 
-            await createPurchase({
+            const purchase = await createPurchase({
                 vendor_id: selectedVendor.id,
                 vendor_name: selectedVendor.name,
                 bill_number: billNumber || undefined,
@@ -134,6 +134,9 @@ export default function NewPurchase() {
                 created_by: profile?.id || 'unknown',
                 notes: notes || undefined
             });
+
+            // Fire-and-forget audit log
+            auditPurchaseCreated(purchase);
 
             toast.success(t('purchases.messages.success'));
             navigate('/transactions');

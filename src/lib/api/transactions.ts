@@ -33,7 +33,11 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
   }
 
   const transactionsRef = collection(db, 'transactions');
-  let q = query(transactionsRef, orderBy('transaction_date', 'desc'));
+  let q = query(
+    transactionsRef,
+    where('created_by', '==', userId),
+    orderBy('transaction_date', 'desc')
+  );
 
   if (limitCount) {
     q = query(q, limit(limitCount));
@@ -53,7 +57,7 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
       transaction_date: data.transaction_date?.toDate ? data.transaction_date.toDate() : new Date(data.transaction_date || Date.now()),
       created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now())
     } as Transaction;
-  }).filter(t => t.created_by === userId);
+  });
 
   // Solve N+1 for items
   const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];
@@ -62,10 +66,20 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
   if (itemIds.length > 0) {
     for (let i = 0; i < itemIds.length; i += 30) {
       const chunk = itemIds.slice(i, i + 30);
-      const itemsSnapshot = await getDocs(query(collection(db, 'items'), where('__name__', 'in', chunk)));
-      itemsSnapshot.forEach(itemDoc => {
-        items[itemDoc.id] = { id: itemDoc.id, ...itemDoc.data() };
-      });
+      try {
+        const itemsSnapshot = await getDocs(
+          query(
+            collection(db, 'items'),
+            where('created_by', '==', userId),
+            where('__name__', 'in', chunk)
+          )
+        );
+        itemsSnapshot.forEach(itemDoc => {
+          items[itemDoc.id] = { id: itemDoc.id, ...itemDoc.data() };
+        });
+      } catch (error: any) {
+        if (error?.code !== 'permission-denied') throw error;
+      }
     }
 
     // Solve N+1 for categories
@@ -75,10 +89,20 @@ export async function getTransactions(limitCount?: number, lastDoc?: DocumentSna
     if (categoryIds.length > 0) {
       for (let i = 0; i < categoryIds.length; i += 30) {
         const chunk = categoryIds.slice(i, i + 30);
-        const catsSnapshot = await getDocs(query(collection(db, 'categories'), where('__name__', 'in', chunk)));
-        catsSnapshot.forEach(catDoc => {
-          categories[catDoc.id] = { id: catDoc.id, ...catDoc.data() };
-        });
+        try {
+          const catsSnapshot = await getDocs(
+            query(
+              collection(db, 'categories'),
+              where('created_by', '==', userId),
+              where('__name__', 'in', chunk)
+            )
+          );
+          catsSnapshot.forEach(catDoc => {
+            categories[catDoc.id] = { id: catDoc.id, ...catDoc.data() };
+          });
+        } catch (error: any) {
+          if (error?.code !== 'permission-denied') throw error;
+        }
       }
     }
 
@@ -132,6 +156,7 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
+    where('created_by', '==', userId),
     where('transaction_date', '>=', Timestamp.fromDate(startDate)),
     where('transaction_date', '<=', Timestamp.fromDate(endDate)),
     orderBy('transaction_date', 'desc')
@@ -146,7 +171,7 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
       transaction_date: data.transaction_date?.toDate ? data.transaction_date.toDate() : new Date(data.transaction_date || Date.now()),
       created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now())
     } as Transaction;
-  }).filter(t => t.created_by === userId);
+  });
 
   // Solve N+1 for items
   const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];
@@ -155,7 +180,13 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
   if (itemIds.length > 0) {
     for (let i = 0; i < itemIds.length; i += 30) {
       const chunk = itemIds.slice(i, i + 30);
-      const itemsSnapshot = await getDocs(query(collection(db, 'items'), where('__name__', 'in', chunk)));
+      const itemsSnapshot = await getDocs(
+        query(
+          collection(db, 'items'),
+          where('created_by', '==', userId),
+          where('__name__', 'in', chunk)
+        )
+      );
       itemsSnapshot.forEach(itemDoc => {
         items[itemDoc.id] = { id: itemDoc.id, ...itemDoc.data() };
       });
@@ -229,7 +260,12 @@ export async function createTransaction(transactionData: {
 export async function getTransactionsByItem(itemId: string): Promise<Transaction[]> {
   const userId = requireCurrentUserId();
   const transactionsRef = collection(db, 'transactions');
-  const q = query(transactionsRef, where('item_id', '==', itemId), orderBy('transaction_date', 'desc'));
+  const q = query(
+    transactionsRef,
+    where('created_by', '==', userId),
+    where('item_id', '==', itemId),
+    orderBy('transaction_date', 'desc')
+  );
   const snapshot = await getDocs(q);
 
   return snapshot.docs.map(docSnapshot => ({
@@ -237,7 +273,7 @@ export async function getTransactionsByItem(itemId: string): Promise<Transaction
     ...docSnapshot.data(),
     transaction_date: docSnapshot.data().transaction_date?.toDate ? docSnapshot.data().transaction_date.toDate() : new Date(docSnapshot.data().transaction_date || Date.now()),
     created_at: docSnapshot.data().created_at?.toDate ? docSnapshot.data().created_at.toDate() : new Date(docSnapshot.data().created_at || Date.now())
-  })).filter(t => (t as Transaction).created_by === userId) as Transaction[];
+  })) as Transaction[];
 }
 
 export async function getTransactionsForPeriod(startDate: Date, endDate: Date): Promise<Transaction[]> {
@@ -245,6 +281,7 @@ export async function getTransactionsForPeriod(startDate: Date, endDate: Date): 
   const transactionsRef = collection(db, 'transactions');
   const q = query(
     transactionsRef,
+    where('created_by', '==', userId),
     where('transaction_date', '>=', Timestamp.fromDate(startDate)),
     where('transaction_date', '<=', Timestamp.fromDate(endDate)),
     orderBy('transaction_date', 'desc')
@@ -260,7 +297,7 @@ export async function getTransactionsForPeriod(startDate: Date, endDate: Date): 
       transaction_date: data.transaction_date?.toDate ? data.transaction_date.toDate() : new Date(data.transaction_date || Date.now()),
       created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now())
     } as Transaction;
-  }).filter(t => t.created_by === userId);
+  });
 
   // Solve N+1 for items
   const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];
@@ -269,7 +306,13 @@ export async function getTransactionsForPeriod(startDate: Date, endDate: Date): 
   if (itemIds.length > 0) {
     for (let i = 0; i < itemIds.length; i += 30) {
       const chunk = itemIds.slice(i, i + 30);
-      const itemsSnapshot = await getDocs(query(collection(db, 'items'), where('__name__', 'in', chunk)));
+      const itemsSnapshot = await getDocs(
+        query(
+          collection(db, 'items'),
+          where('created_by', '==', userId),
+          where('__name__', 'in', chunk)
+        )
+      );
       itemsSnapshot.forEach(itemDoc => {
         items[itemDoc.id] = { id: itemDoc.id, ...itemDoc.data() };
       });

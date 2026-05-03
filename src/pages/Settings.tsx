@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Building2 } from 'lucide-react';
+import { User, Building2, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PersonalSettings from '../components/settings/PersonalSettings';
 import BusinessSettings from '../components/settings/BusinessSettings';
+import NotificationPreferences from '../components/settings/NotificationPreferences';
 import { useAuthStore } from '../lib/store';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 export default function Settings() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'personal' | 'business'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'business' | 'notifications'>('personal');
   const profile = useAuthStore(state => state.profile);
 
   if (!profile) {
@@ -23,6 +24,7 @@ export default function Settings() {
   const tabs = [
     { id: 'personal', label: t('settings.tabs.personal'), icon: User },
     { id: 'business', label: t('settings.tabs.business'), icon: Building2 },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
   ];
 
   return (
@@ -82,7 +84,9 @@ export default function Settings() {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
         >
-          {activeTab === 'personal' ? <PersonalSettings /> : <BusinessSettings />}
+          {activeTab === 'personal' && <PersonalSettings />}
+          {activeTab === 'business' && <BusinessSettings />}
+          {activeTab === 'notifications' && <NotificationPreferences />}
         </motion.div>
       </AnimatePresence>
     </div>

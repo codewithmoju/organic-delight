@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { debounce } from '../utils/debounce';
+import { readScopedJSON, writeScopedJSON, removeScopedKey } from '../utils/storageScope';
 
 export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 export type ContrastMode = 'normal' | 'high';
@@ -32,9 +33,13 @@ export function useAccessibility() {
   // Load settings from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsedSettings = JSON.parse(stored);
+      const parsedSettings = readScopedJSON<Partial<AccessibilitySettings>>(
+        STORAGE_KEY,
+        {},
+        undefined,
+        STORAGE_KEY
+      );
+      if (parsedSettings && Object.keys(parsedSettings).length > 0) {
         setSettings({ ...DEFAULT_SETTINGS, ...parsedSettings });
       }
     } catch (error) {
@@ -51,7 +56,7 @@ export function useAccessibility() {
   const debouncedSave = useCallback(
     debounce((newSettings: AccessibilitySettings) => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+        writeScopedJSON(STORAGE_KEY, newSettings);
       } catch (error) {
         console.error('Failed to save accessibility settings:', error);
       }
@@ -83,7 +88,7 @@ export function useAccessibility() {
   // Reset to defaults
   const resetToDefaults = useCallback(() => {
     setSettings(DEFAULT_SETTINGS);
-    localStorage.removeItem(STORAGE_KEY);
+    removeScopedKey(STORAGE_KEY);
     applySettingsToDocument(DEFAULT_SETTINGS);
   }, []);
 

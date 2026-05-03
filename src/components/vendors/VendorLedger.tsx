@@ -27,6 +27,11 @@ import LedgerSkeleton from './LedgerSkeleton';
 import RecordPaymentModal from './RecordPaymentModal';
 import VendorLedgerPDF from './VendorLedgerPDF';
 import EmptyState from '../ui/EmptyState';
+import VendorPerformance from './VendorPerformance';
+import VendorPaymentSchedule from './VendorPaymentSchedule';
+import { usePagination } from '../../lib/hooks/usePagination';
+import PaginationControls from '../ui/PaginationControls';
+import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 interface LedgerEntry {
     id: string;
@@ -38,12 +43,24 @@ interface LedgerEntry {
     balance_change: number;
 }
 
+function parseDateValue(d: any): Date {
+    if (!d) return new Date();
+    if (d instanceof Date) return d;
+    if (typeof d?.toDate === 'function') return d.toDate();
+    return new Date(d);
+}
+
 export default function VendorLedger() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [vendor, setVendor] = useState<Vendor | null>(null);
-    const [ledger, setLedger] = useState<LedgerEntry[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const cacheKey = id ? `vendor_ledger_cache_${id}` : '';
+    const cached = id ? readScopedJSON<any>(cacheKey, null, undefined, cacheKey) : null;
+    const [vendor, setVendor] = useState<Vendor | null>(cached?.vendor ?? null);
+    const [ledger, setLedger] = useState<LedgerEntry[]>(
+        (cached?.ledger ?? []).map((entry: LedgerEntry) => ({ ...entry, date: parseDateValue(entry.date) }))
+    );
+    const [vendorPurchases, setVendorPurchases] = useState<any[]>(cached?.vendorPurchases ?? []);
+    const [isLoading, setIsLoading] = useState(() => !cached);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [settings, setSettings] = useState<POSSettings | null>(null);
     const componentRef = useRef<HTMLDivElement>(null);
@@ -100,7 +117,8 @@ export default function VendorLedger() {
 
     const loadData = async () => {
         if (!id) return;
-        setIsLoading(true);
+        const hasWarmCache = !!cached;
+        if (!hasWarmCache) setIsLoading(true);
         try {
             const [vendorData, payments, purchases, posSettings] = await Promise.all([
                 getVendorById(id),
@@ -116,6 +134,7 @@ export default function VendorLedger() {
 
             setVendor(vendorData);
             setSettings(posSettings);
+            setVendorPurchases(purchases);
 
             // Combine into a single ledger
             const entries: LedgerEntry[] = [];
@@ -127,7 +146,7 @@ export default function VendorLedger() {
 
                 entries.push({
                     id: p.id,
-                    date: p.purchase_date,
+                    date: parseDateValue(p.purchase_date),
                     type: 'purchase',
                     reference: p.purchase_number,
                     description: `Stock: ${displayNames} (${p.items.length} items)`,
@@ -140,7 +159,7 @@ export default function VendorLedger() {
             payments.forEach(p => {
                 entries.push({
                     id: p.id,
-                    date: p.payment_date,
+                    date: parseDateValue(p.payment_date),
                     type: 'payment',
                     reference: p.reference_number || 'N/A',
                     description: `Payment via ${p.payment_method.replace('_', ' ')}`,
@@ -149,12 +168,18 @@ export default function VendorLedger() {
                 });
             });
 
-            setLedger(entries.sort((a, b) => b.date.getTime() - a.date.getTime()));
+            const sortedEntries = entries.sort((a, b) => b.date.getTime() - a.date.getTime());
+            setLedger(sortedEntries);
+            writeScopedJSON(cacheKey, {
+                vendor: vendorData,
+                vendorPurchases: purchases,
+                ledger: sortedEntries,
+            });
         } catch (error) {
             console.error('Error loading ledger:', error);
             toast.error('Failed to load complete vendor ledger data');
         } finally {
-            setIsLoading(false);
+            if (!hasWarmCache) setIsLoading(false);
         }
     };
 
@@ -200,6 +225,8 @@ export default function VendorLedger() {
             bg: 'bg-accent-500/10'
         }
     ];
+
+    const pagination = usePagination({ data: ledger, defaultItemsPerPage: 25 });
 
     return (
         <div className="space-y-4 sm:space-y-6">
@@ -309,7 +336,7 @@ export default function VendorLedger() {
                     <>
                         {/* ── Mobile card list (< sm) ── */}
                         <div className="sm:hidden divide-y divide-border/30">
-                            {ledger.map((entry) => (
+                            {pagination.paginatedData.map((entry) => (
                                 <div key={entry.id} className="flex items-start gap-3 px-4 py-3 hover:bg-secondary/20 transition-colors">
                                     {/* Type icon */}
                                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -362,7 +389,7 @@ export default function VendorLedger() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/20">
-                                    {ledger.map((entry) => (
+                                    {pagination.paginatedData.map((entry) => (
                                         <tr key={entry.id} className="hover:bg-secondary/20 transition-colors">
                                             <td className="px-5 lg:px-6 py-3.5">
                                                 <div className="flex items-center gap-1.5 text-foreground-muted text-sm whitespace-nowrap">
@@ -418,6 +445,20 @@ export default function VendorLedger() {
                         </div>
                     </div>
                 )}
+                {ledger.length > 0 && (
+                    <div className="px-4 sm:px-6 py-3 border-t border-border/20 bg-background/20">
+                        <PaginationControls
+                            currentPage={pagination.currentPage}
+                            totalPages={pagination.totalPages}
+                            onPageChange={pagination.goToPage}
+                            hasNextPage={pagination.hasNextPage}
+                            hasPrevPage={pagination.hasPrevPage}
+                            startIndex={pagination.startIndex}
+                            endIndex={pagination.endIndex}
+                            totalItems={pagination.totalItems}
+                        />
+                    </div>
+                )}
             </motion.div>
 
             <RecordPaymentModal
@@ -426,6 +467,29 @@ export default function VendorLedger() {
                 vendor={displayVendor || vendor}
                 onSuccess={loadData}
             />
+
+            {/* Vendor Performance & Payment Schedule */}
+            {vendor && !isLoading && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                    <div className="bg-card rounded-2xl border border-border/60 p-5 shadow-sm">
+                        <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-primary" />
+                            Vendor Performance
+                        </h3>
+                        <VendorPerformance
+                            vendorId={vendor.id}
+                            vendorName={vendor.company}
+                            purchases={vendorPurchases}
+                        />
+                    </div>
+                    <div className="bg-card rounded-2xl border border-border/60 p-5 shadow-sm">
+                        <VendorPaymentSchedule
+                            vendorId={vendor.id}
+                            outstandingBalance={displayVendor?.outstanding_balance ?? 0}
+                        />
+                    </div>
+                </div>
+            )}
 
             <div className="hidden">
                 {displayVendor && settings && (

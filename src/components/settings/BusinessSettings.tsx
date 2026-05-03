@@ -21,6 +21,7 @@ export default function BusinessSettings() {
             setFormData({
                 ...settings,
                 store_country: settings.store_country || 'Pakistan',
+                tax_rate: Number.isFinite(settings.tax_rate) ? settings.tax_rate : 0,
                 currency: 'PKR'
             });
         } catch (error) {
@@ -60,6 +61,7 @@ export default function BusinessSettings() {
     }
 
     if (!formData) return null;
+    const taxRatePercent = Number.isFinite(formData.tax_rate) ? formData.tax_rate * 100 : 0;
 
     return (
         <motion.div
@@ -142,8 +144,8 @@ export default function BusinessSettings() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Default Tax Rate (%)</label>
-                        <input type="number" step="0.01" min="0" max="100" value={formData.tax_rate * 100} onChange={(e) => setFormData(prev => prev ? ({ ...prev, tax_rate: (parseFloat(e.target.value) / 100) || 0 }) : null)} className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all text-foreground text-sm" />
-                        <p className="text-xs text-foreground-muted">Current: {(formData.tax_rate * 100).toFixed(2)}%</p>
+                        <input type="number" step="0.01" min="0" max="100" value={taxRatePercent} onChange={(e) => setFormData(prev => prev ? ({ ...prev, tax_rate: (parseFloat(e.target.value) / 100) || 0 }) : null)} className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all text-foreground text-sm" />
+                        <p className="text-xs text-foreground-muted">Current: {taxRatePercent.toFixed(2)}%</p>
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Currency</label>
