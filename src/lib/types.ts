@@ -84,6 +84,7 @@ export interface Profile {
   created_at: Date;
   updated_at: Date;
   role?: 'admin' | 'manager' | 'user';
+  created_by_admin?: boolean;
   company?: string;
   phone?: string;
   phone_number?: string;

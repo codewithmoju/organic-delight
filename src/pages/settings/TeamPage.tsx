@@ -125,7 +125,7 @@ export default function TeamPage() {
             {isOwnerOrManager && (
               <a href="/settings/invite" className="btn-primary px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium shadow-lg shadow-primary/20">
                 <UserPlus className="w-4 h-4" />
-                Invite
+                Add Member
               </a>
             )}
           </div>

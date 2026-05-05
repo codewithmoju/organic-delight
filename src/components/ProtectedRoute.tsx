@@ -23,9 +23,14 @@ export default function ProtectedRoute({ children, requiredPermission }: Protect
     return <Navigate to="/login" />;
   }
 
-  // If org scoping is active and permission is required, check it
-  if (requiredPermission && activeOrganization && !can(requiredPermission)) {
-    return <Navigate to="/" />;
+  // If permission is required, enforce it
+  if (requiredPermission) {
+    if (!activeOrganization) {
+      return <AppLoader fullScreen label="Loading organization…" />;
+    }
+    if (!can(requiredPermission)) {
+      return <Navigate to="/" />;
+    }
   }
 
   return children;

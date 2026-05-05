@@ -2,17 +2,16 @@ import { Menu, User, LogOut, Settings, ChevronDown, Building2, Check } from 'luc
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import { useAuthStore } from '../lib/store';
 import { switchOrganization } from '../lib/auth/orgResolver';
+import { getUserOrganizations } from '../lib/api/organizations';
 import Logo from './ui/Logo';
 import SearchInput from './ui/SearchInput';
 import LanguageSelector from './ui/LanguageSelector';
 import { SimpleThemeToggle } from './ui/ThemeToggle';
 import NotificationCenter from './ui/NotificationCenter';
 import LocationSelector from './ui/LocationSelector';
-import type { OrganizationMember } from '../lib/types/org';
+import type { Organization } from '../lib/types/org';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -28,7 +27,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const setMembership = useAuthStore((state) => state.setMembership);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showOrgMenu, setShowOrgMenu] = useState(false);
-  const [userOrgs, setUserOrgs] = useState<OrganizationMember[]>([]);
+  const [userOrgs, setUserOrgs] = useState<Organization[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const orgDropdownRef = useRef<HTMLDivElement>(null);
@@ -89,15 +88,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   // Fetch user's orgs when org menu opens
   useEffect(() => {
     if (!showOrgMenu || !profile?.id) return;
-    const q = query(
-      collection(db, 'organization_members'),
-      where('user_id', '==', profile.id),
-      where('status', '==', 'active')
-    );
-    getDocs(q).then((snap: any) => {
-      const orgs = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as OrganizationMember[];
-      setUserOrgs(orgs);
-    }).catch(() => {});
+    getUserOrganizations(profile.id).then(setUserOrgs).catch(() => {});
   }, [showOrgMenu, profile?.id]);
 
   const handleOrgSwitch = useCallback(async (orgId: string) => {
@@ -194,16 +185,16 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                       userOrgs.map((org) => (
                         <button
                           key={org.id}
-                          onClick={() => handleOrgSwitch(org.organization_id)}
+                          onClick={() => handleOrgSwitch(org.id)}
                           className={`flex w-full items-center justify-between px-4 py-2.5 text-sm transition-colors duration-150 ${
-                            org.organization_id === activeOrganization.id
+                            org.id === activeOrganization.id
                               ? 'bg-secondary text-foreground font-medium'
                               : 'text-foreground hover:bg-secondary'
                           }`}
                           role="menuitem"
                         >
-                          <span className="truncate">{org.organization_id}</span>
-                          {org.organization_id === activeOrganization.id && (
+                          <span className="truncate">{org.name}</span>
+                          {org.id === activeOrganization.id && (
                             <Check className="w-4 h-4 text-primary" />
                           )}
                         </button>

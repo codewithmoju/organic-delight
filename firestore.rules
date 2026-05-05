@@ -283,7 +283,10 @@ service cloud.firestore {
     // Organization members rules
     match /organization_members/{memberId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() && (
+        isOrgManagerOrOwner(request.resource.data.organization_id) ||
+        request.resource.data.user_id == request.auth.uid
+      );
       allow update: if isAuthenticated() && hasRole(resource.data.organization_id, 'owner') || isOrgOwner(resource.data.organization_id);
       allow delete: if isAuthenticated() && hasRole(resource.data.organization_id, 'owner') || isOrgOwner(resource.data.organization_id);
     }
