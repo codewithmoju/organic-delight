@@ -42,6 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const isDesktop = useIsDesktop();
   const isExpanded = isHovered || !isDesktop;
   const activeOrganization = useAuthStore((state) => state.activeOrganization);
+  const orgResolved = useAuthStore((state) => state.orgResolved);
   const orgActive = !!activeOrganization;
 
   const navGroups = [
@@ -92,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     }
   ].map(group => ({
     ...group,
-    items: orgActive ? group.items.filter(item => can(item.permission)) : group.items,
+    items: orgActive && orgResolved ? group.items.filter(item => can(item.permission)) : group.items,
   })).filter(group => group.items.length > 0);
 
   // Handle escape key to close sidebar on mobile

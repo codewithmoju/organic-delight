@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store';
 import { requireCurrentUserId } from './userScope';
 
-const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED === 'true';
+const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED !== 'false';
 
 /**
  * Returns the active organization ID, or null if org scoping is disabled

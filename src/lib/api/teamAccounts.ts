@@ -36,10 +36,20 @@ export async function createTeamMember(
 
   const uid = data.localId;
 
-  // Step 2: Create profile + org_member using admin's Firestore access
-  // Admin is still signed in, so Firestore writes use admin's auth
-  const { doc, setDoc, Timestamp } = await import('firebase/firestore');
+  // Step 2: Check for duplicate email in this org
+  const { doc, setDoc, Timestamp, collection, query, where, getDocs } = await import('firebase/firestore');
   const { db } = await import('../firebase');
+
+  const existingQuery = query(
+    collection(db, 'organization_members'),
+    where('organization_id', '==', orgId),
+    where('user_email', '==', email),
+    where('status', '==', 'active')
+  );
+  const existing = await getDocs(existingQuery);
+  if (!existing.empty) {
+    throw new Error('A team member with this email already exists in this organization');
+  }
 
   // Create profile
   await setDoc(doc(db, 'profiles', uid), {

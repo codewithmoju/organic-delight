@@ -19,8 +19,6 @@ import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
 import { readScopedJSON, writeScopedJSON } from '../lib/utils/storageScope';
-import { useRoleRedirect } from '../lib/hooks/useRoleRedirect';
-
 // Lazy-load the chart — it's below the fold and pulls in recharts (~400KB)
 const MetricsChart = lazy(() => import('../components/dashboard/MetricsChart'));
 
@@ -38,7 +36,6 @@ function writeCache(key: string, value: unknown) {
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  useRoleRedirect();
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
 
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(() => readCache(LS_METRICS));

@@ -4,7 +4,7 @@ import { useAuthStore } from '../store';
 import type { Organization, OrganizationMember } from '../types/org';
 import { getOrganization } from '../api/organizations';
 
-const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED === 'true';
+const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED !== 'false';
 
 /** Force token refresh to pick up latest custom claims (org roles).
  *  Fire-and-forget — non-blocking, claims refresh in background. */
@@ -24,9 +24,17 @@ function refreshClaims(): void {
  * 5. Store activeOrganization + membership in auth store
  */
 export async function resolveActiveOrganization(uid: string): Promise<void> {
-  if (!ORG_SCOPING_ENABLED) return;
+  if (!ORG_SCOPING_ENABLED) {
+    useAuthStore.getState().setOrgResolved(true);
+    return;
+  }
 
-  const { setActiveOrganization, setMembership } = useAuthStore.getState();
+  const { setActiveOrganization, setMembership, setOrgResolved } = useAuthStore.getState();
+
+  // Clear stale localStorage data to force fresh resolution
+  setActiveOrganization(null);
+  setMembership(null);
+  setOrgResolved(false);
 
   // Find memberships for this user
   const membersQuery = query(
@@ -46,6 +54,7 @@ export async function resolveActiveOrganization(uid: string): Promise<void> {
     const profile = useAuthStore.getState().profile;
     if (profile?.created_by_admin) {
       console.error('Admin-created user has no organization membership');
+      setOrgResolved(true);
       return;
     }
     // No org memberships — create a personal org for legacy user
@@ -61,6 +70,7 @@ export async function resolveActiveOrganization(uid: string): Promise<void> {
     };
     setActiveOrganization(org);
     setMembership(membership);
+    setOrgResolved(true);
     refreshClaims();
     return;
   }
@@ -72,9 +82,20 @@ export async function resolveActiveOrganization(uid: string): Promise<void> {
 
   try {
     const org = await getOrganization(selected.organization_id);
+    // If user is the org creator but membership role is wrong, auto-promote to owner
+    if (org.created_by === uid && selected.role !== 'owner') {
+      console.warn('[orgResolver] Org creator has role', selected.role, '— auto-promoting to owner');
+      selected = { ...selected, role: 'owner' };
+      // Update Firestore in background
+      import('firebase/firestore').then(({ doc, updateDoc }) => {
+        updateDoc(doc(db, 'organization_members', selected.id), { role: 'owner' }).catch(() => {});
+      });
+    }
+    console.log('[orgResolver] Resolved org:', org.name, 'role:', selected.role, 'orgId:', selected.organization_id);
     setActiveOrganization(org);
     setMembership(selected);
     localStorage.setItem('stocksuite_active_org', selected.organization_id);
+    setOrgResolved(true);
     refreshClaims();
   } catch {
     // Org may have been deleted — try next membership
@@ -84,6 +105,7 @@ export async function resolveActiveOrganization(uid: string): Promise<void> {
       setActiveOrganization(org);
       setMembership(fallback);
       localStorage.setItem('stocksuite_active_org', fallback.organization_id);
+      setOrgResolved(true);
       refreshClaims();
     }
   }

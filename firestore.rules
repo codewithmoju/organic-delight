@@ -287,8 +287,8 @@ service cloud.firestore {
         isOrgManagerOrOwner(request.resource.data.organization_id) ||
         request.resource.data.user_id == request.auth.uid
       );
-      allow update: if isAuthenticated() && hasRole(resource.data.organization_id, 'owner') || isOrgOwner(resource.data.organization_id);
-      allow delete: if isAuthenticated() && hasRole(resource.data.organization_id, 'owner') || isOrgOwner(resource.data.organization_id);
+      allow update: if isAuthenticated() && (isOrgManagerOrOwner(resource.data.organization_id));
+      allow delete: if isAuthenticated() && (isOrgManagerOrOwner(resource.data.organization_id));
     }
 
     // Invites rules

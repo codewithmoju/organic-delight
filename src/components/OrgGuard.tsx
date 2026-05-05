@@ -2,7 +2,7 @@ import { Building2, Settings } from 'lucide-react';
 import { useAuthStore } from '../lib/store';
 import LoadingSpinner from './ui/LoadingSpinner';
 
-const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED === 'true';
+const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED !== 'false';
 
 export default function OrgGuard({ children }: { children: React.ReactNode }) {
   const activeOrganization = useAuthStore((s) => s.activeOrganization);

@@ -109,6 +109,16 @@ function App() {
       // Mark auth as initialized after first check
       setInitialized(true);
 
+      // One-time role redirect: cashier→POS, accountant→reports (only on initial load at '/')
+      if (user && window.location.pathname === '/') {
+        const membership = useAuthStore.getState().membership;
+        const ROLE_LANDING: Record<string, string> = { cashier: '/pos', accountant: '/reports' };
+        const landing = membership ? ROLE_LANDING[membership.role] : undefined;
+        if (landing) {
+          window.location.replace(landing);
+        }
+      }
+
       // Check low stock and push notifications (fire-and-forget)
       if (user) {
         import('./lib/api/lowStock').then(({ getLowStockItems }) =>

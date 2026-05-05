@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '../../lib/store';
 import { getMembers, updateMemberRole, removeMember } from '../../lib/api/organizations';
 import { getPendingInvites } from '../../lib/api/invites';
+import { can } from '../../lib/auth/permissions';
 import type { OrganizationMember, OrgRole, Invite } from '../../lib/types/org';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -37,7 +38,7 @@ export default function TeamPage() {
   const [confirmRemove, setConfirmRemove] = useState<OrganizationMember | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
 
-  const isOwnerOrManager = membership?.role === 'owner' || membership?.role === 'manager';
+  const isOwnerOrManager = membership?.role === 'owner' || membership?.role === 'manager' || can('settings.team');
 
   const load = useCallback(async () => {
     if (!activeOrganization) return;

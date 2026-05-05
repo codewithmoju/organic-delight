@@ -86,7 +86,7 @@ export async function getUserOrganizations(userId?: string): Promise<Organizatio
     where('status', '==', 'active')
   );
   const memberSnaps = await getDocs(membersQuery);
-  const orgIds = memberSnaps.docs.map(d => d.data().organization_id);
+  const orgIds = [...new Set(memberSnaps.docs.map(d => d.data().organization_id))];
 
   if (orgIds.length === 0) return [];
 
