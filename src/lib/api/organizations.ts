@@ -4,6 +4,7 @@ import {
   getDocs,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -60,7 +61,7 @@ export async function createOrganization(name: string): Promise<string> {
 
   // Auto-add creator as owner
   const memberId = `${orgRef.id}_${userId}`;
-  await addDoc(collection(db, MEMBERS_COLLECTION), {
+  await setDoc(doc(db, MEMBERS_COLLECTION, memberId), {
     organization_id: orgRef.id,
     user_id: userId,
     role: 'owner' as OrgRole,
@@ -160,7 +161,7 @@ export async function getMember(orgId: string, userId: string): Promise<Organiza
 
 export async function addMember(orgId: string, userId: string, role: OrgRole, invitedBy?: string): Promise<string> {
   const memberId = `${orgId}_${userId}`;
-  await addDoc(collection(db, MEMBERS_COLLECTION), {
+  await setDoc(doc(db, MEMBERS_COLLECTION, memberId), {
     organization_id: orgId,
     user_id: userId,
     role,

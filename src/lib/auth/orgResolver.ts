@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, setDoc, doc, Timestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { useAuthStore } from '../store';
 import type { Organization, OrganizationMember } from '../types/org';
@@ -26,7 +26,7 @@ function refreshClaims(): void {
 export async function resolveActiveOrganization(uid: string): Promise<void> {
   if (!ORG_SCOPING_ENABLED) return;
 
-  const { setActiveOrganization, setMembership, setPermissions } = useAuthStore.getState();
+  const { setActiveOrganization, setMembership } = useAuthStore.getState();
 
   // Find memberships for this user
   const membersQuery = query(
@@ -42,6 +42,12 @@ export async function resolveActiveOrganization(uid: string): Promise<void> {
   })) as OrganizationMember[];
 
   if (memberships.length === 0) {
+    // Admin-created users should already have membership — don't create personal org
+    const profile = useAuthStore.getState().profile;
+    if (profile?.created_by_admin) {
+      console.error('Admin-created user has no organization membership');
+      return;
+    }
     // No org memberships — create a personal org for legacy user
     const orgId = await createPersonalOrg(uid);
     const org = await getOrganization(orgId);
@@ -134,7 +140,8 @@ async function createPersonalOrg(uid: string): Promise<string> {
   });
 
   // Add user as owner
-  await addDoc(collection(db, 'organization_members'), {
+  const memberId = `${orgRef.id}_${uid}`;
+  await setDoc(doc(db, 'organization_members', memberId), {
     organization_id: orgRef.id,
     user_id: uid,
     role: 'owner',
