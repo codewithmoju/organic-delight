@@ -1,10 +1,11 @@
-import { Menu, User, LogOut, Settings, ChevronDown, Building2, Check } from 'lucide-react';
+import { Menu, User, LogOut, Settings, ChevronDown, Building2, Check, Shield } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../lib/store';
 import { switchOrganization } from '../lib/auth/orgResolver';
 import { getUserOrganizations } from '../lib/api/organizations';
+import { isSuperAdmin } from '../lib/auth/permissions';
 import Logo from './ui/Logo';
 import SearchInput from './ui/SearchInput';
 import LanguageSelector from './ui/LanguageSelector';
@@ -296,6 +297,17 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     <User className="mr-3 h-4 w-4" />
                     {t('settings.profile.accountSettings', 'Account Settings')}
                   </button>
+
+                  {isSuperAdmin() && (
+                    <button
+                      onClick={() => handleMenuItemClick(() => navigate('/super-admin'))}
+                      className="flex w-full items-center px-4 py-3 text-sm text-foreground hover:bg-secondary hover:text-foreground transition-colors duration-150"
+                      role="menuitem"
+                    >
+                      <Shield className="mr-3 h-4 w-4 text-primary" />
+                      Super Admin
+                    </button>
+                  )}
 
                   <div className="border-t border-border my-2"></div>
 

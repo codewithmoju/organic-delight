@@ -24,6 +24,12 @@ function refreshClaims(): void {
  * 5. Store activeOrganization + membership in auth store
  */
 export async function resolveActiveOrganization(uid: string): Promise<void> {
+  // Super admin doesn't need an org — skip resolution entirely
+  if (useAuthStore.getState().isSuperAdmin) {
+    useAuthStore.getState().setOrgResolved(true);
+    return;
+  }
+
   if (!ORG_SCOPING_ENABLED) {
     useAuthStore.getState().setOrgResolved(true);
     return;

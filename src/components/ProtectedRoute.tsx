@@ -14,6 +14,7 @@ export default function ProtectedRoute({ children, requiredPermission }: Protect
   const isInitialized = useAuthStore((state) => state.isInitialized);
   const activeOrganization = useAuthStore((state) => state.activeOrganization);
   const orgResolved = useAuthStore((state) => state.orgResolved);
+  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin);
 
   // Show full-screen loader while Firebase auth is initializing
   if (!isInitialized) {
@@ -22,6 +23,11 @@ export default function ProtectedRoute({ children, requiredPermission }: Protect
 
   if (!user) {
     return <Navigate to="/login" />;
+  }
+
+  // Super admin bypasses all permission and org checks
+  if (isSuperAdmin) {
+    return children;
   }
 
   // If permission is required, enforce it

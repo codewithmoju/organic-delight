@@ -16,12 +16,14 @@ interface AuthState {
   activeOrganization: Organization | null;
   membership: OrganizationMember | null;
   orgResolved: boolean;
+  isSuperAdmin: boolean;
   setUser: (user: User | null) => void;
   setProfile: (profile: Profile | null) => void;
   setInitialized: (initialized: boolean) => void;
   setActiveOrganization: (org: Organization | null) => void;
   setMembership: (member: OrganizationMember | null) => void;
   setOrgResolved: (resolved: boolean) => void;
+  setIsSuperAdmin: (value: boolean) => void;
   signOut: () => Promise<void>;
 }
 
@@ -41,12 +43,14 @@ export const useAuthStore = create<AuthState>()(
       activeOrganization: null,
       membership: null,
       orgResolved: false,
+      isSuperAdmin: false,
       setUser: (user) => set({ user }),
       setProfile: (profile) => set({ profile }),
       setInitialized: (isInitialized) => set({ isInitialized }),
       setActiveOrganization: (activeOrganization) => set({ activeOrganization }),
       setMembership: (membership) => set({ membership }),
       setOrgResolved: (orgResolved) => set({ orgResolved }),
+      setIsSuperAdmin: (isSuperAdmin) => set({ isSuperAdmin }),
       signOut: async () => {
         const uid =
           firebaseAuth.currentUser?.uid ??
@@ -55,13 +59,13 @@ export const useAuthStore = create<AuthState>()(
           null;
         await firebaseSignOut(firebaseAuth);
         clearSessionCaches(uid ?? undefined);
-        set({ user: null, profile: null, activeOrganization: null, membership: null, orgResolved: false });
+        set({ user: null, profile: null, activeOrganization: null, membership: null, orgResolved: false, isSuperAdmin: false });
       },
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => createScopedZustandStorage()),
-      partialize: (state) => ({ profile: state.profile, activeOrganization: state.activeOrganization, membership: state.membership }),
+      partialize: (state) => ({ profile: state.profile, activeOrganization: state.activeOrganization, membership: state.membership, isSuperAdmin: state.isSuperAdmin }),
     }
   )
 );

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { useEffect, Suspense, lazy, useRef } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -51,6 +51,21 @@ const TeamPage = lazy(() => import('./pages/settings/TeamPage'));
 const InvitePage = lazy(() => import('./pages/settings/InvitePage'));
 const OrgSettingsPage = lazy(() => import('./pages/settings/OrgSettingsPage'));
 
+// Super Admin pages
+const SuperAdminLayout = lazy(() => import('./components/admin/SuperAdminLayout'));
+import SuperAdminGuard from './components/admin/SuperAdminGuard';
+const SuperAdminDashboard = lazy(() => import('./pages/super-admin/SuperAdminDashboard'));
+const SAStoresPage = lazy(() => import('./pages/super-admin/StoresPage'));
+const SAStoreDetailPage = lazy(() => import('./pages/super-admin/StoreDetailPage'));
+const SAUsersPage = lazy(() => import('./pages/super-admin/UsersPage'));
+const SAUserDetailPage = lazy(() => import('./pages/super-admin/UserDetailPage'));
+const SADataItemsPage = lazy(() => import('./pages/super-admin/DataItemsPage'));
+const SADataTransactionsPage = lazy(() => import('./pages/super-admin/DataTransactionsPage'));
+const SADataExpensesPage = lazy(() => import('./pages/super-admin/DataExpensesPage'));
+const SARolesPage = lazy(() => import('./pages/super-admin/RolesPage'));
+const SAAuditPage = lazy(() => import('./pages/super-admin/AuditPage'));
+const SASettingsPage = lazy(() => import('./pages/super-admin/SettingsPage'));
+
 // Page-level loading fallback — uses the shared AppLoader
 const LoadingFallback = ({ text }: { text: string }) => (
   <AppLoader label={text} />
@@ -74,7 +89,7 @@ function Page({ component: Component, text, permission }: {
 }
 
 function App() {
-  const { setUser, setProfile, setInitialized } = useAuthStore();
+  const { setUser, setProfile, setInitialized, setIsSuperAdmin } = useAuthStore();
   const lastUserRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -92,6 +107,14 @@ function App() {
 
       setUser(user);
       if (user) {
+        // Read custom claims to detect super admin
+        try {
+          const tokenResult = await user.getIdTokenResult();
+          setIsSuperAdmin(!!tokenResult.claims.superAdmin);
+        } catch {
+          setIsSuperAdmin(false);
+        }
+
         // Run profile + org resolution in parallel — neither depends on the other
         const [profileResult] = await Promise.allSettled([
           getProfile(user),
@@ -105,17 +128,23 @@ function App() {
         }
       } else {
         setProfile(null);
+        setIsSuperAdmin(false);
       }
       // Mark auth as initialized after first check
       setInitialized(true);
 
-      // One-time role redirect: cashier→POS, accountant→reports (only on initial load at '/')
+      // One-time role redirect: super admin→super-admin panel, cashier→POS, accountant→reports
       if (user && window.location.pathname === '/') {
-        const membership = useAuthStore.getState().membership;
-        const ROLE_LANDING: Record<string, string> = { cashier: '/pos', accountant: '/reports' };
-        const landing = membership ? ROLE_LANDING[membership.role] : undefined;
-        if (landing) {
-          window.location.replace(landing);
+        const state = useAuthStore.getState();
+        if (state.isSuperAdmin) {
+          window.location.replace('/super-admin');
+        } else {
+          const membership = state.membership;
+          const ROLE_LANDING: Record<string, string> = { cashier: '/pos', accountant: '/reports' };
+          const landing = membership ? ROLE_LANDING[membership.role] : undefined;
+          if (landing) {
+            window.location.replace(landing);
+          }
         }
       }
 
@@ -165,16 +194,8 @@ function App() {
                 <Login />
               </Suspense>
             } />
-            <Route path="/register" element={
-              <Suspense fallback={<LoadingFallback text="Loading register" />}>
-                <Register />
-              </Suspense>
-            } />
-            <Route path="/register-multi" element={
-              <Suspense fallback={<LoadingFallback text="Loading register" />}>
-                <MultiStepRegister />
-              </Suspense>
-            } />
+            <Route path="/register" element={<Navigate to="/login" replace />} />
+            <Route path="/register-multi" element={<Navigate to="/login" replace />} />
             <Route path="/forgot-password" element={
               <Suspense fallback={<LoadingFallback text="Loading password reset" />}>
                 <ForgotPassword />
@@ -191,6 +212,22 @@ function App() {
               </Suspense>
             } />
 
+            {/* Super Admin Routes */}
+            <Route element={<ProtectedRoute><Suspense fallback={<LoadingFallback text="Loading admin panel" />}><SuperAdminLayout /></Suspense></ProtectedRoute>}>
+              <Route path="/super-admin" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading dashboard" />}><SuperAdminDashboard /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/stores" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading stores" />}><SAStoresPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/stores/:id" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading store" />}><SAStoreDetailPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/users" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading users" />}><SAUsersPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/users/:id" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading user" />}><SAUserDetailPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/data/items" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading inventory" />}><SADataItemsPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/data/transactions" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading transactions" />}><SADataTransactionsPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/data/expenses" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading expenses" />}><SADataExpensesPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/roles" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading roles" />}><SARolesPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/audit" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading audit" />}><SAAuditPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/settings" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading settings" />}><SASettingsPage /></Suspense></SuperAdminGuard>} />
+            </Route>
+
+            {/* User Panel Routes */}
             <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route path="/" element={<Page component={Dashboard} text="Loading dashboard" permission="dashboard.view" />} />
               <Route path="/pos" element={<Page component={POS} text="Loading POS system" permission="pos.access" />} />

@@ -104,3 +104,41 @@ export interface Invite {
   organization_name?: string;
   inviter_name?: string;
 }
+
+/** Summary of an organization for admin dashboard listing */
+export interface OrgSummary {
+  id: string;
+  name: string;
+  created_by: string;
+  created_at: Date;
+  updated_at: Date;
+  member_count: number;
+  owner_name?: string;
+  owner_email?: string;
+  settings?: OrganizationSettings;
+}
+
+/** A user profile enriched with their org memberships */
+export interface AdminUserProfile {
+  id: string;
+  full_name: string;
+  email: string;
+  avatar_url?: string;
+  created_at: Date;
+  created_by_admin?: boolean;
+  memberships: {
+    organization_id: string;
+    organization_name: string;
+    role: OrgRole;
+    status: 'active' | 'inactive' | 'pending';
+  }[];
+}
+
+/** Platform-wide statistics for super admin dashboard */
+export interface PlatformStats {
+  totalOrganizations: number;
+  totalUsers: number;
+  totalTeamMembers: number;
+  totalActiveMembers: number;
+  recentOrganizations: OrgSummary[];
+}

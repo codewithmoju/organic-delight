@@ -188,18 +188,6 @@ export default function Login() {
               </motion.button>
             </div>
           </form>
-
-          <div className="mt-10 text-center">
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
-              {t('auth.login.noAccount')}{' '}
-              <Link
-                to="/register-multi"
-                className="font-bold text-primary hover:text-primary-dark transition-colors duration-200"
-              >
-                {t('auth.login.signUp')}
-              </Link>
-            </p>
-          </div>
         </motion.div>
       </div>
     </div>

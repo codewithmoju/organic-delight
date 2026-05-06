@@ -82,6 +82,7 @@ export interface AuditFilters {
   action?: AuditAction;
   resource?: AuditResource;
   limitCount?: number;
+  orgIds?: string[];
 }
 
 export async function getAuditLogs(filters: AuditFilters = {}): Promise<AuditEntry[]> {
@@ -90,8 +91,35 @@ export async function getAuditLogs(filters: AuditFilters = {}): Promise<AuditEnt
 
   try {
     const ref = collection(db, 'audit_logs');
+    let q;
+
+    if (filters.orgIds && filters.orgIds.length > 0) {
+      // Firestore 'in' supports up to 10 values — batch if needed
+      const batches: AuditEntry[] = [];
+      for (let i = 0; i < filters.orgIds.length; i += 10) {
+        const batch = filters.orgIds.slice(i, i + 10);
+        let batchQ = query(ref, where('organization_id', 'in', batch), orderBy('created_at', 'desc'));
+        if (filters.limitCount) {
+          batchQ = query(batchQ, limit(filters.limitCount));
+        }
+        const snap = await getDocs(batchQ);
+        batches.push(...snap.docs.map(d => ({
+          id: d.id,
+          ...d.data(),
+          created_at: d.data().created_at?.toDate?.() || new Date(),
+        })) as AuditEntry[]);
+      }
+      // Sort combined results by date descending
+      batches.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+
+      let entries = filters.limitCount ? batches.slice(0, filters.limitCount) : batches;
+      if (filters.action) entries = entries.filter(e => e.action === filters.action);
+      if (filters.resource) entries = entries.filter(e => e.resource === filters.resource);
+      return entries;
+    }
+
     const scope = getOrgScopeFilter();
-    let q = query(ref, where(scope.field, '==', scope.value), orderBy('created_at', 'desc'));
+    q = query(ref, where(scope.field, '==', scope.value), orderBy('created_at', 'desc'));
 
     if (filters.limitCount) {
       q = query(q, limit(filters.limitCount));

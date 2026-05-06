@@ -7,7 +7,14 @@ import type { OrgRole, Permission } from '../types/org';
  * All permission checks in the app should go through this module.
  */
 
+export function isSuperAdmin(): boolean {
+  return useAuthStore.getState().isSuperAdmin;
+}
+
 export function can(permission: Permission): boolean {
+  // Super admin bypasses all permission checks
+  if (isSuperAdmin()) return true;
+
   const state = useAuthStore.getState();
   const overrides = state.membership?.permissions_overrides;
 
