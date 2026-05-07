@@ -205,7 +205,13 @@ export async function getAllUsers(options?: {
   search?: string;
   limitCount?: number;
 }): Promise<AdminUserProfile[]> {
-  const profilesSnap = await getDocs(collection(db, PROFILES));
+  // Fetch profiles, memberships, and orgs in parallel (3 queries instead of N*M+1)
+  const [profilesSnap, membersSnap, orgsSnap] = await Promise.all([
+    getDocs(collection(db, PROFILES)),
+    getDocs(collection(db, MEMBERS)),
+    getDocs(collection(db, ORGS)),
+  ]);
+
   // Deduplicate — Firestore offline cache can return duplicate docs
   const seen = new Set<string>();
   let profiles = profilesSnap.docs.filter(d => {
@@ -226,42 +232,41 @@ export async function getAllUsers(options?: {
     profiles = profiles.slice(0, options.limitCount);
   }
 
-  // Enrich with memberships
-  const enriched = await Promise.all(
-    profiles.map(async (profile) => {
-      const membersSnap = await getDocs(
-        query(collection(db, MEMBERS), where('user_id', '==', profile.id))
-      );
-      const memberships = membersSnap.docs.map(mapMember);
+  // Build lookup maps
+  const orgNameMap = new Map<string, string>();
+  orgsSnap.forEach(d => orgNameMap.set(d.id, d.data().name || 'Unknown'));
 
-      // Get org names
-      const enrichedMemberships = await Promise.all(
-        memberships.map(async (m) => {
-          try {
-            const orgSnap = await getDoc(doc(db, ORGS, m.organization_id));
-            return {
-              organization_id: m.organization_id,
-              organization_name: orgSnap.exists() ? orgSnap.data().name : 'Unknown',
-              role: m.role,
-              status: m.status,
-            };
-          } catch {
-            return {
-              organization_id: m.organization_id,
-              organization_name: 'Unknown',
-              role: m.role,
-              status: m.status,
-            };
-          }
-        })
-      );
+  const membersByUser = new Map<string, ReturnType<typeof mapMember>>();
+  membersSnap.forEach(d => {
+    const m = mapMember(d);
+    // Group by user_id
+    const existing = membersByUser.get(m.user_id);
+    if (!existing) membersByUser.set(m.user_id, m);
+  });
 
-      return {
-        ...profile,
-        memberships: enrichedMemberships,
-      } as AdminUserProfile;
-    })
-  );
+  // Collect all memberships grouped by user_id
+  const allMemberships = new Map<string, ReturnType<typeof mapMember>[]>();
+  membersSnap.forEach(d => {
+    const m = mapMember(d);
+    if (!allMemberships.has(m.user_id)) allMemberships.set(m.user_id, []);
+    allMemberships.get(m.user_id)!.push(m);
+  });
+
+  // Enrich profiles with memberships (in-memory join)
+  const enriched: AdminUserProfile[] = profiles.map((profile) => {
+    const memberships = allMemberships.get(profile.id) || [];
+    const enrichedMemberships = memberships.map((m) => ({
+      organization_id: m.organization_id,
+      organization_name: orgNameMap.get(m.organization_id) || 'Unknown',
+      role: m.role,
+      status: m.status,
+    }));
+
+    return {
+      ...profile,
+      memberships: enrichedMemberships,
+    } as AdminUserProfile;
+  });
 
   // Final dedup by ID — guard against any duplication from enrichment
   const uniqueMap = new Map<string, AdminUserProfile>();

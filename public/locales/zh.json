@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "StockSuite - 专业库存管理",
+    "description": "现代企业专业库存管理系统",
+    "version": "StockSuite v2.0"
+  },
+  "navigation": {
+    "dashboard": "仪表板",
+    "categories": "分类",
+    "items": "物品",
+    "transactions": "交易",
+    "stockLevels": "库存水平",
+    "reports": "报告",
+    "settings": "设置"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加"
+  }
+}

@@ -3,18 +3,8 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
 
-// Import translation files
+// Only inline English as fallback — other locales loaded on demand via HTTP backend
 import enTranslations from './locales/en.json';
-import esTranslations from './locales/es.json';
-import frTranslations from './locales/fr.json';
-import deTranslations from './locales/de.json';
-import itTranslations from './locales/it.json';
-import ptTranslations from './locales/pt.json';
-import zhTranslations from './locales/zh.json';
-import jaTranslations from './locales/ja.json';
-import arTranslations from './locales/ar.json';
-import hiTranslations from './locales/hi.json';
-import urTranslations from './locales/ur.json';
 
 // Language configuration
 export const SUPPORTED_LANGUAGES = [
@@ -31,19 +21,9 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'ur', name: 'Urdu', nativeName: 'اردو', flag: '🇵🇰', rtl: true },
 ];
 
-// Translation resources
+// Translation resources — only English inline, others loaded via HTTP backend from /locales/
 const resources = {
   en: { translation: enTranslations },
-  es: { translation: esTranslations },
-  fr: { translation: frTranslations },
-  de: { translation: deTranslations },
-  it: { translation: itTranslations },
-  pt: { translation: ptTranslations },
-  zh: { translation: zhTranslations },
-  ja: { translation: jaTranslations },
-  ar: { translation: arTranslations },
-  hi: { translation: hiTranslations },
-  ur: { translation: urTranslations },
 };
 
 // Initialize i18next
@@ -55,6 +35,11 @@ i18n
     resources,
     fallbackLng: 'en',
     debug: import.meta.env.DEV,
+
+    // HTTP backend config — loads locale JSON from public/locales/{lng}.json
+    backend: {
+      loadPath: '/locales/{{lng}}.json',
+    },
 
     // Language detection options
     detection: {

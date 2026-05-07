@@ -139,6 +139,7 @@ export async function createItemWithInitialStock(itemData: {
 }
 
 export async function getItemByBarcode(barcode: string): Promise<Item | null> {
+  const userId = requireCurrentUserId();
   const scope = getOrgScopeFilter();
   try {
     const itemsRef = collection(db, 'items');
@@ -171,6 +172,7 @@ export async function getItemByBarcode(barcode: string): Promise<Item | null> {
 }
 
 export async function getItemByProductId(productId: string): Promise<Item | null> {
+  const userId = requireCurrentUserId();
   const scope = getOrgScopeFilter();
   try {
     const itemsRef = collection(db, 'items');
@@ -203,6 +205,7 @@ export async function getItemByProductId(productId: string): Promise<Item | null
 }
 
 export async function searchItemsEnhanced(searchQuery: string, searchType: 'name' | 'barcode' | 'sku' = 'name'): Promise<Item[]> {
+  const userId = requireCurrentUserId();
   const scope = getOrgScopeFilter();
   try {
     const itemsRef = collection(db, 'items');

@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "StockSuite - إدارة المخزون المهنية",
+    "description": "نظام إدارة مخزون مهني للشركات الحديثة",
+    "version": "StockSuite v2.0"
+  },
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "categories": "الفئات",
+    "items": "العناصر",
+    "transactions": "المعاملات",
+    "stockLevels": "مستويات المخزون",
+    "reports": "التقارير",
+    "settings": "الإعدادات"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة"
+  }
+}

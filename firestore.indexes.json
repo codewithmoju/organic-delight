@@ -245,6 +245,14 @@
             "collectionGroup": "customer_payments",
             "queryScope": "COLLECTION",
             "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "customer_id", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "customer_payments",
+            "queryScope": "COLLECTION",
+            "fields": [
                 { "fieldPath": "created_by", "order": "ASCENDING" },
                 { "fieldPath": "payment_date", "order": "DESCENDING" }
             ]
@@ -344,6 +352,16 @@
             "collectionGroup": "items",
             "queryScope": "COLLECTION",
             "fields": [
+                { "fieldPath": "created_by", "order": "ASCENDING" },
+                { "fieldPath": "category_id", "order": "ASCENDING" },
+                { "fieldPath": "is_archived", "order": "ASCENDING" },
+                { "fieldPath": "name", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "items",
+            "queryScope": "COLLECTION",
+            "fields": [
                 { "fieldPath": "organization_id", "order": "ASCENDING" },
                 { "fieldPath": "barcode", "order": "ASCENDING" }
             ]
@@ -358,11 +376,29 @@
             ]
         },
         {
+            "collectionGroup": "items",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "created_by", "order": "ASCENDING" },
+                { "fieldPath": "is_archived", "order": "ASCENDING" },
+                { "fieldPath": "name", "order": "ASCENDING" }
+            ]
+        },
+        {
             "collectionGroup": "transactions",
             "queryScope": "COLLECTION",
             "fields": [
                 { "fieldPath": "organization_id", "order": "ASCENDING" },
                 { "fieldPath": "item_id", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "transactions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "item_id", "order": "ASCENDING" },
+                { "fieldPath": "transaction_date", "order": "DESCENDING" }
             ]
         },
         {
@@ -422,6 +458,15 @@
             "queryScope": "COLLECTION",
             "fields": [
                 { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "expense_date", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "expenses",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "category", "order": "ASCENDING" },
                 { "fieldPath": "expense_date", "order": "DESCENDING" }
             ]
         },

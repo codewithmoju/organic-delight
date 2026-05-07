@@ -1,0 +1,1585 @@
+﻿{
+    "common": {
+        "loading": "لوڈ ہو رہا ہے...",
+        "error": "خرابی",
+        "success": "کامیابی",
+        "items": "اشیاء",
+        "cancel": "منسوخ",
+        "save": "محفوظ کریں",
+        "delete": "حذف کریں",
+        "edit": "ترمیم",
+        "add": "شامل کریں",
+        "search": "تلاش",
+        "filter": "فلٹر",
+        "sort": "ترتیب",
+        "actions": "اعمال",
+        "confirm": "تصدیق",
+        "yes": "ہاں",
+        "no": "نہیں",
+        "ok": "ٹھیک ہے",
+        "close": "بند کریں",
+        "back": "واپس",
+        "next": "اگلا",
+        "previous": "پچھلا",
+        "finish": "ختم",
+        "continue": "جاری رکھیں",
+        "retry": "دوبارہ کوشش کریں",
+        "refresh": "ریفریش",
+        "clear": "صاف کریں",
+        "reset": "ری سیٹ",
+        "submit": "جمع کروائیں",
+        "upload": "اپ لوڈ",
+        "download": "ڈاؤن لوڈ",
+        "export": "ایکسپورٹ",
+        "import": "امپورٹ",
+        "view": "دیکھیں",
+        "show": "دکھائیں",
+        "hide": "چھپائیں",
+        "expand": "پھیلائیں",
+        "collapse": "سمیٹیں",
+        "select": "منتخب کریں",
+        "deselect": "غیر منتخب کریں",
+        "selectAll": "سب منتخب کریں",
+        "deselectAll": "سب غیر منتخب کریں",
+        "required": "ضروری",
+        "optional": "اختیاری",
+        "recommended": "تجویز کردہ",
+        "deprecated": "متروک",
+        "new": "نیا",
+        "updated": "اپ ڈیٹ شدہ",
+        "draft": "مسودہ",
+        "published": "شائع شدہ",
+        "archived": "آرکائیو شدہ",
+        "active": "فعال",
+        "inactive": "غیر فعال",
+        "enabled": "فعال",
+        "disabled": "غیر فعال",
+        "online": "آن لائن",
+        "offline": "آف لائن",
+        "available": "دستیاب",
+        "unavailable": "غیر دستیاب",
+        "inStock": "اسٹاک میں",
+        "outOfStock": "اسٹاک ختم",
+        "lowStock": "کم اسٹاک",
+        "units": "یونٹس",
+        "pagination": {
+            "showing": "دکھا رہا ہے",
+            "to": "تا",
+            "of": "کل",
+            "results": "نتائج",
+            "firstPage": "پہلے صفحے پر جائیں",
+            "prevPage": "پچھلے صفحے پر جائیں",
+            "page": "صفحہ {{page}} پر جائیں",
+            "nextPage": "اگلے صفحے پر جائیں",
+            "lastPage": "آخری صفحے پر جائیں"
+        }
+    },
+    "app": {
+        "title": "اسٹاک سویٹ - پیشہ ورانہ انوینٹری مینجمنٹ",
+        "description": "جدید کاروباروں کے لیے پیشہ ورانہ انوینٹری مینجمنٹ سسٹم",
+        "version": "اسٹاک سویٹ ورژن 2.0"
+    },
+    "navigation": {
+        "dashboard": "ڈیش بورڈ",
+        "categories": "زمرے",
+        "items": "اشیاء",
+        "transactions": "لین دین",
+        "stockLevels": "اسٹاک کی سطحیں",
+        "reports": "رپورٹس",
+        "settings": "ترتیبات",
+        "pointOfSale": "پوائنٹ آف سیل",
+        "inventoryManager": "انوینٹری مینیجر",
+        "warehouseValue": "گودام کی قیمت",
+        "vendors": "سپلائرز",
+        "newPurchase": "نئی خریداری",
+        "customers": "گاہک",
+        "activityLog": "سرگرمی لاگ",
+        "expenses": "اخراجات",
+        "performance": "کارکردگی",
+        "groups": {
+            "foundation": "بنیاد",
+            "inventoryHub": "انوینٹری ہب",
+            "procurement": "خریداری",
+            "salesCrm": "فروخت اور CRM",
+            "insights": "بصیرت"
+        },
+        "poweredBy": "NAM STUDIOS سے تقویت یافتہ"
+    },
+    "auth": {
+        "login": {
+            "title": "واپس خوش آمدید",
+            "subtitle": "اپنے اسٹاک سویٹ اکاؤنٹ میں سائن ان کریں",
+            "email": "ای میل ایڈریس",
+            "password": "پاس ورڈ",
+            "rememberMe": "مجھے یاد رکھیں",
+            "forgotPassword": "پاس ورڈ بھول گئے؟",
+            "signIn": "سائن ان",
+            "signUp": "سائن اپ",
+            "noAccount": "اکاؤنٹ نہیں ہے؟",
+            "signingIn": "سائن ان ہو رہا ہے...",
+            "errors": {
+                "emailRequired": "ای میل درکار ہے",
+                "passwordRequired": "پاس ورڈ درکار ہے",
+                "invalidCredentials": "غلط ای میل یا پاس ورڈ۔ براہ کرم اپنی تفصیلات چیک کریں۔",
+                "userNotFound": "اس ای میل سے کوئی اکاؤنٹ نہیں ملا",
+                "wrongPassword": "غلط پاس ورڈ",
+                "invalidEmail": "غلط ای میل ایڈریس",
+                "tooManyRequests": "بہت زیادہ ناکام کوششیں۔ براہ کرم بعد میں دوبارہ کوشش کریں۔"
+            }
+        },
+        "signOut": "سائن آؤٹ",
+        "register": {
+            "title": "اپنا اکاؤنٹ بنائیں",
+            "subtitle": "اسٹاک سویٹ میں شامل ہوں اور اپنی انوینٹری کا انتظام شروع کریں",
+            "steps": {
+                "basicInfo": "بنیادی معلومات",
+                "security": "اکاؤنٹ کی حفاظت",
+                "additional": "اضافی تفصیلات",
+                "stepIndicator": "مرحلہ {{current}} از {{total}}"
+            },
+            "firstName": "پہلا نام",
+            "lastName": "آخری نام",
+            "fullName": "پورا نام",
+            "email": "ای میل ایڈریس",
+            "phone": "فون نمبر",
+            "dob": "تاریخ پیدائش",
+            "username": "یوزر نیم",
+            "password": "پاس ورڈ",
+            "confirmPassword": "پاس ورڈ کی تصدیق",
+            "securityQuestion": "سیکیورٹی سوال",
+            "securityAnswer": "سیکیورٹی جواب",
+            "profilePicture": "پروفائل تصویر (اختیاری)",
+            "uploadPhoto": "تصویر اپ لوڈ کریں",
+            "address": {
+                "street": "گلی کا پتہ",
+                "city": "شہر",
+                "state": "صوبہ/ریاست",
+                "postalCode": "پوسٹل کوڈ",
+                "country": "ملک"
+            },
+            "terms": {
+                "agree": "میں متفق ہوں",
+                "service": "سروس کی شرائط",
+                "privacy": "پرائیویسی پالیسی",
+                "and": "اور",
+                "captcha": "میں روبوٹ نہیں ہوں"
+            },
+            "buttons": {
+                "next": "اگلا",
+                "previous": "پچھلا",
+                "createAccount": "اکاؤنٹ بنائیں"
+            },
+            "strength": {
+                "weak": "کمزور",
+                "fair": "مناسب",
+                "good": "اچھا",
+                "strong": "مضبوط",
+                "label": "پاس ورڈ کی طاقت:"
+            },
+            "placeholders": {
+                "firstName": "اپنا پہلا نام درج کریں",
+                "lastName": "اپنا آخری نام درج کریں",
+                "email": "اپنا ای میل درج کریں",
+                "phone": "اپنا فون نمبر درج کریں",
+                "username": "ایک منفرد یوزر نیم منتخب کریں",
+                "password": "ایک مضبوط پاس ورڈ بنائیں",
+                "confirmPassword": "پاس ورڈ کی تصدیق کریں",
+                "securityAnswer": "اپنا جواب درج کریں",
+                "street": "اپنا گلی کا پتہ درج کریں",
+                "city": "اپنا شہر درج کریں",
+                "state": "اپنا صوبہ/ریاست درج کریں",
+                "postalCode": "اپنا پوسٹل کوڈ درج کریں"
+            },
+            "createAccount": "اکاؤنٹ بنائیں",
+            "creating": "اکاؤنٹ بنایا جا رہا ہے...",
+            "hasAccount": "پہلے سے اکاؤنٹ ہے؟",
+            "signIn": "سائن ان",
+            "passwordRequirements": {
+                "length": "کم از کم 8 حروف",
+                "uppercase": "بڑے حروف شامل ہیں",
+                "lowercase": "چھوٹے حروف شامل ہیں",
+                "number": "نمبر شامل ہے",
+                "special": "خاص حروف شامل ہیں"
+            },
+            "errors": {
+                "firstNameRequired": "پہلا نام درکار ہے",
+                "lastNameRequired": "آخری نام درکار ہے",
+                "fullNameRequired": "پورا نام درکار ہے",
+                "emailRequired": "ای میل درکار ہے",
+                "phoneRequired": "فون نمبر درکار ہے",
+                "dobRequired": "تاریخ پیدائش درکار ہے",
+                "ageRequirement": "آپ کی عمر کم از کم 13 سال ہونی چاہیے",
+                "invalidEmail": "براہ کرم درست ای میل ایڈریس درج کریں",
+                "passwordRequired": "پاس ورڈ درکار ہے",
+                "passwordRequirements": "پاس ورڈ تقاضوں کو پورا نہیں کرتا",
+                "passwordMismatch": "پاس ورڈ مماثل نہیں ہیں",
+                "usernameRequired": "یوزر نیم درکار ہے",
+                "usernameTaken": "یوزر نیم پہلے سے استعمال میں ہے",
+                "securityQuestionRequired": "براہ کرم ایک سیکیورٹی سوال منتخب کریں",
+                "securityAnswerRequired": "سیکیورٹی جواب درکار ہے",
+                "addressRequired": "مکمل پتہ درکار ہے",
+                "termsRequired": "آپ کو سروس کی شرائط قبول کرنی ہوں گی",
+                "privacyRequired": "آپ کو پرائیویسی پالیسی قبول کرنی ہوگی",
+                "captchaRequired": "براہ کرم کیپچا مکمل کریں",
+                "emailExists": "اس ای میل سے ایک اکاؤنٹ پہلے سے موجود ہے"
+            }
+        },
+        "forgotPassword": {
+            "title": "اپنا پاس ورڈ ری سیٹ کریں",
+            "subtitle": "پاس ورڈ ری سیٹ کرنے کی ہدایات حاصل کرنے کے لیے اپنا ای میل درج کریں",
+            "email": "ای میل ایڈریس",
+            "submit": "ری سیٹ ہدایات بھیجیں",
+            "rememberPassword": "پاس ورڈ یاد ہے؟",
+            "signIn": "سائن ان",
+            "titles": {
+                "request": "اپنا پاس ورڈ ری سیٹ کریں",
+                "reset": "نیا پاس ورڈ سیٹ کریں",
+                "success": "پاس ورڈ ری سیٹ مکمل"
+            },
+            "subtitles": {
+                "request": "ری سیٹ ہدایات حاصل کرنے کے لیے اپنا ای میل درج کریں",
+                "reset": "نیچے اپنا نیا پاس ورڈ درج کریں",
+                "success": "آپ کا پاس ورڈ کامیابی سے ری سیٹ ہو گیا ہے"
+            },
+            "success": {
+                "checkEmail": "اپنا ای میل چیک کریں",
+                "sentTo": "ہم نے پاس ورڈ ری سیٹ کی ہدایات بھیج دی ہیں",
+                "checkSpam": "ای میل موصول نہیں ہوئی؟ اپنا اسپام فولڈر چیک کریں",
+                "expires": "ری سیٹ لنک 1 گھنٹے میں ختم ہو جائے گا",
+                "loginWithNew": "اب آپ اپنے نئے پاس ورڈ کے ساتھ سائن ان کر سکتے ہیں",
+                "returnLogin": "لاگ ان پر واپس جائیں"
+            },
+            "form": {
+                "emailPlaceholder": "اپنا ای میل ایڈریس درج کریں",
+                "newPassword": "نیا پاس ورڈ",
+                "newPasswordPlaceholder": "اپنا نیا پاس ورڈ درج کریں",
+                "confirmPassword": "نئے پاس ورڈ کی تصدیق",
+                "confirmPasswordPlaceholder": "اپنے نئے پاس ورڈ کی تصدیق کریں",
+                "sendButton": "ری سیٹ ہدایات بھیجیں",
+                "sending": "بھیجا جا رہا ہے...",
+                "resetButton": "پاس ورڈ ری سیٹ کریں",
+                "resetting": "ری سیٹ ہو رہا ہے..."
+            },
+            "errors": {
+                "emailRequired": "ای میل درکار ہے",
+                "validEmail": "براہ کرم درست ای میل ایڈریس درج کریں",
+                "userNotFound": "اس ای میل ایڈریس کے ساتھ کوئی اکاؤنٹ نہیں ملا",
+                "sendFailed": "ری سیٹ ای میل بھیجنے میں ناکامی۔ براہ کرم دوبارہ کوشش کریں",
+                "newPasswordRequired": "نیا پاس ورڈ درکار ہے",
+                "passwordLength": "پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے",
+                "passwordMismatch": "پاس ورڈ مماثل نہیں ہیں",
+                "invalidLink": "غلط یا میعاد ختم ہونے والا ری سیٹ لنک۔ براہ کرم نیا طلب کریں",
+                "expiredLink": "ری سیٹ لنک کی میعاد ختم ہو گئی ہے۔ براہ کرم نیا طلب کریں",
+                "resetFailed": "پاس ورڈ ری سیٹ کرنے میں ناکامی۔ براہ کرم دوبارہ کوشش کریں"
+            }
+        },
+        "verifyEmail": {
+            "title": "ای میل کی تصدیق",
+            "verifying": "آپ کی ای میل کی تصدیق ہو رہی ہے...",
+            "verified": "ای میل کی تصدیق ہو گئی!",
+            "expired": "تصدیقی لنک کی میعاد ختم ہو گئی",
+            "failed": "تصدیق ناکام",
+            "messages": {
+                "loading": "براہ کرم انتظار کریں جب تک ہم آپ کے ای میل ایڈریس کی تصدیق کر رہے ہیں۔",
+                "success": "آپ کی ای میل کی کامیابی سے تصدیق ہو گئی ہے۔ اب آپ اپنے اکاؤنٹ کی تمام خصوصیات تک رسائی حاصل کر سکتے ہیں۔",
+                "expired": "تصدیقی لنک کی میعاد ختم ہو گئی ہے۔ براہ کرم نئی تصدیقی ای میل کی درخواست کریں۔",
+                "error": "ہم آپ کے ای میل ایڈریس کی تصدیق نہیں کر سکے۔ لنک غلط ہو سکتا ہے یا پہلے ہی استعمال ہو چکا ہے۔"
+            },
+            "buttons": {
+                "continueLogin": "لاگ ان جاری رکھیں",
+                "resend": "تصدیقی ای میل دوبارہ بھیجیں",
+                "backLogin": "لاگ ان پر واپس جائیں",
+                "sending": "بھیجا جا رہا ہے...",
+                "resendIn": "دوبارہ بھیجیں {{seconds}} سیکنڈ میں"
+            },
+            "help": {
+                "title": "مدد چاہیے؟",
+                "text": "اگر آپ کو ای میل کی تصدیق میں مسائل درپیش ہیں، تو براہ کرم ہماری سپورٹ ٹیم سے رابطہ کریں۔"
+            },
+            "toast": {
+                "verified": "ای میل کی کامیابی سے تصدیق ہو گئی!",
+                "sent": "تصدیقی ای میل بھیج دی گئی! براہ کرم اپنا ان باکس چیک کریں۔",
+                "failed": "تصدیقی ای میل بھیجنے میں ناکامی۔ براہ کرم دوبارہ کوشش کریں۔"
+            }
+        }
+    },
+    "dashboard": {
+        "title": "ڈیش بورڈ کا جائزہ",
+        "subtitle": "واپس خوش آمدید! یہاں آپ کی انوینٹری کی صورتحال ہے۔",
+        "welcome": "خوش آمدید",
+        "loading": "آپ کی انوینٹری ڈیٹا لوڈ ہو رہی ہے...",
+        "metrics": {
+            "totalStockIn": "کل اسٹاک ان",
+            "totalStockOut": "کل اسٹاک آؤٹ",
+            "revenueSpent": "خرچ شدہ آمدنی (اسٹاک ان)",
+            "revenueEarned": "حاصل شدہ آمدنی (اسٹاک آؤٹ)",
+            "totalItems": "کل اشیاء",
+            "totalValue": "کل قیمت",
+            "lowStockItems": "کم اسٹاک اشیاء",
+            "outOfStock": "اسٹاک ختم"
+        },
+        "charts": {
+            "stockMovementTrends": "اسٹاک کی نقل و حرکت کے رجحانات",
+            "revenueTrends": "آمدنی کے رجحانات",
+            "inventoryLevels": "انوینٹری کی سطحیں"
+        },
+        "lowStockAlert": {
+            "title": "کم اسٹاک الرٹ",
+            "reorderAt": "دوبارہ آرڈر کی سطح"
+        },
+        "recentTransactions": {
+            "title": "حالیہ لین دین",
+            "noTransactions": "کوئی حالیہ لین دین نہیں",
+            "stockIn": "اسٹاک ان",
+            "stockOut": "اسٹاک آؤٹ"
+        },
+        "quickActions": {
+            "takeAppTour": "ایپ کا ٹور لیں",
+            "tourDescription": "صرف 2 منٹ میں اسٹاک سویٹ استعمال کرنا سیکھیں",
+            "manageCategories": "زمروں کا انتظام کریں",
+            "recordTransaction": "لین دین ریکارڈ کریں",
+            "viewStockLevels": "اسٹاک کی سطحیں دیکھیں",
+            "addNewProduct": "نئی مصنوع شامل کریں",
+            "pointOfSale": "پوائنٹ آف سیل"
+        },
+        "loadingStages": {
+            "fetching": "ڈیش بورڈ کا ڈیٹا حاصل کیا جا رہا ہے...",
+            "inventory": "انوینٹری آئٹمز لوڈ ہو رہے ہیں...",
+            "metrics": "میٹرکس کا حساب لگایا جا رہا ہے...",
+            "preparing": "ڈیش بورڈ تیار کیا جا رہا ہے...",
+            "ready": "ڈیش بورڈ تیار ہے!"
+        },
+        "errors": {
+            "loadFailed": "ڈیش بورڈ ڈیٹا لوڈ کرنے میں ناکامی",
+            "metricsFailed": "میٹرکس ڈیٹا لوڈ کرنے میں ناکامی",
+            "generic": "ڈیش بورڈ ڈیٹا لوڈ کرنے میں ناکام۔ براہ کرم بعد میں دوبارہ کوشش کریں۔"
+        }
+    },
+    "categories": {
+        "title": "زمرے",
+        "subtitle": "اپنی انوینٹری کو حسب ضرورت زمروں کے ساتھ ترتیب دیں",
+        "addCategory": "زمرہ شامل کریں",
+        "editCategory": "زمرہ ترمیم کریں",
+        "newCategory": "نیا زمرہ شامل کریں",
+        "updateCategory": "زمرے کی معلومات اپ ڈیٹ کریں",
+        "createCategory": "نیا انوینٹری زمرہ بنائیں",
+        "noCategories": "ابھی کوئی زمرے نہیں",
+        "noCategoriesDescription": "اپنی انوینٹری کو ترتیب دینے کے لیے پہلا زمرہ بنائیں",
+        "createFirst": "پہلا زمرہ بنائیں",
+        "createFirstCategory": "پہلا زمرہ بنائیں",
+        "form": {
+            "name": "زمرے کا نام",
+            "nameRequired": "زمرے کا نام درکار ہے",
+            "nameMinLength": "زمرے کا نام کم از کم 2 حروف کا ہونا چاہیے",
+            "nameMaxLength": "زمرے کا نام 50 حروف یا کم ہونا چاہیے",
+            "description": "تفصیل",
+            "descriptionRequired": "تفصیل درکار ہے",
+            "descriptionMinLength": "تفصیل کم از کم 5 حروف کی ہونی چاہیے",
+            "namePlaceholder": "زمرے کا نام درج کریں (مثلاً، اسمارٹ فونز، لیپ ٹاپ، آڈیو)",
+            "descriptionPlaceholder": "بیان کریں کہ اس زمرے میں کس قسم کی اشیاء ہوں گی...",
+            "cancel": "منسوخ",
+            "create": "زمرہ بنائیں",
+            "update": "زمرہ اپ ڈیٹ کریں",
+            "creating": "بنایا جا رہا ہے...",
+            "updating": "اپ ڈیٹ ہو رہا ہے..."
+        },
+        "messages": {
+            "createSuccess": "زمرہ کامیابی سے بنایا گیا",
+            "updateSuccess": "زمرہ کامیابی سے اپ ڈیٹ ہوا",
+            "deleteSuccess": "زمرہ کامیابی سے حذف ہوا",
+            "createError": "زمرہ بنانے میں ناکامی",
+            "updateError": "زمرہ اپ ڈیٹ کرنے میں ناکامی",
+            "deleteError": "زمرہ حذف کرنے میں ناکامی",
+            "deleteConfirm": "کیا آپ واقعی یہ زمرہ حذف کرنا چاہتے ہیں؟",
+            "alreadyExists": "اس نام کا زمرہ پہلے سے موجود ہے"
+        }
+    },
+    "items": {
+        "title": "اشیاء",
+        "subtitle": "آئٹمز مینجمنٹ، اسٹاک تجزیہ، اور کم اسٹاک الرٹس کا یکجا نظارہ",
+        "addItem": "شے شامل کریں",
+        "editItem": "شے ترمیم کریں",
+        "newItem": "نئی شے شامل کریں",
+        "updateItem": "شے کی معلومات اپ ڈیٹ کریں",
+        "createItem": "نئی انوینٹری شے بنائیں",
+        "noItems": "کوئی اشیاء نہیں ملیں",
+        "noItemsDescription": "اپنی تلاش یا فلٹر کی شرائط کو ایڈجسٹ کرنے کی کوشش کریں",
+        "noItemsEmpty": "اپنی پہلی شے شامل کرکے شروع کریں",
+        "addFirstItem": "اپنی پہلی شے شامل کریں",
+        "allCategories": "تمام زمرے",
+        "currentStock": "موجودہ اسٹاک",
+        "avgCost": "اوسط لاگت",
+        "salePrice": "فروخت کی قیمت",
+        "totalValue": "کل قیمت",
+        "totalPosition": "کل پوزیشن",
+        "active": "فعال",
+        "searchPlaceholder": "نام، SKU، یا بارکوڈ سے تلاش کریں...",
+        "uncategorized": "غیر زمرہ بند",
+        "form": {
+            "name": "شے کا نام",
+            "nameRequired": "شے کا نام درکار ہے",
+            "nameMinLength": "شے کا نام کم از کم 2 حروف کا ہونا چاہیے",
+            "nameMaxLength": "شے کا نام 100 حروف یا کم ہونا چاہیے",
+            "category": "زمرہ",
+            "categoryRequired": "براہ کرم زمرہ منتخب کریں",
+            "noCategories": "کوئی زمرے دستیاب نہیں۔ براہ کرم پہلے ایک زمرہ بنائیں۔",
+            "description": "تفصیل",
+            "descriptionRequired": "تفصیل درکار ہے",
+            "descriptionMinLength": "تفصیل کم از کم 5 حروف کی ہونی چاہیے",
+            "namePlaceholder": "شے کا نام درج کریں (مثلاً، آئی فون 15، نائکی ایئر میکس)",
+            "selectCategory": "زمرہ منتخب کریں",
+            "descriptionPlaceholder": "شے، اس کی خصوصیات، وضاحتیں، یا کوئی متعلقہ تفصیلات بیان کریں...",
+            "importantNote": "اہم نوٹ",
+            "stockNote": "اسٹاک کی مقدار اور قیمتیں لین دین سیکشن کے ذریعے منظم کی جائیں گی۔ یہ فارم صرف بنیادی شے کی معلومات اور زمرے کی تفویض کی وضاحت کرتا ہے۔",
+            "cancel": "منسوخ",
+            "create": "شے بنائیں",
+            "update": "شے اپ ڈیٹ کریں",
+            "creating": "بنایا جا رہا ہے...",
+            "updating": "اپ ڈیٹ ہو رہا ہے..."
+        },
+        "messages": {
+            "createSuccess": "شے کامیابی سے بنائی گئی",
+            "updateSuccess": "شے کامیابی سے اپ ڈیٹ ہوئی",
+            "deleteSuccess": "شے کامیابی سے پروسیس ہوئی",
+            "createError": "شے بنانے میں ناکامی",
+            "updateError": "شے اپ ڈیٹ کرنے میں ناکامی",
+            "deleteError": "شے پروسیس کرنے میں ناکامی",
+            "deleteConfirm": "کیا آپ واقعی یہ شے حذف کرنا چاہتے ہیں؟ لین دین کی تاریخ والی اشیاء مستقل حذف کرنے کی بجائے آرکائیو کی جائیں گی۔",
+            "alreadyExists": "اس نام کی شے اس زمرے میں پہلے سے موجود ہے",
+            "thresholdUpdated": "حد اپ ڈیٹ ہو گئی",
+            "thresholdError": "حد اپ ڈیٹ کرنے میں ناکامی"
+        },
+        "table": {
+            "productInfo": "مصنوعات کی معلومات",
+            "category": "زمرہ",
+            "stock": "اسٹاک",
+            "avgCost": "اوسط لاگت",
+            "selling": "فروخت",
+            "valuation": "ویلیویشن",
+            "status": "حیثیت"
+        },
+        "status": {
+            "outOfStock": "اسٹاک ختم",
+            "lowStock": "کم اسٹاک",
+            "good": "اچھا"
+        },
+        "wizard": {
+            "title": "نئی مصنوع شامل کریں",
+            "stepIndicator": "مرحلہ {{current}} از {{total}}",
+            "steps": {
+                "category": "زمرہ منتخب کریں",
+                "basicInfo": "مصنوعات کی معلومات",
+                "price": "قیمت مقرر کریں",
+                "productId": "پروڈکٹ ID",
+                "stock": "اسٹاک اور خصوصیات"
+            },
+            "category": {
+                "title": "پروڈکٹ زمرہ منتخب کریں",
+                "subtitle": "وہ زمرہ منتخب کریں جو آپ کی مصنوعات کی بہترین وضاحت کرتا ہے"
+            },
+            "basicInfo": {
+                "title": "مصنوعات کی معلومات",
+                "subtitle": "بنیادی مصنوعات کی تفصیلات درج کریں"
+            },
+            "price": {
+                "title": "پروڈکٹ کی قیمت مقرر کریں",
+                "subtitle": "یہ قیمت تمام POS لین دین کے لیے استعمال کی جائے گی",
+                "unitPrice": "یونٹ قیمت",
+                "adminOnly": "یونٹ قیمت میں ترمیم کرنے کے لیے ایڈمن کے اختیارات درکار ہیں",
+                "perUnit": "فی یونٹ"
+            },
+            "productId": {
+                "title": "پروڈکٹ ID تفویض",
+                "subtitle": "اس پروڈکٹ کے لیے ایک منفرد شناخت کنندہ تفویض کریں",
+                "label": "پروڈکٹ ID",
+                "placeholder": "ID درج کریں یا بنائیں",
+                "generate": "بنائیں",
+                "helper": "یہ ID انوینٹری ٹریکنگ کے لیے استعمال کی جائے گی"
+            },
+            "stock": {
+                "title": "اسٹاک اور اضافی تفصیلات",
+                "subtitle": "ابتدائی اسٹاک کی مقدار اور اختیاری خصوصیات مقرر کریں",
+                "initialStock": "ابتدائی اسٹاک کی مقدار",
+                "initialStockPlaceholder": "ابتدائی اسٹاک کی مقدار درج کریں",
+                "reorderPoint": "دوبارہ آرڈر پوائنٹ",
+                "reorderPointPlaceholder": "کم از کم اسٹاک کی سطح",
+                "barcode": "بارکوڈ",
+                "barcodePlaceholder": "پروڈکٹ بارکوڈ درج کریں",
+                "location": "اسٹوریج مقام",
+                "locationPlaceholder": "اسٹوریج مقام درج کریں (مثلاً، گودام A، شیلف B-3)"
+            },
+            "summary": {
+                "title": "پروڈکٹ کا خلاصہ",
+                "price": "قیمت",
+                "totalValue": "کل قیمت"
+            },
+            "errors": {
+                "categoryRequired": "براہ کرم ایک زمرہ منتخب کریں",
+                "priceRequired": "پروڈکٹ کی قیمت 0 سے زیادہ ہونی چاہیے",
+                "productIdRequired": "پروڈکٹ ID درکار ہے",
+                "stockRequired": "اسٹاک کی مقدار 0 یا اس سے زیادہ ہونی چاہیے",
+                "reorderPointRequired": "دوبارہ آرڈر پوائنٹ 0 یا اس سے زیادہ ہونا چاہیے"
+            }
+        }
+    },
+    "valuation": {
+        "title": "انوینٹری ویلیویشن",
+        "subtitle": "آپ کے اسٹاک کی کل مالی قدر",
+        "analyzing": "انوینٹری بیچز کا تجزیہ کیا جا رہا ہے...",
+        "totalAssetValue": "کل اثاثہ کی قدر",
+        "stockedItems": "اسٹاک شدہ اشیاء",
+        "avgItemValue": "اوسط شے کی قدر",
+        "calculatedUsing": "{{method}} طریقہ استعمال کرتے ہوئے حساب لگایا گیا",
+        "acrossCategories": "تمام زمروں میں",
+        "perUniqueProduct": "فی منفرد مصنوعات",
+        "breakdown": "بیچ انوینٹری بریک ڈاؤن",
+        "activeBatches": "صرف فعال بیچز دکھا رہا ہے",
+        "table": {
+            "productName": "مصنوعات کا نام",
+            "qty": "مقدار",
+            "valuation": "ویلیویشن",
+            "details": "تفصیلات",
+            "batchesCount": "{{count}} خریداری بیچز"
+        }
+    },
+    "stockLevels": {
+        "title": "اسٹاک کی سطحیں",
+        "subtitle": "لین دین کی تاریخ سے حساب کی گئی ریئل ٹائم انوینٹری سطحیں",
+        "searchPlaceholder": "نام یا زمرے سے اشیاء تلاش کریں...",
+        "sortBy": "نام سے ترتیب دیں",
+        "sortByQuantity": "مقدار سے ترتیب دیں",
+        "sortByValue": "کل قیمت سے ترتیب دیں",
+        "sortByDate": "آخری لین دین سے ترتیب دیں",
+        "currentStock": "موجودہ اسٹاک",
+        "avgUnitCost": "اوسط یونٹ لاگت",
+        "totalValue": "کل قیمت",
+        "lastUpdated": "آخری اپ ڈیٹ",
+        "noData": "کوئی اسٹاک ڈیٹا نہیں ملا",
+        "noDataDescription": "اپنے تلاش کے معیار کو ایڈجسٹ کرنے کی کوشش کریں",
+        "noDataEmpty": "لین دین ریکارڈ کرنے کے بعد اسٹاک کی سطحیں یہاں ظاہر ہوں گی"
+    },
+    "reports": {
+        "title": "تجزیات اور رپورٹس",
+        "subtitle": "آپ کی انوینٹری کی کارکردگی کی جامع بصیرت",
+        "charts": {
+            "monthlyTransactions": "ماہانہ لین دین کا حجم",
+            "categoryDistribution": "زمرے کی تقسیم",
+            "topItems": "سب سے زیادہ فروخت ہونے والی اشیاء"
+        },
+        "table": {
+            "itemName": "شے کا نام",
+            "quantitySold": "فروخت شدہ مقدار",
+            "revenue": "آمدنی"
+        },
+        "messages": {
+            "loadError": "رپورٹ ڈیٹا لوڈ کرنے میں ناکامی"
+        }
+    },
+    "settings": {
+        "title": "ترتیبات",
+        "subtitle": "اپنے اکاؤنٹ کی ترجیحات اور سیکیورٹی سیٹنگز کا انتظام کریں",
+        "tabs": {
+            "profile": "پروفائل",
+            "personal": "ذاتی معلومات",
+            "business": "کاروباری پروفائل",
+            "security": "سیکیورٹی",
+            "preferences": "ترجیحات",
+            "notifications": "نوٹیفیکیشنز"
+        },
+        "loadingProfile": "پروفائل لوڈ ہو رہی ہے...",
+        "profile": {
+            "title": "پروفائل کی معلومات",
+            "fullName": "پورا نام",
+            "fullNamePlaceholder": "اپنا پورا نام درج کریں",
+            "email": "ای میل ایڈریس",
+            "phone": "فون نمبر",
+            "phonePlaceholder": "فون نمبر درج کریں",
+            "company": "کمپنی",
+            "companyPlaceholder": "کمپنی کا نام درج کریں",
+            "address": "پتہ",
+            "addressPlaceholder": "اپنا پتہ درج کریں",
+            "editProfile": "پروفائل میں ترمیم کریں",
+            "accountSettings": "اکاؤنٹ کی ترتیبات",
+            "saveChanges": "تبدیلیاں محفوظ کریں",
+            "saving": "محفوظ ہو رہا ہے...",
+            "updateSuccess": "پروفائل کامیابی سے اپ ڈیٹ ہوئی",
+            "updateError": "پروفائل اپ ڈیٹ کرنے میں ناکامی"
+        },
+        "security": {
+            "title": "سیکیورٹی سیٹنگز",
+            "currentPassword": "موجودہ پاس ورڈ",
+            "currentPasswordPlaceholder": "موجودہ پاس ورڈ درج کریں",
+            "newPassword": "نیا پاس ورڈ",
+            "newPasswordPlaceholder": "نیا پاس ورڈ درج کریں",
+            "confirmPassword": "نئے پاس ورڈ کی تصدیق",
+            "confirmPasswordPlaceholder": "نیا پاس ورڈ دوبارہ درج کریں",
+            "updatePassword": "پاس ورڈ اپ ڈیٹ کریں",
+            "updating": "اپ ڈیٹ ہو رہا ہے...",
+            "twoFactor": "دو فیکٹر تصدیق",
+            "twoFactorDescription": "اپنے اکاؤنٹ میں سیکیورٹی کی اضافی تہہ شامل کریں",
+            "enable2FA": "2FA فعال کریں",
+            "passwordUpdateSuccess": "پاس ورڈ کامیابی سے اپ ڈیٹ ہوا",
+            "passwordMismatch": "نئے پاس ورڈ مماثل نہیں ہیں",
+            "noUser": "کوئی تصدیق شدہ صارف نہیں"
+        },
+        "preferences": {
+            "title": "ترجیحات",
+            "search": "ترجیحات تلاش کریں...",
+            "currencyLocalization": {
+                "title": "کرنسی اور مقامیت",
+                "description": "اپنی علاقائی ترجیحات ترتیب دیں",
+                "preferredCurrency": "ترجیحی کرنسی",
+                "language": "زبان",
+                "languageDescription": "اپنی پسندیدہ زبان منتخب کریں",
+                "dateFormat": "تاریخ کا فارمیٹ",
+                "dateFormatDescription": "منتخب کریں کہ تاریخیں کیسے ظاہر ہوں",
+                "timeFormat": "وقت کا فارمیٹ",
+                "timeFormatDescription": "12 گھنٹے یا 24 گھنٹے کا وقت فارمیٹ منتخب کریں",
+                "dateFormats": {
+                    "us": "MM/DD/YYYY (امریکی)",
+                    "eu": "DD/MM/YYYY (یورپی)",
+                    "iso": "YYYY-MM-DD (ISO)"
+                },
+                "timeFormats": {
+                    "12h": "12 گھنٹے (صبح/شام)",
+                    "24h": "24 گھنٹے"
+                }
+            },
+            "appearance": {
+                "title": "ظاہری شکل",
+                "description": "ایپلیکیشن کی شکل و صورت کو حسب ضرورت بنائیں",
+                "theme": "تھیم",
+                "themeDescription": "اپنی پسندیدہ رنگ سکیم منتخب کریں",
+                "fontSize": "فونٹ سائز",
+                "fontSizeDescription": "بہتر پڑھنے کے لیے ٹیکسٹ سائز ایڈجسٹ کریں",
+                "showAnimations": "اینیمیشنز دکھائیں",
+                "showAnimationsDescription": "ہموار ٹرانزیشنز اور اینیمیشنز فعال کریں",
+                "highContrast": "ہائی کنٹراسٹ موڈ",
+                "highContrastDescription": "بہتر مرئیت کے لیے کنٹراسٹ بڑھائیں",
+                "compactView": "کمپیکٹ ویو",
+                "compactViewDescription": "کم جگہ میں زیادہ مواد دکھائیں",
+                "themes": {
+                    "light": "☀️ لائٹ موڈ",
+                    "dark": "🌙 ڈارک موڈ",
+                    "system": "💻 سسٹم ڈیفالٹ"
+                },
+                "fontSizes": {
+                    "small": "چھوٹا",
+                    "medium": "درمیانہ",
+                    "large": "بڑا"
+                }
+            },
+            "behavior": {
+                "title": "رویہ",
+                "description": "ایپلیکیشن کے رویے کو ترتیب دیں",
+                "autoSave": "آٹو سیو",
+                "autoSaveDescription": "جیسے آپ تبدیلیاں کریں خود بخود محفوظ کریں",
+                "itemsPerPage": "فی صفحہ اشیاء",
+                "itemsPerPageDescription": "فہرستوں میں دکھانے کے لیے اشیاء کی تعداد",
+                "currencyDisplay": "کرنسی ڈسپلے",
+                "currencyDisplayDescription": "کرنسی کی معلومات کیسے ظاہر کریں",
+                "currencyDisplayOptions": {
+                    "symbol": "صرف علامت (Rs)",
+                    "code": "صرف کوڈ (PKR)",
+                    "both": "دونوں (Rs PKR)"
+                }
+            },
+            "saveActions": {
+                "unsavedChanges": "آپ کے پاس غیر محفوظ تبدیلیاں ہیں",
+                "lastSaved": "آخری بار محفوظ: {{date}}",
+                "resetToDefaults": "ڈیفالٹس پر ری سیٹ کریں",
+                "saveAllChanges": "تمام تبدیلیاں محفوظ کریں",
+                "resetSuccess": "ترجیحات ڈیفالٹس پر ری سیٹ ہو گئیں",
+                "resetError": "ترجیحات ری سیٹ کرنے میں ناکامی",
+                "saveSuccess": "تمام ترجیحات کامیابی سے محفوظ ہو گئیں",
+                "saveError": "ترجیحات محفوظ کرنے میں ناکامی"
+            }
+        }
+    },
+    "tour": {
+        "welcome": {
+            "title": "اسٹاک سویٹ میں خوش آمدید! 🎉",
+            "content": "آئیے آپ کے انوینٹری مینجمنٹ سسٹم سے زیادہ سے زیادہ فائدہ اٹھانے میں مدد کے لیے ایک مختصر ٹور لیتے ہیں۔ یہ صرف 2 منٹ لے گا!"
+        },
+        "takeTour": "ایپ کا ٹور لیں",
+        "tourDesc": "صرف 2 منٹ میں اسٹاک سویٹ استعمال کرنا سیکھیں",
+        "startTour": "ٹور شروع کریں",
+        "restartTour": "ٹور دوبارہ شروع کریں",
+        "dashboard": {
+            "title": "ڈیش بورڈ کا جائزہ",
+            "content": "آپ کا کمانڈ سینٹر! یہاں آپ کو اہم میٹرکس، کم اسٹاک الرٹس، اور حالیہ سرگرمی ایک نظر میں نظر آئے گی۔"
+        },
+        "sidebar": {
+            "title": "نیویگیشن مینو",
+            "content": "مختلف سیکشنز کے درمیان نیویگیٹ کرنے کے لیے یہ سائڈ بار استعمال کریں۔ آپ کو جو کچھ بھی چاہیے وہ صرف ایک کلک کی دوری پر ہے!"
+        },
+        "categories": {
+            "title": "زمروں کے ساتھ ترتیب دیں",
+            "content": "اپنی انوینٹری کو منظم رکھنے کے لیے زمرے بنائیں اور ان کا انتظام کریں۔ سوچیں اسمارٹ فونز، لیپ ٹاپ، آڈیو آلات وغیرہ۔"
+        },
+        "items": {
+            "title": "اپنی اشیاء کا انتظام کریں",
+            "content": "اپنی تمام انوینٹری اشیاء کو شامل کریں، ترمیم کریں، اور ٹریک کریں۔ ہر شے موجودہ اسٹاک، قیمت، اور زمرہ دکھاتی ہے۔"
+        },
+        "transactions": {
+            "title": "اسٹاک کی نقل و حرکت ریکارڈ کریں",
+            "content": "ہر اس شے کو ٹریک کریں جو آتی ہے یا جاتی ہے۔ یہ آپ کی انوینٹری گنتی کو درست رکھتا ہے اور قیمتی بصیرت فراہم کرتا ہے۔"
+        },
+        "stockLevels": {
+            "title": "ریئل ٹائم اسٹاک کی سطحیں",
+            "content": "اپنے تمام لین دین سے حساب کی گئی موجودہ اسٹاک مقدار دیکھیں۔ اپنے پاس موجود چیزوں کا کبھی ٹریک نہ کھوئیں!"
+        },
+        "reports": {
+            "title": "طاقتور تجزیات",
+            "content": "خوبصورت چارٹس اور رپورٹس کے ساتھ اپنی انوینٹری کے رجحانات، سب سے زیادہ بکنے والی اشیاء، اور کاروباری بصیرت کا تصور کریں۔"
+        },
+        "settings": {
+            "title": "اپنا تجربہ حسب ضرورت بنائیں",
+            "content": "اپنی ترجیحات، کرنسی کی ترتیبات، اور اکاؤنٹ کی معلومات کے ساتھ اسٹاک سویٹ کو ذاتی بنائیں۔"
+        },
+        "completion": {
+            "title": "آپ تیار ہیں! 🚀",
+            "content": "مبارک ہو! اب آپ اسٹاک سویٹ میں اپنا راستہ جانتے ہیں۔ اپنا پہلا زمرہ بنا کر یا کوئی شے شامل کرکے شروع کریں۔ خوشگوار انوینٹری مینجمنٹ!"
+        },
+        "controls": {
+            "previous": "پچھلا",
+            "next": "اگلا",
+            "skip": "ٹور چھوڑیں",
+            "finish": "ختم",
+            "startTour": "ٹور شروع کریں",
+            "restartTour": "ٹور دوبارہ شروع کریں",
+            "appTour": "ایپ ٹور",
+            "learnBasics": "بنیادی باتیں سیکھیں"
+        },
+        "messages": {
+            "completed": "ٹور مکمل! اسٹاک سویٹ میں خوش آمدید 🎉",
+            "skipped": "ٹور چھوڑ دیا گیا۔ آپ اسے کبھی بھی ترتیبات سے دوبارہ شروع کر سکتے ہیں۔"
+        }
+    },
+    "expenses": {
+        "title": "کاروباری اخراجات",
+        "subtitle": "کرایہ، افادیت، تنخواہیں، اور دیگر اخراجات کو ٹریک کریں",
+        "recordExpense": "اخراجات ریکارڈ کریں",
+        "recordNew": "نیا اخراجات ریکارڈ کریں",
+        "loading": "اخراجات لوڈ ہو رہے ہیں...",
+        "noExpenses": "ابھی تک کوئی اخراجات ریکارڈ نہیں ہوئے",
+        "breakdown": "زمرے کی تقسیم",
+        "summary": "خلاصہ (30 دن)",
+        "totalMonthly": "کل ماہانہ اخراجات",
+        "count": "اخراجات کی گنتی",
+        "confirmDelete": "کیا آپ واقعی یہ اخراجات حذف کرنا چاہتے ہیں؟",
+        "form": {
+            "description": "تفصیل",
+            "descPlaceholder": "مثلاً، اسٹور بجلی کا بل، آلات کی دیکھ بھال",
+            "amount": "رقم",
+            "category": "زمرہ",
+            "paymentMethod": "ادائیگی کا طریقہ",
+            "date": "تاریخ",
+            "cancel": "منسوخ",
+            "save": "اخراجات محفوظ کریں",
+            "methods": {
+                "cash": "نقد",
+                "bank_transfer": "بینک ٹرانسفر",
+                "digital": "ڈیجیٹل ادائیگی"
+            }
+        },
+        "table": {
+            "expense": "اخراجات",
+            "category": "زمرہ",
+            "date": "تاریخ",
+            "method": "طریقہ",
+            "amount": "رقم"
+        },
+        "categories": {
+            "rent": "کرایہ",
+            "utilities": "افادیت (بجلی/پانی)",
+            "salary": "تنخواہ",
+            "supplies": "سامان",
+            "maintenance": "دیکھ بھال",
+            "marketing": "مارکیٹنگ",
+            "transportation": "نقل و حمل",
+            "miscellaneous": "متفرق"
+        }
+    },
+    "pos": {
+        "title": "پوائنٹ آف سیل",
+        "subtitle": "پیشہ ورانہ ریٹیل اور بلنگ سسٹم",
+        "scanBarcode": "بارکوڈ اسکین کریں",
+        "searchProducts": "مصنوعات تلاش کریں",
+        "cart": "ٹوکری",
+        "shoppingCart": "شاپنگ کارٹ",
+        "emptyCart": "ٹوکری خالی ہے",
+        "cartEmpty": "کارٹ خالی ہے",
+        "scanOrSearch": "مصنوعات شامل کرنے کے لیے اسکین یا تلاش کریں",
+        "total": "کل",
+        "subtotal": "ذیلی کل",
+        "tax": "ٹیکس",
+        "discount": "رعایت",
+        "checkout": "چیک آؤٹ",
+        "payment": "ادائیگی",
+        "cash": "نقد",
+        "card": "کارڈ",
+        "complete": "مکمل کریں",
+        "tabs": {
+            "terminal": "POS ٹرمینل",
+            "reports": "فروخت کی رپورٹس",
+            "settings": "POS ترتیبات"
+        },
+        "terminal": {
+            "regularBill": "🧾 باقاعدہ بل",
+            "quotation": "📋 کوٹیشن",
+            "pressF8": "بل کی قسم ٹوگل کرنے کے لیے F8 دبائیں",
+            "newTransaction": "نیا لین دین",
+            "new": "نیا",
+            "print": "پرنٹ کریں",
+            "startScanner": "اسکینر شروع کریں",
+            "stopScanner": "اسکینر بند کریں",
+            "scannerActive": "اسکینر فعال",
+            "readyToScan": "اسکین کرنے کے لیے تیار",
+            "successfulScans": "کامیاب اسکین",
+            "barcodeScanner": "بارکوڈ اسکینر",
+            "clickToScan": "بارکوڈز اسکین کرنا شروع کرنے کے لیے \"اسکینر شروع کریں\" کلک کریں",
+            "supportsFormats": "UPC، EAN، Code 128، Code 39، QR کوڈز سپورٹ کرتا ہے",
+            "scannerNotWorking": "اسکینر کام نہیں کر رہا؟ بارکوڈ دستی طور پر درج کریں",
+            "enterBarcode": "بارکوڈ دستی طور پر درج کریں",
+            "add": "شامل کریں",
+            "scannerQuality": "اسکینر کوالٹی",
+            "qualityLow": "کم (5 FPS)",
+            "qualityMedium": "درمیانہ (10 FPS)",
+            "qualityHigh": "اعلی (15 FPS)",
+            "manualEntryLabel": "دستی اندراج",
+            "productSearch": "پروڈکٹ سرچ",
+            "findProducts": "ٹوکری میں مصنوعات تلاش کریں اور شامل کریں",
+            "barcode": "بارکوڈ",
+            "productId": "پروڈکٹ ID",
+            "name": "نام",
+            "searchByName": "نام سے تلاش کریں...",
+            "searchById": "آئی ڈی سے تلاش کریں...",
+            "searchByBarcode": "بارکوڈ سے تلاش کریں...",
+            "searchTip": "کارٹ میں شامل کرنے کے لیے نام، ID، یا بارکوڈ سے مصنوعات تلاش کریں",
+            "useBarcodeScanner": "💡 تیز چیک آؤٹ کے لیے بارکوڈ اسکینر استعمال کریں",
+            "enableCreditSale": "ادھار فروخت فعال کریں",
+            "creditSale": "ادھار فروخت (Udhaar)",
+            "change": "تبدیل کریں",
+            "due": "واجب الادا",
+            "proceedToPayment": "ادائیگی کے لیے آگے بڑھیں",
+            "items": "اشیاء",
+            "collapse": "سمیٹیں",
+            "expand": "پھیلائیں",
+            "addToCart": "ٹوکری میں شامل کریں",
+            "outOfStock": "اسٹاک ختم",
+            "noResults": "کوئی مصنوعات نہیں ملیں",
+            "trySearchingBy": "کوشش کریں بذریعہ تلاش",
+            "scanPositionFrame": "بارکوڈ کو فریم کے اندر رکھیں",
+            "scannerError": "اسکینر کی خرابی",
+            "retryScanner": "اسکینر دوبارہ کوشش کریں",
+            "manualAdded": "دستی اندراج شامل کیا گیا: {{value}}",
+            "totalItems": "کل اشیاء",
+            "avgPrice": "اوسط قیمت",
+            "each": "فی",
+            "left": "باقی"
+        },
+        "quotationMode": {
+            "title": "کوٹیشن موڈ فعال",
+            "description": "یہ بل انوینٹری یا مالیاتی ریکارڈ کو متاثر نہیں کرے گا۔ صرف قیمت پوچھ گچھ کے لیے استعمال کریں۔"
+        },
+        "transaction": {
+            "complete": "لین دین مکمل!",
+            "number": "لین دین نمبر",
+            "change": "واپسی",
+            "printReceipt": "رسید پرنٹ کریں",
+            "newSale": "نئی فروخت"
+        },
+        "keyboard": {
+            "title": "کی بورڈ شارٹ کٹس",
+            "shortcuts": "شارٹ کٹس"
+        },
+        "settings": {
+            "title": "POS ترتیبات",
+            "subtitle": "اپنے پوائنٹ آف سیل سسٹم کی ترجیحات ترتیب دیں",
+            "required": "POS ترتیبات درکار ہیں",
+            "configureMessage": "جاری رکھنے کے لیے براہ کرم POS ترتیبات کنفیگر کریں",
+            "storeInfo": {
+                "title": "اسٹور کی معلومات",
+                "storeName": "اسٹور کا نام",
+                "storePhone": "اسٹور فون",
+                "storeAddress": "اسٹور کا پتہ"
+            },
+            "financial": {
+                "title": "مالی ترتیبات",
+                "currency": "کرنسی",
+                "taxRate": "ٹیکس کی شرح (%)"
+            },
+            "hardware": {
+                "title": "ہارڈویئر ترتیبات",
+                "barcodeScanner": "بارکوڈ اسکینر",
+                "enableScanner": "کیمرہ پر مبنی بارکوڈ اسکیننگ فعال کریں",
+                "autoPrint": "خودکار رسید پرنٹ",
+                "autoPrintDesc": "ادائیگی کے بعد خود بخود رسیدیں پرنٹ کریں",
+                "thermalPrinter": "تھرمل پرنٹر",
+                "thermalPrinterDesc": "تھرمل رسید پرنٹر سپورٹ فعال کریں"
+            },
+            "receipt": {
+                "title": "رسید حسب ضرورت",
+                "footerMessage": "رسید فوٹر پیغام",
+                "footerNote": "یہ پیغام تمام پرنٹ شدہ رسیدوں کے نیچے ظاہر ہوگا۔",
+                "defaultFooter": "آپ کے کاروبار کا شکریہ!"
+            }
+        },
+        "reports": {
+            "title": "فروخت کی رپورٹس",
+            "subtitle": "اپنے پوائنٹ آف سیل کی کارکردگی اور رجحانات کا تجزیہ کریں",
+            "totalSales": "کل فروخت",
+            "transactions": "لین دین",
+            "avgTransaction": "اوسط لین دین",
+            "itemsSold": "فروخت شدہ اشیاء",
+            "paymentMethods": "ادائیگی کے طریقے",
+            "topSellingItems": "سب سے زیادہ بکنے والی اشیاء",
+            "recentTransactions": "حالیہ لین دین",
+            "transactionNumber": "لین دین #",
+            "date": "تاریخ",
+            "items": "اشیاء",
+            "payment": "ادائیگی",
+            "total": "کل"
+        },
+        "loading": "POS سسٹم لوڈ ہو رہا ہے...",
+        "messages": {
+            "printSuccess": "رسید کامیابی سے پرنٹ ہو گئی",
+            "transactionSuccess": "لین دین کامیابی سے مکمل ہو گیا!",
+            "quotationSuccess": "کوٹیشن کامیابی سے بنائی گئی!",
+            "cartCleared": "کارٹ صاف کر دی گئی",
+            "clearCartConfirm": "کیا آپ واقعی کارٹ صاف کرنا چاہتے ہیں؟",
+            "productNotFound": "بارکوڈ کے لیے پروڈکٹ نہیں ملا: {{barcode}}",
+            "outOfStock": "{{name}} کا اسٹاک ختم ہے",
+            "addedToCart": "{{name}} کو کارٹ میں شامل کر دیا گیا",
+            "limitedStock": "اسٹاک میں صرف {{count}} اشیاء دستیاب ہیں"
+        }
+    },
+    "purchases": {
+        "title": "خریداری",
+        "subtitle": "سپلائرز سے خریداری کا انتظام کریں",
+        "newPurchase": "نئی خریداری",
+        "purchaseDetails": "خریداری کی تفصیلات",
+        "selectVendor": "سپلائر منتخب کریں",
+        "addItems": "اشیاء شامل کریں",
+        "purchaseDate": "خریداری کی تاریخ",
+        "invoiceNumber": "انوائس نمبر",
+        "paymentStatus": "ادائیگی کی حیثیت",
+        "paid": "ادا شدہ",
+        "unpaid": "غیر ادا شدہ",
+        "partial": "جزوی",
+        "step": "مرحلہ {{current}} کا {{total}}",
+        "reviewComplete": "جائزہ اور تکمیل",
+        "billNumber": "بل نمبر",
+        "billNumberOptional": "بل نمبر (اختیاری)",
+        "vendorInvoiceNumber": "سپلائر کا انوائس نمبر",
+        "paidAmount": "ادا شدہ رقم",
+        "notes": "نوٹس",
+        "notesOptional": "نوٹس (اختیاری)",
+        "addNotes": "کوئی اضافی نوٹس شامل کریں...",
+        "orderSummary": "آرڈر کا خلاصہ",
+        "totalUnits": "کل یونٹس",
+        "totalAmount": "کل رقم",
+        "completePurchase": "خریداری مکمل کریں",
+        "creating": "بنایا جا رہا ہے...",
+        "messages": {
+            "selectVendor": "براہ کرم ایک سپلائر منتخب کریں",
+            "addItems": "براہ کرم کم از کم ایک شے شامل کریں",
+            "success": "خریداری کامیابی سے بنائی گئی",
+            "error": "خریداری بنانے میں ناکامی",
+            "loadError": "زمرہ جات لوڈ کرنے میں ناکامی"
+        }
+    },
+    "transactions": {
+        "title": "لین دین",
+        "subtitle": "تمام انوینٹری حرکات کو ریکارڈ اور ٹریک کریں",
+        "newTransaction": "نیا لین دین",
+        "recordTransaction": "نیا انوینٹری لین دین ریکارڈ کریں",
+        "noTransactions": "کوئی لین دین نہیں ملا",
+        "noTransactionsDescription": "اپنے فلٹر کی شرائط کو ایڈجسٹ کرنے کی کوشش کریں",
+        "noTransactionsEmpty": "اپنا پہلا لین دین ریکارڈ کرکے شروع کریں",
+        "recordFirst": "پہلا لین دین ریکارڈ کریں",
+        "filters": {
+            "transactionType": "لین دین کی قسم",
+            "allTransactions": "تمام لین دین",
+            "stockIn": "اسٹاک ان",
+            "stockOut": "اسٹاک آؤٹ",
+            "dateRange": "تاریخ کی حد",
+            "allTime": "ہر وقت",
+            "today": "آج",
+            "lastWeek": "پچھلے 7 دن",
+            "lastMonth": "پچھلے 30 دن"
+        },
+        "activityLog": "سرگرمی لاگ",
+        "historyTitle": "سرگرمی لاگ",
+        "historySubtitle": "تمام کاروباری نقل و حرکت کو ٹریک کرنے کا مرکزی مرکز",
+        "addPurchase": "خریداری شامل کریں",
+        "generalLog": "جنرل لاگ",
+        "tabs": {
+            "allLogs": "تمام لاگز",
+            "procurement": "خریداری",
+            "salesHistory": "فروخت کی تاریخ"
+        },
+        "searchPlaceholder": "تاریخ تلاش کریں...",
+        "allTypes": "تمام اقسام",
+        "noLogs": "کوئی لاگز نہیں ملے",
+        "noProcurement": "کوئی خریداری کا ریکارڈ نہیں ملا",
+        "unknownItem": "نامعلوم شے",
+        "table": {
+            "purchaseNum": "خریداری #",
+            "vendor": "سپلائر",
+            "date": "تاریخ",
+            "total": "کل"
+        },
+        "form": {
+            "transactionType": "لین دین کی قسم",
+            "stockIn": "اسٹاک ان",
+            "stockInDescription": "انوینٹری شامل کریں",
+            "stockOut": "اسٹاک آؤٹ",
+            "stockOutDescription": "انوینٹری نکالیں",
+            "selectCategory": "زمرہ منتخب کریں",
+            "chooseCategory": "پہلے ایک زمرہ منتخب کریں",
+            "selectItem": "شے منتخب کریں",
+            "chooseItem": "ایک شے منتخب کریں",
+            "selectCategoryFirst": "پہلے زمرہ منتخب کریں",
+            "noItems": "کوئی اشیاء دستیاب نہیں۔ براہ کرم پہلے ایک شے بنائیں۔",
+            "quantity": "مقدار",
+            "enterQuantity": "مقدار درج کریں",
+            "unitPrice": "یونٹ قیمت",
+            "unitPriceFixed": "یونٹ قیمت (مقررہ)",
+            "priceNote": "قیمت خود بخود پروڈکٹ کی تعریف سے مقرر کی جاتی ہے اور تبدیل نہیں کی جا سکتی",
+            "currentStock": "موجودہ اسٹاک",
+            "totalValue": "کل قیمت",
+            "transactionDate": "لین دین کی تاریخ",
+            "supplier": "سپلائر",
+            "customer": "گاہک",
+            "enterName": "{{type}} نام درج کریں",
+            "referenceNumber": "حوالہ نمبر",
+            "referenceOptional": "حوالہ نمبر (اختیاری)",
+            "referencePlaceholder": "انوائس/رسید نمبر درج کریں",
+            "notes": "نوٹس",
+            "notesOptional": "نوٹس (اختیاری)",
+            "notesPlaceholder": "اس لین دین کے بارے میں کوئی اضافی نوٹس شامل کریں...",
+            "cancel": "منسوخ",
+            "record": "لین دین ریکارڈ کریں",
+            "recording": "ریکارڈ ہو رہا ہے..."
+        },
+        "messages": {
+            "success": "لین دین کامیابی سے ریکارڈ کیا گیا",
+            "error": "لین دین ریکارڈ کرنے میں ناکامی",
+            "selectItem": "براہ کرم ایک شے منتخب کریں",
+            "invalidQty": "مقدار 0 سے زیادہ ہونی چاہیے",
+            "insufficientStock": "ناکافی اسٹاک۔ دستیاب: {{stock}}",
+            "nameRequired": "{{type}} نام درکار ہے",
+            "futureDate": "لین دین کی تاریخ مستقبل میں نہیں ہو سکتی"
+        }
+    },
+    "customers": {
+        "title": "صارفین",
+        "subtitle": "کسٹمر کریڈٹ (ادھار) اور پروفائلز کا انتظام کریں",
+        "addCustomer": "کسٹمر شامل کریں",
+        "searchPlaceholder": "نام یا فون سے صارفین تلاش کریں...",
+        "noCustomers": "کوئی صارف نہیں ملا",
+        "creditDue": "بقایا کریڈٹ",
+        "purchases": "خریداری",
+        "viewLedger": "لیجر دیکھیں",
+        "totalCollections": "کل وصولیاں",
+        "udhaarPending": "کل 'ادھار' زیر التواء",
+        "activeCustomers": "فعال صارفین",
+        "quickActions": "فوری اقدامات",
+        "collectPayment": "رقم وصول کریں",
+        "sendReminder": "ادائیگی کی یاد دہانی بھیجیں",
+        "loading": "صارفین لوڈ ہو رہے ہیں..."
+    },
+    "errors": {
+        "generic": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔",
+        "network": "نیٹ ورک کی خرابی۔ براہ کرم اپنا کنکشن چیک کریں۔",
+        "unauthorized": "آپ یہ عمل انجام دینے کے مجاز نہیں ہیں۔",
+        "forbidden": "رسائی مسترد۔",
+        "notFound": "درخواست کردہ وسیلہ نہیں ملا۔",
+        "serverError": "سرور کی خرابی۔ براہ کرم بعد میں دوبارہ کوشش کریں۔",
+        "validation": "براہ کرم اپنا ان پٹ چیک کریں اور دوبارہ کوشش کریں۔",
+        "timeout": "درخواست کا وقت ختم۔ براہ کرم دوبارہ کوشش کریں۔",
+        "offline": "آپ فی الحال آف لائن ہیں۔ براہ کرم اپنا کنکشن چیک کریں۔"
+    },
+    "notifications": {
+        "success": {
+            "saved": "تبدیلیاں کامیابی سے محفوظ ہو گئیں",
+            "deleted": "شے کامیابی سے حذف ہو گئی",
+            "created": "شے کامیابی سے بنائی گئی",
+            "updated": "شے کامیابی سے اپ ڈیٹ ہو گئی",
+            "uploaded": "فائل کامیابی سے اپ لوڈ ہو گئی",
+            "sent": "پیغام کامیابی سے بھیجا گیا"
+        },
+        "error": {
+            "save": "تبدیلیاں محفوظ کرنے میں ناکامی",
+            "delete": "شے حذف کرنے میں ناکامی",
+            "create": "شے بنانے میں ناکامی",
+            "update": "شے اپ ڈیٹ کرنے میں ناکامی",
+            "upload": "فائل اپ لوڈ کرنے میں ناکامی",
+            "send": "پیغام بھیجنے میں ناکامی",
+            "load": "ڈیٹا لوڈ کرنے میں ناکامی"
+        },
+        "warning": {
+            "unsavedChanges": "آپ کے پاس غیر محفوظ تبدیلیاں ہیں",
+            "lowStock": "کچھ اشیاء کا اسٹاک کم ہو رہا ہے",
+            "expiringSoon": "کچھ اشیاء جلد ختم ہونے والی ہیں"
+        },
+        "info": {
+            "autoSaved": "تبدیلیاں خود بخود محفوظ ہو گئیں",
+            "syncComplete": "ڈیٹا ہم آہنگ ہو گیا",
+            "updateAvailable": "اپ ڈیٹ دستیاب ہے"
+        }
+    },
+    "vendors": {
+        "title": "سپلائرز",
+        "subtitle": "اپنے سپلائرز اور بقایا رقوم کا انتظام کریں",
+        "addVendor": "سپلائر شامل کریں",
+        "addNewVendor": "نیا سپلائر شامل کریں",
+        "noVendors": "کوئی سپلائر نہیں ملے",
+        "searchPlaceholder": "نام، کمپنی یا فون سے سپلائرز تلاش کریں...",
+        "credit": "کریڈٹ",
+        "balance": "بقایا",
+        "totalPurchases": "کل خریداری",
+        "noPurchasesYet": "ابھی کوئی خریداری نہیں",
+        "viewLedger": "لیجر دیکھیں",
+        "deleteVendor": "سپلائر حذف کریں",
+        "confirmDelete": "کیا آپ واقعی سپلائر \"{{name}}\" کو حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں کیا جا سکتا۔",
+        "deleteSuccess": "سپلائر کامیابی سے حذف ہو گیا",
+        "deleteFailed": "سپلائر حذف کرنے میں ناکامی",
+        "quickSummary": "فوری خلاصہ",
+        "netOutstanding": "خالص بقایا",
+        "totalSuppliers": "کل سپلائرز",
+        "globalActions": "عالمی اعمال",
+        "messages": {
+            "indexRequired": "ڈیٹا بیس انڈیکس درکار ہے۔ سیٹ اپ لنک کے لیے براہ کرم براؤزر کنسول چیک کریں۔",
+            "loadFailed": "سپلائرز لوڈ کرنے میں ناکامی",
+            "searchFailed": "تلاش ناکام ہو گئی",
+            "requiredFields": "براہ کرم تمام لازمی فیلڈز (*) بھریں",
+            "requiredFieldsSimple": "براہ کرم تمام لازمی فیلڈز بھریں",
+            "addSuccess": "{{company}} کامیابی سے شامل ہو گیا",
+            "addFailed": "سپلائر شامل کرنے میں ناکامی",
+            "createSuccess": "{{company}} کامیابی سے بنایا گیا",
+            "createFailed": "سپلائر بنانے میں ناکامی",
+            "unsavedDiscarded": "غیر محفوظ سپلائر تفصیلات ختم کر دی گئیں"
+        }
+    },
+  "loading": {
+    "initializing": "اسٹاک سویٹ شروع ہو رہا ہے...",
+    "authenticating": "آپ کا سیشن تصدیق ہو رہا ہے...",
+    "loadingData": "آپ کا ڈیٹا لوڈ ہو رہا ہے...",
+    "almostReady": "تقریباً تیار...",
+    "tips": {
+      "title": "کیا آپ جانتے ہیں؟",
+      "list": [
+        "POS بارکوڈ اسکینر سے سیکنڈوں میں آئٹمز رجسٹر کریں۔",
+        "فروخت کے دوران کارٹ ہولڈ کریں اور بعد میں دوبارہ شروع کریں۔",
+        "آئٹمز پر ری آرڈر پوائنٹ سیٹ کریں تاکہ کم اسٹاک الرٹ ملیں۔",
+        "ہر POS ٹرانزیکشن کے بعد ڈیش بورڈ خود بخود اپ ڈیٹ ہوتا ہے۔",
+        "POS ٹول بار سے بل کی قسم تبدیل کریں۔",
+        "کریڈٹ سیلز فی گاہک ٹریک ہوتی ہیں — کسی بھی وقت لیجر چیک کریں۔",
+        "کوئیک ایکسیس آئٹمز سے اپنے بہترین فروخت ہونے والے آئٹمز پن کریں۔",
+        "آف لائن موڈ ٹرانزیکشنز قطار میں رکھتا ہے اور دوبارہ کنیکٹ ہونے پر سنک کرتا ہے۔"
+      ]
+    }
+  },
+  "stockAdjustments": {
+    "title": "اسٹاک ایڈجسٹمنٹ",
+    "subtitle": "انوینٹری کی مقداریں ایڈجسٹ، رائٹ آف، یا درست کریں",
+    "searchPlaceholder": "نام یا SKU سے اشیاء تلاش کریں...",
+    "noItems": "کوئی اشیاء نہیں ملیں",
+    "noItemsSearch": "مختلف تلاش کی اصطلاح آزمائیں",
+    "noItemsEmpty": "پہلے اپنی انوینٹری میں اشیاء شامل کریں",
+    "adjustButton": "ایڈجسٹ کریں",
+    "form": {
+      "adjustmentType": "ایڈجسٹمنٹ کی قسم",
+      "quantity": "مقدار",
+      "quantityHint": "(+ شامل / − نکالیں)",
+      "quantityPlaceholder": "مثلاً -5 یا 10",
+      "reason": "وجہ",
+      "reasonPlaceholder": "مثلاً خراب سامان",
+      "cancel": "منسوخ",
+      "apply": "ایڈجسٹمنٹ لاگو کریں",
+      "applying": "محفوظ ہو رہا ہے...",
+      "types": {
+        "adjustment": "ایڈجسٹمنٹ",
+        "write_off": "رائٹ آف",
+        "count_correction": "گنتی کی درستگی"
+      }
+    },
+    "messages": {
+      "reasonRequired": "وجہ درکار ہے",
+      "quantityRequired": "غیر صفر مقدار درج کریں",
+      "notAuthenticated": "تصدیق نہیں ہوئی",
+      "success": "{{name}} کا اسٹاک ایڈجسٹ ہو گیا",
+      "error": "اسٹاک ایڈجسٹ کرنے میں ناکامی",
+      "loadError": "اشیاء لوڈ کرنے میں ناکامی"
+    }
+  },
+  "inventoryCount": {
+    "title": "انوینٹری گنتی",
+    "subtitle": "جسمانی گنتی بمقابلہ سسٹم گنتی کا موازنہ کریں",
+    "startCount": "گنتی شروع کریں",
+    "loading": "لوڈ ہو رہا ہے...",
+    "readyTitle": "گنتی کے لیے تیار ہیں؟",
+    "readyDescription": "تمام انوینٹری آئٹمز لوڈ کرنے اور جسمانی مقداریں درج کرنے کے لیے \"گنتی شروع کریں\" کلک کریں۔",
+    "stats": {
+      "totalItems": "کل اشیاء",
+      "itemsWithVariance": "فرق والی اشیاء",
+      "totalVarianceValue": "کل فرق کی قیمت"
+    },
+    "table": {
+      "item": "شے",
+      "systemQty": "سسٹم مقدار",
+      "physicalCount": "جسمانی گنتی",
+      "variance": "فرق",
+      "enterCount": "گنتی درج کریں",
+      "ok": "ٹھیک"
+    },
+    "applyAll": "تمام درستگیاں لاگو کریں ({{count}})",
+    "applying": "لاگو ہو رہا ہے...",
+    "messages": {
+      "loadError": "اشیاء لوڈ کرنے میں ناکامی",
+      "notAuthenticated": "تصدیق نہیں ہوئی",
+      "noVariances": "درست کرنے کے لیے کوئی فرق نہیں",
+      "success": "{{count}} درستگی(اں) کامیابی سے لاگو ہوئیں",
+      "partialError": "{{success}} کامیاب، {{failed}} ناکام"
+    }
+  },
+  "expiryTracking": {
+    "title": "میعاد ختم ہونے کی ٹریکنگ",
+    "subtitle": "اپنی انوینٹری میں بیچ کی میعاد ختم ہونے کی تاریخوں کی نگرانی کریں",
+    "exportCsv": "CSV ایکسپورٹ کریں",
+    "noItems": "کوئی اشیاء نہیں ملیں",
+    "noItemsAll": "کسی خریداری کی شے میں میعاد ختم ہونے کی تاریخ درج نہیں",
+    "noItemsFiltered": "\"{{tab}}\" زمرے میں کوئی اشیاء نہیں",
+    "tabs": {
+      "all": "سب",
+      "expired": "میعاد ختم",
+      "expiringSoon": "جلد ختم ہونے والی",
+      "ok": "ٹھیک"
+    },
+    "status": {
+      "expired": "میعاد ختم",
+      "critical": "7 دن سے کم",
+      "warning": "30 دن سے کم",
+      "ok": "ٹھیک"
+    },
+    "table": {
+      "itemName": "شے کا نام",
+      "batchLot": "بیچ/لاٹ",
+      "expiryDate": "میعاد ختم ہونے کی تاریخ",
+      "daysUntilExpiry": "میعاد ختم ہونے تک دن",
+      "status": "حیثیت",
+      "daysAgo": "{{days}} دن پہلے",
+      "days": "{{days}} دن"
+    },
+    "messages": {
+      "loadError": "خریداری کا ڈیٹا لوڈ کرنے میں ناکامی",
+      "exportError": "ایکسپورٹ کرنے کے لیے کوئی ڈیٹا نہیں",
+      "exportSuccess": "کامیابی سے ایکسپورٹ ہو گیا"
+    }
+  },
+  "stockTransfer": {
+    "title": "اسٹاک ٹرانسفر",
+    "subtitle": "مقامات کے درمیان اسٹاک منتقل کریں",
+    "newTransfer": "نئی منتقلی",
+    "recentTransfers": "حالیہ منتقلیاں",
+    "noTransfers": "ابھی کوئی منتقلی ریکارڈ نہیں",
+    "form": {
+      "fromLocation": "کہاں سے",
+      "fromPlaceholder": "مثلاً گودام A",
+      "toLocation": "کہاں تک",
+      "toPlaceholder": "مثلاً اسٹور فرنٹ",
+      "item": "شے",
+      "itemSearch": "شے تلاش کریں...",
+      "quantity": "مقدار",
+      "quantityPlaceholder": "مثلاً 50",
+      "available": "دستیاب: {{count}}",
+      "notes": "نوٹس",
+      "notesPlaceholder": "اختیاری نوٹس...",
+      "transfer": "اسٹاک منتقل کریں",
+      "transferring": "منتقل ہو رہا ہے..."
+    },
+    "messages": {
+      "notAuthenticated": "تصدیق نہیں ہوئی",
+      "fromRequired": "کہاں سے مقام درکار ہے",
+      "toRequired": "کہاں تک مقام درکار ہے",
+      "itemRequired": "براہ کرم ایک شے منتخب کریں",
+      "quantityRequired": "درست مثبت مقدار درج کریں",
+      "insufficientStock": "ناکافی اسٹاک۔ دستیاب: {{count}}",
+      "success": "{{qty}} یونٹس {{from}} سے {{to}} منتقل ہو گئے",
+      "error": "منتقلی ناکام"
+    }
+  },
+  "barcodeLabels": {
+    "title": "بارکوڈ اور QR لیبلز",
+    "subtitle": "انوینٹری اشیاء کے لیے بارکوڈ یا QR کوڈ بنائیں اور پرنٹ کریں",
+    "labelsPerRow": "لیبلز/قطار:",
+    "print": "پرنٹ کریں",
+    "printCount": "پرنٹ کریں ({{count}})",
+    "preview": "پیش نظارہ",
+    "noBarcode": "کوئی بارکوڈ نہیں",
+    "selectItem": "پیش نظارہ کے لیے ایک شے منتخب کریں",
+    "noItems": "کوئی اشیاء نہیں ملیں",
+    "searchPlaceholder": "اشیاء، SKU، بارکوڈ تلاش کریں...",
+    "selectionSummary": "{{items}} شے(اں) منتخب · {{labels}} لیبل(ز)",
+    "clearAll": "سب صاف کریں",
+    "downloadBarcode": "بارکوڈ PNG ڈاؤن لوڈ کریں",
+    "downloadQr": "QR PNG ڈاؤن لوڈ کریں",
+    "typeBarcode": "بارکوڈ",
+    "typeQr": "QR کوڈ",
+    "sku": "SKU:",
+    "barcode": "بارکوڈ:",
+    "price": "قیمت:",
+    "messages": {
+      "selectFirst": "کم از کم ایک شے منتخب کریں",
+      "printing": "{{count}} لیبل(ز) پرنٹ ہو رہے ہیں",
+      "downloadSuccess": "{{type}} ڈاؤن لوڈ ہو گیا",
+      "loadError": "اشیاء لوڈ کرنے میں ناکامی"
+    }
+  },
+  "reportsPage": {
+    "title": "رپورٹس",
+    "subtitle": "مالی بصیرت، عمر رسیدہ تجزیہ، اور کاروباری ذہانت",
+    "from": "سے",
+    "to": "تک",
+    "refresh": "ریفریش",
+    "exportCsv": "CSV ایکسپورٹ کریں",
+    "noData": "منتخب مدت کے لیے کوئی ڈیٹا نہیں",
+    "tabs": {
+      "salesProduct": "مصنوعات کے مطابق فروخت",
+      "salesCategory": "زمرے کے مطابق فروخت",
+      "pnl": "منافع و نقصان",
+      "tax": "ٹیکس رپورٹ",
+      "inventoryAging": "انوینٹری عمر",
+      "customerAging": "گاہک عمر",
+      "vendorAging": "سپلائر عمر"
+    },
+    "salesProduct": {
+      "totalRevenue": "کل آمدنی",
+      "totalUnitsSold": "کل فروخت شدہ یونٹس",
+      "topProduct": "سب سے اوپر مصنوعات",
+      "productBreakdown": "مصنوعات کی تفصیل",
+      "table": {
+        "productName": "مصنوعات کا نام",
+        "unitsSold": "فروخت شدہ یونٹس",
+        "revenue": "آمدنی",
+        "cost": "لاگت",
+        "profit": "منافع",
+        "margin": "مارجن %"
+      }
+    },
+    "salesCategory": {
+      "totalRevenue": "کل آمدنی",
+      "categories": "زمرے",
+      "revenueByCategory": "زمرے کے مطابق آمدنی",
+      "categoryBreakdown": "زمرے کی تفصیل",
+      "table": {
+        "category": "زمرہ",
+        "unitsSold": "فروخت شدہ یونٹس",
+        "revenue": "آمدنی",
+        "percentOfTotal": "کل کا %"
+      }
+    },
+    "pnl": {
+      "title": "منافع و نقصان کا بیان",
+      "subtitle": "آمدنی، اخراجات، اور آپریٹنگ نتیجہ",
+      "income": "آمدنی",
+      "grossRevenue": "مجموعی آمدنی",
+      "lessDiscounts": "منہا: رعایتیں",
+      "lessReturns": "منہا: واپسیاں",
+      "netRevenue": "خالص آمدنی",
+      "costOfGoods": "سامان کی لاگت",
+      "cogs": "فروخت شدہ سامان کی لاگت",
+      "grossProfit": "مجموعی منافع",
+      "grossMargin": "مجموعی مارجن",
+      "operatingExpenses": "آپریٹنگ اخراجات",
+      "noExpenses": "کوئی اخراجات ریکارڈ نہیں",
+      "uncategorized": "غیر زمرہ بند",
+      "totalExpenses": "کل اخراجات",
+      "operatingProfit": "آپریٹنگ منافع",
+      "operatingLoss": "آپریٹنگ نقصان",
+      "taxCollected": "وصول شدہ ٹیکس",
+      "totalPurchases": "کل خریداری",
+      "noData": "منتخب مدت کے لیے کوئی مالی ڈیٹا نہیں",
+      "errors": {
+        "loadError": "منافع و نقصان کا بیان لوڈ کرنے میں ناکامی"
+      }
+    },
+    "tax": {
+      "totalTaxCollected": "کل وصول شدہ ٹیکس",
+      "taxableRevenue": "قابل ٹیکس آمدنی",
+      "effectiveTaxRate": "مؤثر ٹیکس کی شرح",
+      "transactions": "{{count}} لین دین",
+      "taxByMethod": "ادائیگی کے طریقے کے مطابق ٹیکس",
+      "errors": {
+        "loadError": "ٹیکس رپورٹ لوڈ کرنے میں ناکامی"
+      }
+    },
+    "inventoryAging": {
+      "stagnantFor": "جمود کی مدت:",
+      "days": "{{count}} دن",
+      "stagnantItems": "جامد اشیاء",
+      "notSoldIn": "{{days}}+ دنوں میں فروخت نہیں ہوئیں",
+      "totalValueAtRisk": "خطرے میں کل قیمت",
+      "stagnantInventory": "جامد انوینٹری",
+      "noStagnant": "{{days}}+ دنوں کے لیے کوئی جامد اشیاء نہیں ملیں",
+      "table": {
+        "itemName": "شے کا نام",
+        "qty": "مقدار",
+        "value": "قیمت",
+        "daysNotSold": "فروخت نہ ہونے کے دن"
+      },
+      "errors": {
+        "loadError": "انوینٹری عمر لوڈ کرنے میں ناکامی"
+      }
+    },
+    "customerAging": {
+      "customersWithBalance": "بقایا والے گاہک",
+      "totalOwedToYou": "آپ کو واجب الادا کل",
+      "customerCreditBalances": "گاہک کریڈٹ بیلنس",
+      "noCustomers": "بقایا رقم والے کوئی گاہک نہیں",
+      "view": "دیکھیں",
+      "table": {
+        "customerName": "گاہک کا نام",
+        "phone": "فون",
+        "outstandingBalance": "بقایا رقم",
+        "ledger": "لیجر"
+      },
+      "errors": {
+        "loadError": "گاہک عمر لوڈ کرنے میں ناکامی"
+      }
+    },
+    "vendorAging": {
+      "vendorsWithBalance": "بقایا والے سپلائرز",
+      "totalYouOwe": "آپ کی کل واجب الادا رقم",
+      "vendorPaymentBalances": "سپلائر ادائیگی بیلنس",
+      "noVendors": "بقایا رقم والے کوئی سپلائرز نہیں",
+      "view": "دیکھیں",
+      "table": {
+        "vendorName": "سپلائر کا نام",
+        "company": "کمپنی",
+        "outstandingBalance": "بقایا رقم",
+        "ledger": "لیجر"
+      },
+      "errors": {
+        "loadError": "سپلائر عمر لوڈ کرنے میں ناکامی"
+      }
+    }
+  },
+  "auditLog": {
+    "title": "آڈٹ لاگ",
+    "subtitle": "سسٹم میں کیے گئے تمام اہم اعمال کو ٹریک کریں",
+    "searchPlaceholder": "وسیلہ، عمل، تفصیلات سے تلاش کریں...",
+    "allActions": "تمام اعمال",
+    "allResources": "تمام وسائل",
+    "entries": "{{count}} اندراجات",
+    "clearFilters": "فلٹر صاف کریں",
+    "exportCsv": "CSV ایکسپورٹ کریں",
+    "noEntries": "کوئی آڈٹ اندراجات نہیں ملیں",
+    "noEntriesEmpty": "اعمال انجام دینے پر آڈٹ واقعات یہاں ظاہر ہوں گے",
+    "noEntriesFiltered": "آپ کے موجودہ فلٹرز سے کوئی اندراجات مماثل نہیں",
+    "actions": {
+      "create": "بنایا گیا",
+      "update": "اپ ڈیٹ ہوا",
+      "delete": "حذف ہوا",
+      "login": "لاگ ان",
+      "logout": "لاگ آؤٹ",
+      "sale": "فروخت",
+      "purchase": "خریداری",
+      "payment": "ادائیگی",
+      "adjustment": "ایڈجسٹمنٹ",
+      "return": "واپسی",
+      "export": "ایکسپورٹ",
+      "security": "سیکیورٹی"
+    },
+    "resources": {
+      "item": "شے",
+      "category": "زمرہ",
+      "customer": "گاہک",
+      "vendor": "سپلائر",
+      "expense": "اخراجات",
+      "purchase": "خریداری",
+      "pos_transaction": "POS فروخت",
+      "user": "صارف",
+      "settings": "ترتیبات",
+      "report": "رپورٹ",
+      "tenant": "ٹیننٹ"
+    },
+    "messages": {
+      "loadError": "آڈٹ لاگز لوڈ کرنے میں ناکامی",
+      "exportError": "ایکسپورٹ کرنے کے لیے کوئی ڈیٹا نہیں",
+      "exportSuccess": "آڈٹ لاگ ایکسپورٹ ہو گیا"
+    }
+  },
+  "locations": {
+    "title": "مقامات اور شاخیں",
+    "subtitle": "اپنے اسٹور کے مقامات اور شاخوں کا انتظام کریں",
+    "addLocation": "مقام شامل کریں",
+    "newLocation": "نیا مقام",
+    "noLocations": "ابھی کوئی مقامات نہیں",
+    "noLocationsDescription": "شروع کرنے کے لیے اپنا پہلا مقام شامل کریں",
+    "namePlaceholder": "مثلاً مرکزی اسٹور، گودام A",
+    "addressPlaceholder": "اختیاری پتہ",
+    "nameLabel": "نام",
+    "addressLabel": "پتہ",
+    "defaultBadge": "ڈیفالٹ",
+    "activeBadge": "فعال",
+    "switchButton": "تبدیل کریں",
+    "setDefault": "ڈیفالٹ کے طور پر سیٹ کریں",
+    "cancel": "منسوخ",
+    "add": "شامل کریں",
+    "deleteTitle": "مقام حذف کریں",
+    "deleteMessage": "کیا آپ واقعی \"{{name}}\" کو حذف کرنا چاہتے ہیں؟ یہ واپس نہیں کیا جا سکتا۔",
+    "deleteConfirm": "حذف کریں",
+    "messages": {
+      "nameRequired": "مقام کا نام درکار ہے",
+      "added": "مقام \"{{name}}\" شامل ہو گیا",
+      "updated": "مقام اپ ڈیٹ ہو گیا",
+      "deleted": "\"{{name}}\" حذف ہو گیا",
+      "cannotDeleteOnly": "واحد مقام کو حذف نہیں کیا جا سکتا",
+      "nameRequired2": "نام درکار ہے"
+    }
+  },
+  "shift": {
+    "openShift": "شفٹ کھولیں",
+    "closeShift": "شفٹ بند کریں",
+    "openingFloat": "ابتدائی نقد (دراز میں نقد)",
+    "skip": "چھوڑیں",
+    "enterFloat": "ابتدائی نقد فلوٹ درج کریں",
+    "actualCash": "دراز میں اصل نقد *",
+    "notes": "نوٹس (اختیاری)",
+    "notesPlaceholder": "اس شفٹ کے بارے میں کوئی نوٹس...",
+    "cashVariance": "نقد فرق",
+    "summary": {
+      "openingFloat": "ابتدائی فلوٹ",
+      "totalSales": "کل فروخت",
+      "transactions": "لین دین",
+      "expectedCash": "متوقع نقد"
+    },
+    "statusBar": {
+      "openShift": "شفٹ کھولیں",
+      "close": "بند کریں"
+    },
+    "openedAt": "{{time}} پر کھولی گئی · {{duration}} پہلے"
+  },
+  "splitPayment": {
+    "title": "تقسیم شدہ ادائیگی",
+    "totalDue": "کل واجب الادا:",
+    "payment": "ادائیگی {{number}}",
+    "addMethod": "ادائیگی کا اور طریقہ شامل کریں",
+    "totalDueLabel": "کل واجب الادا",
+    "totalEntered": "کل درج شدہ",
+    "remaining": "باقی",
+    "changeDue": "واپسی",
+    "cancel": "منسوخ",
+    "completePayment": "ادائیگی مکمل کریں",
+    "processing": "پروسیس ہو رہا ہے...",
+    "methods": {
+      "cash": "نقد",
+      "card": "کارڈ",
+      "digital": "ڈیجیٹل"
+    }
+  }
+}

@@ -16,6 +16,9 @@ import { Expense, ExpenseCategory } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
 import { stampOrgId, getOrgScopeFilter } from './orgScope';
 import { stripUndefined } from '../utils/firestore';
+import { createCache } from './_base';
+
+const expensesCache = createCache<Expense[]>(5 * 60 * 1000); // 5 minutes
 
 // ============================================
 // EXPENSE CRUD OPERATIONS
@@ -53,6 +56,7 @@ export async function recordExpense(expenseData: {
     };
 
     const docRef = await addDoc(expensesRef, newExpense);
+    expensesCache.clear();
 
     // Fire-and-forget audit log
     import('./auditLog').then(({ logAudit }) => {
@@ -77,6 +81,10 @@ export async function recordExpense(expenseData: {
  * Get expenses for a date range
  */
 export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Expense[]> {
+    const cacheKey = `expenses-${startDate?.toISOString() || 'all'}-${endDate?.toISOString() || 'all'}`;
+    const cached = expensesCache.get(cacheKey);
+    if (cached) return cached;
+
     const scope = getOrgScopeFilter();
     const expensesRef = collection(db, 'expenses');
     let q = query(expensesRef, where(scope.field, '==', scope.value), orderBy('expense_date', 'desc'));
@@ -90,12 +98,14 @@ export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Exp
 
     try {
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
+        const result = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
             expense_date: doc.data().expense_date?.toDate() || new Date(),
             created_at: doc.data().created_at?.toDate() || new Date()
         })) as Expense[];
+        expensesCache.set(cacheKey, result);
+        return result;
     } catch (error: any) {
         console.error('Error fetching expenses:', error);
         // Fallback to client-side filter if server-side fails (e.g. index issue)
@@ -169,6 +179,7 @@ export async function updateExpense(
     }
 
     await updateDoc(expenseRef, payload);
+    expensesCache.clear();
 }
 
 /**
@@ -185,6 +196,7 @@ export async function deleteExpense(expenseId: string): Promise<void> {
     assertOwnership(expenseSnap.data(), 'Expense');
 
     await deleteDoc(expenseRef);
+    expensesCache.clear();
 }
 
 /**

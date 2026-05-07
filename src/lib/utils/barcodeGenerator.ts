@@ -7,6 +7,8 @@
  *   - QR code via a lightweight pure-JS implementation
  */
 
+import { escapeHtml } from './htmlEscape';
+
 // ── Code 128 Barcode ──────────────────────────────────────────────────────────
 // Subset B encoding (printable ASCII 32-127)
 
@@ -151,13 +153,13 @@ export function printLabels(labels: LabelData[], labelsPerRow = 3): void {
 
   const labelHtml = labels.map(label => `
     <div class="label">
-      <div class="name">${label.name}</div>
-      ${label.sku ? `<div class="sku">SKU: ${label.sku}</div>` : ''}
+      <div class="name">${escapeHtml(label.name)}</div>
+      ${label.sku ? `<div class="sku">SKU: ${escapeHtml(label.sku)}</div>` : ''}
       ${label.price !== undefined ? `<div class="price">PKR ${label.price.toFixed(2)}</div>` : ''}
       ${label.barcode ? `
         <div class="barcode-wrap">
-          <svg class="barcode" data-barcode="${label.barcode}"></svg>
-          <div class="barcode-text">${label.barcode}</div>
+          <svg class="barcode" data-barcode="${escapeHtml(label.barcode)}"></svg>
+          <div class="barcode-text">${escapeHtml(label.barcode)}</div>
         </div>
       ` : ''}
     </div>

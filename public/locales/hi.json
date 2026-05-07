@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "StockSuite - व्यावसायिक इन्वेंटरी प्रबंधन",
+    "description": "आधुनिक व्यवसायों के लिए व्यावसायिक इन्वेंटरी प्रबंधन प्रणाली",
+    "version": "StockSuite v2.0"
+  },
+  "navigation": {
+    "dashboard": "डैशबोर्ड",
+    "categories": "श्रेणियां",
+    "items": "वस्तुएं",
+    "transactions": "लेन-देन",
+    "stockLevels": "स्टॉक स्तर",
+    "reports": "रिपोर्ट",
+    "settings": "सेटिंग्स"
+  },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि",
+    "success": "सफलता",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "add": "जोड़ें"
+  }
+}

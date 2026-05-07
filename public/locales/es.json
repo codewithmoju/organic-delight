@@ -1,0 +1,86 @@
+{
+  "app": {
+    "title": "StockSuite - Gestión Profesional de Inventario",
+    "description": "Sistema profesional de gestión de inventario para empresas modernas",
+    "version": "StockSuite v2.0"
+  },
+  "navigation": {
+    "dashboard": "Panel de Control",
+    "categories": "Categorías",
+    "items": "Artículos",
+    "transactions": "Transacciones",
+    "stockLevels": "Niveles de Stock",
+    "reports": "Informes",
+    "settings": "Configuración"
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de vuelta",
+      "subtitle": "Inicia sesión en tu cuenta de StockSuite",
+      "email": "Dirección de correo electrónico",
+      "password": "Contraseña",
+      "rememberMe": "Recordarme",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "signIn": "Iniciar sesión",
+      "signUp": "Registrarse",
+      "noAccount": "¿No tienes una cuenta?",
+      "signingIn": "Iniciando sesión...",
+      "errors": {
+        "emailRequired": "El correo electrónico es obligatorio",
+        "passwordRequired": "La contraseña es obligatoria",
+        "invalidCredentials": "Correo electrónico o contraseña inválidos. Por favor verifica tus credenciales.",
+        "userNotFound": "No se encontró una cuenta con este correo electrónico",
+        "wrongPassword": "Contraseña incorrecta",
+        "invalidEmail": "Dirección de correo electrónico inválida",
+        "tooManyRequests": "Demasiados intentos fallidos. Por favor intenta de nuevo más tarde."
+      }
+    },
+    "register": {
+      "title": "Crea tu cuenta",
+      "subtitle": "Únete a StockSuite y comienza a gestionar tu inventario",
+      "fullName": "Nombre Completo",
+      "email": "Dirección de correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "createAccount": "Crear cuenta",
+      "creating": "Creando cuenta...",
+      "hasAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Iniciar sesión"
+    }
+  },
+  "dashboard": {
+    "title": "Resumen del Panel",
+    "subtitle": "¡Bienvenido de vuelta! Esto es lo que está pasando con tu inventario.",
+    "metrics": {
+      "totalStockIn": "Total de Entrada de Stock",
+      "totalStockOut": "Total de Salida de Stock",
+      "revenueSpent": "Ingresos Gastados (Entrada de Stock)",
+      "revenueEarned": "Ingresos Obtenidos (Salida de Stock)",
+      "totalItems": "Total de Artículos",
+      "totalValue": "Valor Total",
+      "lowStockItems": "Artículos con Poco Stock",
+      "outOfStock": "Sin Stock"
+    }
+  },
+  "categories": {
+    "title": "Categorías",
+    "subtitle": "Organiza tu inventario con categorías personalizadas",
+    "addCategory": "Agregar Categoría",
+    "form": {
+      "name": "Nombre de la Categoría",
+      "description": "Descripción",
+      "cancel": "Cancelar",
+      "create": "Crear Categoría"
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar"
+  }
+}

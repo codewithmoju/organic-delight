@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "StockSuite - Gestione Professionale dell'Inventario",
+    "description": "Sistema professionale di gestione inventario per aziende moderne",
+    "version": "StockSuite v2.0"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "categories": "Categorie",
+    "items": "Articoli",
+    "transactions": "Transazioni",
+    "stockLevels": "Livelli di Stock",
+    "reports": "Report",
+    "settings": "Impostazioni"
+  },
+  "common": {
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "success": "Successo",
+    "cancel": "Annulla",
+    "save": "Salva",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "add": "Aggiungi"
+  }
+}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 
 interface TourContextType {
   isTourActive: boolean;
@@ -28,29 +28,29 @@ export default function TourProvider({ children }: TourProviderProps) {
   const [isTourActive, setIsTourActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
-  const startTour = () => {
+  const startTour = useCallback(() => {
     setIsTourActive(true);
     setCurrentStep(0);
-  };
+  }, []);
 
-  const endTour = () => {
+  const endTour = useCallback(() => {
     setIsTourActive(false);
     setCurrentStep(0);
-  };
+  }, []);
 
-  const nextStep = () => {
+  const nextStep = useCallback(() => {
     setCurrentStep(prev => prev + 1);
-  };
+  }, []);
 
-  const prevStep = () => {
+  const prevStep = useCallback(() => {
     setCurrentStep(prev => Math.max(0, prev - 1));
-  };
+  }, []);
 
-  const goToStep = (step: number) => {
+  const goToStep = useCallback((step: number) => {
     setCurrentStep(step);
-  };
+  }, []);
 
-  const value: TourContextType = {
+  const value = useMemo<TourContextType>(() => ({
     isTourActive,
     currentStep,
     startTour,
@@ -58,7 +58,7 @@ export default function TourProvider({ children }: TourProviderProps) {
     nextStep,
     prevStep,
     goToStep,
-  };
+  }), [isTourActive, currentStep, startTour, endTour, nextStep, prevStep, goToStep]);
 
   return (
     <TourContext.Provider value={value}>

@@ -15,6 +15,9 @@ import { db } from '../firebase';
 import { Customer, CustomerPayment } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
 import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
+import { createCache } from './_base';
+
+const customersCache = createCache<Customer[]>(10 * 60 * 1000); // 10 minutes
 // ============================================
 // CUSTOMER CRUD OPERATIONS
 // ============================================
@@ -23,6 +26,9 @@ import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
  * Get all active customers
  */
 export async function getCustomers(): Promise<Customer[]> {
+    const cached = customersCache.get('active');
+    if (cached) return cached;
+
     const scope = getOrgScopeFilter();
     try {
         const customersRef = collection(db, 'customers');
@@ -35,12 +41,14 @@ export async function getCustomers(): Promise<Customer[]> {
         );
         const snapshot = await getDocs(q);
 
-        return snapshot.docs.map(doc => ({
+        const result = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
             created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
             updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
         })) as Customer[];
+        customersCache.set('active', result);
+        return result;
     } catch (error: any) {
         console.error('Firestore getCustomers error:', error);
 
@@ -59,7 +67,9 @@ export async function getCustomers(): Promise<Customer[]> {
                 created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
                 updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
             })) as Customer[];
-            return all.filter(c => c.is_active !== false);
+            const result = all.filter(c => c.is_active !== false);
+            customersCache.set('active', result);
+            return result;
         }
         throw error;
     }
@@ -129,6 +139,7 @@ export async function createCustomer(customerData: {
     };
 
     const docRef = await addDoc(customersRef, newCustomer);
+    customersCache.clear();
 
     return {
         id: docRef.id,
@@ -158,6 +169,7 @@ export async function updateCustomer(
         ...updates,
         updated_at: Timestamp.fromDate(new Date())
     });
+    customersCache.clear();
 }
 
 /**
@@ -173,6 +185,7 @@ export async function deactivateCustomer(customerId: string): Promise<void> {
         is_active: false,
         updated_at: Timestamp.fromDate(new Date())
     });
+    customersCache.clear();
 }
 
 /**
@@ -195,6 +208,7 @@ export async function deleteCustomer(customerId: string): Promise<void> {
         // For now, deleting the customer profile is sufficient to "remove" them.
         // Orphaned payments will remain in the system for accounting integrity.
     });
+    customersCache.clear();
 }
 
 // ============================================

@@ -14,32 +14,43 @@ import { db } from '../firebase';
 import { Category } from '../types';
 import { requireCurrentUserId } from './userScope';
 import { stampOrgId, getOrgScopeFilter } from './orgScope';
+import { createCache } from './_base';
+
+const categoriesCache = createCache<Category[]>(10 * 60 * 1000); // 10 minutes
 
 export async function getCategories(): Promise<Category[]> {
+  const cached = categoriesCache.get('all');
+  if (cached) return cached;
+
   const scope = getOrgScopeFilter();
   const categoriesRef = collection(db, 'categories');
   const q = query(categoriesRef, where(scope.field, '==', scope.value), orderBy('name'));
-  const snapshot = await getDocs(q);
 
-  const categories = [];
-  for (const docSnapshot of snapshot.docs) {
-    const category = { id: docSnapshot.id, ...docSnapshot.data() } as Category;
-
-    // Get item count for this category (exclude archived/soft-deleted items)
-    const itemsRef = collection(db, 'items');
-    const itemsQuery = query(
-      itemsRef,
-      where('category_id', '==', category.id),
+  // Fetch categories and items in parallel
+  const [categoriesSnap, itemsSnap] = await Promise.all([
+    getDocs(q),
+    getDocs(query(
+      collection(db, 'items'),
       where(scope.field, '==', scope.value),
       where('is_archived', '!=', true)
-    );
-    const itemsSnapshot = await getDocs(itemsQuery);
-    category.item_count = itemsSnapshot.size;
+    )),
+  ]);
 
-    categories.push(category);
-  }
+  // Build item count map from single items fetch
+  const countMap: Record<string, number> = {};
+  itemsSnap.forEach((itemDoc) => {
+    const catId = itemDoc.data().category_id;
+    if (catId) countMap[catId] = (countMap[catId] || 0) + 1;
+  });
 
-  return categories;
+  const result = categoriesSnap.docs.map((docSnapshot) => {
+    const category = { id: docSnapshot.id, ...docSnapshot.data() } as Category;
+    category.item_count = countMap[category.id] || 0;
+    return category;
+  });
+
+  categoriesCache.set('all', result);
+  return result;
 }
 
 export async function getCategoryById(id: string): Promise<Category> {
@@ -90,6 +101,7 @@ export async function createCategory(categoryData: {
     ...stampOrgId({}),
   });
 
+  categoriesCache.clear();
   return {
     id: docRef.id,
     ...categoryData,
@@ -134,6 +146,7 @@ export async function updateCategory(id: string, categoryData: {
   };
 
   await updateDoc(docRef, updateData);
+  categoriesCache.clear();
   return getCategoryById(id);
 }
 
@@ -157,6 +170,7 @@ export async function deleteCategory(id: string): Promise<void> {
   }
 
   await deleteDoc(doc(db, 'categories', id));
+  categoriesCache.clear();
 }
 
 export async function getCategoryItemCount(categoryId: string): Promise<number> {

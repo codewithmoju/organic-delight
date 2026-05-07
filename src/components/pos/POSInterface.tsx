@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useReactToPrint } from 'react-to-print';
 import {
-  Printer, Receipt, RotateCcw, Settings, FileText, CreditCard,
+  Printer, Receipt, RotateCcw, Settings, FileText, CreditCard, Share2,
   Building2, User, Keyboard, Search, Plus, Package,
   Camera, Scan, ShoppingCart as CartIcon, Minus,
   Trash2, X, AlertTriangle
@@ -16,6 +16,8 @@ import SplitPaymentModal, { SplitPaymentEntry } from './SplitPaymentModal';
 import { ShiftStatusBar, OpenShiftModal, CloseShiftModal, useShift } from './ShiftManager';
 import EnhancedReceiptGenerator from './EnhancedReceiptGenerator';
 import VendorListModal from '../vendors/VendorListModal';
+import SharePanel from '../documents/SharePanel';
+import type { ReceiptProps } from '../documents/types';
 import CustomerSelector from '../customers/CustomerSelector';
 import { BarcodeProduct, POSTransaction, POSSettings, BillType, Customer } from '../../lib/types';
 import { getProductByBarcode, createPOSTransaction, getPOSSettings, searchProducts, getQuickAccessProducts, toggleQuickAccessItem, getItemCurrentStock } from '../../lib/api/pos';
@@ -34,6 +36,39 @@ import { Star, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { useOfflineQueue } from '../../hooks/useOfflineQueue';
 import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
+
+function buildReceiptShareData(tx: POSTransaction, settings: POSSettings | null): ReceiptProps {
+  return {
+    variant: 'standard',
+    store: {
+      name: settings?.store_name || 'StockSuite Store',
+      address: settings?.store_address || '',
+      phone: settings?.store_phone || '',
+    },
+    documentNumber: tx.transaction_number,
+    date: tx.created_at instanceof Date ? tx.created_at : new Date(tx.created_at),
+    currency: settings?.currency || 'PKR',
+    items: tx.items.map(item => ({
+      name: item.item_name,
+      quantity: item.quantity,
+      unit: item.unit || 'pcs',
+      unit_price: item.unit_price,
+      total: item.line_total,
+    })),
+    totals: {
+      subtotal: tx.subtotal,
+      discount: tx.discount_amount || 0,
+      tax: tx.tax_amount || 0,
+      total: tx.total_amount,
+    },
+    payment: {
+      method: tx.payment_method,
+      amount_paid: tx.payment_amount,
+      change: tx.change_amount || 0,
+    },
+    customer: tx.customer_name ? { name: tx.customer_name, phone: tx.customer_phone || undefined } : undefined,
+  };
+}
 
 export default function POSInterface() {
   const { t } = useTranslation();
@@ -118,6 +153,7 @@ export default function POSInterface() {
   const [completedTransaction, setCompletedTransaction] = useState<POSTransaction | null>(null);
   const [profitDiscount, setProfitDiscount] = useState(0);
   const [priceDiscount, setPriceDiscount] = useState(0);
+  const [showShare, setShowShare] = useState(false);
 
   // Split payment
   const [isSplitPaymentOpen, setIsSplitPaymentOpen] = useState(false);
@@ -131,11 +167,19 @@ export default function POSInterface() {
   const receiptRef = useRef<HTMLDivElement>(null);
 
   // Calculations
-  const subtotal = cartItems.reduce((sum, item) => sum + item.line_total, 0);
-  const discountAmount = profitDiscount + priceDiscount;
-  const discountedSubtotal = subtotal - discountAmount;
-  const taxAmount = discountedSubtotal * (settings?.tax_rate ?? 0);
-  const total = discountedSubtotal + taxAmount;
+  const { subtotal, discountAmount, discountedSubtotal, taxAmount, total } = useMemo(() => {
+    const sub = cartItems.reduce((sum, item) => sum + item.line_total, 0);
+    const disc = profitDiscount + priceDiscount;
+    const discounted = sub - disc;
+    const tax = discounted * (settings?.tax_rate ?? 0);
+    return {
+      subtotal: sub,
+      discountAmount: disc,
+      discountedSubtotal: discounted,
+      taxAmount: tax,
+      total: discounted + tax,
+    };
+  }, [cartItems, profitDiscount, priceDiscount, settings?.tax_rate]);
 
   // Keyboard shortcuts
   usePOSShortcuts({
@@ -489,6 +533,7 @@ export default function POSInterface() {
 
   function startNewTransaction() {
     setCompletedTransaction(null);
+    setShowShare(false);
     clearCart(); // Use clearCart from hook
     resetBillState();
   }
@@ -1592,12 +1637,26 @@ export default function POSInterface() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowShare(!showShare)}
+                  className="btn-secondary flex items-center justify-center gap-2 px-3"
+                >
+                  <Share2 className="w-4 h-4" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={startNewTransaction}
                   className="btn-primary flex-1 flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" /> New Sale
                 </motion.button>
               </div>
+
+              {showShare && completedTransaction && (
+                <div className="mt-4 pt-4 border-t border-border/50">
+                  <SharePanel type="receipt" data={buildReceiptShareData(completedTransaction, settings)} />
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

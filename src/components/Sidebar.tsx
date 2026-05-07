@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const orgResolved = useAuthStore((state) => state.orgResolved);
   const orgActive = !!activeOrganization;
 
-  const navGroups = [
+  const navGroups = React.useMemo(() => [
     {
       title: t('navigation.groups.foundation'),
       items: [
@@ -94,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   ].map(group => ({
     ...group,
     items: orgActive && orgResolved ? group.items.filter(item => can(item.permission)) : group.items,
-  })).filter(group => group.items.length > 0);
+  })).filter(group => group.items.length > 0), [t, orgActive, orgResolved]);
 
   // Handle escape key to close sidebar on mobile
   React.useEffect(() => {

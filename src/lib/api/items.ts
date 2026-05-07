@@ -51,7 +51,7 @@ function derivePricing(data: any): { base_price: number; selling_price: number }
 function mapItemSnapshot(docSnapshot: DocumentSnapshot): Item {
   const data = docSnapshot.data() as any;
   const { base_price, selling_price } = derivePricing(data);
-  return {
+  const item = {
     id: docSnapshot.id,
     ...data,
     current_quantity: data.current_quantity ?? 0,
@@ -65,10 +65,21 @@ function mapItemSnapshot(docSnapshot: DocumentSnapshot): Item {
     created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now()),
     updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : new Date(data.updated_at || Date.now())
   } as Item;
+
+  // Use denormalized category_name to avoid N+1 category fetches
+  if (data.category_name && !item.category) {
+    item.category = { id: data.category_id, name: data.category_name } as any;
+  }
+
+  return item;
 }
 
 async function hydrateItemCategories(items: Item[]): Promise<Item[]> {
-  const categoryIds = [...new Set(items.map(item => item.category_id).filter(Boolean))] as string[];
+  // Skip items that already have category from denormalized category_name
+  const itemsNeedingHydration = items.filter(item => item.category_id && !item.category);
+  if (itemsNeedingHydration.length === 0) return items;
+
+  const categoryIds = [...new Set(itemsNeedingHydration.map(item => item.category_id).filter(Boolean))] as string[];
   if (categoryIds.length === 0) return items;
 
   const categoriesById: Record<string, any> = {};
@@ -99,7 +110,7 @@ async function hydrateItemCategories(items: Item[]): Promise<Item[]> {
   return items;
 }
 
-async function fetchAllItems(categoryId?: string): Promise<Item[]> {
+async function fetchAllItems(categoryId?: string, limitCount?: number): Promise<Item[]> {
   const scope = getOrgScopeFilter();
   let itemsQuery = query(collection(db, 'items'), where(scope.field, '==', scope.value));
   if (categoryId) {
@@ -117,6 +128,11 @@ async function fetchAllItems(categoryId?: string): Promise<Item[]> {
   items = await hydrateItemCategories(items);
 
   items.sort((a, b) => a.name.localeCompare(b.name));
+
+  if (limitCount) {
+    items = items.slice(0, limitCount);
+  }
+
   return items;
 }
 
@@ -127,8 +143,7 @@ export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) 
   if (cached && isCacheValid(cached.timestamp)) {
     return cached.data;
   }
-  const allItems = await fetchAllItems();
-  const items = limitCount ? allItems.slice(0, limitCount) : allItems;
+  const items = await fetchAllItems(undefined, limitCount);
   const result = { items, lastDoc: null };
   itemsCache.set(cacheKey, { data: result, timestamp: Date.now() });
   return result;
@@ -206,7 +221,6 @@ export async function createItem(itemData: {
   created_by: string;
 }): Promise<Item> {
   const userId = requireCurrentUserId();
-  console.log('Creating item in database:', itemData);
 
   // Check for duplicate item names within the same category
   const itemsRef = collection(db, 'items');
@@ -221,6 +235,15 @@ export async function createItem(itemData: {
 
   if (!existingSnapshot.empty) {
     throw new Error('An item with this name already exists in this category');
+  }
+
+  // Fetch category name for denormalization (avoids N+1 reads later)
+  let categoryName: string | null = null;
+  if (itemData.category_id) {
+    try {
+      const catDoc = await getDoc(doc(db, 'categories', itemData.category_id));
+      categoryName = catDoc.exists() ? (catDoc.data().name || null) : null;
+    } catch { /* non-critical */ }
   }
 
   const basePrice = Number(itemData.base_price ?? itemData.purchase_rate ?? 0) || 0;
@@ -240,6 +263,7 @@ export async function createItem(itemData: {
     reorder_point: itemData.reorder_point || 10,
     purchase_rate: basePrice,
     sale_rate: sellingPrice,
+    category_name: categoryName,
     created_by: userId,
     is_archived: false,
     created_at: Timestamp.fromDate(new Date()),
@@ -247,7 +271,6 @@ export async function createItem(itemData: {
     ...stampOrgId({}),
   });
 
-  console.log('Item created with ID:', docRef.id);
   // Invalidate cache
   itemsCache.clear();
   return getItem(docRef.id);
@@ -321,8 +344,18 @@ export async function updateItem(id: string, itemData: {
     0
   ) || 0;
 
+  // Stamp denormalized category_name when category changes
+  let categoryNameUpdate: { category_name?: string } = {};
+  if (itemData.category_id && itemData.category_id !== currentData?.category_id) {
+    try {
+      const catDoc = await getDoc(doc(db, 'categories', itemData.category_id));
+      categoryNameUpdate.category_name = catDoc.exists() ? (catDoc.data().name || null) : null;
+    } catch { /* non-critical */ }
+  }
+
   const updateData = {
     ...stripUndefined(itemData),
+    ...categoryNameUpdate,
     ...(hasAnyPriceUpdate ? {
       base_price: basePrice,
       selling_price: sellingPrice,

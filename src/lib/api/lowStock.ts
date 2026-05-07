@@ -14,27 +14,42 @@ import { requireCurrentUserId } from './userScope';
 import { getOrgScopeFilter } from './orgScope';
 
 /**
- * Get all items where current stock is at or below the threshold
+ * Get all items where current stock is at or below the threshold.
+ * Fetches items + all transactions in parallel, builds stock map in memory.
+ * Reduces N+1 queries to 2 total.
  */
 export async function getLowStockItems(): Promise<EnhancedItem[]> {
     const scope = getOrgScopeFilter();
-    const itemsRef = collection(db, 'items');
-    const q = query(
-        itemsRef,
-        where(scope.field, '==', scope.value),
-        where('is_archived', '!=', true)
-    );
-    const snapshot = await getDocs(q);
 
+    // Fetch items and all transactions in parallel
+    const [itemsSnap, txSnap] = await Promise.all([
+        getDocs(query(
+            collection(db, 'items'),
+            where(scope.field, '==', scope.value),
+            where('is_archived', '!=', true)
+        )),
+        getDocs(query(
+            collection(db, 'transactions'),
+            where(scope.field, '==', scope.value)
+        )),
+    ]);
+
+    // Build stock map from transactions
+    const stockMap: Record<string, number> = {};
+    txSnap.forEach((txDoc) => {
+        const t = txDoc.data();
+        const id = t.item_id;
+        if (!stockMap[id]) stockMap[id] = 0;
+        if (t.type === 'stock_in') stockMap[id] += t.quantity;
+        if (t.type === 'stock_out') stockMap[id] -= t.quantity;
+    });
+
+    // Filter items by stock threshold
     const lowStockItems: EnhancedItem[] = [];
-
-    for (const itemDoc of snapshot.docs) {
+    itemsSnap.forEach((itemDoc) => {
         const data = itemDoc.data() as Item;
-        // Get current stock
-        const currentStock = await getItemCurrentStock(itemDoc.id);
-
-        // Default threshold is 10 if not set
         const threshold = data.low_stock_threshold || 10;
+        const currentStock = Math.max(0, stockMap[itemDoc.id] || 0);
 
         if (currentStock <= threshold) {
             lowStockItems.push({
@@ -43,7 +58,7 @@ export async function getLowStockItems(): Promise<EnhancedItem[]> {
                 current_quantity: currentStock
             } as EnhancedItem);
         }
-    }
+    });
 
     return lowStockItems;
 }

@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Settings,
   Shield,
+  FileText,
   X,
 } from 'lucide-react';
 import Logo from '../ui/Logo';
@@ -48,6 +49,7 @@ const navGroups = [
     title: 'Configuration',
     items: [
       { to: '/super-admin/roles', icon: ShieldCheck, label: 'Roles' },
+      { to: '/super-admin/documents', icon: FileText, label: 'Documents' },
       { to: '/super-admin/settings', icon: Settings, label: 'Settings' },
     ],
   },

@@ -15,6 +15,9 @@ import { db } from '../firebase';
 import { Vendor, VendorPayment } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
 import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
+import { createCache } from './_base';
+
+const vendorsCache = createCache<Vendor[]>(10 * 60 * 1000); // 10 minutes
 
 // ============================================
 // VENDOR CRUD OPERATIONS
@@ -24,11 +27,12 @@ import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
  * Get all vendors with their outstanding balances
  */
 export async function getVendors(): Promise<Vendor[]> {
+    const cached = vendorsCache.get('active');
+    if (cached) return cached;
+
     const scope = getOrgScopeFilter();
     try {
         const vendorsRef = collection(db, 'vendors');
-        // Simplified query: remove 'is_active' filter from server query to avoid index requirement
-        // We'll filter client-side instead.
         const q = query(vendorsRef, where(scope.field, '==', scope.value), orderBy('name'));
         const snapshot = await getDocs(q);
 
@@ -39,7 +43,9 @@ export async function getVendors(): Promise<Vendor[]> {
             updated_at: doc.data().updated_at?.toDate() || new Date()
         })) as Vendor[];
 
-        return vendors.filter(v => v.is_active !== false);
+        const result = vendors.filter(v => v.is_active !== false);
+        vendorsCache.set('active', result);
+        return result;
     } catch (error: any) {
         console.error('Firestore getVendors error:', error);
         if (error.message?.includes('index')) {
@@ -116,6 +122,7 @@ export async function createVendor(vendorData: {
     };
 
     const docRef = await addDoc(vendorsRef, newVendor);
+    vendorsCache.clear();
 
     return {
         id: docRef.id,
@@ -145,6 +152,7 @@ export async function updateVendor(
         ...updates,
         updated_at: Timestamp.fromDate(new Date())
     });
+    vendorsCache.clear();
 }
 
 /**
@@ -160,6 +168,7 @@ export async function deactivateVendor(vendorId: string): Promise<void> {
         is_active: false,
         updated_at: Timestamp.fromDate(new Date())
     });
+    vendorsCache.clear();
 }
 
 /**
@@ -206,6 +215,7 @@ export async function deleteVendor(vendorId: string): Promise<void> {
     // Import deleteDoc dynamically to avoid circular issues
     const { deleteDoc } = await import('firebase/firestore');
     await deleteDoc(vendorRef);
+    vendorsCache.clear();
 }
 
 // ============================================

@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "StockSuite - Professionelle Lagerverwaltung",
+    "description": "Professionelles Lagerverwaltungssystem für moderne Unternehmen",
+    "version": "StockSuite v2.0"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "categories": "Kategorien",
+    "items": "Artikel",
+    "transactions": "Transaktionen",
+    "stockLevels": "Lagerbestände",
+    "reports": "Berichte",
+    "settings": "Einstellungen"
+  },
+  "auth": {
+    "login": {
+      "title": "Willkommen zurück",
+      "subtitle": "Melden Sie sich bei Ihrem StockSuite-Konto an",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort",
+      "rememberMe": "Angemeldet bleiben",
+      "forgotPassword": "Passwort vergessen?",
+      "signIn": "Anmelden",
+      "signUp": "Registrieren",
+      "noAccount": "Haben Sie noch kein Konto?",
+      "signingIn": "Anmeldung läuft..."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard-Übersicht",
+    "subtitle": "Willkommen zurück! Hier ist, was mit Ihrem Inventar passiert.",
+    "metrics": {
+      "totalStockIn": "Gesamter Wareneingang",
+      "totalStockOut": "Gesamter Warenausgang",
+      "revenueSpent": "Ausgaben (Wareneingang)",
+      "revenueEarned": "Einnahmen (Warenausgang)",
+      "totalItems": "Gesamte Artikel",
+      "totalValue": "Gesamtwert",
+      "lowStockItems": "Artikel mit niedrigem Bestand",
+      "outOfStock": "Nicht vorrätig"
+    }
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen"
+  }
+}

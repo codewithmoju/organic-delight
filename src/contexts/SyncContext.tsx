@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { toast } from 'sonner';
 import { useAuthStore } from '../lib/store';
@@ -45,7 +45,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         return () => window.removeEventListener('storage', onStorage);
     }, [storageKey]);
 
-    const syncData = async () => {
+    const syncData = useCallback(async () => {
         if (!isOnline || isSyncing) return;
         setIsSyncing(true);
 
@@ -55,7 +55,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
             if (posQueue.length > 0) {
                 // This logic is currently handled in POSInterface or useOfflineQueue.
                 // In a full implementation, we'd move the sync logic here or trigger it.
-                // For now, we'll let existing hooks handle their specific syncs, 
+                // For now, we'll let existing hooks handle their specific syncs,
                 // but this provider acts as a global monitor.
             }
 
@@ -70,17 +70,23 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         } finally {
             setIsSyncing(false);
         }
-    };
+    }, [isOnline, isSyncing, storageKey]);
 
     // Auto-sync when coming online
     useEffect(() => {
         if (isOnline && pendingChanges > 0) {
             syncData();
         }
-    }, [isOnline, pendingChanges, storageKey]);
+    }, [isOnline, pendingChanges, syncData]);
+
+    const value = useMemo<SyncContextType>(() => ({
+        isSyncing,
+        pendingChanges,
+        syncData,
+    }), [isSyncing, pendingChanges, syncData]);
 
     return (
-        <SyncContext.Provider value={{ isSyncing, pendingChanges, syncData }}>
+        <SyncContext.Provider value={value}>
             {children}
         </SyncContext.Provider>
     );

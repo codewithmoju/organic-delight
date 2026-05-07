@@ -11,6 +11,7 @@ import { resolveActiveOrganization } from './lib/auth/orgResolver';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLoader from './components/ui/AppLoader';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import type { Permission } from './lib/types/org';
 import OfflineIndicator from './components/ui/OfflineIndicator';
 
@@ -65,6 +66,7 @@ const SADataExpensesPage = lazy(() => import('./pages/super-admin/DataExpensesPa
 const SARolesPage = lazy(() => import('./pages/super-admin/RolesPage'));
 const SAAuditPage = lazy(() => import('./pages/super-admin/AuditPage'));
 const SASettingsPage = lazy(() => import('./pages/super-admin/SettingsPage'));
+const SADocumentsPage = lazy(() => import('./pages/super-admin/DocumentsPage'));
 
 // Page-level loading fallback — uses the shared AppLoader
 const LoadingFallback = ({ text }: { text: string }) => (
@@ -78,9 +80,11 @@ function Page({ component: Component, text, permission }: {
   permission?: Permission;
 }) {
   const content = (
-    <Suspense fallback={<LoadingFallback text={text} />}>
-      <Component />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingFallback text={text} />}>
+        <Component />
+      </Suspense>
+    </ErrorBoundary>
   );
   if (permission) {
     return <ProtectedRoute requiredPermission={permission}>{content}</ProtectedRoute>;
@@ -224,6 +228,7 @@ function App() {
               <Route path="/super-admin/data/expenses" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading expenses" />}><SADataExpensesPage /></Suspense></SuperAdminGuard>} />
               <Route path="/super-admin/roles" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading roles" />}><SARolesPage /></Suspense></SuperAdminGuard>} />
               <Route path="/super-admin/audit" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading audit" />}><SAAuditPage /></Suspense></SuperAdminGuard>} />
+              <Route path="/super-admin/documents" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading documents" />}><SADocumentsPage /></Suspense></SuperAdminGuard>} />
               <Route path="/super-admin/settings" element={<SuperAdminGuard><Suspense fallback={<LoadingFallback text="Loading settings" />}><SASettingsPage /></Suspense></SuperAdminGuard>} />
             </Route>
 

@@ -1,5 +1,6 @@
 import { useAuthStore } from '../store';
 import { requireCurrentUserId } from './userScope';
+export { stripUndefined } from '../utils/firestore';
 
 const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED !== 'false';
 
@@ -30,13 +31,6 @@ export function stampOrgId<T extends Record<string, any>>(data: T): T & { organi
   const orgId = getOrgIdOrNull();
   if (!orgId) return data;
   return { ...data, organization_id: orgId };
-}
-
-/**
- * Strips undefined values from an object so Firestore doesn't reject them.
- */
-export function stripUndefined<T extends Record<string, any>>(obj: T): T {
-  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as T;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { POSTransaction, POSSettings } from '../types';
 import { formatCurrency } from './notifications';
 import { format } from 'date-fns';
+import { escapeHtml } from './htmlEscape';
 
 export interface ReceiptData {
   transaction: POSTransaction;
@@ -71,13 +72,13 @@ function centerText(text: string, width: number): string {
 
 export function generateReceiptHTML(data: ReceiptData): string {
   const { transaction, settings } = data;
-  
+
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Receipt - ${transaction.transaction_number}</title>
+      <title>Receipt - ${escapeHtml(transaction.transaction_number)}</title>
       <style>
         body {
           font-family: 'Courier New', monospace;
@@ -103,16 +104,16 @@ export function generateReceiptHTML(data: ReceiptData): string {
     </head>
     <body>
       <div class="center">
-        <div class="bold large">${settings.store_name}</div>
-        <div>${settings.store_address}</div>
-        <div>${settings.store_phone}</div>
+        <div class="bold large">${escapeHtml(settings.store_name)}</div>
+        <div>${escapeHtml(settings.store_address)}</div>
+        <div>${escapeHtml(settings.store_phone)}</div>
       </div>
-      
+
       <div class="separator"></div>
-      
+
       <div class="flex">
         <span>Transaction #:</span>
-        <span class="bold">${transaction.transaction_number}</span>
+        <span class="bold">${escapeHtml(transaction.transaction_number)}</span>
       </div>
       <div class="flex">
         <span>Date:</span>
@@ -120,32 +121,32 @@ export function generateReceiptHTML(data: ReceiptData): string {
       </div>
       <div class="flex">
         <span>Cashier:</span>
-        <span>${transaction.cashier_id}</span>
+        <span>${escapeHtml(transaction.cashier_id)}</span>
       </div>
       ${transaction.customer_name ? `
       <div class="flex">
         <span>Customer:</span>
-        <span>${transaction.customer_name}</span>
+        <span>${escapeHtml(transaction.customer_name)}</span>
       </div>
       ` : ''}
-      
+
       <div class="separator"></div>
-      
+
       ${transaction.items.map(item => `
         <div class="item">
           <div class="flex">
-            <span style="flex: 1;">${item.item_name}</span>
+            <span style="flex: 1;">${escapeHtml(item.item_name)}</span>
             <span>${formatCurrency(item.line_total)}</span>
           </div>
           <div class="item-details">
             ${item.quantity} x ${formatCurrency(item.unit_price)}
-            ${item.barcode ? ` #${item.barcode}` : ''}
+            ${item.barcode ? ` #${escapeHtml(item.barcode)}` : ''}
           </div>
         </div>
       `).join('')}
-      
+
       <div class="separator"></div>
-      
+
       <div class="flex">
         <span>Subtotal:</span>
         <span>${formatCurrency(transaction.subtotal)}</span>
@@ -164,12 +165,12 @@ export function generateReceiptHTML(data: ReceiptData): string {
         <span>TOTAL:</span>
         <span>${formatCurrency(transaction.total_amount)}</span>
       </div>
-      
+
       <div class="separator"></div>
-      
+
       <div class="flex">
         <span>Payment Method:</span>
-        <span class="bold">${transaction.payment_method.toUpperCase()}</span>
+        <span class="bold">${escapeHtml(transaction.payment_method.toUpperCase())}</span>
       </div>
       <div class="flex">
         <span>Amount Paid:</span>
@@ -181,11 +182,11 @@ export function generateReceiptHTML(data: ReceiptData): string {
         <span>${formatCurrency(transaction.change_amount)}</span>
       </div>
       ` : ''}
-      
+
       <div class="separator"></div>
-      
+
       <div class="center">
-        <div>${settings.receipt_footer_message}</div>
+        <div>${escapeHtml(settings.receipt_footer_message)}</div>
         <div style="margin-top: 10px; font-size: 10px; color: #666;">
           Powered by StockSuite POS
         </div>

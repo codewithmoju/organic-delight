@@ -155,8 +155,7 @@ export function addResourceHints() {
   
   // Preconnect to external domains
   const preconnectDomains = [
-    'https://fonts.googleapis.com',
-    'https://images.unsplash.com'
+    'https://fonts.googleapis.com'
   ];
   
   preconnectDomains.forEach(domain => {
