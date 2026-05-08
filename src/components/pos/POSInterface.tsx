@@ -14,7 +14,7 @@ import ConfirmDialog from '../ui/ConfirmDialog';
 import PaymentModal from './PaymentModal';
 import SplitPaymentModal, { SplitPaymentEntry } from './SplitPaymentModal';
 import { ShiftStatusBar, OpenShiftModal, CloseShiftModal, useShift } from './ShiftManager';
-import EnhancedReceiptGenerator from './EnhancedReceiptGenerator';
+import ReceiptTemplate from '../documents/templates/ReceiptTemplate';
 import VendorListModal from '../vendors/VendorListModal';
 import SharePanel from '../documents/SharePanel';
 import type { ReceiptProps } from '../documents/types';
@@ -37,7 +37,7 @@ import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { useOfflineQueue } from '../../hooks/useOfflineQueue';
 import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
-function buildReceiptShareData(tx: POSTransaction, settings: POSSettings | null): ReceiptProps {
+function buildReceiptShareData(tx: POSTransaction, settings: POSSettings | null, cashierName?: string): ReceiptProps {
   return {
     variant: 'standard',
     store: {
@@ -67,6 +67,7 @@ function buildReceiptShareData(tx: POSTransaction, settings: POSSettings | null)
       change: tx.change_amount || 0,
     },
     customer: tx.customer_name ? { name: tx.customer_name, phone: tx.customer_phone || undefined } : undefined,
+    cashierName: cashierName || tx.cashier_id || undefined,
   };
 }
 
@@ -1654,7 +1655,7 @@ export default function POSInterface() {
 
               {showShare && completedTransaction && (
                 <div className="mt-4 pt-4 border-t border-border/50">
-                  <SharePanel type="receipt" data={buildReceiptShareData(completedTransaction, settings)} />
+                  <SharePanel type="receipt" data={buildReceiptShareData(completedTransaction, settings, profile?.full_name)} />
                 </div>
               )}
             </motion.div>
@@ -1665,11 +1666,9 @@ export default function POSInterface() {
       {/* Hidden Receipt for Printing */}
       <div className="hidden">
         {completedTransaction && (
-          <EnhancedReceiptGenerator
+          <ReceiptTemplate
             ref={receiptRef}
-            transaction={completedTransaction}
-            settings={settings}
-            variant="standard"
+            {...buildReceiptShareData(completedTransaction, settings, profile?.full_name)}
           />
         )}
       </div>

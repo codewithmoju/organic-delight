@@ -18,6 +18,10 @@ export interface DiscountType {
 
 const COLLECTION_NAME = 'discount_types';
 
+// TTL cache
+const DISCOUNT_TYPES_TTL = 10 * 60 * 1000;
+let discountTypesCache: { data: DiscountType[]; at: number } | null = null;
+
 const DEFAULT_DISCOUNT_TYPES = [
     { id: 'profit', name: 'Profit Discount', slug: 'profit', active: true, order: 1 },
     { id: 'price', name: 'Price Discount', slug: 'price', active: true, order: 2 },
@@ -25,6 +29,10 @@ const DEFAULT_DISCOUNT_TYPES = [
 ] as const;
 
 export async function getDiscountTypes(): Promise<DiscountType[]> {
+    if (discountTypesCache && Date.now() - discountTypesCache.at < DISCOUNT_TYPES_TTL) {
+        return discountTypesCache.data;
+    }
+
     try {
         const typesRef = collection(db, COLLECTION_NAME);
         const q = query(typesRef, orderBy('order'));
@@ -34,19 +42,22 @@ export async function getDiscountTypes(): Promise<DiscountType[]> {
             console.log('No discount types found, seeding defaults...');
             await seedDiscountTypes();
             const newSnapshot = await getDocs(q);
-            return newSnapshot.docs.map(doc => ({
+            const types = newSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as DiscountType));
+            discountTypesCache = { data: types, at: Date.now() };
+            return types;
         }
 
-        return snapshot.docs.map(doc => ({
+        const types = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         } as DiscountType));
+        discountTypesCache = { data: types, at: Date.now() };
+        return types;
     } catch (error) {
         console.error('Error fetching discount types:', error);
-        // Fallback
         return DEFAULT_DISCOUNT_TYPES.map(d => ({ ...d }));
     }
 }
