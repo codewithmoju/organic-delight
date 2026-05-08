@@ -1,355 +1,150 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import type {
-  DocumentType,
-  ReceiptProps,
-  QuotationProps,
-  PurchaseInvoiceProps,
-  CustomerStatementProps,
-  VendorStatementProps,
-  CreditNoteProps,
-  BarcodeLabelProps,
-} from '../../components/documents/types';
+import type { DocumentType } from '../../components/documents/types';
+import {
+  ReceiptTemplate,
+  QuotationTemplate,
+  PurchaseInvoiceTemplate,
+  CustomerStatementTemplate,
+  VendorStatementTemplate,
+  CreditNoteTemplate,
+} from '../../components/documents';
 
-function fmt(amount: number, currency = 'PKR'): string {
-  return `${currency} ${amount.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
+const templateMap: Record<string, React.ComponentType<any>> = {
+  'receipt': ReceiptTemplate,
+  'quotation': QuotationTemplate,
+  'purchase-invoice': PurchaseInvoiceTemplate,
+  'customer-statement': CustomerStatementTemplate,
+  'vendor-statement': VendorStatementTemplate,
+  'credit-note': CreditNoteTemplate,
+};
 
-function fmtDate(date: Date): string {
-  return date.toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-function addHeader(doc: jsPDF, storeName: string, title: string, docNumber: string, date: Date, y: number): number {
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text(storeName, 105, y, { align: 'center' });
-  y += 8;
-
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(14, 165, 233); // sky-500
-  doc.text(title, 105, y, { align: 'center' });
-  doc.setTextColor(0);
-  y += 8;
-
-  doc.setFontSize(10);
-  doc.text(`${docNumber}  |  ${fmtDate(date)}`, 105, y, { align: 'center' });
-  y += 4;
-
-  doc.setDrawColor(14, 165, 233);
-  doc.setLineWidth(0.5);
-  doc.line(20, y, 190, y);
-  y += 6;
-  return y;
-}
-
-function addItemsTable(doc: jsPDF, items: { name: string; quantity: number; unit: string; unit_price: number; total: number }[], currency: string, y: number): number {
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Item', 20, y);
-  doc.text('Qty', 120, y);
-  doc.text('Price', 140, y);
-  doc.text('Total', 170, y, { align: 'right' });
-  y += 2;
-  doc.setDrawColor(200);
-  doc.line(20, y, 190, y);
-  y += 4;
-
-  doc.setFont('helvetica', 'normal');
-  items.forEach(item => {
-    doc.text(item.name.substring(0, 40), 20, y);
-    doc.text(`${item.quantity} ${item.unit}`, 120, y);
-    doc.text(fmt(item.unit_price, currency), 140, y);
-    doc.text(fmt(item.total, currency), 190, y, { align: 'right' });
-    y += 5;
-  });
-
-  doc.setDrawColor(200);
-  doc.line(20, y, 190, y);
-  y += 4;
-  return y;
-}
-
-function addTotals(doc: jsPDF, totals: { subtotal: number; discount?: number; tax?: number; total: number }, currency: string, y: number): number {
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-
-  doc.text('Subtotal:', 140, y);
-  doc.text(fmt(totals.subtotal, currency), 190, y, { align: 'right' });
-  y += 5;
-
-  if (totals.discount && totals.discount > 0) {
-    doc.text('Discount:', 140, y);
-    doc.text(`-${fmt(totals.discount, currency)}`, 190, y, { align: 'right' });
-    y += 5;
-  }
-  if (totals.tax && totals.tax > 0) {
-    doc.text('Tax:', 140, y);
-    doc.text(fmt(totals.tax, currency), 190, y, { align: 'right' });
-    y += 5;
+/**
+ * Renders a document template off-screen and captures it as a PDF.
+ * Uses the same React templates as the image generator for visual consistency.
+ */
+export async function generateDocumentPDF(type: DocumentType, data: any): Promise<jsPDF> {
+  const Template = templateMap[type];
+  if (!Template) {
+    throw new Error(`No template found for document type: ${type}`);
   }
 
-  doc.setDrawColor(14, 165, 233);
-  doc.setLineWidth(0.5);
-  doc.line(140, y, 190, y);
-  y += 5;
+  // Create off-screen container
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.zIndex = '-1';
+  document.body.appendChild(container);
 
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Total:', 140, y);
-  doc.text(fmt(totals.total, currency), 190, y, { align: 'right' });
-  y += 8;
-  return y;
-}
+  const root = createRoot(container);
 
-function addFooter(doc: jsPDF, y: number, notes?: string) {
-  doc.setDrawColor(200);
-  doc.line(20, y, 190, y);
-  y += 6;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Thank you for your business!', 105, y, { align: 'center' });
-  y += 4;
-  doc.setFontSize(8);
-  doc.setTextColor(150);
-  doc.text('Powered by StockSuite', 105, y, { align: 'center' });
-  doc.setTextColor(0);
-  if (notes) {
-    y += 6;
-    doc.setFontSize(9);
-    doc.text(`Notes: ${notes}`, 20, y);
-  }
-}
+  try {
+    // Render template with standard variant and color mode
+    await new Promise<void>((resolve) => {
+      root.render(
+        React.createElement(Template, {
+          ...data,
+          variant: 'standard',
+          colorMode: 'color',
+          ref: () => resolve(),
+        })
+      );
+      // Fallback resolve in case ref callback doesn't fire
+      setTimeout(resolve, 500);
+    });
 
-function generateReceiptPDF(data: ReceiptProps): jsPDF {
-  const doc = new jsPDF();
-  const currency = data.currency || 'PKR';
-  let y = 20;
+    // Wait for fonts and layout
+    await new Promise((r) => setTimeout(r, 200));
+    await document.fonts.ready;
 
-  y = addHeader(doc, data.store.name, 'Sales Receipt', data.documentNumber, data.date, y);
-
-  if (data.customer) {
-    doc.setFontSize(10);
-    doc.text(`Customer: ${data.customer.name}`, 20, y);
-    y += 5;
-  }
-  if (data.cashierName) {
-    doc.text(`Cashier: ${data.cashierName}`, 20, y);
-    y += 6;
-  }
-
-  y = addItemsTable(doc, data.items, currency, y);
-  y = addTotals(doc, data.totals, currency, y);
-
-  doc.setFontSize(10);
-  doc.text(`Payment: ${data.payment.method.replace('_', ' ')}`, 20, y);
-  y += 5;
-  doc.text(`Amount Paid: ${fmt(data.payment.amount_paid, currency)}`, 20, y);
-  if (data.payment.change) {
-    y += 5;
-    doc.text(`Change: ${fmt(data.payment.change, currency)}`, 20, y);
-  }
-
-  addFooter(doc, y + 6, data.notes);
-  return doc;
-}
-
-function generateQuotationPDF(data: QuotationProps): jsPDF {
-  const doc = new jsPDF();
-  const currency = data.currency || 'PKR';
-  let y = 20;
-
-  y = addHeader(doc, data.store.name, 'Quotation', data.documentNumber, data.date, y);
-
-  doc.setFontSize(10);
-  doc.text(`For: ${data.customer.name}`, 20, y);
-  y += 5;
-  if (data.validUntil) {
-    doc.text(`Valid until: ${fmtDate(data.validUntil)}`, 20, y);
-    y += 6;
-  }
-
-  y = addItemsTable(doc, data.items, currency, y);
-  y = addTotals(doc, data.totals, currency, y);
-
-  if (data.terms) {
-    doc.setFontSize(9);
-    doc.text(`Terms: ${data.terms}`, 20, y);
-  }
-
-  addFooter(doc, y + 6, data.notes);
-  return doc;
-}
-
-function generatePurchaseInvoicePDF(data: PurchaseInvoiceProps): jsPDF {
-  const doc = new jsPDF();
-  const currency = data.currency || 'PKR';
-  let y = 20;
-
-  y = addHeader(doc, data.store.name, 'Purchase Invoice', data.documentNumber, data.date, y);
-
-  doc.setFontSize(10);
-  doc.text(`Vendor: ${data.vendor.name}`, 20, y);
-  y += 5;
-  doc.text(`Status: ${data.paymentStatus.toUpperCase()}`, 20, y);
-  y += 6;
-
-  y = addItemsTable(doc, data.items, currency, y);
-  y = addTotals(doc, data.totals, currency, y);
-
-  if (data.paidAmount !== undefined) {
-    doc.text(`Paid: ${fmt(data.paidAmount, currency)}`, 20, y);
-    y += 5;
-  }
-  if (data.pendingAmount !== undefined) {
-    doc.text(`Pending: ${fmt(data.pendingAmount, currency)}`, 20, y);
-  }
-
-  addFooter(doc, y + 6, data.notes);
-  return doc;
-}
-
-function generateCustomerStatementPDF(data: CustomerStatementProps): jsPDF {
-  const doc = new jsPDF();
-  const currency = data.currency || 'PKR';
-  let y = 20;
-
-  y = addHeader(doc, data.store.name, 'Customer Statement', data.documentNumber, data.date, y);
-
-  doc.setFontSize(10);
-  doc.text(`Customer: ${data.customer.name}`, 20, y);
-  y += 5;
-  doc.text(`Period: ${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}`, 20, y);
-  y += 8;
-
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Opening Balance: ${fmt(data.openingBalance, currency)}`, 20, y);
-  y += 5;
-  doc.text(`Closing Balance: ${fmt(data.closingBalance, currency)}`, 20, y);
-  y += 8;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text('Date', 20, y);
-  doc.text('Description', 50, y);
-  doc.text('Debit', 130, y);
-  doc.text('Credit', 150, y);
-  doc.text('Balance', 175, y, { align: 'right' });
-  y += 4;
-  doc.line(20, y, 190, y);
-  y += 4;
-
-  doc.setFont('helvetica', 'normal');
-  data.ledgerEntries.forEach(entry => {
-    doc.text(fmtDate(entry.date), 20, y);
-    doc.text(entry.description.substring(0, 30), 50, y);
-    doc.text(entry.debit > 0 ? fmt(entry.debit, currency) : '-', 130, y);
-    doc.text(entry.credit > 0 ? fmt(entry.credit, currency) : '-', 150, y);
-    doc.text(fmt(entry.balance, currency), 190, y, { align: 'right' });
-    y += 5;
-    if (y > 270) { doc.addPage(); y = 20; }
-  });
-
-  addFooter(doc, y + 4, data.notes);
-  return doc;
-}
-
-function generateVendorStatementPDF(data: VendorStatementProps): jsPDF {
-  const doc = new jsPDF();
-  const currency = data.currency || 'PKR';
-  let y = 20;
-
-  y = addHeader(doc, data.store.name, 'Vendor Statement', data.documentNumber, data.date, y);
-
-  doc.setFontSize(10);
-  doc.text(`Vendor: ${data.vendor.name}`, 20, y);
-  y += 5;
-  doc.text(`Period: ${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}`, 20, y);
-  y += 8;
-
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Opening Balance: ${fmt(data.openingBalance, currency)}`, 20, y);
-  y += 5;
-  doc.text(`Amount Due: ${fmt(data.closingBalance, currency)}`, 20, y);
-  y += 8;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text('Date', 20, y);
-  doc.text('Description', 50, y);
-  doc.text('Debit', 130, y);
-  doc.text('Credit', 150, y);
-  doc.text('Balance', 175, y, { align: 'right' });
-  y += 4;
-  doc.line(20, y, 190, y);
-  y += 4;
-
-  doc.setFont('helvetica', 'normal');
-  data.ledgerEntries.forEach(entry => {
-    doc.text(fmtDate(entry.date), 20, y);
-    doc.text(entry.description.substring(0, 30), 50, y);
-    doc.text(entry.debit > 0 ? fmt(entry.debit, currency) : '-', 130, y);
-    doc.text(entry.credit > 0 ? fmt(entry.credit, currency) : '-', 150, y);
-    doc.text(fmt(entry.balance, currency), 190, y, { align: 'right' });
-    y += 5;
-    if (y > 270) { doc.addPage(); y = 20; }
-  });
-
-  addFooter(doc, y + 4, data.notes);
-  return doc;
-}
-
-function generateCreditNotePDF(data: CreditNoteProps): jsPDF {
-  const doc = new jsPDF();
-  const currency = data.currency || 'PKR';
-  let y = 20;
-
-  y = addHeader(doc, data.store.name, 'Credit Note', data.documentNumber, data.date, y);
-
-  doc.setFontSize(10);
-  doc.text(`Customer: ${data.customer.name}`, 20, y);
-  y += 5;
-  if (data.originalInvoiceNumber) {
-    doc.text(`Ref: ${data.originalInvoiceNumber}`, 20, y);
-    y += 6;
-  }
-
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(220, 38, 38); // red-600
-  doc.text(`Credit Amount: ${fmt(data.creditAmount, currency)}`, 105, y, { align: 'center' });
-  doc.setTextColor(0);
-  y += 10;
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Reason: ${data.reason}`, 20, y);
-  y += 8;
-
-  y = addItemsTable(doc, data.items, currency, y);
-  y = addTotals(doc, data.totals, currency, y);
-
-  addFooter(doc, y, data.notes);
-  return doc;
-}
-
-export function generateDocumentPDF(type: DocumentType, data: any): jsPDF {
-  switch (type) {
-    case 'receipt': return generateReceiptPDF(data);
-    case 'quotation': return generateQuotationPDF(data);
-    case 'purchase-invoice': return generatePurchaseInvoicePDF(data);
-    case 'customer-statement': return generateCustomerStatementPDF(data);
-    case 'vendor-statement': return generateVendorStatementPDF(data);
-    case 'credit-note': return generateCreditNotePDF(data);
-    default: {
-      const doc = new jsPDF();
-      doc.text('Document', 105, 100, { align: 'center' });
-      return doc;
+    const element = container.firstElementChild as HTMLElement;
+    if (!element) {
+      throw new Error('Template render failed — no element found');
     }
+
+    // Capture with html2canvas
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+    });
+
+    // Convert canvas to PDF
+    const imgData = canvas.toDataURL('image/png', 0.95);
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+
+    // A4 dimensions in mm
+    const pdfWidth = 210;
+    const pdfHeight = 297;
+
+    // Scale image to fit A4 width with margins
+    const margin = 10; // mm
+    const contentWidth = pdfWidth - margin * 2;
+    const ratio = contentWidth / (imgWidth / 2); // divide by 2 because scale: 2
+    const scaledHeight = (imgHeight / 2) * ratio;
+
+    const doc = new jsPDF({
+      orientation: scaledHeight > pdfHeight ? 'portrait' : 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    // If content is taller than one page, split across pages
+    if (scaledHeight <= pdfHeight - margin * 2) {
+      // Fits on one page
+      doc.addImage(imgData, 'PNG', margin, margin, contentWidth, scaledHeight);
+    } else {
+      // Multi-page: slice the canvas into page-sized chunks
+      const pageContentHeight = pdfHeight - margin * 2; // usable height per page in mm
+      const pixelsPerMm = imgWidth / contentWidth; // pixels per mm (at scale 2)
+      const pagePixelHeight = pageContentHeight * pixelsPerMm; // pixels per page
+
+      let sourceY = 0;
+      let pageNumber = 0;
+
+      while (sourceY < imgHeight) {
+        if (pageNumber > 0) {
+          doc.addPage();
+        }
+
+        const sliceHeight = Math.min(pagePixelHeight, imgHeight - sourceY);
+
+        // Create a canvas slice for this page
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = imgWidth;
+        pageCanvas.height = sliceHeight;
+        const ctx = pageCanvas.getContext('2d')!;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, imgWidth, sliceHeight);
+        ctx.drawImage(canvas, 0, sourceY, imgWidth, sliceHeight, 0, 0, imgWidth, sliceHeight);
+
+        const pageImgData = pageCanvas.toDataURL('image/png', 0.95);
+        const pageScaledHeight = (sliceHeight / 2) * ratio;
+        doc.addImage(pageImgData, 'PNG', margin, margin, contentWidth, pageScaledHeight);
+
+        sourceY += sliceHeight;
+        pageNumber++;
+      }
+    }
+
+    return doc;
+  } finally {
+    root.unmount();
+    document.body.removeChild(container);
   }
 }
 
-export function downloadDocumentPDF(type: DocumentType, data: any, filename?: string): void {
-  const doc = generateDocumentPDF(type, data);
+/**
+ * Generate PDF and trigger download.
+ */
+export async function downloadDocumentPDF(type: DocumentType, data: any, filename?: string): Promise<void> {
+  const doc = await generateDocumentPDF(type, data);
   const name = filename || `${type}-${data.documentNumber || 'document'}.pdf`;
   doc.save(name);
 }

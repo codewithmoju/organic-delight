@@ -20,16 +20,7 @@ const PurchaseInvoiceTemplate = forwardRef<HTMLDivElement, PurchaseInvoiceProps>
   const formattedDate = date instanceof Date ? date.toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' }) : String(date);
   const formattedDueDate = dueDate instanceof Date ? dueDate.toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' }) : null;
 
-  const statusStyles: Record<string, { bg: string; border: string; text: string }> = isColor ? {
-    paid: { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
-    partial: { bg: '#fef9c3', border: '#f59e0b', text: '#854d0e' },
-    pending: { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' },
-  } : {
-    paid: { bg: '#f0f0f0', border: '#000', text: '#000' },
-    partial: { bg: '#f0f0f0', border: '#666', text: '#333' },
-    pending: { bg: '#f0f0f0', border: '#000', text: '#000' },
-  };
-  const status = statusStyles[paymentStatus] || statusStyles.pending;
+  const statusColor = paymentStatus === 'paid' ? (isColor ? '#16a34a' : '#000') : paymentStatus === 'partial' ? (isColor ? '#f59e0b' : '#555') : (isColor ? '#ef4444' : '#000');
 
   return (
     <DocumentShell ref={ref} variant={variant} colorMode={cm}>
@@ -39,20 +30,20 @@ const PurchaseInvoiceTemplate = forwardRef<HTMLDivElement, PurchaseInvoiceProps>
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         fontSize: isThermal ? '10px' : '12px', margin: isThermal ? '4px 0' : '8px 0',
       }}>
-        <span style={{ opacity: 0.7 }}>Invoice: {documentNumber}</span>
-        <span style={{ opacity: 0.7 }}>{formattedDate}</span>
+        <span style={{ color: '#6b7280' }}>Invoice: {documentNumber}</span>
+        <span style={{ color: '#6b7280' }}>{formattedDate}</span>
       </div>
 
       <div style={{
         display: 'inline-block',
-        padding: isThermal ? '2px 6px' : '5px 14px',
-        borderRadius: '9999px',
-        backgroundColor: isColor ? status.bg : '#f0f0f0',
-        border: isColor ? `1px solid ${status.border}` : `1px solid ${isColor ? status.border : '#000'}`,
-        color: status.text,
-        fontSize: isThermal ? '10px' : '12px', fontWeight: 700,
+        padding: '4px 12px',
+        borderRadius: '6px',
+        backgroundColor: isColor ? '#f9fafb' : '#f0f0f0',
+        border: `1px solid ${isColor ? '#e5e7eb' : '#ccc'}`,
+        color: statusColor,
+        fontSize: '12px', fontWeight: 700,
         textTransform: 'uppercase', letterSpacing: '0.05em',
-        marginBottom: isThermal ? '4px' : '10px',
+        marginBottom: '10px',
       }}>
         {paymentStatus}
       </div>
@@ -64,25 +55,25 @@ const PurchaseInvoiceTemplate = forwardRef<HTMLDivElement, PurchaseInvoiceProps>
       {(paymentStatus === 'partial' || paymentStatus === 'pending') && (
         <div style={{
           margin: isThermal ? '4px 0' : '12px 0',
-          padding: isThermal ? '0' : '14px',
-          backgroundColor: isThermal ? 'transparent' : (isColor ? '#FFFBF5' : '#f5f5f5'),
-          borderRadius: isThermal ? 0 : '8px',
-          borderLeft: isThermal ? 'none' : `4px solid ${isColor ? '#F59E0B' : '#000'}`,
+          padding: isThermal ? '0' : '12px 14px',
+          borderRadius: '8px',
+          backgroundColor: '#f9fafb',
+          border: '1px solid #e5e7eb',
         }}>
           {paidAmount !== undefined && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: isThermal ? '11px' : '14px', padding: '3px 0' }}>
-              <span>Paid</span>
-              <span style={{ color: isColor ? '#166534' : '#000', fontWeight: 700 }}>{formatCurrency(paidAmount, currency)}</span>
+              <span style={{ color: '#6b7280' }}>Paid</span>
+              <span style={{ fontWeight: 700 }}>{formatCurrency(paidAmount, currency)}</span>
             </div>
           )}
           {pendingAmount !== undefined && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: isThermal ? '11px' : '14px', padding: '3px 0' }}>
-              <span>Pending</span>
-              <span style={{ color: isColor ? '#991b1b' : '#000', fontWeight: 700 }}>{formatCurrency(pendingAmount, currency)}</span>
+              <span style={{ color: '#6b7280' }}>Pending</span>
+              <span style={{ fontWeight: 700, color: isColor ? '#ef4444' : '#000' }}>{formatCurrency(pendingAmount, currency)}</span>
             </div>
           )}
           {formattedDueDate && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: isThermal ? '10px' : '12px', padding: '3px 0', opacity: 0.7 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: isThermal ? '10px' : '12px', padding: '3px 0', color: '#9ca3af' }}>
               <span>Due Date</span><span>{formattedDueDate}</span>
             </div>
           )}

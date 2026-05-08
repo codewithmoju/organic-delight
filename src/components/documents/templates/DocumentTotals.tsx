@@ -41,19 +41,17 @@ export default function DocumentTotals({ variant, colorMode = 'color', totals, c
     );
   }
 
-  const accentBorder = isColor ? '#FB923C' : '#000';
-  const totalColor = isColor ? '#EA580C' : '#000';
-  const labelColor = isColor ? '#9A3412' : '#333';
+  const accentColor = isColor ? '#F97316' : '#000';
 
   const row = (label: string, value: string, bold = false) => (
     <div style={{
       display: 'flex', justifyContent: 'space-between',
       padding: '5px 0', fontWeight: bold ? 700 : 400,
       fontSize: bold ? '18px' : '14px',
-      borderTop: bold ? `2px solid ${accentBorder}` : undefined,
+      borderTop: bold ? `2px solid ${accentColor}` : undefined,
       paddingTop: bold ? '10px' : undefined,
       marginTop: bold ? '6px' : undefined,
-      color: bold ? totalColor : labelColor,
+      color: bold ? accentColor : '#374151',
     }}>
       <span>{label}</span>
       <span>{value}</span>

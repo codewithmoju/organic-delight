@@ -23,31 +23,31 @@ const CreditNoteTemplate = forwardRef<HTMLDivElement, CreditNoteProps>((props, r
     <DocumentShell ref={ref} variant={variant} colorMode={cm}>
       <DocumentHeader variant={variant} colorMode={cm} store={store} title="Credit Note" />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: isThermal ? '10px' : '12px', margin: isThermal ? '4px 0' : '8px 0', opacity: 0.7 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: isThermal ? '10px' : '12px', margin: isThermal ? '4px 0' : '8px 0', color: '#6b7280' }}>
         <span>CN: {documentNumber}</span>
         <span>{formattedDate}</span>
       </div>
 
       {originalInvoiceNumber && (
-        <div style={{ fontSize: isThermal ? '10px' : '12px', opacity: 0.7, marginBottom: isThermal ? '2px' : '8px' }}>
+        <div style={{ fontSize: isThermal ? '10px' : '12px', color: '#6b7280', marginBottom: isThermal ? '2px' : '8px' }}>
           Ref: {originalInvoiceNumber}
         </div>
       )}
 
-      {/* Prominent credit amount */}
+      {/* Credit amount */}
       <div style={{
         textAlign: 'center', margin: isThermal ? '6px 0' : '16px 0',
         padding: isThermal ? '6px 4px' : '20px',
-        backgroundColor: isThermal ? 'transparent' : (isColor ? '#FEF2F2' : '#f5f5f5'),
-        border: isThermal ? '2px solid #000' : `2px solid ${isColor ? '#EF4444' : '#000'}`,
-        borderRadius: isThermal ? 0 : '10px',
+        borderRadius: '8px',
+        backgroundColor: isColor ? '#fef2f2' : '#f5f5f5',
+        border: `1px solid ${isColor ? '#fecaca' : '#ccc'}`,
       }}>
-        <div style={{ fontSize: isThermal ? '10px' : '12px', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.6, fontWeight: 600 }}>
+        <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6b7280', fontWeight: 600 }}>
           Credit Amount
         </div>
         <div style={{
-          fontSize: isThermal ? '18px' : '32px', fontWeight: 800,
-          color: isColor ? '#DC2626' : '#000',
+          fontSize: isThermal ? '18px' : '30px', fontWeight: 800,
+          color: isColor ? '#ef4444' : '#000',
           marginTop: '4px',
         }}>
           {formatCurrency(creditAmount, currency)}
@@ -59,12 +59,13 @@ const CreditNoteTemplate = forwardRef<HTMLDivElement, CreditNoteProps>((props, r
       <div style={{
         margin: isThermal ? '4px 0' : '10px 0',
         padding: isThermal ? '0' : '12px 14px',
-        borderRadius: isThermal ? 0 : '8px',
-        backgroundColor: isThermal ? 'transparent' : (isColor ? '#FFFBF5' : '#f5f5f5'),
-        borderLeft: isThermal ? 'none' : `3px solid ${isColor ? '#F59E0B' : '#000'}`,
+        borderRadius: '8px',
+        backgroundColor: '#f9fafb',
+        border: '1px solid #e5e7eb',
         fontSize: isThermal ? '11px' : '13px',
+        color: '#374151',
       }}>
-        <strong style={{ color: isColor ? '#9A3412' : '#333' }}>Reason:</strong> {reason}
+        <strong style={{ color: '#6b7280' }}>Reason:</strong> {reason}
       </div>
 
       <DocumentItemsTable variant={variant} colorMode={cm} items={items} currency={currency} />

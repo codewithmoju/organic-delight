@@ -1,17 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, X } from 'lucide-react';
+import { FileText, Plus, X, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { recordCustomerTransaction } from '../../lib/api/customers';
 import { useAuthStore } from '../../lib/store';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import SharePanel from '../documents/SharePanel';
+import type { CreditNoteProps } from '../documents/types';
+import { getPOSSettings } from '../../lib/api/pos';
+import type { POSSettings } from '../../lib/types';
 
 interface CustomerCreditNoteProps {
   customerId: string;
   customerName: string;
   onIssued: () => void;
+}
+
+function buildCreditNoteData(
+  amount: number,
+  reason: string,
+  customerName: string,
+  settings: POSSettings | null
+): CreditNoteProps {
+  return {
+    variant: 'standard',
+    store: {
+      name: settings?.store_name || 'StockSuite Store',
+      address: settings?.store_address || '',
+      phone: settings?.store_phone || '',
+    },
+    documentNumber: `CN-${Date.now().toString(36).toUpperCase()}`,
+    date: new Date(),
+    currency: settings?.currency || 'PKR',
+    items: [],
+    totals: {
+      subtotal: amount,
+      total: amount,
+    },
+    customer: {
+      name: customerName,
+    },
+    creditAmount: amount,
+    reason: reason,
+  };
 }
 
 export default function CustomerCreditNote({ customerId, customerName, onIssued }: CustomerCreditNoteProps) {
@@ -20,6 +53,12 @@ export default function CustomerCreditNote({ customerId, customerName, onIssued 
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [shareData, setShareData] = useState<CreditNoteProps | null>(null);
+  const [settings, setSettings] = useState<POSSettings | null>(null);
+
+  useEffect(() => {
+    getPOSSettings().then(setSettings).catch(() => {});
+  }, []);
 
   const handleIssue = async () => {
     const amt = parseFloat(amount);
@@ -39,9 +78,9 @@ export default function CustomerCreditNote({ customerId, customerName, onIssued 
         created_by: profile?.id || 'unknown',
       });
       toast.success(`Credit note of ${formatCurrency(amt)} issued to ${customerName}`);
+      setShareData(buildCreditNoteData(amt, reason.trim(), customerName, settings));
       setAmount('');
       setReason('');
-      setShowForm(false);
       onIssued();
     } catch (err: any) {
       toast.error(err.message || 'Failed to issue credit note');
@@ -105,6 +144,25 @@ export default function CustomerCreditNote({ customerId, customerName, onIssued 
           </motion.div>
         )}
       </AnimatePresence>
+
+      {shareData && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-secondary/20 rounded-2xl p-4 border border-border/40 space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <Share2 className="w-3.5 h-3.5 text-primary" />
+              Share Credit Note
+            </p>
+            <button onClick={() => setShareData(null)} className="text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <SharePanel type="credit-note" data={shareData} />
+        </motion.div>
+      )}
     </div>
   );
 }

@@ -8,9 +8,7 @@ interface DocumentShellProps {
   className?: string;
 }
 
-function getVariantStyles(variant: DocumentVariant, colorMode: DocumentColorMode): React.CSSProperties {
-  const isColor = colorMode === 'color';
-
+function getVariantStyles(variant: DocumentVariant, _colorMode: DocumentColorMode): React.CSSProperties {
   const base: Record<DocumentVariant, React.CSSProperties> = {
     thermal: {
       width: '80mm',
@@ -30,8 +28,7 @@ function getVariantStyles(variant: DocumentVariant, colorMode: DocumentColorMode
       padding: '15mm 20mm',
       color: '#1a1a1a',
       background: '#fff',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
-      borderTop: isColor ? '4px solid #F97316' : '4px solid #000',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
     },
     mobile: {
       width: '360px',
@@ -42,8 +39,7 @@ function getVariantStyles(variant: DocumentVariant, colorMode: DocumentColorMode
       color: '#1a1a1a',
       background: '#fff',
       borderRadius: '12px',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-      borderTop: isColor ? '4px solid #F97316' : '4px solid #000',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
     },
   };
 

@@ -10,7 +10,8 @@ import {
     FileText,
     Download,
     Calendar,
-    Printer
+    Printer,
+    Share2
 } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
@@ -25,7 +26,9 @@ import { formatCurrency } from '../../lib/utils/notifications';
 import { exportToCSV } from '../../lib/utils/export';
 import LedgerSkeleton from './LedgerSkeleton';
 import RecordPaymentModal from './RecordPaymentModal';
-import VendorLedgerPDF from './VendorLedgerPDF';
+import VendorStatementTemplate from '../documents/templates/VendorStatementTemplate';
+import SharePanel from '../documents/SharePanel';
+import type { VendorStatementProps } from '../documents/types';
 import EmptyState from '../ui/EmptyState';
 import VendorPerformance from './VendorPerformance';
 import VendorPaymentSchedule from './VendorPaymentSchedule';
@@ -50,6 +53,57 @@ function parseDateValue(d: any): Date {
     return new Date(d);
 }
 
+function buildStatementShareData(
+    vendor: Vendor,
+    ledger: LedgerEntry[],
+    settings: POSSettings | null
+): VendorStatementProps {
+    const entries = ledger
+        .slice()
+        .sort((a, b) => a.date.getTime() - b.date.getTime())
+        .map(entry => ({
+            date: entry.date,
+            description: entry.description,
+            reference: entry.reference,
+            debit: entry.type === 'payment' ? entry.amount : 0,
+            credit: entry.type === 'purchase' ? entry.amount : 0,
+            balance: 0,
+        }));
+
+    let runningBalance = 0;
+    for (const e of entries) {
+        runningBalance += e.credit - e.debit;
+        e.balance = runningBalance;
+    }
+
+    const now = new Date();
+    const periodStart = entries.length > 0 ? entries[0].date : new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return {
+        variant: 'standard',
+        store: {
+            name: settings?.store_name || 'StockSuite Store',
+            address: settings?.store_address || '',
+            phone: settings?.store_phone || '',
+        },
+        documentNumber: `STMT-${vendor.id.slice(0, 8).toUpperCase()}`,
+        date: now,
+        currency: settings?.currency || 'PKR',
+        vendor: {
+            name: vendor.name,
+            company: vendor.company,
+            phone: vendor.phone || undefined,
+            email: vendor.email || undefined,
+            address: vendor.address || undefined,
+        },
+        ledgerEntries: entries,
+        openingBalance: 0,
+        closingBalance: runningBalance,
+        periodStart,
+        periodEnd: now,
+    };
+}
+
 export default function VendorLedger() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -63,6 +117,7 @@ export default function VendorLedger() {
     const [isLoading, setIsLoading] = useState(() => !cached);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [settings, setSettings] = useState<POSSettings | null>(null);
+    const [showShare, setShowShare] = useState(false);
     const componentRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = useReactToPrint({
@@ -253,6 +308,14 @@ export default function VendorLedger() {
 
                 <div className="flex items-center gap-2 flex-wrap">
                     <button
+                        onClick={() => setShowShare(!showShare)}
+                        className="btn-secondary flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm"
+                        title="Share Statement"
+                    >
+                        <Share2 className="w-4 h-4" />
+                        <span className="hidden sm:inline">Share</span>
+                    </button>
+                    <button
                         onClick={handleExport}
                         disabled={ledger.length === 0}
                         className="btn-secondary flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm disabled:opacity-50"
@@ -277,6 +340,12 @@ export default function VendorLedger() {
                     </button>
                 </div>
             </div>
+
+            {showShare && vendor && settings && (
+                <div className="mt-3">
+                    <SharePanel type="vendor-statement" data={buildStatementShareData(vendor, ledger, settings)} />
+                </div>
+            )}
 
             {/* ── Stats — 1 col mobile, 3 col sm+ ── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -493,11 +562,9 @@ export default function VendorLedger() {
 
             <div className="hidden">
                 {displayVendor && settings && (
-                    <VendorLedgerPDF
+                    <VendorStatementTemplate
                         ref={componentRef}
-                        vendor={displayVendor}
-                        ledger={ledger}
-                        settings={settings}
+                        {...buildStatementShareData(displayVendor, ledger, settings)}
                     />
                 )}
             </div>

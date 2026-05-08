@@ -46,11 +46,6 @@ export default function DocumentItemsTable({ variant, colorMode = 'color', items
     );
   }
 
-  const headerBg = isColor ? '#FFF7ED' : '#f0f0f0';
-  const headerBorder = isColor ? '#FB923C' : '#000';
-  const altRowBg = isColor ? '#FFFBF5' : '#f5f5f5';
-  const rowBorder = isColor ? '#FED7AA' : '#ddd';
-
   return (
     <table style={{
       width: '100%', borderCollapse: 'collapse',
@@ -59,32 +54,31 @@ export default function DocumentItemsTable({ variant, colorMode = 'color', items
     }}>
       <thead>
         <tr style={{
-          borderBottom: `2px solid ${headerBorder}`,
-          backgroundColor: headerBg,
+          borderBottom: `2px solid ${isColor ? '#F97316' : '#000'}`,
         }}>
-          <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: isColor ? '#9A3412' : '#333' }}>Item</th>
-          <th style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: isColor ? '#9A3412' : '#333' }}>Qty</th>
-          <th style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: isColor ? '#9A3412' : '#333' }}>Unit Price</th>
-          <th style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: isColor ? '#9A3412' : '#333' }}>Total</th>
+          <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '12px', color: '#374151' }}>Item</th>
+          <th style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, fontSize: '12px', color: '#374151' }}>Qty</th>
+          <th style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, fontSize: '12px', color: '#374151' }}>Unit Price</th>
+          <th style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, fontSize: '12px', color: '#374151' }}>Total</th>
         </tr>
       </thead>
       <tbody>
         {items.map((item, i) => (
           <tr key={i} style={{
-            borderBottom: `1px solid ${rowBorder}`,
-            backgroundColor: i % 2 === 0 ? '#fff' : altRowBg,
+            borderBottom: '1px solid #f3f4f6',
+            backgroundColor: i % 2 === 0 ? '#fff' : '#fafafa',
           }}>
             <td style={{ padding: '10px 8px' }}>
-              <div style={{ fontWeight: 600 }}>{item.name}</div>
-              {item.sku && <div style={{ fontSize: '11px', opacity: 0.5, marginTop: '2px' }}>SKU: {item.sku}</div>}
+              <div style={{ fontWeight: 600, color: '#1a1a1a' }}>{item.name}</div>
+              {item.sku && <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>SKU: {item.sku}</div>}
             </td>
-            <td style={{ textAlign: 'right', padding: '10px 8px' }}>
+            <td style={{ textAlign: 'right', padding: '10px 8px', color: '#374151' }}>
               {item.quantity} {item.unit}
             </td>
-            <td style={{ textAlign: 'right', padding: '10px 8px' }}>
+            <td style={{ textAlign: 'right', padding: '10px 8px', color: '#374151' }}>
               {formatCurrency(item.unit_price, currency)}
             </td>
-            <td style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, color: isColor ? '#EA580C' : '#000' }}>
+            <td style={{ textAlign: 'right', padding: '10px 8px', fontWeight: 700, color: '#1a1a1a' }}>
               {formatCurrency(item.total, currency)}
             </td>
           </tr>
