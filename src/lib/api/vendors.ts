@@ -15,9 +15,8 @@ import { db } from '../firebase';
 import { Vendor, VendorPayment } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
 import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
-import { createCache } from './_base';
-
-const vendorsCache = createCache<Vendor[]>(10 * 60 * 1000); // 10 minutes
+import { cacheFirstRead, STALE_MS } from './_cacheFirst';
+import { useEntityStore } from '../store/entities';
 
 // ============================================
 // VENDOR CRUD OPERATIONS
@@ -27,33 +26,28 @@ const vendorsCache = createCache<Vendor[]>(10 * 60 * 1000); // 10 minutes
  * Get all vendors with their outstanding balances
  */
 export async function getVendors(): Promise<Vendor[]> {
-    const cached = vendorsCache.get('active');
-    if (cached) return cached;
+    return cacheFirstRead(
+        'vendors',
+        () => useEntityStore.getState().vendors.data.length > 0 ? useEntityStore.getState().vendors.data : null,
+        () => useEntityStore.getState().vendors.loadedAt,
+        (data) => useEntityStore.getState().setVendors(data),
+        async () => {
+            const scope = getOrgScopeFilter();
+            const vendorsRef = collection(db, 'vendors');
+            const q = query(vendorsRef, where(scope.field, '==', scope.value), orderBy('name'));
+            const snapshot = await getDocs(q);
 
-    const scope = getOrgScopeFilter();
-    try {
-        const vendorsRef = collection(db, 'vendors');
-        const q = query(vendorsRef, where(scope.field, '==', scope.value), orderBy('name'));
-        const snapshot = await getDocs(q);
+            const vendors = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                created_at: doc.data().created_at?.toDate() || new Date(),
+                updated_at: doc.data().updated_at?.toDate() || new Date()
+            })) as Vendor[];
 
-        const vendors = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            created_at: doc.data().created_at?.toDate() || new Date(),
-            updated_at: doc.data().updated_at?.toDate() || new Date()
-        })) as Vendor[];
-
-        const result = vendors.filter(v => v.is_active !== false);
-        vendorsCache.set('active', result);
-        return result;
-    } catch (error: any) {
-        console.error('Firestore getVendors error:', error);
-        if (error.message?.includes('index')) {
-            const indexLink = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/)?.[0];
-            if (indexLink) console.info('To fix this index error, visit:', indexLink);
-        }
-        throw error;
-    }
+            return vendors.filter(v => v.is_active !== false);
+        },
+        STALE_MS.vendors,
+    );
 }
 
 /**
@@ -122,9 +116,8 @@ export async function createVendor(vendorData: {
     };
 
     const docRef = await addDoc(vendorsRef, newVendor);
-    vendorsCache.clear();
 
-    return {
+    const result: Vendor = {
         id: docRef.id,
         ...vendorData,
         created_by: userId,
@@ -134,6 +127,8 @@ export async function createVendor(vendorData: {
         created_at: new Date(),
         updated_at: new Date()
     };
+    useEntityStore.getState().addVendor(result);
+    return result;
 }
 
 /**
@@ -152,7 +147,7 @@ export async function updateVendor(
         ...updates,
         updated_at: Timestamp.fromDate(new Date())
     });
-    vendorsCache.clear();
+    useEntityStore.getState().updateVendor(vendorId, { ...updates, updated_at: new Date() } as any);
 }
 
 /**
@@ -168,7 +163,7 @@ export async function deactivateVendor(vendorId: string): Promise<void> {
         is_active: false,
         updated_at: Timestamp.fromDate(new Date())
     });
-    vendorsCache.clear();
+    useEntityStore.getState().removeVendor(vendorId);
 }
 
 /**
@@ -215,7 +210,7 @@ export async function deleteVendor(vendorId: string): Promise<void> {
     // Import deleteDoc dynamically to avoid circular issues
     const { deleteDoc } = await import('firebase/firestore');
     await deleteDoc(vendorRef);
-    vendorsCache.clear();
+    useEntityStore.getState().removeVendor(vendorId);
 }
 
 // ============================================

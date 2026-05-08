@@ -16,9 +16,22 @@ import { Expense, ExpenseCategory } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
 import { stampOrgId, getOrgScopeFilter } from './orgScope';
 import { stripUndefined } from '../utils/firestore';
-import { createCache } from './_base';
+// Simple TTL cache for date-range queries
+const expensesCacheMap = new Map<string, { data: Expense[]; at: number }>();
+const EXPENSES_STALE_MS = 5 * 60 * 1000;
 
-const expensesCache = createCache<Expense[]>(5 * 60 * 1000); // 5 minutes
+function getExpensesCached(key: string): Expense[] | null {
+    const entry = expensesCacheMap.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.at > EXPENSES_STALE_MS) { expensesCacheMap.delete(key); return null; }
+    return entry.data;
+}
+function setExpensesCache(key: string, data: Expense[]) {
+    expensesCacheMap.set(key, { data, at: Date.now() });
+}
+function clearExpensesCache() {
+    expensesCacheMap.clear();
+}
 
 // ============================================
 // EXPENSE CRUD OPERATIONS
@@ -56,7 +69,7 @@ export async function recordExpense(expenseData: {
     };
 
     const docRef = await addDoc(expensesRef, newExpense);
-    expensesCache.clear();
+    clearExpensesCache();
 
     // Fire-and-forget audit log
     import('./auditLog').then(({ logAudit }) => {
@@ -82,7 +95,7 @@ export async function recordExpense(expenseData: {
  */
 export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Expense[]> {
     const cacheKey = `expenses-${startDate?.toISOString() || 'all'}-${endDate?.toISOString() || 'all'}`;
-    const cached = expensesCache.get(cacheKey);
+    const cached = getExpensesCached(cacheKey);
     if (cached) return cached;
 
     const scope = getOrgScopeFilter();
@@ -104,7 +117,7 @@ export async function getExpenses(startDate?: Date, endDate?: Date): Promise<Exp
             expense_date: doc.data().expense_date?.toDate() || new Date(),
             created_at: doc.data().created_at?.toDate() || new Date()
         })) as Expense[];
-        expensesCache.set(cacheKey, result);
+        setExpensesCache(cacheKey, result);
         return result;
     } catch (error: any) {
         console.error('Error fetching expenses:', error);
@@ -179,7 +192,7 @@ export async function updateExpense(
     }
 
     await updateDoc(expenseRef, payload);
-    expensesCache.clear();
+    clearExpensesCache();
 }
 
 /**
@@ -196,7 +209,7 @@ export async function deleteExpense(expenseId: string): Promise<void> {
     assertOwnership(expenseSnap.data(), 'Expense');
 
     await deleteDoc(expenseRef);
-    expensesCache.clear();
+    clearExpensesCache();
 }
 
 /**

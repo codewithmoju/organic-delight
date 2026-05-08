@@ -14,43 +14,52 @@ import { db } from '../firebase';
 import { Category } from '../types';
 import { requireCurrentUserId } from './userScope';
 import { stampOrgId, getOrgScopeFilter } from './orgScope';
-import { createCache } from './_base';
-
-const categoriesCache = createCache<Category[]>(10 * 60 * 1000); // 10 minutes
+import { cacheFirstRead, STALE_MS } from './_cacheFirst';
+import { useEntityStore } from '../store/entities';
 
 export async function getCategories(): Promise<Category[]> {
-  const cached = categoriesCache.get('all');
-  if (cached) return cached;
+  return cacheFirstRead(
+    'categories',
+    () => useEntityStore.getState().categories.data.length > 0 ? useEntityStore.getState().categories.data : null,
+    () => useEntityStore.getState().categories.loadedAt,
+    (data) => useEntityStore.getState().setCategories(data),
+    async () => {
+      const scope = getOrgScopeFilter();
+      const categoriesRef = collection(db, 'categories');
+      const q = query(categoriesRef, where(scope.field, '==', scope.value), orderBy('name'));
+      const categoriesSnap = await getDocs(q);
 
-  const scope = getOrgScopeFilter();
-  const categoriesRef = collection(db, 'categories');
-  const q = query(categoriesRef, where(scope.field, '==', scope.value), orderBy('name'));
+      // Compute item_count from entity store (no extra Firestore fetch needed)
+      const items = useEntityStore.getState().items.data;
+      const countMap: Record<string, number> = {};
+      for (const item of items) {
+        if (item.category_id && !item.is_archived) {
+          countMap[item.category_id] = (countMap[item.category_id] || 0) + 1;
+        }
+      }
 
-  // Fetch categories and items in parallel
-  const [categoriesSnap, itemsSnap] = await Promise.all([
-    getDocs(q),
-    getDocs(query(
-      collection(db, 'items'),
-      where(scope.field, '==', scope.value),
-      where('is_archived', '!=', true)
-    )),
-  ]);
+      // If items store is empty (first load), fetch items to compute counts
+      if (items.length === 0) {
+        const scope2 = getOrgScopeFilter();
+        const itemsSnap = await getDocs(query(
+          collection(db, 'items'),
+          where(scope2.field, '==', scope2.value),
+          where('is_archived', '!=', true)
+        ));
+        itemsSnap.forEach((itemDoc) => {
+          const catId = itemDoc.data().category_id;
+          if (catId) countMap[catId] = (countMap[catId] || 0) + 1;
+        });
+      }
 
-  // Build item count map from single items fetch
-  const countMap: Record<string, number> = {};
-  itemsSnap.forEach((itemDoc) => {
-    const catId = itemDoc.data().category_id;
-    if (catId) countMap[catId] = (countMap[catId] || 0) + 1;
-  });
-
-  const result = categoriesSnap.docs.map((docSnapshot) => {
-    const category = { id: docSnapshot.id, ...docSnapshot.data() } as Category;
-    category.item_count = countMap[category.id] || 0;
-    return category;
-  });
-
-  categoriesCache.set('all', result);
-  return result;
+      return categoriesSnap.docs.map((docSnapshot) => {
+        const category = { id: docSnapshot.id, ...docSnapshot.data() } as Category;
+        category.item_count = countMap[category.id] || 0;
+        return category;
+      });
+    },
+    STALE_MS.categories,
+  );
 }
 
 export async function getCategoryById(id: string): Promise<Category> {
@@ -101,8 +110,7 @@ export async function createCategory(categoryData: {
     ...stampOrgId({}),
   });
 
-  categoriesCache.clear();
-  return {
+  const result: Category = {
     id: docRef.id,
     ...categoryData,
     name: categoryData.name.trim(),
@@ -110,6 +118,9 @@ export async function createCategory(categoryData: {
     created_at: new Date() as any,
     updated_at: new Date() as any
   };
+
+  useEntityStore.getState().addCategory(result);
+  return result;
 }
 
 export async function updateCategory(id: string, categoryData: {
@@ -146,8 +157,10 @@ export async function updateCategory(id: string, categoryData: {
   };
 
   await updateDoc(docRef, updateData);
-  categoriesCache.clear();
-  return getCategoryById(id);
+
+  const updated = await getCategoryById(id);
+  useEntityStore.getState().updateCategory(id, updated);
+  return updated;
 }
 
 export async function deleteCategory(id: string): Promise<void> {
@@ -170,7 +183,7 @@ export async function deleteCategory(id: string): Promise<void> {
   }
 
   await deleteDoc(doc(db, 'categories', id));
-  categoriesCache.clear();
+  useEntityStore.getState().removeCategory(id);
 }
 
 export async function getCategoryItemCount(categoryId: string): Promise<number> {

@@ -12,35 +12,20 @@ import { getDateRangeForPeriod } from '../utils/dateFilters';
 import { DashboardMetrics } from '../types';
 import { requireCurrentUserId } from './userScope';
 import { getOrgScopeFilter } from './orgScope';
-import { readScopedJSON, writeScopedJSON, removeScopedKey } from '../utils/storageScope';
+import { useEntityStore } from '../store/entities';
 
-// In-memory cache for dashboard data
-const dashboardCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const DASHBOARD_READ_MODEL_KEY = 'dashboard_read_model_cache';
+// Simple TTL cache for dashboard data (period-specific queries don't fit entity store)
+const dashboardCacheMap = new Map<string, { data: any; at: number }>();
+const DASHBOARD_STALE_MS = 5 * 60 * 1000;
 
-function getCacheKey(period: TimePeriod): string {
-  const userId = requireCurrentUserId();
-  return `dashboard-metrics-${userId}-${period}`;
-}
-
-function isCacheValid(timestamp: number): boolean {
-  return Date.now() - timestamp < CACHE_DURATION;
-}
-
-type PersistedReadModel = Record<string, { data: any; timestamp: number }>;
-
-function readPersistedCache(cacheKey: string) {
-  const model = readScopedJSON<PersistedReadModel>(DASHBOARD_READ_MODEL_KEY, {}, undefined, DASHBOARD_READ_MODEL_KEY);
-  const entry = model[cacheKey];
-  if (!entry || !isCacheValid(entry.timestamp)) return null;
+function getCached(key: string): any | null {
+  const entry = dashboardCacheMap.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.at > DASHBOARD_STALE_MS) { dashboardCacheMap.delete(key); return null; }
   return entry.data;
 }
-
-function writePersistedCache(cacheKey: string, data: any) {
-  const model = readScopedJSON<PersistedReadModel>(DASHBOARD_READ_MODEL_KEY, {}, undefined, DASHBOARD_READ_MODEL_KEY);
-  model[cacheKey] = { data, timestamp: Date.now() };
-  writeScopedJSON(DASHBOARD_READ_MODEL_KEY, model);
+function setCache(key: string, data: any) {
+  dashboardCacheMap.set(key, { data, at: Date.now() });
 }
 
 /**
@@ -53,16 +38,8 @@ export async function getDashboardMetricsAndTrends(period: TimePeriod): Promise<
 }> {
   const userId = requireCurrentUserId();
   const cacheKey = `dashboard-combined-${userId}-${period}`;
-  const cached = dashboardCache.get(cacheKey);
-
-  if (cached && isCacheValid(cached.timestamp)) {
-    return cached.data;
-  }
-  const persisted = readPersistedCache(cacheKey);
-  if (persisted) {
-    dashboardCache.set(cacheKey, { data: persisted, timestamp: Date.now() });
-    return persisted;
-  }
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
 
   const { start, end } = getDateRangeForPeriod(period);
 
@@ -115,8 +92,7 @@ export async function getDashboardMetricsAndTrends(period: TimePeriod): Promise<
     trends: Object.values(trendData),
   };
 
-  dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  writePersistedCache(cacheKey, result);
+  setCache(cacheKey, result);
   return result;
 }
 
@@ -143,43 +119,23 @@ export async function getInventoryTrends(period: TimePeriod) {
 }
 
 export async function getStockLevels() {
-  const userId = requireCurrentUserId();
-  const cacheKey = `stock-levels-${userId}`;
-  const cached = dashboardCache.get(cacheKey);
+  // Read from entity store — zero network calls
+  const storeItems = useEntityStore.getState().items.data;
 
-  if (cached && isCacheValid(cached.timestamp)) {
-    return cached.data;
-  }
-  const persisted = readPersistedCache(cacheKey);
-  if (persisted) {
-    dashboardCache.set(cacheKey, { data: persisted, timestamp: Date.now() });
-    return persisted;
-  }
+  const stockLevels = storeItems
+    .filter(item => item.is_archived !== true)
+    .map(item => ({
+      item_id: item.id,
+      current_quantity: item.current_quantity ?? 0,
+      total_value: (item.current_quantity ?? 0) * (item.selling_price || item.unit_price || 0),
+      item,
+    }));
 
-  const scope = getOrgScopeFilter();
-  const itemsSnapshot = await getDocs(query(collection(db, 'items'), where(scope.field, '==', scope.value)));
-
-  const stockLevels: any[] = [];
-  for (const itemDoc of itemsSnapshot.docs) {
-    const data = itemDoc.data();
-    const current_quantity = data.current_quantity ?? 0;
-    stockLevels.push({
-      item_id: itemDoc.id,
-      current_quantity,
-      total_value: current_quantity * (data.unit_price || 0),
-      item: { id: itemDoc.id, ...data }
-    });
-  }
-
-  const result = stockLevels.sort((a, b) => b.total_value - a.total_value);
-  dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  writePersistedCache(cacheKey, result);
-  return result;
+  return stockLevels.sort((a, b) => b.total_value - a.total_value);
 }
 
 export function clearDashboardCache() {
-  dashboardCache.clear();
-  removeScopedKey(DASHBOARD_READ_MODEL_KEY);
+  dashboardCacheMap.clear();
 }
 
 /**
@@ -189,13 +145,8 @@ export function clearDashboardCache() {
 export async function getDashboardWidgetData(period: TimePeriod) {
   const userId = requireCurrentUserId();
   const cacheKey = `dashboard-widgets-${userId}-${period}`;
-  const cached = dashboardCache.get(cacheKey);
-  if (cached && isCacheValid(cached.timestamp)) return cached.data;
-  const persisted = readPersistedCache(cacheKey);
-  if (persisted) {
-    dashboardCache.set(cacheKey, { data: persisted, timestamp: Date.now() });
-    return persisted;
-  }
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
 
   const { start, end } = getDateRangeForPeriod(period);
 
@@ -263,7 +214,6 @@ export async function getDashboardWidgetData(period: TimePeriod) {
     customers,
   };
 
-  dashboardCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  writePersistedCache(cacheKey, result);
+  setCache(cacheKey, result);
   return result;
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { createPOSTransaction } from '../lib/api/pos';
 import { useAuthStore } from '../lib/store';
+import { useEntityStore } from '../lib/store/entities';
 import { getScopedStorageKey, readScopedJSON, writeScopedJSON, removeScopedKey } from '../lib/utils/storageScope';
 
 const STORAGE_KEY = 'offline_pos_transactions';
@@ -71,6 +72,8 @@ export function useOfflineQueue() {
         setIsSyncing(false);
 
         if (syncedCount > 0) {
+            // Refresh items in entity store since stock changed
+            useEntityStore.getState().markItemsStale();
             toast.success(`Synced ${syncedCount} offline transactions.`);
         }
         if (failedCount > 0) {
