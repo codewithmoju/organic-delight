@@ -18,37 +18,24 @@ import { POSTransaction, DashboardMetrics } from '../lib/types';
 import { formatCurrency } from '../lib/utils/notifications';
 import { useTranslation } from 'react-i18next';
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
-import { readScopedJSON, writeScopedJSON } from '../lib/utils/storageScope';
 // Lazy-load the chart — it's below the fold and pulls in recharts (~400KB)
 const MetricsChart = lazy(() => import('../components/dashboard/MetricsChart'));
-
-const LS_SUMMARY = 'dashboard_summary_cache';
-const LS_TRANSACTIONS = 'dashboard_transactions_cache';
-const LS_METRICS = 'dashboard_metrics_cache';
-
-function readCache<T>(key: string): T | null {
-  return readScopedJSON<T | null>(key, null as T | null, undefined, key);
-}
-
-function writeCache(key: string, value: unknown) {
-  writeScopedJSON(key, value);
-}
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
 
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(() => readCache(LS_METRICS));
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
-  const [summary, setSummary] = useState<any>(() => readCache(LS_SUMMARY));
-  const [transactions, setTransactions] = useState<POSTransaction[]>(() => readCache<POSTransaction[]>(LS_TRANSACTIONS) ?? []);
+  const [summary, setSummary] = useState<any>(null);
+  const [transactions, setTransactions] = useState<POSTransaction[]>([]);
   const [topProduct, setTopProduct] = useState<any>(null);
 
   // Widget data
   const [widgetData, setWidgetData] = useState<any>(null);
   const [isWidgetsLoading, setIsWidgetsLoading] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(() => readCache(LS_SUMMARY) == null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isMetricsLoading, setIsMetricsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,10 +99,6 @@ export default function Dashboard() {
       setTransactions(recentSales);
       setTopProduct(topItem ? { name: topItem.name, count: topItem.current_quantity || 0, price: topItem.unit_price || 0 } : null);
       setError(null);
-
-      // Persist to localStorage so next visit is instant
-      writeCache(LS_SUMMARY, newSummary);
-      writeCache(LS_TRANSACTIONS, recentSales);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
       setError(t('dashboard.errors.generic'));
@@ -132,7 +115,6 @@ export default function Dashboard() {
       const { metrics: m, trends } = await getDashboardMetricsAndTrends(selectedPeriod);
       setMetrics(m);
       setChartData(trends);
-      writeCache(LS_METRICS, m);
     } catch (err) {
       console.error('Error loading metrics:', err);
       toast.error(t('dashboard.errors.metricsFailed'));

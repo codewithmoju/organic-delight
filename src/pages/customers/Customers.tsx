@@ -12,9 +12,9 @@ import { Customer } from '../../lib/types';
 import { getCustomers, searchCustomers, createCustomer, recordCustomerTransaction } from '../../lib/api/customers';
 import { formatCurrency } from '../../lib/utils/notifications';
 import { useAuthStore } from '../../lib/store';
+import { useEntityStore } from '../../lib/store/entities';
 import CustomerSkeleton from '../../components/skeletons/CustomerSkeleton';
 import CustomerGroupManager, { getGroups, CustomerGroup } from '../../components/customers/CustomerGroupManager';
-import { readScopedRaw, writeScopedJSON } from '../../lib/utils/storageScope';
 
 // ============================================
 // STAT CARD
@@ -340,21 +340,8 @@ function EmptyState() {
 export default function Customers() {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const [customers, setCustomers] = useState<Customer[]>(() => {
-        try {
-            const cached = readScopedRaw('customers_cache', 'customers_cache');
-            if (cached) {
-                return JSON.parse(cached, (key, value) => {
-                    if (['created_at', 'updated_at', 'last_transaction_date'].includes(key)) return new Date(value);
-                    return value;
-                });
-            }
-        } catch (e) {
-            console.error('Failed to parse customers cache', e);
-        }
-        return [];
-    });
-    const [isLoading, setIsLoading] = useState(() => readScopedRaw('customers_cache', 'customers_cache') == null);
+    const [customers, setCustomers] = useState<Customer[]>(() => useEntityStore.getState().customers.data);
+    const [isLoading, setIsLoading] = useState(() => useEntityStore.getState().customers.data.length === 0);
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddForm, setShowAddForm] = useState(false);
     const [filterMode, setFilterMode] = useState<'all' | 'credit' | 'clear'>('all');
@@ -371,7 +358,6 @@ export default function Customers() {
         try {
             const data = await getCustomers();
             setCustomers(data);
-            writeScopedJSON('customers_cache', data);
         } catch (error) {
             toast.error('Failed to load customers');
             console.error(error);

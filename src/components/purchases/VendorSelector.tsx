@@ -7,7 +7,6 @@ import { getVendors, createVendor } from '../../lib/api/vendors';
 import { useAuthStore } from '../../lib/store';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
-import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 interface VendorSelectorProps {
     onVendorSelected: (vendor: Vendor) => void;
@@ -25,13 +24,9 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
         gst_number: ''
     };
     const [searchQuery, setSearchQuery] = useState('');
-    const [vendors, setVendors] = useState<Vendor[]>(() =>
-        readScopedJSON<Vendor[]>('vendors_cache', [], undefined, 'vendors_cache')
-    );
+    const [vendors, setVendors] = useState<Vendor[]>([]);
     const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
-    const [isLoading, setIsLoading] = useState(
-        () => readScopedJSON<Vendor[]>('vendors_cache', [], undefined, 'vendors_cache').length === 0
-    );
+    const [isLoading, setIsLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const user = useAuthStore(state => state.user);
@@ -76,18 +71,15 @@ export default function VendorSelector({ onVendorSelected, selectedVendor }: Ven
     }, [searchQuery, vendors]);
 
     const loadVendors = async () => {
-        if (!vendors.length) setIsLoading(true);
+        setIsLoading(true);
         try {
             const data = await getVendors();
             setVendors(data);
-            writeScopedJSON('vendors_cache', data);
-            // Only update filtered if we are not searching
             if (!searchQuery.trim()) {
                 setFilteredVendors(data);
             }
         } catch (error) {
             console.error('Error loading vendors:', error);
-            // Only show error if no cache
             if (vendors.length === 0) toast.error(t('vendors.messages.loadFailed', 'Failed to load vendors'));
         } finally {
             setIsLoading(false);
