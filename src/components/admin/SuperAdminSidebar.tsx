@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -13,10 +13,14 @@ import {
   Shield,
   FileText,
   X,
+  ArrowLeftRight,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import Logo from '../ui/Logo';
 import { SimpleThemeToggle } from '../ui/ThemeToggle';
 import { useIsDesktop } from '../../hooks/useMediaQuery';
+import { useAuthStore } from '../../lib/store';
+import { resolveActiveOrganization } from '../../lib/auth/orgResolver';
 
 interface SuperAdminSidebarProps {
   isOpen: boolean;
@@ -64,6 +68,33 @@ const navGroups = [
 const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ isOpen, onClose }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const isDesktop = useIsDesktop();
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+
+  const handleSwitchToClient = async () => {
+    if (!user?.uid) return;
+    try {
+      // Temporarily clear super admin flag so org resolution runs normally
+      const store = useAuthStore.getState();
+      store.setIsSuperAdmin(false);
+      try {
+        await resolveActiveOrganization(user.uid);
+      } finally {
+        // Restore super admin flag regardless of outcome
+        store.setIsSuperAdmin(true);
+      }
+      const updated = useAuthStore.getState();
+      if (updated.activeOrganization) {
+        navigate('/');
+        toast.success(`Switched to ${updated.activeOrganization.name}`);
+      } else {
+        toast.error('No client organization found. Create one from the client panel first.');
+      }
+    } catch (err) {
+      console.error('Failed to resolve client org:', err);
+      toast.error('Failed to switch to client panel');
+    }
+  };
   const isExpanded = isHovered || !isDesktop;
 
   React.useEffect(() => {
@@ -211,8 +242,24 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ isOpen, onClose }
           </nav>
 
           {/* Footer */}
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-4 lg:hidden">
+          <div className="p-4 space-y-3">
+            {/* Switch to Client Panel */}
+            <button
+              onClick={handleSwitchToClient}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-orange-300 hover:bg-orange-500/10 hover:text-orange-200 transition-all duration-200 min-h-[40px] touch-manipulation overflow-hidden"
+            >
+              <ArrowLeftRight className="w-5 h-5 flex-shrink-0" />
+              <motion.span
+                initial={false}
+                animate={{ opacity: isExpanded ? 1 : 0, x: isExpanded ? 0 : -8 }}
+                transition={{ duration: 0.2 }}
+                className="whitespace-nowrap overflow-hidden"
+              >
+                Switch to Client Panel
+              </motion.span>
+            </button>
+
+            <div className="flex items-center justify-between lg:hidden">
               <span className="text-sm font-medium text-muted-foreground">Theme</span>
               <SimpleThemeToggle />
             </div>
