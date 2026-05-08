@@ -23,8 +23,8 @@ const QuotationTemplate = forwardRef<HTMLDivElement, QuotationProps>((props, ref
       {!isThermal && (
         <div style={{
           display: 'inline-block', padding: '4px 14px', borderRadius: '9999px',
-          backgroundColor: cm === 'color' ? '#FFF7ED' : '#f0f0f0',
-          border: `1px solid ${cm === 'color' ? '#FB923C' : '#999'}`,
+          backgroundColor: '#f9fafb',
+          border: `1px solid ${isThermal ? '#999' : '#e5e7eb'}`,
           color: accentColor,
           fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em',
           marginBottom: '8px',
@@ -57,11 +57,11 @@ const QuotationTemplate = forwardRef<HTMLDivElement, QuotationProps>((props, ref
           margin: isThermal ? '4px 0' : '12px 0',
           padding: isThermal ? '4px 0' : '12px 14px',
           borderRadius: isThermal ? 0 : '8px',
-          backgroundColor: isThermal ? 'transparent' : (cm === 'color' ? '#FFFBF5' : '#f9f9f9'),
-          borderLeft: isThermal ? 'none' : `3px solid ${cm === 'color' ? '#FB923C' : '#999'}`,
+          backgroundColor: isThermal ? 'transparent' : '#f9fafb',
+          borderLeft: isThermal ? 'none' : `3px solid ${cm === 'color' ? '#F97316' : '#999'}`,
           fontSize: isThermal ? '10px' : '12px', opacity: 0.8,
         }}>
-          <strong style={{ color: cm === 'color' ? '#9A3412' : '#333' }}>Terms & Conditions:</strong>
+          <strong style={{ color: '#374151' }}>Terms & Conditions:</strong>
           <p style={{ margin: '4px 0 0' }}>{terms}</p>
         </div>
       )}
