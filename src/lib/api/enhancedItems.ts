@@ -2,20 +2,16 @@ import {
   collection,
   doc,
   getDocs,
-  getDoc,
-  addDoc,
-  updateDoc,
   query,
   where,
-  orderBy,
   Timestamp,
   writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Item } from '../types';
-import { invalidateItemsCache } from './items';
 import { requireCurrentUserId } from './userScope';
 import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
+import { useEntityStore } from '../store/entities';
 
 export async function createItemWithInitialStock(itemData: {
   name: string;
@@ -132,133 +128,54 @@ export async function createItemWithInitialStock(itemData: {
     updated_at: now as any
   } as Item;
 
-  // Invalidate items cache
-  invalidateItemsCache();
+  // Update entity store
+  useEntityStore.getState().addItem(result);
 
   return result;
 }
 
 export async function getItemByBarcode(barcode: string): Promise<Item | null> {
-  const userId = requireCurrentUserId();
-  const scope = getOrgScopeFilter();
-  try {
-    const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where(scope.field, '==', scope.value), where('barcode', '==', barcode));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      return null;
-    }
-
-    const itemDoc = snapshot.docs.find((docSnap) => {
-      const data = docSnap.data() as any;
-      return data.created_by === userId && data.is_archived !== true;
-    });
-    if (!itemDoc) {
-      return null;
-    }
-    const itemData = itemDoc.data();
-
-    return {
-      id: itemDoc.id,
-      ...itemData,
-      created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
-      updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
-    } as Item;
-  } catch (error) {
-    console.error('Error fetching item by barcode:', error);
-    return null;
-  }
+  // Search from entity store — zero network calls
+  const storeItems = useEntityStore.getState().items.data;
+  const normalizedBarcode = barcode.trim().toLowerCase();
+  const found = storeItems.find(item =>
+    item.barcode?.trim().toLowerCase() === normalizedBarcode &&
+    item.is_archived !== true
+  );
+  return (found as Item) || null;
 }
 
 export async function getItemByProductId(productId: string): Promise<Item | null> {
-  const userId = requireCurrentUserId();
-  const scope = getOrgScopeFilter();
-  try {
-    const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where(scope.field, '==', scope.value), where('sku', '==', productId));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      return null;
-    }
-
-    const itemDoc = snapshot.docs.find((docSnap) => {
-      const data = docSnap.data() as any;
-      return data.created_by === userId && data.is_archived !== true;
-    });
-    if (!itemDoc) {
-      return null;
-    }
-    const itemData = itemDoc.data();
-
-    return {
-      id: itemDoc.id,
-      ...itemData,
-      created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
-      updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
-    } as Item;
-  } catch (error) {
-    console.error('Error fetching item by product ID:', error);
-    return null;
-  }
+  // Search from entity store — zero network calls
+  const storeItems = useEntityStore.getState().items.data;
+  const normalizedSku = productId.trim().toLowerCase();
+  const found = storeItems.find(item =>
+    item.sku?.trim().toLowerCase() === normalizedSku &&
+    item.is_archived !== true
+  );
+  return (found as Item) || null;
 }
 
 export async function searchItemsEnhanced(searchQuery: string, searchType: 'name' | 'barcode' | 'sku' = 'name'): Promise<Item[]> {
-  const userId = requireCurrentUserId();
-  const scope = getOrgScopeFilter();
-  try {
-    const itemsRef = collection(db, 'items');
-    const q = query(itemsRef, where(scope.field, '==', scope.value), orderBy('name'));
+  // Read from entity store — zero network calls, no N+1 category fetches
+  const storeItems = useEntityStore.getState().items.data;
+  const term = searchQuery.toLowerCase();
 
-    const snapshot = await getDocs(q);
+  const items = storeItems.filter(item => {
+    if (item.is_archived === true) return false;
 
-    const items = [];
-    for (const docSnapshot of snapshot.docs) {
-      const itemData = docSnapshot.data();
-      if ((itemData as any).is_archived === true || (itemData as any).created_by !== userId) {
-        continue;
-      }
-      const item = {
-        id: docSnapshot.id,
-        ...itemData,
-        created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
-        updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
-      } as Item;
-
-      // Client-side filtering based on search type
-      let matches = false;
-      const query = searchQuery.toLowerCase();
-
-      switch (searchType) {
-        case 'name':
-          matches = item.name.toLowerCase().includes(query) ||
-            item.description?.toLowerCase().includes(query);
-          break;
-        case 'barcode':
-          matches = item.barcode?.toLowerCase().includes(query) || false;
-          break;
-        case 'sku':
-          matches = item.sku?.toLowerCase().includes(query) || false;
-          break;
-      }
-
-      if (matches) {
-        // Get category data
-        if (item.category_id) {
-          const categoryDoc = await getDoc(doc(db, 'categories', item.category_id));
-          if (categoryDoc.exists()) {
-            item.category = { id: categoryDoc.id, ...categoryDoc.data() };
-          }
-        }
-
-        items.push(item);
-      }
+    switch (searchType) {
+      case 'name':
+        return item.name.toLowerCase().includes(term) ||
+          item.description?.toLowerCase().includes(term);
+      case 'barcode':
+        return item.barcode?.toLowerCase().includes(term) || false;
+      case 'sku':
+        return item.sku?.toLowerCase().includes(term) || false;
+      default:
+        return false;
     }
+  });
 
-    return items.slice(0, 20); // Limit results for performance
-  } catch (error) {
-    console.error('Error searching items:', error);
-    return [];
-  }
+  return items.slice(0, 20) as Item[];
 }

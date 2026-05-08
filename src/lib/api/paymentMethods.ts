@@ -20,6 +20,10 @@ export interface PaymentMethod {
 
 const COLLECTION_NAME = 'payment_methods';
 
+// TTL cache
+const PAYMENT_METHODS_TTL = 10 * 60 * 1000;
+let paymentMethodsCache: { data: PaymentMethod[]; at: number } | null = null;
+
 const DEFAULT_PAYMENT_METHODS = [
     { id: 'cash', name: 'Cash', type: 'cash', icon: 'Banknote', active: true, order: 1 },
     { id: 'card', name: 'Card', type: 'card', icon: 'CreditCard', active: true, order: 2 },
@@ -30,6 +34,10 @@ const DEFAULT_PAYMENT_METHODS = [
 ] as const;
 
 export async function getPaymentMethods(): Promise<PaymentMethod[]> {
+    if (paymentMethodsCache && Date.now() - paymentMethodsCache.at < PAYMENT_METHODS_TTL) {
+        return paymentMethodsCache.data;
+    }
+
     try {
         const methodsRef = collection(db, COLLECTION_NAME);
         const q = query(methodsRef, orderBy('order'));
@@ -49,9 +57,12 @@ export async function getPaymentMethods(): Promise<PaymentMethod[]> {
         const orgSettings = await getOrgSettings();
         if (orgSettings.disabled_payment_methods?.length) {
             const disabled = new Set(orgSettings.disabled_payment_methods);
-            return methods.filter(m => !disabled.has(m.id));
+            const filtered = methods.filter(m => !disabled.has(m.id));
+            paymentMethodsCache = { data: filtered, at: Date.now() };
+            return filtered;
         }
 
+        paymentMethodsCache = { data: methods, at: Date.now() };
         return methods;
     } catch (error) {
         console.error('Error fetching payment methods:', error);

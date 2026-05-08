@@ -19,6 +19,30 @@ import { CartItem, BarcodeProduct, POSTransaction, POSSettings, BillType, SalesR
 import { DEFAULT_POS_SETTINGS } from '../constants/defaults';
 import { requireCurrentUserId, assertOwnership } from './userScope';
 import { stampOrgId, getOrgScopeFilter } from './orgScope';
+import { useEntityStore } from '../store/entities';
+
+// ── POS Settings & Bill Types TTL cache ────────────────────────────────────
+const POS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const posSettingsCache = new Map<string, { data: POSSettings; at: number }>();
+const billTypesCache = new Map<string, { data: BillType[]; at: number }>();
+
+function getCachedPosSettings(key: string): POSSettings | null {
+  const hit = posSettingsCache.get(key);
+  if (hit && Date.now() - hit.at < POS_CACHE_TTL) return hit.data;
+  return null;
+}
+function setCachedPosSettings(key: string, data: POSSettings) {
+  posSettingsCache.set(key, { data, at: Date.now() });
+}
+
+function getCachedBillTypes(key: string): BillType[] | null {
+  const hit = billTypesCache.get(key);
+  if (hit && Date.now() - hit.at < POS_CACHE_TTL) return hit.data;
+  return null;
+}
+function setCachedBillTypes(key: string, data: BillType[]) {
+  billTypesCache.set(key, { data, at: Date.now() });
+}
 
 function resolveBasePrice(data: any): number {
   return Number(data?.base_price ?? data?.purchase_rate ?? data?.average_unit_cost ?? 0) || 0;
@@ -154,6 +178,21 @@ export async function createPOSTransaction(transactionData: {
       }
 
       return posTransaction;
+    }).then(result => {
+      // Update entity store with new stock levels after successful transaction
+      if (affectsInventory) {
+        for (const cartItem of transactionData.items) {
+          const storeItem = useEntityStore.getState().items.data.find(i => i.id === cartItem.item_id);
+          if (storeItem) {
+            const qtyChange = transactionData.is_return ? cartItem.quantity : -cartItem.quantity;
+            useEntityStore.getState().updateItem(cartItem.item_id, {
+              current_quantity: (storeItem.current_quantity ?? 0) + qtyChange,
+              updated_at: new Date(),
+            } as any);
+          }
+        }
+      }
+      return result;
     });
   } catch (error: any) {
     if (error.code === 'unavailable' || error.message?.includes('offline') || !navigator.onLine) {
@@ -197,6 +236,21 @@ export async function createPOSTransaction(transactionData: {
       }
 
       await batch.commit();
+
+      // Update entity store with new stock levels after successful offline write
+      if (affectsInventory) {
+        for (const item of posTransaction.items) {
+          const storeItem = useEntityStore.getState().items.data.find(i => i.id === item.item_id);
+          if (storeItem) {
+            const qtyChange = transactionData.is_return ? item.quantity : -item.quantity;
+            useEntityStore.getState().updateItem(item.item_id, {
+              current_quantity: (storeItem.current_quantity ?? 0) + qtyChange,
+              updated_at: new Date(),
+            } as any);
+          }
+        }
+      }
+
       return posTransaction;
     }
     throw error;
@@ -229,6 +283,8 @@ export async function getPOSTransactions(limitCount?: number): Promise<POSTransa
 // Cancel/Refund Transaction
 export async function cancelPOSTransaction(transactionId: string, reason: string): Promise<void> {
   const userId = requireCurrentUserId();
+  let cancelledTransaction: POSTransaction | null = null;
+
   await runTransaction(db, async (transaction) => {
     const posTransactionRef = doc(db, 'pos_transactions', transactionId);
     const posTransactionDoc = await transaction.get(posTransactionRef);
@@ -279,132 +335,104 @@ export async function cancelPOSTransaction(transactionId: string, reason: string
         });
       }
     }
+
+    cancelledTransaction = posTransaction;
   });
-}
 
-// Barcode Product Lookup
-export async function getProductByBarcode(barcode: string): Promise<BarcodeProduct | null> {
-  const scope = getOrgScopeFilter();
-  try {
-    const itemsRef = collection(db, 'items');
-    const q = query(
-      itemsRef,
-      where(scope.field, '==', scope.value),
-      where('barcode', '==', String(barcode)),
-      limit(1)
-    );
-    const snapshot = await getDocs(q);
-    const itemDoc = snapshot.docs.find((docSnap) => docSnap.data().is_archived !== true);
-    if (!itemDoc) {
-      return null;
+  // Update entity store with restored stock levels
+  if (cancelledTransaction) {
+    const storeItems = useEntityStore.getState().items.data;
+    for (const item of cancelledTransaction.items) {
+      const storeItem = storeItems.find(i => i.id === item.item_id);
+      if (storeItem && cancelledTransaction.affects_inventory !== false) {
+        useEntityStore.getState().updateItem(item.item_id, {
+          current_quantity: (storeItem.current_quantity ?? 0) + item.quantity,
+          updated_at: new Date(),
+        } as any);
+      }
     }
-
-    const itemData = itemDoc.data();
-    const currentStock = itemData.current_quantity ?? 0;
-
-    return {
-      id: itemDoc.id,
-      name: itemData.name,
-      barcode: itemData.barcode,
-      price: resolveSellingPrice(itemData),
-      selling_price: resolveSellingPrice(itemData),
-      base_price: resolveBasePrice(itemData),
-      stock: currentStock,
-      category: itemData.category?.name
-    };
-  } catch (error) {
-    console.error('Error fetching product by barcode:', error);
-    return null;
   }
 }
 
-// Get current stock level
+// Barcode Product Lookup — reads from entity store
+export async function getProductByBarcode(barcode: string): Promise<BarcodeProduct | null> {
+  const storeItems = useEntityStore.getState().items.data;
+  const normalizedBarcode = String(barcode).trim();
+  const found = storeItems.find(item =>
+    item.barcode === normalizedBarcode && item.is_archived !== true
+  );
+  if (!found) return null;
+
+  return {
+    id: found.id,
+    name: found.name,
+    barcode: found.barcode,
+    price: resolveSellingPrice(found),
+    selling_price: resolveSellingPrice(found),
+    base_price: resolveBasePrice(found),
+    stock: found.current_quantity ?? 0,
+    category: found.category?.name
+  };
+}
+
+// Get current stock level — reads from entity store
 export async function getItemCurrentStock(itemId: string): Promise<number> {
-  const userId = requireCurrentUserId();
-  try {
-    const itemDoc = await getDoc(doc(db, 'items', itemId));
-    if (!itemDoc.exists()) return 0;
-    if (itemDoc.data().created_by !== userId) return 0;
-    return itemDoc.data().current_quantity ?? 0;
-  } catch (error) {
-    console.error('Error fetching current stock:', error);
-    return 0;
-  }
+  const storeItems = useEntityStore.getState().items.data;
+  const found = storeItems.find(item => item.id === itemId);
+  return found?.current_quantity ?? 0;
 }
 
-// Search products
+// Search products — reads from entity store, zero network calls
 export async function searchProducts(searchQuery: string): Promise<BarcodeProduct[]> {
-  const scope = getOrgScopeFilter();
   const normalizedQuery = String(searchQuery || '').trim();
   if (!normalizedQuery) {
     return [];
   }
 
-  const itemsRef = collection(db, 'items');
-  const exactBarcodeQuery = query(
-    itemsRef,
-    where(scope.field, '==', scope.value),
-    where('barcode', '==', normalizedQuery),
-    limit(10)
-  );
-  const barcodeSnapshot = await getDocs(exactBarcodeQuery);
-  const barcodeMatches = barcodeSnapshot.docs
-    .map((itemDoc) => {
-      const itemData = itemDoc.data() as any;
-      if (itemData.is_archived === true) {
-        return null;
-      }
-      return {
-        id: itemDoc.id,
-        name: String(itemData.name || ''),
-        barcode: String(itemData.barcode || ''),
-        price: resolveSellingPrice(itemData),
-        selling_price: resolveSellingPrice(itemData),
-        base_price: resolveBasePrice(itemData),
-        stock: itemData.current_quantity ?? 0,
-        category: itemData.category?.name
-      } as BarcodeProduct;
-    })
-    .filter((item): item is BarcodeProduct => item !== null);
+  const storeItems = useEntityStore.getState().items.data;
+  const searchTerm = normalizedQuery.toLowerCase();
+
+  // First try exact barcode match
+  const barcodeMatches = storeItems
+    .filter(item => item.is_archived !== true && item.barcode === normalizedQuery)
+    .map(item => ({
+      id: item.id,
+      name: String(item.name || ''),
+      barcode: String(item.barcode || ''),
+      price: resolveSellingPrice(item),
+      selling_price: resolveSellingPrice(item),
+      base_price: resolveBasePrice(item),
+      stock: item.current_quantity ?? 0,
+      category: item.category?.name
+    } as BarcodeProduct));
 
   if (barcodeMatches.length > 0 || normalizedQuery.length < 2) {
     return barcodeMatches.slice(0, 20);
   }
 
-  const q = query(itemsRef, where(scope.field, '==', scope.value), limit(250));
-  const snapshot = await getDocs(q);
-
-  const products: BarcodeProduct[] = [];
-  const searchTerm = normalizedQuery.toLowerCase();
-
-  for (const itemDoc of snapshot.docs) {
-    const itemData = itemDoc.data() as any;
-    if (itemData.is_archived === true) {
-      continue;
-    }
-
-    const name = String(itemData.name || '');
-    const description = String(itemData.description || '');
-    const barcode = String(itemData.barcode || '');
-    const sku = String(itemData.sku || '');
-
-    if (name.toLowerCase().includes(searchTerm) ||
-      description.toLowerCase().includes(searchTerm) ||
-      barcode.includes(normalizedQuery) ||
-      sku.toLowerCase().includes(searchTerm)) {
-
-      products.push({
-        id: itemDoc.id,
-        name,
-        barcode,
-        price: resolveSellingPrice(itemData),
-        selling_price: resolveSellingPrice(itemData),
-        base_price: resolveBasePrice(itemData),
-        stock: itemData.current_quantity ?? 0,
-        category: itemData.category?.name
-      });
-    }
-  }
+  // Full text search from store
+  const products = storeItems
+    .filter(item => {
+      if (item.is_archived === true) return false;
+      const name = String(item.name || '');
+      const description = String(item.description || '');
+      const barcode = String(item.barcode || '');
+      const sku = String(item.sku || '');
+      return name.toLowerCase().includes(searchTerm) ||
+        description.toLowerCase().includes(searchTerm) ||
+        barcode.includes(normalizedQuery) ||
+        sku.toLowerCase().includes(searchTerm);
+    })
+    .map(item => ({
+      id: item.id,
+      name: String(item.name || ''),
+      barcode: String(item.barcode || ''),
+      price: resolveSellingPrice(item),
+      selling_price: resolveSellingPrice(item),
+      base_price: resolveBasePrice(item),
+      stock: item.current_quantity ?? 0,
+      category: item.category?.name
+    } as BarcodeProduct));
 
   products.sort((a, b) => a.name.localeCompare(b.name));
   return products.slice(0, 20);
@@ -413,14 +441,18 @@ export async function searchProducts(searchQuery: string): Promise<BarcodeProduc
 // POS Settings
 export async function getPOSSettings(): Promise<POSSettings> {
   const userId = requireCurrentUserId();
+  const cached = getCachedPosSettings(userId);
+  if (cached) return cached;
+
   const settingsRef = doc(db, 'pos_settings', userId);
   const docSnap = await getDoc(settingsRef);
 
-  if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as unknown as POSSettings;
-  } else {
-    return DEFAULT_POS_SETTINGS;
-  }
+  const settings = docSnap.exists()
+    ? ({ id: docSnap.id, ...docSnap.data() } as unknown as POSSettings)
+    : DEFAULT_POS_SETTINGS;
+
+  setCachedPosSettings(userId, settings);
+  return settings;
 }
 
 export async function updatePOSSettings(settings: Partial<POSSettings>): Promise<void> {
@@ -433,40 +465,25 @@ export async function updatePOSSettings(settings: Partial<POSSettings>): Promise
   }, { merge: true });
 }
 
-// Quick Access Products
+// Quick Access Products — reads from entity store
 export async function getQuickAccessProducts(itemIds: string[]): Promise<BarcodeProduct[]> {
   if (!itemIds || itemIds.length === 0) return [];
-  const userId = requireCurrentUserId();
 
-  try {
-    const productPromises = itemIds.map(async (id) => {
-      const docRef = doc(db, 'items', id);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data.created_by !== userId || data.is_archived === true) {
-          return null;
-        }
-        return {
-          id: snap.id,
-          name: data.name,
-          barcode: data.barcode,
-          price: resolveSellingPrice(data),
-          selling_price: resolveSellingPrice(data),
-          base_price: resolveBasePrice(data),
-          stock: data.current_quantity || 0,
-          category: data.category_id
-        } as BarcodeProduct;
-      }
-      return null;
-    });
+  const storeItems = useEntityStore.getState().items.data;
+  const idSet = new Set(itemIds);
 
-    const results = await Promise.all(productPromises);
-    return results.filter((p): p is BarcodeProduct => p !== null);
-  } catch (error) {
-    console.error('Error fetching quick access products:', error);
-    return [];
-  }
+  return storeItems
+    .filter(item => idSet.has(item.id) && item.is_archived !== true)
+    .map(item => ({
+      id: item.id,
+      name: item.name,
+      barcode: item.barcode,
+      price: resolveSellingPrice(item),
+      selling_price: resolveSellingPrice(item),
+      base_price: resolveBasePrice(item),
+      stock: item.current_quantity || 0,
+      category: item.category_id
+    } as BarcodeProduct));
 }
 
 // Toggle Quick Access Item
@@ -494,9 +511,15 @@ export async function toggleQuickAccessItem(itemId: string): Promise<string[]> {
 
 // Bill Types
 export async function getBillTypes(): Promise<BillType[]> {
+  const cacheKey = 'bill_types_active';
+  const cached = getCachedBillTypes(cacheKey);
+  if (cached) return cached;
+
   const q = query(collection(db, 'bill_types'), where('active', '==', true));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BillType));
+  const types = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BillType));
+  setCachedBillTypes(cacheKey, types);
+  return types;
 }
 
 // Sales Report helper
@@ -540,28 +563,22 @@ export async function addBarcodeToItem(itemId: string, barcode: string): Promise
   });
 }
 
-// Get items with barcodes
+// Get items with barcodes — reads from entity store
 export async function getItemsWithBarcodes(): Promise<BarcodeProduct[]> {
-  const scope = getOrgScopeFilter();
-  const itemsRef = collection(db, 'items');
-  const q = query(itemsRef, where(scope.field, '==', scope.value));
-  const snapshot = await getDocs(q);
+  const storeItems = useEntityStore.getState().items.data;
 
-  return snapshot.docs
-    .filter(doc => doc.data().barcode != null)
-    .map(doc => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      name: data.name,
-      barcode: data.barcode,
-      price: resolveSellingPrice(data),
-      selling_price: resolveSellingPrice(data),
-      base_price: resolveBasePrice(data),
-      stock: data.current_quantity || 0,
-      category: data.category_id
-    };
-  }) as BarcodeProduct[];
+  return storeItems
+    .filter(item => item.barcode != null && item.is_archived !== true)
+    .map(item => ({
+      id: item.id,
+      name: item.name,
+      barcode: item.barcode,
+      price: resolveSellingPrice(item),
+      selling_price: resolveSellingPrice(item),
+      base_price: resolveBasePrice(item),
+      stock: item.current_quantity || 0,
+      category: item.category_id
+    })) as BarcodeProduct[];
 }
 
 // Helpers

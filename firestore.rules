@@ -188,6 +188,12 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Discount types lookup rules
+    match /discount_types/{discountTypeId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
     // POS Transactions rules
     match /pos_transactions/{transactionId} {
       allow read: if canReadCashierDoc();

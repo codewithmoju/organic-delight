@@ -26,7 +26,7 @@ import ExpenseCategoryBreakdown from '../../components/expenses/ExpenseCategoryB
 import ExpenseDateFilter, { DateRange } from '../../components/expenses/ExpenseDateFilter';
 import ExpenseCategoryForm from '../../components/expenses/ExpenseCategoryForm';
 import ExportMenu from '../../components/ui/ExportMenu';
-import { readScopedRaw, writeScopedJSON } from '../../lib/utils/storageScope';
+// localStorage cache removed — API-level caching handles freshness
 
 // ============================================
 // STAT CARD
@@ -77,20 +77,7 @@ export default function Expenses() {
   const profile = useAuthStore(state => state.profile);
 
   // ── State ──────────────────────────────────────────────────────────────
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    try {
-      const raw = readScopedRaw('expenses_cache', 'expenses_cache');
-      if (raw) {
-        return JSON.parse(raw, (key, value) => {
-          if (['created_at', 'updated_at', 'expense_date'].includes(key)) return new Date(value);
-          return value;
-        });
-      }
-    } catch {
-      /* ignore */
-    }
-    return [];
-  });
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
   const [summary, setSummary] = useState<{
     totalExpenses: number;
@@ -98,7 +85,7 @@ export default function Expenses() {
     categoryBreakdown: { category: string; amount: number }[];
   } | null>(null);
 
-  const [isLoading, setIsLoading] = useState(() => readScopedRaw('expenses_cache', 'expenses_cache') == null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form visibility
@@ -139,7 +126,7 @@ export default function Expenses() {
     try {
       const data = await getExpenses(dateRange.from, dateRange.to);
       setExpenses(data);
-      writeScopedJSON('expenses_cache', data);
+      // Data loaded from API
 
       const summaryData = await getExpenseSummary(dateRange.from, dateRange.to);
       setSummary(summaryData);
@@ -167,7 +154,7 @@ export default function Expenses() {
       const saved = await recordExpense({ ...formData, created_by: profile?.id || 'unknown' });
       setExpenses(prev => {
         const next = [saved, ...prev];
-        writeScopedJSON('expenses_cache', next);
+        // State updated optimistically
         return next;
       });
       setIsFormOpen(false);
@@ -254,7 +241,7 @@ export default function Expenses() {
       await deleteExpense(id);
       setExpenses(prev => {
         const next = prev.filter(e => e.id !== id);
-        writeScopedJSON('expenses_cache', next);
+        // State updated optimistically
         return next;
       });
       toast.success(t('expenses.deleteSuccess', 'Expense deleted successfully'));

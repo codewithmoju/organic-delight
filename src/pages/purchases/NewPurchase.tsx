@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, CheckCircle2, Calendar, Receipt,
-    Save, ChevronRight, Package, Building2
+    Save, ChevronRight, Package, Building2, Share2, X
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Vendor, Category } from '../../lib/types';
+import { Vendor, Category, POSSettings } from '../../lib/types';
 import { getCategories } from '../../lib/api/categories';
 import { createPurchase, auditPurchaseCreated } from '../../lib/api/purchases';
 import { createItem } from '../../lib/api/items';
@@ -16,6 +16,9 @@ import { formatCurrency } from '../../lib/utils/notifications';
 import VendorSelector from '../../components/purchases/VendorSelector';
 import PurchaseItemBuilder, { PurchaseItemData } from '../../components/purchases/PurchaseItemBuilder';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import SharePanel from '../../components/documents/SharePanel';
+import type { PurchaseInvoiceProps } from '../../components/documents/types';
+import { getPOSSettings } from '../../lib/api/pos';
 
 export default function NewPurchase() {
     const { t } = useTranslation();
@@ -38,8 +41,15 @@ export default function NewPurchase() {
     const [paidAmount, setPaidAmount] = useState(0);
     const [notes, setNotes] = useState('');
 
+    // Share modal state
+    const [completedPurchase, setCompletedPurchase] = useState<any>(null);
+    const [completedVendor, setCompletedVendor] = useState<Vendor | null>(null);
+    const [settings, setSettings] = useState<POSSettings | null>(null);
+    const [showShare, setShowShare] = useState(false);
+
     useEffect(() => {
         loadCategories();
+        getPOSSettings().then(setSettings).catch(() => {});
     }, []);
 
     const loadCategories = async () => {
@@ -79,6 +89,46 @@ export default function NewPurchase() {
             setCurrentStep(prev => Math.max(prev - 1, 1));
         }
     };
+
+    function buildPurchaseInvoiceData(
+        purchase: any,
+        vendor: Vendor,
+        items: PurchaseItemData[],
+        posSettings: POSSettings | null
+    ): PurchaseInvoiceProps {
+        const total = items.reduce((sum, item) => sum + item.quantity * item.purchase_rate, 0);
+        return {
+            variant: 'standard',
+            store: {
+                name: posSettings?.store_name || 'StockSuite Store',
+                address: posSettings?.store_address || '',
+                phone: posSettings?.store_phone || '',
+            },
+            documentNumber: purchase?.id?.slice(0, 8).toUpperCase() || 'NEW',
+            date: new Date(),
+            currency: posSettings?.currency || 'PKR',
+            items: items.map(item => ({
+                name: item.item_name,
+                quantity: item.quantity,
+                unit: 'pcs',
+                unit_price: item.purchase_rate,
+                total: item.quantity * item.purchase_rate,
+            })),
+            totals: {
+                subtotal: total,
+                total: total,
+            },
+            vendor: {
+                name: vendor.name,
+                company: vendor.company,
+                phone: vendor.phone || undefined,
+                email: vendor.email || undefined,
+            },
+            paymentStatus: purchase?.payment_status || 'unpaid',
+            paidAmount: purchase?.paid_amount || 0,
+            pendingAmount: total - (purchase?.paid_amount || 0),
+        };
+    }
 
     const handleSubmit = async () => {
         if (!selectedVendor || purchaseItems.length === 0) return;
@@ -138,8 +188,11 @@ export default function NewPurchase() {
             // Fire-and-forget audit log
             auditPurchaseCreated(purchase);
 
+            // Store completed purchase for share modal
+            setCompletedPurchase(purchase);
+            setCompletedVendor(selectedVendor);
+            setShowShare(true);
             toast.success(t('purchases.messages.success'));
-            navigate('/transactions');
         } catch (error: any) {
             console.error('Purchase error:', error);
             toast.error(error.message || t('purchases.messages.error'));
@@ -421,6 +474,45 @@ export default function NewPurchase() {
                     )}
                 </div>
             </div>
+
+            {/* Share Purchase Invoice Modal */}
+            <AnimatePresence>
+                {completedPurchase && showShare && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-card rounded-2xl p-6 max-w-md w-full space-y-4"
+                        >
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-foreground">Purchase Saved!</h3>
+                                <button onClick={() => { setShowShare(false); setCompletedPurchase(null); navigate('/transactions'); }}>
+                                    <X className="w-5 h-5 text-muted-foreground" />
+                                </button>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Purchase invoice created successfully. Share it with your vendor?
+                            </p>
+                            <SharePanel
+                                type="purchase-invoice"
+                                data={buildPurchaseInvoiceData(completedPurchase, completedVendor!, purchaseItems, settings)}
+                            />
+                            <button
+                                onClick={() => { setShowShare(false); setCompletedPurchase(null); navigate('/transactions'); }}
+                                className="w-full py-2.5 rounded-xl bg-secondary text-foreground text-sm font-semibold hover:bg-secondary/80 transition-colors"
+                            >
+                                Done
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -6,32 +6,19 @@ import { useTranslation } from 'react-i18next';
 import { Vendor } from '../../lib/types';
 import { getVendors, searchVendors, deleteVendor } from '../../lib/api/vendors';
 import { formatCurrency } from '../../lib/utils/notifications';
+import { useEntityStore } from '../../lib/store/entities';
 import VendorSkeleton from '../../components/vendors/VendorSkeleton';
 import VendorListModal from '../../components/vendors/VendorListModal';
 import { toast } from 'sonner';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
 import VendorRating from '../../components/vendors/VendorRating';
-import { readScopedRaw, writeScopedJSON } from '../../lib/utils/storageScope';
 
 export default function Vendors() {
     const { t } = useTranslation();
-    const [vendors, setVendors] = useState<Vendor[]>(() => {
-        try {
-            const cached = readScopedRaw('vendors_cache', 'vendors_cache');
-            if (cached) {
-                return JSON.parse(cached, (key, value) => {
-                    if (['created_at', 'updated_at'].includes(key)) return new Date(value);
-                    return value;
-                });
-            }
-        } catch (e) {
-            console.error('Failed to parse vendors cache', e);
-        }
-        return [];
-    });
+    const [vendors, setVendors] = useState<Vendor[]>(() => useEntityStore.getState().vendors.data);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isLoading, setIsLoading] = useState(() => readScopedRaw('vendors_cache', 'vendors_cache') == null);
+    const [isLoading, setIsLoading] = useState(() => useEntityStore.getState().vendors.data.length === 0);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -47,7 +34,6 @@ export default function Vendors() {
             // await new Promise(resolve => setTimeout(resolve, 800));
             const data = await getVendors();
             setVendors(data);
-            writeScopedJSON('vendors_cache', data);
         } catch (error: any) {
             console.error('Error loading vendors:', error);
             const msg = error.message?.includes('index')

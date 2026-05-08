@@ -5,7 +5,8 @@ import {
     ArrowLeft, Phone, Mail, MapPin, Calendar, DollarSign,
     CreditCard, Clock, Wallet, Plus, X,
     Receipt, BanknoteIcon, Building2, AlertCircle,
-    Trash2, ArrowUpRight, ArrowDownLeft, Download, Printer
+    Trash2, ArrowUpRight, ArrowDownLeft, Download, Printer,
+    Share2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Customer, CustomerPayment } from '../../lib/types';
@@ -18,7 +19,7 @@ import { useReactToPrint } from 'react-to-print';
 import { POSSettings } from '../../lib/types';
 import { getPOSSettings } from '../../lib/api/pos';
 import { exportToCSV } from '../../lib/utils/export';
-import CustomerLedgerPDF from './CustomerLedgerPDF';
+import CustomerStatementTemplate from '../../components/documents/templates/CustomerStatementTemplate';
 import { useRef } from 'react';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import CustomerCreditNote from '../../components/customers/CustomerCreditNote';
@@ -26,13 +27,73 @@ import CustomerCommunicationLog from '../../components/customers/CustomerCommuni
 import CustomerLoyalty from '../../components/customers/CustomerLoyalty';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
-import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
+// localStorage cache removed — API-level caching handles freshness
+import SharePanel from '../../components/documents/SharePanel';
+import type { CustomerStatementProps } from '../../components/documents/types';
 
 function parseDate(d: any): Date {
     if (!d) return new Date();
     if (d instanceof Date) return d;
     if (typeof d?.toDate === 'function') return d.toDate();
     return new Date(d);
+}
+
+function buildStatementShareData(
+    customer: Customer,
+    payments: CustomerPayment[],
+    creditSales: any[],
+    settings: POSSettings | null
+): CustomerStatementProps {
+    const paymentEntries = payments.map(p => ({
+        date: parseDate(p.payment_date),
+        description: p.notes || 'Payment received',
+        reference: p.reference_number || '',
+        debit: 0,
+        credit: p.amount,
+        balance: 0,
+    }));
+
+    const creditEntries = creditSales.map(s => ({
+        date: parseDate(s.created_at),
+        description: 'Credit sale',
+        reference: s.transaction_number || s.id?.slice(0, 8) || '',
+        debit: s.total_amount || 0,
+        credit: 0,
+        balance: 0,
+    }));
+
+    let entries = [...paymentEntries, ...creditEntries].sort((a, b) => a.date.getTime() - b.date.getTime());
+    let runningBalance = 0;
+    entries = entries.map(e => {
+        runningBalance += e.debit - e.credit;
+        return { ...e, balance: runningBalance };
+    });
+
+    const now = new Date();
+    const periodStart = entries.length > 0 ? entries[0].date : new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return {
+        variant: 'standard',
+        store: {
+            name: settings?.store_name || 'StockSuite Store',
+            address: settings?.store_address || '',
+            phone: settings?.store_phone || '',
+        },
+        documentNumber: `STMT-${customer.id.slice(0, 8).toUpperCase()}`,
+        date: now,
+        currency: settings?.currency || 'PKR',
+        customer: {
+            name: customer.name,
+            phone: customer.phone || undefined,
+            email: customer.email || undefined,
+            address: customer.address || undefined,
+        },
+        ledgerEntries: entries,
+        openingBalance: 0,
+        closingBalance: runningBalance,
+        periodStart,
+        periodEnd: now,
+    };
 }
 
 function getRelativeTime(date: Date): string {
@@ -377,18 +438,17 @@ const IconLink = ({ Icon, className }: { Icon: any, className: string }) => <Ico
 export default function CustomerLedger() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const cacheKey = id ? `customer_ledger_cache_${id}` : '';
-    const cached = id ? readScopedJSON<any>(cacheKey, null, undefined, cacheKey) : null;
-    const [customer, setCustomer] = useState<Customer | null>(cached?.customer ?? null);
-    const [payments, setPayments] = useState<CustomerPayment[]>(cached?.payments ?? []);
-    const [creditSales, setCreditSales] = useState<any[]>(cached?.creditSales ?? []);
-    const [isLoading, setIsLoading] = useState(() => !cached);
+    const [customer, setCustomer] = useState<Customer | null>(null);
+    const [payments, setPayments] = useState<CustomerPayment[]>([]);
+    const [creditSales, setCreditSales] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'payments' | 'credits'>('all');
     const [settings, setSettings] = useState<POSSettings | null>(null);
     const componentRef = useRef<HTMLDivElement>(null);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showShare, setShowShare] = useState(false);
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
@@ -408,10 +468,8 @@ export default function CustomerLedger() {
     }, [id]);
 
     async function loadData() {
-        const hasWarmCache = !!cached;
-        if (!hasWarmCache) setIsLoading(true);
+        setIsLoading(true);
         try {
-            // Load customer first - this is required
             const cust = await getCustomerById(id!);
             if (!cust) {
                 toast.error('Customer not found');
@@ -420,7 +478,6 @@ export default function CustomerLedger() {
             }
             setCustomer(cust);
 
-            // Load ledger and credit sales independently (may fail due to missing indexes)
             const [ledger, sales] = await Promise.all([
                 getCustomerLedger(id!).catch((err) => {
                     console.warn('Error loading ledger:', err);
@@ -433,16 +490,11 @@ export default function CustomerLedger() {
             ]);
             setPayments(ledger);
             setCreditSales(sales);
-            writeScopedJSON(cacheKey, {
-                customer: cust,
-                payments: ledger,
-                creditSales: sales
-            });
         } catch (error) {
             toast.error('Failed to load customer data');
             console.error(error);
         } finally {
-            if (!hasWarmCache) setIsLoading(false);
+            setIsLoading(false);
         }
     }
 
@@ -596,6 +648,13 @@ export default function CustomerLedger() {
                                     {/* Actions */}
                                     <div className="flex gap-2 flex-shrink-0">
                                         <button
+                                            onClick={() => setShowShare(!showShare)}
+                                            className="p-2 sm:p-2.5 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                            title="Share Statement"
+                                        >
+                                            <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        </button>
+                                        <button
                                             onClick={handleExport}
                                             className="p-2 sm:p-2.5 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                                             title="Export CSV"
@@ -628,6 +687,12 @@ export default function CustomerLedger() {
                                     </div>
                                 </div>
                             </motion.div>
+                        )}
+
+                        {showShare && customer && settings && (
+                            <div className="mt-3">
+                                <SharePanel type="customer-statement" data={buildStatementShareData(customer, payments, creditSales, settings)} />
+                            </div>
                         )}
 
                         {/* ─── STATS ─── */}
@@ -747,12 +812,10 @@ export default function CustomerLedger() {
             )}
             {/* Hidden PDF Component */}
             <div className="hidden">
-                {displayCustomer && settings && (
-                    <CustomerLedgerPDF
+                {displayCustomer && settings && customer && (
+                    <CustomerStatementTemplate
                         ref={componentRef}
-                        customer={displayCustomer}
-                        ledger={allEntries}
-                        settings={settings}
+                        {...buildStatementShareData(customer, payments, creditSales, settings)}
                     />
                 )}
             </div>

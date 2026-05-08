@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { toast } from 'sonner';
 import { useAuthStore } from '../lib/store';
+import { useEntityStore } from '../lib/store/entities';
 import { getScopedStorageKey } from '../lib/utils/storageScope';
 
 interface SyncContextType {
@@ -50,20 +51,20 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         setIsSyncing(true);
 
         try {
-            // 1. Sync POS Transactions
+            // Mark all entity store slices stale so next reads revalidate from Firestore
+            const store = useEntityStore.getState();
+            store.markItemsStale();
+            store.markCategoriesStale();
+            store.markCustomersStale();
+            store.markVendorsStale();
+            store.markTransactionsStale();
+
+            // POS queue sync is handled by useOfflineQueue — trigger it via storage event
             const posQueue = JSON.parse(localStorage.getItem(storageKey) || '[]');
             if (posQueue.length > 0) {
-                // This logic is currently handled in POSInterface or useOfflineQueue.
-                // In a full implementation, we'd move the sync logic here or trigger it.
-                // For now, we'll let existing hooks handle their specific syncs,
-                // but this provider acts as a global monitor.
+                // Notify useOfflineQueue to process its queue
+                window.dispatchEvent(new StorageEvent('storage', { key: storageKey }));
             }
-
-            // Future: Add other sync logic here (e.g. new products, customer updates)
-
-            // Simulate sync delay for UX
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
         } catch (error) {
             console.error('Global sync failed:', error);
             toast.error('Sync failed. Please check connection.');
@@ -78,6 +79,36 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
             syncData();
         }
     }, [isOnline, pendingChanges, syncData]);
+
+    // Revalidate stale data when tab regains focus
+    useEffect(() => {
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && isOnline) {
+                const store = useEntityStore.getState();
+                // Only mark stale if data is actually stale (older than stale threshold)
+                const now = Date.now();
+                const STALE_MS = 5 * 60 * 1000; // 5 minutes
+                if (store.items.loadedAt && now - store.items.loadedAt > STALE_MS) {
+                    store.markItemsStale();
+                }
+                if (store.categories.loadedAt && now - store.categories.loadedAt > STALE_MS) {
+                    store.markCategoriesStale();
+                }
+                if (store.customers.loadedAt && now - store.customers.loadedAt > STALE_MS) {
+                    store.markCustomersStale();
+                }
+                if (store.vendors.loadedAt && now - store.vendors.loadedAt > STALE_MS) {
+                    store.markVendorsStale();
+                }
+                if (store.transactions.loadedAt && now - store.transactions.loadedAt > STALE_MS) {
+                    store.markTransactionsStale();
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    }, [isOnline]);
 
     const value = useMemo<SyncContextType>(() => ({
         isSyncing,

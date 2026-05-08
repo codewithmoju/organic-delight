@@ -9,8 +9,6 @@ import {
   query,
   where,
   orderBy,
-  limit,
-  startAfter,
   DocumentSnapshot,
   Timestamp,
   writeBatch
@@ -19,17 +17,11 @@ import { db } from '../firebase';
 import { Item, StockLevel } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
 import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
-
-// Simple cache for frequently accessed data
-const itemsCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+import { cacheFirstRead, STALE_MS } from './_cacheFirst';
+import { useEntityStore } from '../store/entities';
 
 export function invalidateItemsCache() {
-  itemsCache.clear();
-}
-
-function isCacheValid(timestamp: number): boolean {
-  return Date.now() - timestamp < CACHE_DURATION;
+  useEntityStore.getState().markItemsStale();
 }
 
 function derivePricing(data: any): { base_price: number; selling_price: number } {
@@ -137,16 +129,15 @@ async function fetchAllItems(categoryId?: string, limitCount?: number): Promise<
 }
 
 export async function getItems(limitCount?: number, lastDoc?: DocumentSnapshot) {
-  const cacheKey = `items-${limitCount || 'all'}-${lastDoc?.id || 'start'}`;
-  const cached = itemsCache.get(cacheKey);
-
-  if (cached && isCacheValid(cached.timestamp)) {
-    return cached.data;
-  }
-  const items = await fetchAllItems(undefined, limitCount);
-  const result = { items, lastDoc: null };
-  itemsCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  return result;
+  const items = await cacheFirstRead(
+    'items',
+    () => useEntityStore.getState().items.data.length > 0 ? useEntityStore.getState().items.data : null,
+    () => useEntityStore.getState().items.loadedAt,
+    (data) => useEntityStore.getState().setItems(data),
+    async () => fetchAllItems(undefined, limitCount),
+    STALE_MS.items,
+  );
+  return { items, lastDoc: null };
 }
 
 export async function getItemsByCategory(categoryId: string): Promise<Item[]> {
@@ -272,8 +263,9 @@ export async function createItem(itemData: {
   });
 
   // Invalidate cache
-  itemsCache.clear();
-  return getItem(docRef.id);
+  const newItem = await getItem(docRef.id);
+  useEntityStore.getState().addItem(newItem);
+  return newItem;
 }
 
 export async function updateItem(id: string, itemData: {
@@ -368,9 +360,10 @@ export async function updateItem(id: string, itemData: {
   };
 
   await updateDoc(docRef, updateData);
-  // Invalidate cache
-  itemsCache.clear();
-  return getItem(id);
+  // Update entity store
+  const updatedItem = await getItem(id);
+  useEntityStore.getState().updateItem(id, updatedItem);
+  return updatedItem;
 }
 
 export async function deleteItem(id: string): Promise<void> {
@@ -395,14 +388,12 @@ export async function deleteItem(id: string): Promise<void> {
       is_archived: true,
       updated_at: Timestamp.fromDate(new Date())
     });
-    // Invalidate cache
-    itemsCache.clear();
+    useEntityStore.getState().removeItem(id);
     return;
   }
 
   await deleteDoc(itemRef);
-  // Invalidate cache
-  itemsCache.clear();
+  useEntityStore.getState().removeItem(id);
 }
 
 export async function getItemStockLevel(itemId: string): Promise<StockLevel | null> {
@@ -473,36 +464,13 @@ export async function getItemStockLevel(itemId: string): Promise<StockLevel | nu
 }
 
 export async function searchItems(searchQuery: string, categoryId?: string): Promise<Item[]> {
-  const scope = getOrgScopeFilter();
-  const itemsRef = collection(db, 'items');
-  let q = query(itemsRef, where(scope.field, '==', scope.value), limit(300));
+  // Read from entity store — zero network calls
+  const storeItems = useEntityStore.getState().items.data;
+  let items = storeItems.filter(item => item.is_archived !== true);
 
   if (categoryId) {
-    q = query(
-      itemsRef,
-      where(scope.field, '==', scope.value),
-      where('category_id', '==', categoryId),
-      limit(300)
-    );
+    items = items.filter(item => item.category_id === categoryId);
   }
-
-  const snapshot = await getDocs(q);
-
-  let items = snapshot.docs.map(docSnapshot => {
-    const itemData = docSnapshot.data();
-    return {
-      id: docSnapshot.id,
-      ...itemData,
-      current_quantity: itemData.current_quantity ?? 0,
-      average_unit_cost: itemData.average_unit_cost ?? 0,
-      total_value: (itemData.current_quantity ?? 0) * (itemData.average_unit_cost ?? 0),
-      created_at: itemData.created_at?.toDate ? itemData.created_at.toDate() : new Date(itemData.created_at || Date.now()),
-      updated_at: itemData.updated_at?.toDate ? itemData.updated_at.toDate() : new Date(itemData.updated_at || Date.now())
-    } as Item;
-  });
-
-  // Client-side filtering for search (Firestore search is limited)
-  items = items.filter(item => item.is_archived !== true);
 
   if (searchQuery) {
     const term = searchQuery.toLowerCase();
@@ -512,9 +480,7 @@ export async function searchItems(searchQuery: string, categoryId?: string): Pro
     );
   }
 
-  items = await hydrateItemCategories(items);
-
-  return items;
+  return items as Item[];
 }
 export async function reconcileAllItemsStock(): Promise<{ updated: number; failed: number }> {
   try {
@@ -558,7 +524,9 @@ export async function reconcileAllItemsStock(): Promise<{ updated: number; faile
     }
 
     await Promise.all(batches);
-    invalidateItemsCache();
+    // Refresh items in entity store after reconciliation
+    const freshItems = await fetchAllItems();
+    useEntityStore.getState().setItems(freshItems);
     return { updated: updatedCount, failed: failedCount };
   } catch (error) {
     console.error('Error in reconcileAllItemsStock:', error);
@@ -604,6 +572,9 @@ export async function adjustItemStock(
     ...stampOrgId({}),
   });
 
-  // Invalidate cache so updated quantity is reflected
-  invalidateItemsCache();
+  // Update entity store with new stock level
+  useEntityStore.getState().updateItem(itemId, {
+    current_quantity: newQty,
+    updated_at: new Date(),
+  } as any);
 }

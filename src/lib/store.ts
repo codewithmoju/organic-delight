@@ -8,6 +8,7 @@ import { clearKnownSessionStorage, createScopedZustandStorage } from './utils/st
 import { invalidateItemsCache } from './api/items';
 import { clearTransactionsCache } from './api/transactions';
 import { clearDashboardCache } from './api/dashboard';
+import { useEntityStore } from './store/entities';
 
 interface AuthState {
   user: User | null;
@@ -31,6 +32,7 @@ export function clearSessionCaches(previousUserId?: string | null): void {
   invalidateItemsCache();
   clearTransactionsCache();
   clearDashboardCache();
+  useEntityStore.getState().clearAll();
   clearKnownSessionStorage(previousUserId ?? undefined);
 }
 

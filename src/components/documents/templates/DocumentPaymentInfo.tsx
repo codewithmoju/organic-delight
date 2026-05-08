@@ -34,39 +34,36 @@ export default function DocumentPaymentInfo({ variant, colorMode = 'color', paym
     );
   }
 
-  const bg = isColor ? '#FFF7ED' : '#f5f5f5';
-  const borderColor = isColor ? '#F97316' : '#000';
-  const labelColor = isColor ? '#9A3412' : '#333';
-
   return (
     <div style={{
-      margin: '12px 0', padding: '14px',
-      borderRadius: '8px', backgroundColor: bg,
-      borderLeft: `4px solid ${borderColor}`,
+      margin: '12px 0', padding: '12px 14px',
+      borderRadius: '8px',
+      backgroundColor: isColor ? '#f9fafb' : '#f5f5f5',
+      border: `1px solid ${isColor ? '#e5e7eb' : '#ddd'}`,
     }}>
       <h3 style={{
-        fontSize: '12px', fontWeight: 700, margin: '0 0 10px',
+        fontSize: '11px', fontWeight: 700, margin: '0 0 10px',
         textTransform: 'uppercase', letterSpacing: '0.08em',
-        color: labelColor,
+        color: isColor ? '#F97316' : '#333',
       }}>
         Payment Details
       </h3>
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '14px' }}>
-        <span style={{ opacity: 0.7 }}>Method</span>
+        <span style={{ color: '#6b7280' }}>Method</span>
         <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{payment.method.replace('_', ' ')}</span>
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '14px' }}>
-        <span style={{ opacity: 0.7 }}>Amount Paid</span>
+        <span style={{ color: '#6b7280' }}>Amount Paid</span>
         <span style={{ fontWeight: 700 }}>{formatCurrency(payment.amount_paid, currency)}</span>
       </div>
       {payment.change !== undefined && payment.change > 0 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '14px' }}>
-          <span style={{ opacity: 0.7 }}>Change</span>
+          <span style={{ color: '#6b7280' }}>Change</span>
           <span style={{ fontWeight: 700 }}>{formatCurrency(payment.change, currency)}</span>
         </div>
       )}
       {payment.reference && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px', opacity: 0.6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px', color: '#9ca3af' }}>
           <span>Ref</span><span>{payment.reference}</span>
         </div>
       )}

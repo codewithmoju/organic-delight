@@ -4,11 +4,11 @@ import { Plus, Pencil, Trash2, FolderOpen, Package, Search, X, Undo2 } from 'luc
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../../lib/api/categories';
+import { useEntityStore } from '../../lib/store/entities';
 import { Category } from '../../lib/types';
 import InlineCategoryForm from '../../components/inventory/InlineCategoryForm';
 import CategorySkeleton from '../../components/inventory/CategorySkeleton';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { readScopedRaw, writeScopedJSON } from '../../lib/utils/storageScope';
 
 interface CategoryWithCount extends Category {
   itemCount?: number;
@@ -22,23 +22,10 @@ interface DeletedCategory {
 
 export default function Categories() {
   const { t } = useTranslation();
-  const [categories, setCategories] = useState<CategoryWithCount[]>(() => {
-    try {
-      const cached = readScopedRaw('inventory_categories_cache', 'inventory_categories_cache');
-      if (cached) {
-        return JSON.parse(cached, (key, value) => {
-          if (['created_at', 'updated_at'].includes(key)) return new Date(value);
-          return value;
-        });
-      }
-    } catch (e) {
-      console.error('Failed to parse categories cache', e);
-    }
-    return [];
-  });
-  const [isLoading, setIsLoading] = useState(
-    () => readScopedRaw('inventory_categories_cache', 'inventory_categories_cache') == null
+  const [categories, setCategories] = useState<CategoryWithCount[]>(() =>
+    useEntityStore.getState().categories.data.map(cat => ({ ...cat, itemCount: cat.item_count || 0 }))
   );
+  const [isLoading, setIsLoading] = useState(() => useEntityStore.getState().categories.data.length === 0);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryWithCount | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,7 +77,6 @@ export default function Categories() {
       const data = await getCategories();
       const enrichedData = data.map(cat => ({ ...cat, itemCount: cat.item_count || 0 }));
       setCategories(enrichedData);
-      writeScopedJSON('inventory_categories_cache', enrichedData);
     } catch (error) {
       toast.error(t('categories.messages.loadError', 'Failed to load categories'));
       console.error(error);

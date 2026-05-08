@@ -8,22 +8,13 @@ import { getItems } from '../lib/api/items';
 import AnimatedCard from '../components/ui/AnimatedCard';
 import { formatCurrency } from '../lib/utils/notifications';
 import ContextualLoader from '../components/ui/ContextualLoader';
-import { readScopedJSON, writeScopedJSON } from '../lib/utils/storageScope';
 
 export default function Reports() {
   const { t } = useTranslation();
-  const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>(() =>
-    readScopedJSON<any[]>('reports_monthly_cache', [], undefined, 'reports_monthly_cache')
-  );
-  const [topItems, setTopItems] = useState<any[]>(() =>
-    readScopedJSON<any[]>('reports_top_items_cache', [], undefined, 'reports_top_items_cache')
-  );
-  const [categoryDistribution, setCategoryDistribution] = useState<any[]>(() =>
-    readScopedJSON<any[]>('reports_category_dist_cache', [], undefined, 'reports_category_dist_cache')
-  );
-  const [isLoading, setIsLoading] = useState(
-    () => readScopedJSON<any[]>('reports_monthly_cache', [], undefined, 'reports_monthly_cache').length === 0
-  );
+  const [monthlyTransactions, setMonthlyTransactions] = useState<any[]>([]);
+  const [topItems, setTopItems] = useState<any[]>([]);
+  const [categoryDistribution, setCategoryDistribution] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const COLORS = ['#3b82f6', '#d946ef', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -89,9 +80,7 @@ export default function Reports() {
       setTopItems(processedTopItems);
       setCategoryDistribution(processedCategory);
 
-      writeScopedJSON('reports_monthly_cache', processedMonthly);
-      writeScopedJSON('reports_top_items_cache', processedTopItems);
-      writeScopedJSON('reports_category_dist_cache', processedCategory);
+      // State updated from API
 
     } catch (error) {
       toast.error(t('reports.messages.loadError'));

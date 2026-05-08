@@ -23,28 +23,25 @@ export default function DocumentPartyDetails({ variant, colorMode = 'color', par
     );
   }
 
-  const bg = isColor ? '#F0FDFA' : '#f5f5f5';
-  const borderColor = isColor ? '#0D9488' : '#000';
-  const labelColor = isColor ? '#0D9488' : '#000';
-
   return (
     <div style={{
-      margin: '12px 0', padding: '14px',
-      borderRadius: '8px', backgroundColor: bg,
-      borderLeft: `4px solid ${borderColor}`,
+      margin: '12px 0', padding: '12px 14px',
+      borderRadius: '8px',
+      backgroundColor: isColor ? '#f9fafb' : '#f5f5f5',
+      border: `1px solid ${isColor ? '#e5e7eb' : '#ddd'}`,
     }}>
       <h3 style={{
-        fontSize: '12px', fontWeight: 700, margin: '0 0 8px',
+        fontSize: '11px', fontWeight: 700, margin: '0 0 8px',
         textTransform: 'uppercase', letterSpacing: '0.08em',
-        color: labelColor,
+        color: isColor ? '#F97316' : '#333',
       }}>
         {label}
       </h3>
-      <p style={{ fontWeight: 700, fontSize: '15px', margin: '0 0 3px' }}>{party.name}</p>
-      {party.company && <p style={{ fontSize: '13px', margin: '0 0 2px', opacity: 0.7 }}>{party.company}</p>}
-      {party.phone && <p style={{ fontSize: '13px', margin: '0 0 2px', opacity: 0.7 }}>{party.phone}</p>}
-      {party.email && <p style={{ fontSize: '13px', margin: '0 0 2px', opacity: 0.7 }}>{party.email}</p>}
-      {party.address && <p style={{ fontSize: '13px', margin: 0, opacity: 0.7 }}>{party.address}</p>}
+      <p style={{ fontWeight: 700, fontSize: '15px', margin: '0 0 3px', color: '#1a1a1a' }}>{party.name}</p>
+      {party.company && <p style={{ fontSize: '13px', margin: '0 0 2px', color: '#6b7280' }}>{party.company}</p>}
+      {party.phone && <p style={{ fontSize: '13px', margin: '0 0 2px', color: '#6b7280' }}>{party.phone}</p>}
+      {party.email && <p style={{ fontSize: '13px', margin: '0 0 2px', color: '#6b7280' }}>{party.email}</p>}
+      {party.address && <p style={{ fontSize: '13px', margin: 0, color: '#6b7280' }}>{party.address}</p>}
     </div>
   );
 }

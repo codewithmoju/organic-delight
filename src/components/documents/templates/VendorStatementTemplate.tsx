@@ -18,9 +18,8 @@ const VendorStatementTemplate = forwardRef<HTMLDivElement, VendorStatementProps>
   const formattedDate = date instanceof Date ? date.toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' }) : String(date);
   const fmtPeriod = `${periodStart.toLocaleDateString('en-PK', { month: 'short', day: 'numeric' })} - ${periodEnd.toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
-  const headerBg = isColor ? '#FFF7ED' : '#f0f0f0';
-  const headerBorder = isColor ? '#FB923C' : '#000';
-  const altRowBg = isColor ? '#FFFBF5' : '#f5f5f5';
+  const accentColor = isColor ? '#F97316' : '#000';
+  const altRowBg = isColor ? '#fafafa' : '#f5f5f5';
 
   return (
     <DocumentShell ref={ref} variant={variant} colorMode={cm}>
@@ -42,7 +41,7 @@ const VendorStatementTemplate = forwardRef<HTMLDivElement, VendorStatementProps>
           ].map(card => (
             <div key={card.label} style={{
               flex: 1, padding: '14px', borderRadius: '8px',
-              backgroundColor: isColor ? '#FFFBF5' : '#f5f5f5',
+              backgroundColor: '#f9fafb',
               borderLeft: `4px solid ${card.color}`,
             }}>
               <div style={{ fontSize: '11px', opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{card.label}</div>
@@ -64,17 +63,17 @@ const VendorStatementTemplate = forwardRef<HTMLDivElement, VendorStatementProps>
       {!isThermal ? (
         <table style={{ width: '100%', borderCollapse: 'collapse', margin: '12px 0', fontSize: '13px' }}>
           <thead>
-            <tr style={{ borderBottom: `2px solid ${headerBorder}`, backgroundColor: headerBg }}>
-              <th style={{ textAlign: 'left', padding: '8px 6px', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', color: isColor ? '#9A3412' : '#333' }}>Date</th>
-              <th style={{ textAlign: 'left', padding: '8px 6px', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', color: isColor ? '#9A3412' : '#333' }}>Description</th>
-              <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', color: isColor ? '#9A3412' : '#333' }}>Debit</th>
-              <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', color: isColor ? '#9A3412' : '#333' }}>Credit</th>
-              <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', color: isColor ? '#9A3412' : '#333' }}>Balance</th>
+            <tr style={{ borderBottom: `2px solid ${accentColor}` }}>
+              <th style={{ textAlign: 'left', padding: '8px 6px', fontWeight: 700, fontSize: '11px', color: '#374151' }}>Date</th>
+              <th style={{ textAlign: 'left', padding: '8px 6px', fontWeight: 700, fontSize: '11px', color: '#374151' }}>Description</th>
+              <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, fontSize: '11px', color: '#374151' }}>Debit</th>
+              <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, fontSize: '11px', color: '#374151' }}>Credit</th>
+              <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, fontSize: '11px', color: '#374151' }}>Balance</th>
             </tr>
           </thead>
           <tbody>
             {ledgerEntries.map((entry, i) => (
-              <tr key={i} style={{ borderBottom: `1px solid ${isColor ? '#FED7AA' : '#ddd'}`, backgroundColor: i % 2 === 0 ? '#fff' : altRowBg }}>
+              <tr key={i} style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: i % 2 === 0 ? '#fff' : altRowBg }}>
                 <td style={{ padding: '8px 6px' }}>{entry.date.toLocaleDateString('en-PK', { month: 'short', day: 'numeric' })}</td>
                 <td style={{ padding: '8px 6px' }}>{entry.description}</td>
                 <td style={{ textAlign: 'right', padding: '8px 6px', color: entry.debit > 0 ? (isColor ? '#EF4444' : '#000') : undefined, fontWeight: entry.debit > 0 ? 600 : 400 }}>
@@ -83,7 +82,7 @@ const VendorStatementTemplate = forwardRef<HTMLDivElement, VendorStatementProps>
                 <td style={{ textAlign: 'right', padding: '8px 6px', color: entry.credit > 0 ? (isColor ? '#16A34A' : '#000') : undefined, fontWeight: entry.credit > 0 ? 600 : 400 }}>
                   {entry.credit > 0 ? formatCurrency(entry.credit, currency) : '-'}
                 </td>
-                <td style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, color: isColor ? '#EA580C' : '#000' }}>{formatCurrency(entry.balance, currency)}</td>
+                <td style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, color: '#1a1a1a' }}>{formatCurrency(entry.balance, currency)}</td>
               </tr>
             ))}
           </tbody>

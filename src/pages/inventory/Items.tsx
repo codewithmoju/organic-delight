@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { getItems, createItem, updateItem, deleteItem, reconcileAllItemsStock } from '../../lib/api/items';
 import { getCategories } from '../../lib/api/categories';
 import { createItemWithInitialStock } from '../../lib/api/enhancedItems';
+import { useEntityStore } from '../../lib/store/entities';
+import { useOptimisticMutation } from '../../hooks/useOptimisticMutation';
 
 import { Category, EnhancedItem } from '../../lib/types';
 import QuickItemForm from '../../components/inventory/QuickItemForm';
@@ -18,50 +20,16 @@ import PaginationControls from '../../components/ui/PaginationControls';
 import { PageSkeleton, TableSkeleton } from '../../components/ui/SkeletonLoader';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import EmptyState from '../../components/ui/EmptyState';
-import { readScopedRaw, readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
-
-const ITEMS_CACHE_KEY = 'inventory_items_cache';
-const CATEGORIES_CACHE_KEY = 'inventory_categories_cache';
+import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
 
 export default function Items() {
   const { t } = useTranslation();
 
-  // Initialize from cache to provide instant feedback
-  const [items, setItems] = useState<EnhancedItem[]>(() => {
-    try {
-      const cached = readScopedRaw(ITEMS_CACHE_KEY, ITEMS_CACHE_KEY);
-      if (cached) {
-        return JSON.parse(cached, (key, value) => {
-          if (['created_at', 'updated_at', 'last_transaction_date'].includes(key)) {
-            return new Date(value);
-          }
-          return value;
-        });
-      }
-    } catch (e) {
-      console.error('Failed to parse items cache', e);
-    }
-    return [];
-  });
-
-  const [categories, setCategories] = useState<Category[]>(() => {
-    try {
-      const cached = readScopedRaw(CATEGORIES_CACHE_KEY, CATEGORIES_CACHE_KEY);
-      if (cached) {
-        return JSON.parse(cached, (key, value) => {
-          if (['created_at', 'updated_at'].includes(key)) return new Date(value);
-          return value;
-        });
-      }
-    } catch (e) {
-      console.error('Failed to parse categories cache', e);
-    }
-    return [];
-  });
-
+  // Initialize from entity store (persisted to localStorage via Zustand)
+  const [items, setItems] = useState<EnhancedItem[]>(() => useEntityStore.getState().items.data);
+  const [categories, setCategories] = useState<Category[]>(() => useEntityStore.getState().categories.data);
   const [filteredItems, setFilteredItems] = useState<EnhancedItem[]>([]);
-  // Use cache presence to determine initial loading state
-  const [isLoading, setIsLoading] = useState(() => readScopedRaw(ITEMS_CACHE_KEY, ITEMS_CACHE_KEY) == null);
+  const [isLoading, setIsLoading] = useState(() => useEntityStore.getState().items.data.length === 0);
   const [selectedItem, setSelectedItem] = useState<EnhancedItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,10 +96,6 @@ export default function Items() {
       setItems(loadedItems);
       setCategories(categoriesData);
 
-      // Update cache
-      writeScopedJSON(ITEMS_CACHE_KEY, loadedItems);
-      writeScopedJSON(CATEGORIES_CACHE_KEY, categoriesData);
-
     } catch (error) {
       toast.error('Failed to load data');
       console.error(error);
@@ -166,21 +130,20 @@ export default function Items() {
 
 
   const handleInlinePriceUpdate = async (itemId: string) => {
-    const previousItems = [...items];
-    setItems(prevItems => prevItems.map(item => item.id === itemId ? {
-      ...item,
-      selling_price: editingPriceValue,
-      unit_price: editingPriceValue,
-      sale_rate: editingPriceValue,
-    } : item));
     setEditingPriceId(null);
-    toast.success(t('items.messages.priceUpdated', 'Price updated!'));
-    try {
-      await updateItem(itemId, { selling_price: editingPriceValue, unit_price: editingPriceValue, sale_rate: editingPriceValue });
-    } catch (error: any) {
-      setItems(previousItems);
-      toast.error(t('items.messages.priceError', 'Failed to update price.'));
-    }
+    optimisticMutate(
+      (current) => current.map(item => item.id === itemId ? {
+        ...item,
+        selling_price: editingPriceValue,
+        unit_price: editingPriceValue,
+        sale_rate: editingPriceValue,
+      } : item),
+      () => updateItem(itemId, { selling_price: editingPriceValue, unit_price: editingPriceValue, sale_rate: editingPriceValue }),
+      {
+        successMessage: t('items.messages.priceUpdated', 'Price updated!'),
+        errorMessage: t('items.messages.priceError', 'Failed to update price.'),
+      }
+    );
   };
 
   async function handleSubmit(data: {
@@ -271,6 +234,11 @@ export default function Items() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
+  const { mutate: optimisticMutate } = useOptimisticMutation({
+    getData: () => items,
+    setData: setItems,
+  });
+
   const handleDeleteClick = (id: string) => {
     setItemToDelete(id);
     setIsDeleteConfirmOpen(true);
@@ -288,20 +256,14 @@ export default function Items() {
     setIsDeleteConfirmOpen(false);
     setItemToDelete(null);
 
-    // --- Optimistic UI: Remove item from state immediately ---
-    const previousItems = [...items];
-    setItems(prevItems => prevItems.filter(item => item.id !== id));
-    toast.success(t('items.messages.deleteSuccess'));
-
-    // --- Perform the actual API call in the background ---
-    try {
-      await deleteItem(id);
-    } catch (error: any) {
-      // --- Rollback: Revert to previous state on error ---
-      setItems(previousItems);
-      toast.error(t('items.messages.deleteError') + ': ' + (error.message || 'Unknown error'));
-      console.error(error);
-    }
+    optimisticMutate(
+      (current) => current.filter(item => item.id !== id),
+      () => deleteItem(id),
+      {
+        successMessage: t('items.messages.deleteSuccess'),
+        errorMessage: t('items.messages.deleteError'),
+      }
+    );
   }
 
   if (isFormOpen) {
@@ -354,7 +316,6 @@ export default function Items() {
                 }}
                 onCategoryCreated={(newCat) => {
                   setCategories(prev => [...prev, newCat]);
-                  writeScopedJSON(CATEGORIES_CACHE_KEY, [...categories, newCat]);
                 }}
               />
             )}

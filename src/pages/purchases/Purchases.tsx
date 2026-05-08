@@ -20,7 +20,7 @@ import PurchaseAnalytics from '../../components/purchases/PurchaseAnalytics';
 import ExportMenu from '../../components/ui/ExportMenu';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
-import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
+// localStorage cache removed — API-level caching handles freshness
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -72,13 +72,8 @@ export default function Purchases() {
   const navigate = useNavigate();
 
   const [dateFilter, setDateFilter] = useState<string>('30d');
-  const purchasesCacheKey = `purchases_page_cache_${dateFilter}`;
-  const [purchases, setPurchases] = useState<Purchase[]>(() =>
-    readScopedJSON<Purchase[]>(purchasesCacheKey, [], undefined, purchasesCacheKey)
-  );
-  const [isLoading, setIsLoading] = useState(() =>
-    readScopedJSON<Purchase[]>(purchasesCacheKey, [], undefined, purchasesCacheKey).length === 0
-  );
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
@@ -86,8 +81,7 @@ export default function Purchases() {
 
   // ── Load data ───────────────────────────────────────────────────────────
   const loadPurchases = useCallback(async () => {
-    const hasWarmCache = readScopedJSON<Purchase[]>(purchasesCacheKey, [], undefined, purchasesCacheKey).length > 0;
-    if (!hasWarmCache) setIsLoading(true);
+    setIsLoading(true);
     try {
       let from: Date | undefined;
       const today = new Date();
@@ -97,13 +91,12 @@ export default function Purchases() {
 
       const data = await getPurchases(from, from ? today : undefined);
       setPurchases(data);
-      writeScopedJSON(purchasesCacheKey, data);
     } catch (err) {
       console.error('Error loading purchases:', err);
     } finally {
-      if (!hasWarmCache) setIsLoading(false);
+      setIsLoading(false);
     }
-  }, [dateFilter, purchasesCacheKey]);
+  }, [dateFilter]);
 
   useEffect(() => { loadPurchases(); }, [loadPurchases]);
 

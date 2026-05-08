@@ -15,9 +15,8 @@ import { db } from '../firebase';
 import { Customer, CustomerPayment } from '../types';
 import { requireCurrentUserId, assertOwnership } from './userScope';
 import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
-import { createCache } from './_base';
-
-const customersCache = createCache<Customer[]>(10 * 60 * 1000); // 10 minutes
+import { cacheFirstRead, STALE_MS } from './_cacheFirst';
+import { useEntityStore } from '../store/entities';
 // ============================================
 // CUSTOMER CRUD OPERATIONS
 // ============================================
@@ -26,53 +25,54 @@ const customersCache = createCache<Customer[]>(10 * 60 * 1000); // 10 minutes
  * Get all active customers
  */
 export async function getCustomers(): Promise<Customer[]> {
-    const cached = customersCache.get('active');
-    if (cached) return cached;
+    return cacheFirstRead(
+        'customers',
+        () => useEntityStore.getState().customers.data.length > 0 ? useEntityStore.getState().customers.data : null,
+        () => useEntityStore.getState().customers.loadedAt,
+        (data) => useEntityStore.getState().setCustomers(data),
+        async () => {
+            const scope = getOrgScopeFilter();
+            try {
+                const customersRef = collection(db, 'customers');
+                const q = query(
+                    customersRef,
+                    where(scope.field, '==', scope.value),
+                    where('is_active', '==', true),
+                    orderBy('name')
+                );
+                const snapshot = await getDocs(q);
 
-    const scope = getOrgScopeFilter();
-    try {
-        const customersRef = collection(db, 'customers');
-        // Filter server-side for active customers
-        const q = query(
-            customersRef,
-            where(scope.field, '==', scope.value),
-            where('is_active', '==', true),
-            orderBy('name')
-        );
-        const snapshot = await getDocs(q);
+                return snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
+                    updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
+                })) as Customer[];
+            } catch (error: any) {
+                console.error('Firestore getCustomers error:', error);
 
-        const result = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
-            updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
-        })) as Customer[];
-        customersCache.set('active', result);
-        return result;
-    } catch (error: any) {
-        console.error('Firestore getCustomers error:', error);
-
-        // Return unfiltered as fallback if index is missing (graceful degradation)
-        if (error.message?.includes('index')) {
-            console.warn('Index required for active customer filtering. Falling back to client-side filter.');
-            const q = query(
-                collection(db, 'customers'),
-                where(scope.field, '==', scope.value),
-                orderBy('name')
-            );
-            const snapshot = await getDocs(q);
-            const all = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
-                updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
-            })) as Customer[];
-            const result = all.filter(c => c.is_active !== false);
-            customersCache.set('active', result);
-            return result;
-        }
-        throw error;
-    }
+                // Return unfiltered as fallback if index is missing (graceful degradation)
+                if (error.message?.includes('index')) {
+                    console.warn('Index required for active customer filtering. Falling back to client-side filter.');
+                    const q = query(
+                        collection(db, 'customers'),
+                        where(scope.field, '==', scope.value),
+                        orderBy('name')
+                    );
+                    const snapshot = await getDocs(q);
+                    const all = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        created_at: doc.data().created_at?.toDate ? doc.data().created_at.toDate() : new Date(),
+                        updated_at: doc.data().updated_at?.toDate ? doc.data().updated_at.toDate() : new Date()
+                    })) as Customer[];
+                    return all.filter(c => c.is_active !== false);
+                }
+                throw error;
+            }
+        },
+        STALE_MS.customers,
+    );
 }
 
 /**
@@ -139,9 +139,8 @@ export async function createCustomer(customerData: {
     };
 
     const docRef = await addDoc(customersRef, newCustomer);
-    customersCache.clear();
 
-    return {
+    const result: Customer = {
         id: docRef.id,
         ...customerData,
         created_by: userId,
@@ -151,6 +150,8 @@ export async function createCustomer(customerData: {
         created_at: new Date(),
         updated_at: new Date()
     };
+    useEntityStore.getState().addCustomer(result);
+    return result;
 }
 
 /**
@@ -169,7 +170,7 @@ export async function updateCustomer(
         ...updates,
         updated_at: Timestamp.fromDate(new Date())
     });
-    customersCache.clear();
+    useEntityStore.getState().updateCustomer(customerId, { ...updates, updated_at: new Date() } as any);
 }
 
 /**
@@ -185,7 +186,7 @@ export async function deactivateCustomer(customerId: string): Promise<void> {
         is_active: false,
         updated_at: Timestamp.fromDate(new Date())
     });
-    customersCache.clear();
+    useEntityStore.getState().removeCustomer(customerId);
 }
 
 /**
@@ -208,7 +209,7 @@ export async function deleteCustomer(customerId: string): Promise<void> {
         // For now, deleting the customer profile is sufficient to "remove" them.
         // Orphaned payments will remain in the system for accounting integrity.
     });
-    customersCache.clear();
+    useEntityStore.getState().removeCustomer(customerId);
 }
 
 // ============================================
@@ -329,6 +330,19 @@ export async function recordCustomerTransaction(transactionData: {
                 created_at: new Date()
             };
         });
+
+        // Update entity store with new balance after successful transaction
+        const customerInStore = useEntityStore.getState().customers.data.find(c => c.id === transactionData.customer_id);
+        if (customerInStore) {
+            const delta = transactionData.type === 'charge' ? transactionData.amount : -transactionData.amount;
+            useEntityStore.getState().updateCustomer(transactionData.customer_id, {
+                outstanding_balance: (customerInStore.outstanding_balance || 0) + delta,
+                total_purchases: transactionData.type === 'charge'
+                    ? (customerInStore.total_purchases || 0) + transactionData.amount
+                    : customerInStore.total_purchases,
+                updated_at: new Date(),
+            } as any);
+        }
     } catch (error) {
         console.error('Error recording transaction:', error);
         throw error;
@@ -363,6 +377,16 @@ export async function updateCustomerBalanceForSale(
             updated_at: Timestamp.fromDate(new Date())
         });
     });
+
+    // Update entity store with new balance after successful transaction
+    const customerInStore = useEntityStore.getState().customers.data.find(c => c.id === customerId);
+    if (customerInStore) {
+        useEntityStore.getState().updateCustomer(customerId, {
+            outstanding_balance: (customerInStore.outstanding_balance || 0) + saleAmount,
+            total_purchases: (customerInStore.total_purchases || 0) + saleAmount,
+            updated_at: new Date(),
+        } as any);
+    }
 }
 
 /**

@@ -15,9 +15,7 @@ import { formatCurrency, formatDate } from '../../lib/utils/notifications';
 import { usePagination } from '../../lib/hooks/usePagination';
 import PaginationControls from '../../components/ui/PaginationControls';
 import TransactionSkeleton from '../../components/skeletons/TransactionSkeleton';
-import { readScopedJSON, writeScopedJSON } from '../../lib/utils/storageScope';
-
-const TX_PAGE_CACHE_KEY = 'transactions_page_cache_v1';
+import { useEntityStore } from '../../lib/store/entities';
 
 function isPermissionError(error: unknown): boolean {
   return !!(error && typeof error === 'object' && 'code' in error && (error as any).code === 'permission-denied');
@@ -238,19 +236,15 @@ export default function Transactions() {
   const initialTab = searchParams.get('tab') as 'all' | 'purchases' | 'sales' || 'all';
 
   const [transactions, setTransactions] = useState<Transaction[]>(() =>
-    readScopedJSON<Transaction[]>(TX_PAGE_CACHE_KEY + '_tx', [], undefined, TX_PAGE_CACHE_KEY + '_tx')
+    useEntityStore.getState().transactions.data
   );
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [purchases, setPurchases] = useState<Purchase[]>(() =>
-    readScopedJSON<Purchase[]>(TX_PAGE_CACHE_KEY + '_po', [], undefined, TX_PAGE_CACHE_KEY + '_po')
-  );
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [filteredPurchases, setFilteredPurchases] = useState<Purchase[]>([]);
 
-  const [isLoading, setIsLoading] = useState(() => {
-    const tx = readScopedJSON<Transaction[]>(TX_PAGE_CACHE_KEY + '_tx', [], undefined, TX_PAGE_CACHE_KEY + '_tx');
-    const po = readScopedJSON<Purchase[]>(TX_PAGE_CACHE_KEY + '_po', [], undefined, TX_PAGE_CACHE_KEY + '_po');
-    return tx.length === 0 && po.length === 0;
-  });
+  const [isLoading, setIsLoading] = useState(() =>
+    useEntityStore.getState().transactions.data.length === 0
+  );
   const [activeTab, setActiveTab] = useState<'all' | 'purchases' | 'sales'>(initialTab);
   const [filterType, setFilterType] = useState<'all' | 'stock_in' | 'stock_out'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
@@ -297,7 +291,7 @@ export default function Transactions() {
       if (transactionsResult.status === 'fulfilled') {
         const tx = transactionsResult.value.transactions || transactionsResult.value;
         setTransactions(tx);
-        writeScopedJSON(TX_PAGE_CACHE_KEY + '_tx', tx);
+        // State updated from API
       } else if (isPermissionError(transactionsResult.reason)) {
         toast.error('No permission to read activity logs transactions');
       } else {
@@ -307,7 +301,7 @@ export default function Transactions() {
       if (purchasesResult.status === 'fulfilled') {
         const po = purchasesResult.value;
         setPurchases(po);
-        writeScopedJSON(TX_PAGE_CACHE_KEY + '_po', po);
+        // State updated from API
       } else if (isPermissionError(purchasesResult.reason)) {
         toast.error('No permission to read purchase activity');
       } else {

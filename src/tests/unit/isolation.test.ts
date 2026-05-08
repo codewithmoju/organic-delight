@@ -42,17 +42,17 @@ describe('tenant storage isolation', () => {
   });
 
   it('clears only previous user scoped keys and dynamic keys', () => {
-    localStorage.setItem('customers_cache:u1', '[]');
-    localStorage.setItem('customers_cache:u2', '["keep"]');
+    localStorage.setItem('pos_settings_cache:u1', '[]');
+    localStorage.setItem('pos_settings_cache:u2', '["keep"]');
     localStorage.setItem('comm_log_abc:u1', '[]');
     localStorage.setItem('comm_log_abc:u2', '["keep"]');
     localStorage.setItem('pendingVerificationUid', 'temp');
 
     clearKnownSessionStorage('u1');
 
-    expect(localStorage.getItem('customers_cache:u1')).toBeNull();
+    expect(localStorage.getItem('pos_settings_cache:u1')).toBeNull();
     expect(localStorage.getItem('comm_log_abc:u1')).toBeNull();
-    expect(localStorage.getItem('customers_cache:u2')).toBe('["keep"]');
+    expect(localStorage.getItem('pos_settings_cache:u2')).toBe('["keep"]');
     expect(localStorage.getItem('comm_log_abc:u2')).toBe('["keep"]');
     expect(localStorage.getItem('pendingVerificationUid')).toBeNull();
   });

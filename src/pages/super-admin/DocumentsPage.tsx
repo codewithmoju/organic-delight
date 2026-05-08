@@ -196,9 +196,9 @@ export default function DocumentsPage() {
                 Print
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   const props = getSampleProps(selectedType, selectedVariant, selectedColorMode);
-                  downloadDocumentPDF(selectedType, props);
+                  await downloadDocumentPDF(selectedType, props);
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:opacity-90 transition-opacity"
               >

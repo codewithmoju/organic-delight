@@ -16,140 +16,73 @@ import { db } from '../firebase';
 import { Transaction } from '../types';
 import { requireCurrentUserId } from './userScope';
 import { stampOrgId, getOrgScopeFilter, stripUndefined } from './orgScope';
-
-// Cache for transaction data
-const transactionsCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 1 * 60 * 1000; // 1 minute for transactions
-
-function isCacheValid(timestamp: number): boolean {
-  return Date.now() - timestamp < CACHE_DURATION;
-}
+import { cacheFirstRead, STALE_MS } from './_cacheFirst';
+import { useEntityStore } from '../store/entities';
 export async function getTransactions(limitCount?: number, lastDoc?: DocumentSnapshot) {
   const scope = getOrgScopeFilter();
-  const cacheKey = `transactions-${limitCount || 'all'}-${lastDoc?.id || 'start'}`;
-  const cached = transactionsCache.get(cacheKey);
 
-  if (cached && isCacheValid(cached.timestamp)) {
-    return cached.data;
-  }
+  const transactions = await cacheFirstRead(
+    'transactions',
+    () => useEntityStore.getState().transactions.data.length > 0 ? useEntityStore.getState().transactions.data : null,
+    () => useEntityStore.getState().transactions.loadedAt,
+    (data) => useEntityStore.getState().setTransactions(data),
+    async () => {
+      const transactionsRef = collection(db, 'transactions');
+      let q = query(
+        transactionsRef,
+        where(scope.field, '==', scope.value),
+        orderBy('transaction_date', 'desc')
+      );
 
-  const transactionsRef = collection(db, 'transactions');
-  let q = query(
-    transactionsRef,
-    where(scope.field, '==', scope.value),
-    orderBy('transaction_date', 'desc')
+      if (limitCount) {
+        q = query(q, limit(limitCount));
+      }
+
+      if (lastDoc) {
+        q = query(q, startAfter(lastDoc));
+      }
+
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.map(docSnapshot => {
+        const data = docSnapshot.data();
+        return {
+          id: docSnapshot.id,
+          ...data,
+          transaction_date: data.transaction_date?.toDate ? data.transaction_date.toDate() : new Date(data.transaction_date || Date.now()),
+          created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now())
+        } as Transaction;
+      });
+    },
+    STALE_MS.transactions,
   );
 
-  if (limitCount) {
-    q = query(q, limit(limitCount));
+  // Resolve items from entity store (no Firestore fetch needed)
+  const storeItems = useEntityStore.getState().items.data;
+  const itemsMap: Record<string, any> = {};
+  for (const item of storeItems) {
+    itemsMap[item.id] = item;
   }
 
-  if (lastDoc) {
-    q = query(q, startAfter(lastDoc));
-  }
-
-  const snapshot = await getDocs(q);
-
-  const transactions = snapshot.docs.map(docSnapshot => {
-    const data = docSnapshot.data();
-    return {
-      id: docSnapshot.id,
-      ...data,
-      transaction_date: data.transaction_date?.toDate ? data.transaction_date.toDate() : new Date(data.transaction_date || Date.now()),
-      created_at: data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at || Date.now())
-    } as Transaction;
+  const enriched = transactions.map(t => {
+    const enriched = { ...t } as any;
+    if (t.item_id && itemsMap[t.item_id]) {
+      enriched.item = itemsMap[t.item_id];
+    }
+    return enriched;
   });
 
-  // Solve N+1 for items
-  const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];
-  const items: Record<string, any> = {};
-
-  if (itemIds.length > 0) {
-    for (let i = 0; i < itemIds.length; i += 30) {
-      const chunk = itemIds.slice(i, i + 30);
-      try {
-        const itemsSnapshot = await getDocs(
-          query(
-            collection(db, 'items'),
-            where(scope.field, '==', scope.value),
-            where('__name__', 'in', chunk)
-          )
-        );
-        itemsSnapshot.forEach(itemDoc => {
-          items[itemDoc.id] = { id: itemDoc.id, ...itemDoc.data() };
-        });
-      } catch (error: any) {
-        if (error?.code !== 'permission-denied') throw error;
-      }
-    }
-
-    // Solve N+1 for categories
-    const categoryIds = [...new Set(Object.values(items).map(item => item.category_id).filter(Boolean))];
-    const categories: Record<string, any> = {};
-
-    if (categoryIds.length > 0) {
-      for (let i = 0; i < categoryIds.length; i += 30) {
-        const chunk = categoryIds.slice(i, i + 30);
-        try {
-          const catsSnapshot = await getDocs(
-            query(
-              collection(db, 'categories'),
-              where(scope.field, '==', scope.value),
-              where('__name__', 'in', chunk)
-            )
-          );
-          catsSnapshot.forEach(catDoc => {
-            categories[catDoc.id] = { id: catDoc.id, ...catDoc.data() };
-          });
-        } catch (error: any) {
-          if (error?.code !== 'permission-denied') throw error;
-        }
-      }
-    }
-
-    // Attach categories to items
-    Object.values(items).forEach(item => {
-      if (item.category_id && categories[item.category_id]) {
-        item.category = categories[item.category_id];
-      }
-    });
-  }
-
-  // Attach items to transactions
-  transactions.forEach(t => {
-    if (t.item_id && items[t.item_id]) {
-      t.item = items[t.item_id];
-    }
-  });
-
-  const result = { transactions, lastDoc: snapshot.docs[snapshot.docs.length - 1] };
-
-  // Cache the result
-  transactionsCache.set(cacheKey, { data: result, timestamp: Date.now() });
-
-  return result;
+  return { transactions: enriched, lastDoc: null };
 }
 
 export async function getRecentTransactions(limitCount: number = 5): Promise<Transaction[]> {
-  const cacheKey = `recent-transactions-${limitCount}`;
-  const cached = transactionsCache.get(cacheKey);
-
-  if (cached && isCacheValid(cached.timestamp)) {
-    return cached.data;
-  }
-
   const result = await getTransactions(limitCount);
-  const transactions = result.transactions;
-
-  // Cache the result
-  transactionsCache.set(cacheKey, { data: transactions, timestamp: Date.now() });
-
-  return transactions;
+  return result.transactions;
 }
 
 // Clear cache when new transactions are created
 export function clearTransactionsCache() {
-  transactionsCache.clear();
+  useEntityStore.getState().markTransactionsStale();
 }
 
 export async function getTransactionsByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
@@ -174,30 +107,16 @@ export async function getTransactionsByDateRange(startDate: Date, endDate: Date)
     } as Transaction;
   });
 
-  // Solve N+1 for items
-  const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];
-  const items: Record<string, any> = {};
-
-  if (itemIds.length > 0) {
-    for (let i = 0; i < itemIds.length; i += 30) {
-      const chunk = itemIds.slice(i, i + 30);
-      const itemsSnapshot = await getDocs(
-        query(
-          collection(db, 'items'),
-          where(scope.field, '==', scope.value),
-          where('__name__', 'in', chunk)
-        )
-      );
-      itemsSnapshot.forEach(itemDoc => {
-        items[itemDoc.id] = { id: itemDoc.id, ...itemDoc.data() };
-      });
-    }
+  // Resolve items from entity store (no Firestore fetch needed)
+  const storeItems = useEntityStore.getState().items.data;
+  const itemsMap: Record<string, any> = {};
+  for (const item of storeItems) {
+    itemsMap[item.id] = item;
   }
 
-  // Attach items to transactions
   transactions.forEach(t => {
-    if (t.item_id && items[t.item_id]) {
-      t.item = items[t.item_id];
+    if (t.item_id && itemsMap[t.item_id]) {
+      (t as any).item = itemsMap[t.item_id];
     }
   });
 
@@ -250,11 +169,14 @@ export async function createTransaction(transactionData: {
     total_value,
   };
 
-  // Get item data for the response
-  const itemDoc = await getDoc(doc(db, 'items', transactionData.item_id));
-  if (itemDoc.exists()) {
-    newTransaction.item = { id: itemDoc.id, ...itemDoc.data() };
+  // Get item data from entity store
+  const storeItem = useEntityStore.getState().items.data.find(i => i.id === transactionData.item_id);
+  if (storeItem) {
+    newTransaction.item = storeItem;
   }
+
+  // Update entity store
+  useEntityStore.getState().addTransaction(newTransaction);
 
   return newTransaction;
 }
@@ -301,30 +223,16 @@ export async function getTransactionsForPeriod(startDate: Date, endDate: Date): 
     } as Transaction;
   });
 
-  // Solve N+1 for items
-  const itemIds = [...new Set(transactions.map(t => t.item_id).filter(Boolean))];
-  const items: Record<string, any> = {};
-
-  if (itemIds.length > 0) {
-    for (let i = 0; i < itemIds.length; i += 30) {
-      const chunk = itemIds.slice(i, i + 30);
-      const itemsSnapshot = await getDocs(
-        query(
-          collection(db, 'items'),
-          where(scope.field, '==', scope.value),
-          where('__name__', 'in', chunk)
-        )
-      );
-      itemsSnapshot.forEach(itemDoc => {
-        items[itemDoc.id] = { id: itemDoc.id, ...itemDoc.data() };
-      });
-    }
+  // Resolve items from entity store (no Firestore fetch needed)
+  const storeItems = useEntityStore.getState().items.data;
+  const itemsMap: Record<string, any> = {};
+  for (const item of storeItems) {
+    itemsMap[item.id] = item;
   }
 
-  // Attach items to transactions
   transactions.forEach(t => {
-    if (t.item_id && items[t.item_id]) {
-      t.item = items[t.item_id];
+    if (t.item_id && itemsMap[t.item_id]) {
+      (t as any).item = itemsMap[t.item_id];
     }
   });
 

@@ -35,46 +35,6 @@ export function mapTimestamps<T extends Record<string, any>>(
   return result;
 }
 
-// ── Cache Factory ────────────────────────────────────────────────────────────
-
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-}
-
-export interface ApiCache<T> {
-  get(key: string): T | null;
-  set(key: string, data: T): void;
-  clear(): void;
-  invalidate(key: string): void;
-}
-
-/** Create a simple in-memory cache with TTL. */
-export function createCache<T>(ttlMs: number): ApiCache<T> {
-  const store = new Map<string, CacheEntry<T>>();
-
-  return {
-    get(key: string): T | null {
-      const entry = store.get(key);
-      if (!entry) return null;
-      if (Date.now() - entry.timestamp > ttlMs) {
-        store.delete(key);
-        return null;
-      }
-      return entry.data;
-    },
-    set(key: string, data: T): void {
-      store.set(key, { data, timestamp: Date.now() });
-    },
-    clear(): void {
-      store.clear();
-    },
-    invalidate(key: string): void {
-      store.delete(key);
-    },
-  };
-}
-
 // ── Batch Fetch ──────────────────────────────────────────────────────────────
 
 /** Fetch documents by ID in batches of 30 (Firestore 'in' limit). Uses org scope filter. */

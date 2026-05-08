@@ -28,31 +28,29 @@ export default function DocumentFooter({ variant, colorMode = 'color', notes, sh
     );
   }
 
-  const accentColor = isColor ? '#0E3D3B' : '#666';
-  const borderColor = isColor ? '#FED7AA' : '#ddd';
-
   return (
     <div style={{ marginTop: '24px' }}>
       {notes && (
         <div style={{
           padding: '10px 14px', borderRadius: '8px',
-          backgroundColor: isColor ? '#FFFBF5' : '#f9f9f9',
-          borderLeft: `3px solid ${isColor ? '#FB923C' : '#999'}`,
-          fontSize: '12px', opacity: 0.8, marginBottom: '16px',
+          backgroundColor: '#f9fafb',
+          border: '1px solid #e5e7eb',
+          fontSize: '13px', color: '#374151',
+          marginBottom: '16px',
         }}>
-          <strong style={{ color: isColor ? '#9A3412' : '#333' }}>Notes:</strong> {notes}
+          <strong style={{ color: '#6b7280' }}>Notes:</strong> {notes}
         </div>
       )}
 
       <div style={{
         textAlign: 'center', marginTop: '16px',
-        paddingTop: '16px', borderTop: `1px solid ${borderColor}`,
+        paddingTop: '16px', borderTop: '1px solid #e5e7eb',
       }}>
         <p style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 3px', color: isColor ? '#F97316' : '#000' }}>
           Thank you for your business!
         </p>
         {showBranding && (
-          <p style={{ fontSize: '11px', margin: 0, color: accentColor, fontWeight: 600, letterSpacing: '0.05em' }}>
+          <p style={{ fontSize: '11px', margin: 0, color: '#9ca3af', fontWeight: 500 }}>
             Powered by StockSuite
           </p>
         )}
