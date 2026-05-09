@@ -55,6 +55,27 @@ export default function DashboardSkeleton() {
             ))}
           </div>
 
+          {/* ProfitLoss / CashFlow / ExpenseBreakdown row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="bg-card rounded-2xl border border-border/60 p-5 space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="h-4 w-28 bg-secondary/50 rounded" />
+                  <div className="h-5 w-16 bg-secondary/30 rounded-full" />
+                </div>
+                <div className="h-7 w-32 bg-secondary/50 rounded" />
+                <div className="space-y-2">
+                  {[0, 1, 2].map(j => (
+                    <div key={j} className="flex justify-between">
+                      <div className="h-3 w-20 bg-secondary/40 rounded" />
+                      <div className="h-3 w-16 bg-secondary/40 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Recent transactions */}
           <div className="bg-card rounded-[2rem] border border-border/60 p-4 sm:p-6">
             <div className="flex justify-between items-center mb-4">
@@ -99,6 +120,31 @@ export default function DashboardSkeleton() {
               <div className="h-10 w-10 bg-secondary/30 rounded-full" />
             </div>
           </div>
+
+          {/* Vendor Payments & Customer Credit alerts */}
+          {[0, 1].map(i => (
+            <div key={i} className="bg-card rounded-2xl border border-border/60 p-5 space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="h-4 w-36 bg-secondary/50 rounded" />
+                <div className="h-4 w-20 bg-secondary/40 rounded" />
+              </div>
+              <div className="px-3 py-2 rounded-xl bg-secondary/20">
+                <div className="h-3 w-40 bg-secondary/40 rounded" />
+              </div>
+              <div className="space-y-2">
+                {[0, 1, 2].map(j => (
+                  <div key={j} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/10 border border-border/20">
+                    <div className="h-8 w-8 bg-secondary/30 rounded-lg flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-24 bg-secondary/50 rounded" />
+                      <div className="h-2.5 w-16 bg-secondary/40 rounded" />
+                    </div>
+                    <div className="h-4 w-16 bg-secondary/50 rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
       </div>

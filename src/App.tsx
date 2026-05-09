@@ -51,6 +51,7 @@ const LocationsPage = lazy(() => import('./pages/settings/LocationsPage'));
 const TeamPage = lazy(() => import('./pages/settings/TeamPage'));
 const InvitePage = lazy(() => import('./pages/settings/InvitePage'));
 const OrgSettingsPage = lazy(() => import('./pages/settings/OrgSettingsPage'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Super Admin pages
 const SuperAdminLayout = lazy(() => import('./components/admin/SuperAdminLayout'));
@@ -110,46 +111,51 @@ function App() {
       lastUserRef.current = nextUserId;
 
       setUser(user);
-      if (user) {
-        // Read custom claims to detect super admin
-        try {
-          const tokenResult = await user.getIdTokenResult();
-          setIsSuperAdmin(!!tokenResult.claims.superAdmin);
-        } catch {
-          setIsSuperAdmin(false);
-        }
+      // Mark auth as initialized immediately — auth state is known
+      setInitialized(true);
 
-        // Run profile + org resolution in parallel — neither depends on the other
-        const [profileResult] = await Promise.allSettled([
+      if (user) {
+        // Read custom claims to detect super admin (non-blocking — don't await)
+        user.getIdTokenResult().then(
+          (tokenResult) => setIsSuperAdmin(!!tokenResult.claims.superAdmin),
+          () => setIsSuperAdmin(false)
+        );
+
+        // Fire-and-forget: profile + org resolution run in background.
+        // ProtectedRoute already waits on orgResolved before gating permissions.
+        Promise.allSettled([
           getProfile(user),
           resolveActiveOrganization(user.uid),
-        ]);
-        if (profileResult.status === 'fulfilled') {
-          setProfile(profileResult.value);
-        } else {
-          console.error('Error fetching profile:', profileResult.reason);
-          setProfile(null);
-        }
+        ]).then(([profileResult]) => {
+          if (profileResult.status === 'fulfilled') {
+            setProfile(profileResult.value);
+          } else {
+            console.error('Error fetching profile:', profileResult.reason);
+            setProfile(null);
+          }
+
+          // One-time role redirect after org resolves
+          if (window.location.pathname === '/') {
+            const state = useAuthStore.getState();
+            if (state.isSuperAdmin) {
+              window.location.replace('/super-admin');
+            } else {
+              const membership = state.membership;
+              const ROLE_LANDING: Record<string, string> = { cashier: '/pos', accountant: '/reports' };
+              const landing = membership ? ROLE_LANDING[membership.role] : undefined;
+              if (landing) {
+                window.location.replace(landing);
+              }
+            }
+          }
+        }).catch((err) => {
+          // Ensure orgResolved is set even on unexpected failure — prevents stuck loader
+          console.error('Auth bootstrap error:', err);
+          useAuthStore.getState().setOrgResolved(true);
+        });
       } else {
         setProfile(null);
         setIsSuperAdmin(false);
-      }
-      // Mark auth as initialized after first check
-      setInitialized(true);
-
-      // One-time role redirect: super admin→super-admin panel, cashier→POS, accountant→reports
-      if (user && window.location.pathname === '/') {
-        const state = useAuthStore.getState();
-        if (state.isSuperAdmin) {
-          window.location.replace('/super-admin');
-        } else {
-          const membership = state.membership;
-          const ROLE_LANDING: Record<string, string> = { cashier: '/pos', accountant: '/reports' };
-          const landing = membership ? ROLE_LANDING[membership.role] : undefined;
-          if (landing) {
-            window.location.replace(landing);
-          }
-        }
       }
 
       // Check low stock and push notifications (fire-and-forget)
@@ -264,6 +270,13 @@ function App() {
               <Route path="/settings/invite" element={<Page component={InvitePage} text="Loading invite" permission="settings.invites" />} />
               <Route path="/settings/organization" element={<Page component={OrgSettingsPage} text="Loading org settings" permission="settings.org" />} />
             </Route>
+
+            {/* Catch-all — 404 page for unmatched paths */}
+            <Route path="*" element={
+              <Suspense fallback={<LoadingFallback text="Loading page" />}>
+                <NotFound />
+              </Suspense>
+            } />
           </Routes>
         </TourProvider>
       </Router>

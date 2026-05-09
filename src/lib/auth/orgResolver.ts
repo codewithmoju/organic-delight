@@ -1,16 +1,30 @@
-import { collection, query, where, getDocs, addDoc, setDoc, doc, Timestamp } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { collection, query, where, getDocs, addDoc, setDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 import { useAuthStore } from '../store';
 import type { Organization, OrganizationMember } from '../types/org';
 import { getOrganization } from '../api/organizations';
 
-const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED !== 'false';
-
-/** Force token refresh to pick up latest custom claims (org roles).
- *  Fire-and-forget — non-blocking, claims refresh in background. */
-function refreshClaims(): void {
-  auth.currentUser?.getIdToken(true).catch(() => {});
+/** Write active org context to the user's profile so Firestore security rules
+ *  can verify membership via get(profiles/$(uid)) — no custom claims needed.
+ *  Throws on failure — callers MUST handle or the app stays on loading screen. */
+async function syncOrgToProfile(uid: string, orgId: string, role: string): Promise<void> {
+  const payload = {
+    active_organization_id: orgId,
+    active_organization_role: role,
+  };
+  try {
+    await updateDoc(doc(db, 'profiles', uid), payload);
+    console.log('[orgResolver] Synced org to profile:', orgId, role);
+  } catch (err) {
+    // Retry once — profile doc might not exist yet (race with getProfile creating it)
+    console.warn('[orgResolver] First sync attempt failed, retrying…', err);
+    await new Promise(r => setTimeout(r, 500));
+    await updateDoc(doc(db, 'profiles', uid), payload);
+    console.log('[orgResolver] Synced org to profile (retry):', orgId, role);
+  }
 }
+
+const ORG_SCOPING_ENABLED = import.meta.env.VITE_ORG_SCOPING_ENABLED !== 'false';
 
 /**
  * Resolves the active organization for the current user.
@@ -42,51 +56,57 @@ export async function resolveActiveOrganization(uid: string): Promise<void> {
   setMembership(null);
   setOrgResolved(false);
 
-  // Find memberships for this user
-  const membersQuery = query(
-    collection(db, 'organization_members'),
-    where('user_id', '==', uid),
-    where('status', '==', 'active')
-  );
-  const memberSnap = await getDocs(membersQuery);
-  const memberships = memberSnap.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    joined_at: doc.data().joined_at?.toDate ? doc.data().joined_at.toDate() : new Date(),
-  })) as OrganizationMember[];
+  // Safety timeout — if Firestore query hangs, unblock UI after 15s
+  const timeout = setTimeout(() => {
+    console.warn('[orgResolver] Timed out waiting for org resolution — unblocking UI');
+    useAuthStore.getState().setOrgResolved(true);
+  }, 15000);
 
-  if (memberships.length === 0) {
-    // Admin-created users should already have membership — don't create personal org
-    const profile = useAuthStore.getState().profile;
-    if (profile?.created_by_admin) {
-      console.error('Admin-created user has no organization membership');
+  try {
+    // Find memberships for this user
+    const membersQuery = query(
+      collection(db, 'organization_members'),
+      where('user_id', '==', uid),
+      where('status', '==', 'active')
+    );
+    const memberSnap = await getDocs(membersQuery);
+    const memberships = memberSnap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      joined_at: doc.data().joined_at?.toDate ? doc.data().joined_at.toDate() : new Date(),
+    })) as OrganizationMember[];
+
+    if (memberships.length === 0) {
+      // Admin-created users should already have membership — don't create personal org
+      const profile = useAuthStore.getState().profile;
+      if (profile?.created_by_admin) {
+        console.error('Admin-created user has no organization membership');
+        setOrgResolved(true);
+        return;
+      }
+      // No org memberships — create a personal org for legacy user
+      const orgId = await createPersonalOrg(uid);
+      const org = await getOrganization(orgId);
+      const membership: OrganizationMember = {
+        id: `${orgId}_${uid}`,
+        organization_id: orgId,
+        user_id: uid,
+        role: 'owner',
+        status: 'active',
+        joined_at: new Date(),
+      };
+      setActiveOrganization(org);
+      setMembership(membership);
+      await syncOrgToProfile(uid, orgId, 'owner');
       setOrgResolved(true);
       return;
     }
-    // No org memberships — create a personal org for legacy user
-    const orgId = await createPersonalOrg(uid);
-    const org = await getOrganization(orgId);
-    const membership: OrganizationMember = {
-      id: `${orgId}_${uid}`,
-      organization_id: orgId,
-      user_id: uid,
-      role: 'owner',
-      status: 'active',
-      joined_at: new Date(),
-    };
-    setActiveOrganization(org);
-    setMembership(membership);
-    setOrgResolved(true);
-    refreshClaims();
-    return;
-  }
 
-  // Select org: prefer last-used from localStorage, else first membership
-  const lastOrgId = localStorage.getItem('stocksuite_active_org');
-  let selected = memberships.find(m => m.organization_id === lastOrgId);
-  if (!selected) selected = memberships[0];
+    // Select org: prefer last-used from localStorage, else first membership
+    const lastOrgId = localStorage.getItem('stocksuite_active_org');
+    let selected = memberships.find(m => m.organization_id === lastOrgId);
+    if (!selected) selected = memberships[0];
 
-  try {
     const org = await getOrganization(selected.organization_id);
     // If user is the org creator but membership role is wrong, auto-promote to owner
     if (org.created_by === uid && selected.role !== 'owner') {
@@ -101,19 +121,14 @@ export async function resolveActiveOrganization(uid: string): Promise<void> {
     setActiveOrganization(org);
     setMembership(selected);
     localStorage.setItem('stocksuite_active_org', selected.organization_id);
+    await syncOrgToProfile(uid, selected.organization_id, selected.role);
     setOrgResolved(true);
-    refreshClaims();
-  } catch {
-    // Org may have been deleted — try next membership
-    const fallback = memberships.find(m => m.id !== selected!.id);
-    if (fallback) {
-      const org = await getOrganization(fallback.organization_id);
-      setActiveOrganization(org);
-      setMembership(fallback);
-      localStorage.setItem('stocksuite_active_org', fallback.organization_id);
-      setOrgResolved(true);
-      refreshClaims();
-    }
+  } catch (err) {
+    // Org resolution failed — unblock the UI so user isn't stuck on loader forever
+    console.error('[orgResolver] Failed to resolve organization:', err);
+    setOrgResolved(true);
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -148,7 +163,7 @@ export async function switchOrganization(orgId: string): Promise<void> {
   setActiveOrganization(org);
   setMembership(membership);
   localStorage.setItem('stocksuite_active_org', orgId);
-  refreshClaims();
+  await syncOrgToProfile(uid, orgId, membership.role);
 }
 
 /**

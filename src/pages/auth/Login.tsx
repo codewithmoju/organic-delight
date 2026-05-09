@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
@@ -20,7 +20,17 @@ export default function Login() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const { setUser, setProfile } = useAuthStore();
 
+  const user = useAuthStore((state) => state.user);
+  const orgResolved = useAuthStore((state) => state.orgResolved);
+
   const from = location.state?.from?.pathname || '/';
+
+  // Navigate away once auth is fully resolved (avoids race with onAuthStateChanged)
+  useEffect(() => {
+    if (user && orgResolved) {
+      navigate(from, { replace: true });
+    }
+  }, [user, orgResolved, navigate, from]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -52,7 +62,7 @@ export default function Login() {
       }
 
       toast.success('Successfully signed in');
-      navigate(from, { replace: true });
+      // Navigation handled by useEffect — waits for org resolution to complete
     } catch (error: any) {
       console.error('Login error:', error);
 
@@ -71,7 +81,6 @@ export default function Login() {
       } else {
         toast.error(t('errors.generic'));
       }
-    } finally {
       setIsLoading(false);
     }
   }

@@ -1,5 +1,7 @@
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { POSTransaction } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils/notifications';
 
@@ -23,10 +25,26 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
   const empty = transactions.length === 0;
 
   return (
-    <div className="card-theme p-4 sm:p-6 rounded-[2.5rem]">
-      <h3 className="text-base sm:text-lg font-bold text-foreground mb-4 sm:mb-5">
-        Recent Orders
-      </h3>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className="card-theme p-4 sm:p-6 rounded-[2.5rem]"
+    >
+      <div className="flex items-center justify-between mb-4 sm:mb-5">
+        <h3 className="text-base sm:text-lg font-bold text-foreground">
+          Recent Orders
+        </h3>
+        {!empty && (
+          <Link
+            to="/pos"
+            className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-dark transition-colors group"
+          >
+            View All
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        )}
+      </div>
 
       {empty ? (
         <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -40,10 +58,13 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
         <>
           {/* ── Mobile card list (< sm) ── */}
           <div className="sm:hidden space-y-2">
-            {transactions.map(tx => (
-              <div
+            {transactions.map((tx, i) => (
+              <motion.div
                 key={tx.id}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/30 border border-border/40"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 + i * 0.05, duration: 0.3 }}
+                className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/50 transition-colors"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -67,7 +88,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                 <span className="text-sm font-bold text-primary-500 flex-shrink-0">
                   {formatCurrency(tx.total_amount)}
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -75,18 +96,24 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
           <div className="hidden sm:block overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
             <table className="w-full text-sm text-left min-w-[520px]">
               <thead>
-                <tr className="text-xs text-muted-foreground uppercase bg-secondary/40">
-                  <th className="px-4 py-2.5 rounded-l-xl font-semibold">Order #</th>
-                  <th className="px-4 py-2.5 font-semibold">Items</th>
-                  <th className="px-4 py-2.5 font-semibold">Date</th>
-                  <th className="px-4 py-2.5 font-semibold">Amount</th>
-                  <th className="px-4 py-2.5 font-semibold">Status</th>
-                  <th className="px-4 py-2.5 rounded-r-xl font-semibold">Customer</th>
+                <tr className="text-xs font-medium text-muted-foreground border-b border-border/40">
+                  <th className="px-4 py-2.5 rounded-l-xl">Order #</th>
+                  <th className="px-4 py-2.5">Items</th>
+                  <th className="px-4 py-2.5">Date</th>
+                  <th className="px-4 py-2.5">Amount</th>
+                  <th className="px-4 py-2.5">Status</th>
+                  <th className="px-4 py-2.5 rounded-r-xl">Customer</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/40">
-                {transactions.map(tx => (
-                  <tr key={tx.id} className="hover:bg-secondary/20 transition-colors">
+              <tbody className="divide-y divide-border/30">
+                {transactions.map((tx, i) => (
+                  <motion.tr
+                    key={tx.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 + i * 0.04, duration: 0.3 }}
+                    className="hover:bg-secondary/30 transition-colors group"
+                  >
                     <td className="px-4 py-3 font-mono text-xs text-foreground-muted">
                       #{tx.transaction_number.slice(-6)}
                     </td>
@@ -112,13 +139,13 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                     <td className="px-4 py-3 text-foreground truncate max-w-[120px]">
                       {tx.customer_name || 'Walk-in Customer'}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }

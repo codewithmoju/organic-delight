@@ -111,6 +111,10 @@ export interface Profile {
   tax_number?: string;             // GST/Tax ID
   receipt_header?: string;         // Custom header message for receipts
   receipt_footer?: string;         // Custom footer message for receipts
+
+  // Organization context (synced by orgResolver for Firestore security rules)
+  active_organization_id?: string;
+  active_organization_role?: string;
 }
 
 export interface DashboardMetrics {

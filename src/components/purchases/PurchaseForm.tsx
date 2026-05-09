@@ -335,9 +335,10 @@ export default function PurchaseForm({ isOpen, onClose, onSuccess }: PurchaseFor
                                                 </label>
                                                 <input
                                                     type="number"
+                                                    min="0"
                                                     step="0.01"
                                                     value={paidAmount}
-                                                    onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                                                    onChange={(e) => setPaidAmount(Math.max(0, parseFloat(e.target.value) || 0))}
                                                     className="w-full h-11 px-4 bg-background border border-border/60 rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                                                     placeholder="0.00"
                                                 />

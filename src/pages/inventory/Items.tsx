@@ -570,9 +570,10 @@ export default function Items() {
                         {editingPriceId === item.id ? (
                           <input
                             type="number"
+                            min="0"
                             step="0.01"
                             value={editingPriceValue}
-                            onChange={(e) => setEditingPriceValue(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => setEditingPriceValue(Math.max(0, parseFloat(e.target.value) || 0))}
                             onBlur={() => handleInlinePriceUpdate(item.id)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') handleInlinePriceUpdate(item.id);
