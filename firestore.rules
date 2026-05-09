@@ -55,22 +55,36 @@ service cloud.firestore {
         get(/databases/$(database)/documents/organizations/$(orgId)).data.created_by == request.auth.uid;
     }
 
-    // Zero-cost role check via custom claims (set by syncMemberClaims Cloud Function)
-    function hasRole(orgId, role) {
-      return isAuthenticated() &&
-        request.auth.token.orgs != null &&
-        request.auth.token.orgs[orgId] == role;
+    // Read the caller's profile once (single $(uid) segment — no composite ID issues)
+    function callerProfile() {
+      return get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
     }
 
-    // Manager or owner: via custom claims, or fallback to org creator check
+    // Cached caller context — read profile ONCE per rule evaluation
+    function callerOrgId() {
+      return callerProfile().active_organization_id;
+    }
+
+    function callerOrgRole() {
+      return callerProfile().active_organization_role;
+    }
+
+    // Role check via profile (no Cloud Functions needed)
+    function hasRole(orgId, role) {
+      return isAuthenticated() &&
+        callerOrgId() == orgId &&
+        callerOrgRole() == role;
+    }
+
+    // Manager or owner: profile role or org creator
     function isOrgManagerOrOwner(orgId) {
       return isSuperAdmin() || hasRole(orgId, 'owner') || hasRole(orgId, 'manager') || isOrgOwner(orgId);
     }
 
-    // Org membership check via custom claims (zero-cost, no Firestore read)
+    // Org membership: profile active org matches, OR user created the org
     function isOrgMember(orgId) {
       return isAuthenticated() && (
-        (request.auth.token.orgs != null && request.auth.token.orgs[orgId] != null) ||
+        callerOrgId() == orgId ||
         isOrgOwner(orgId)
       );
     }
@@ -290,7 +304,7 @@ service cloud.firestore {
 
     // Organizations rules
     match /organizations/{orgId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || isOrgMember(orgId));
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && (request.resource.data.created_by == request.auth.uid || isSuperAdmin());
       allow update: if isAuthenticated() && (isSuperAdmin() || hasRole(orgId, 'owner') || isOrgOwner(orgId));
       allow delete: if isAuthenticated() && (isSuperAdmin() || isOrgOwner(orgId));
@@ -300,7 +314,8 @@ service cloud.firestore {
     match /organization_members/{memberId} {
       allow read: if isAuthenticated() && (
         isSuperAdmin() ||
-        isOrgMember(resource.data.organization_id)
+        isOrgMember(resource.data.organization_id) ||
+        resource.data.user_id == request.auth.uid
       );
       allow create: if isAuthenticated() && (
         isOrgManagerOrOwner(request.resource.data.organization_id) ||

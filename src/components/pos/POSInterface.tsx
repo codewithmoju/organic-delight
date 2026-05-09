@@ -1166,16 +1166,17 @@ export default function POSInterface() {
                         </button>
                         <input
                           type="number"
+                          min="1"
                           aria-label={`Quantity of ${item.name}`}
                           value={item.quantity}
                           onChange={(e) => {
                             const val = parseInt(e.target.value);
                             if (!isNaN(val)) {
-                              updateQuantity(item.id, val);
+                              updateQuantity(item.id, Math.max(1, val));
                             } else if (e.target.value === '') {
                               // Allow empty string temporarily for typing
                               (item as any)._tempQty = '';
-                              updateQuantity(item.id, 0); // Or handle as 1? updateQuantity(id, 0) removes item usually.
+                              updateQuantity(item.id, 1);
                             }
                           }}
                           onFocus={(e) => e.target.select()}

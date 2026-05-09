@@ -12,17 +12,17 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children, requiredPermission }: ProtectedRouteProps) {
   const user = useAuthStore((state) => state.user);
   const isInitialized = useAuthStore((state) => state.isInitialized);
-  const activeOrganization = useAuthStore((state) => state.activeOrganization);
   const orgResolved = useAuthStore((state) => state.orgResolved);
   const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin);
 
-  // Show full-screen loader while Firebase auth is initializing
+  // Auth still loading — show minimal spinner
   if (!isInitialized) {
     return <AppLoader fullScreen label="Authenticating your session…" />;
   }
 
+  // Not logged in — redirect immediately
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   // Super admin bypasses all permission and org checks
@@ -36,11 +36,8 @@ export default function ProtectedRoute({ children, requiredPermission }: Protect
     if (!orgResolved) {
       return <AppLoader fullScreen label="Loading organization…" />;
     }
-    if (!activeOrganization) {
-      return <AppLoader fullScreen label="No organization found" />;
-    }
     if (!can(requiredPermission)) {
-      return <Navigate to="/" />;
+      return <Navigate to="/" replace />;
     }
   }
 

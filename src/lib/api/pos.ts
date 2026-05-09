@@ -260,10 +260,12 @@ export async function createPOSTransaction(transactionData: {
 // Transaction History
 export async function getPOSTransactions(limitCount?: number): Promise<POSTransaction[]> {
   const userId = requireCurrentUserId();
+  const scope = getOrgScopeFilter();
   const transactionsRef = collection(db, 'pos_transactions');
   let q = query(
     transactionsRef,
     where('cashier_id', '==', userId),
+    where(scope.field, '==', scope.value),
     orderBy('created_at', 'desc')
   );
 

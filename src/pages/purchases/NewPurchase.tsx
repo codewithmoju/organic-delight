@@ -423,8 +423,10 @@ export default function NewPurchase() {
                                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground-muted pointer-events-none">Rs</span>
                                                     <input
                                                         type="number"
+                                                        min="0"
+                                                        step="0.01"
                                                         value={paidAmount}
-                                                        onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                                                        onChange={(e) => setPaidAmount(Math.max(0, parseFloat(e.target.value) || 0))}
                                                         className="w-full h-11 pl-9 pr-4 bg-background border border-border/60 rounded-xl text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                                                     />
                                                 </div>

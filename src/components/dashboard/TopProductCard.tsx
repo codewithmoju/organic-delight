@@ -46,10 +46,19 @@ export default function TopProductCard({ product, isLoading }: TopProductProps) 
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-theme p-4 sm:p-6 rounded-[2.5rem] relative overflow-hidden"
+      transition={{ duration: 0.45, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -2, scale: 1.01 }}
+      className="card-theme p-4 sm:p-6 rounded-[2.5rem] relative overflow-hidden group"
     >
+      {/* Top gradient accent bar */}
+      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent" />
+
+      {/* Enhanced decorative glow */}
+      <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-primary/15 blur-3xl pointer-events-none transition-all duration-500 group-hover:w-48 group-hover:h-48 group-hover:bg-primary/20" />
+      <div className="absolute -left-4 -top-4 w-20 h-20 rounded-full bg-accent/10 blur-2xl pointer-events-none" />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="relative z-10 flex items-center justify-between mb-3">
         <h3 className="font-bold text-sm sm:text-base text-foreground">Highest Value</h3>
         <div className="inline-flex items-center gap-1 bg-success-500/10 px-2.5 py-1 rounded-full">
           <TrendingUp className="w-3 h-3 text-success-500" />
@@ -60,24 +69,25 @@ export default function TopProductCard({ product, isLoading }: TopProductProps) 
       </div>
 
       {/* Product info */}
-      <p className="text-xs text-muted-foreground mb-1">Top Product</p>
-      <h4 className="font-bold text-lg sm:text-xl text-foreground leading-tight line-clamp-2 mb-4">
+      <p className="relative z-10 text-xs text-muted-foreground mb-1">Top Product</p>
+      <h4 className="relative z-10 font-bold text-lg sm:text-xl text-foreground leading-tight line-clamp-2 mb-4">
         {product.name}
       </h4>
 
       {/* Price row */}
-      <div className="flex items-end justify-between">
+      <div className="relative z-10 flex items-end justify-between">
         <div>
           <p className="font-bold text-2xl sm:text-3xl text-primary">{formatCurrency(product.price)}</p>
           <p className="text-xs text-muted-foreground mt-0.5">Unit Price</p>
         </div>
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center">
+        <motion.div
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center"
+          whileHover={{ rotate: 15, scale: 1.1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 12 }}
+        >
           <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-        </div>
+        </motion.div>
       </div>
-
-      {/* Decorative glow */}
-      <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
     </motion.div>
   );
 }

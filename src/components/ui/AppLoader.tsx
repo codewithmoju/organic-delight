@@ -1,9 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { Package, Lightbulb } from 'lucide-react';
 
 // Tips are hardcoded here so the loader works before i18n is ready.
-// They're kept short so they fit on one line on mobile.
 const TIPS = [
   'Use the POS barcode scanner to ring up items in seconds.',
   'Hold a cart mid-sale and resume it later with Hold Cart.',
@@ -26,8 +24,6 @@ interface AppLoaderProps {
 
 export default function AppLoader({ label, fullScreen = false }: AppLoaderProps) {
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * TIPS.length));
-  const [progress, setProgress] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Rotate tips every 3 s
   useEffect(() => {
@@ -37,48 +33,16 @@ export default function AppLoader({ label, fullScreen = false }: AppLoaderProps)
     return () => clearInterval(id);
   }, []);
 
-  // Fake progress bar — advances quickly to ~85 % then slows
-  useEffect(() => {
-    setProgress(0);
-    let current = 0;
-    intervalRef.current = setInterval(() => {
-      current += current < 70 ? Math.random() * 8 + 4 : Math.random() * 1.5 + 0.5;
-      if (current >= 95) {
-        current = 95;
-        if (intervalRef.current) clearInterval(intervalRef.current);
-      }
-      setProgress(Math.min(current, 95));
-    }, 180);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
-
   const content = (
     <div className="flex flex-col items-center justify-center w-full h-full px-6 py-12 select-none">
 
       {/* ── Logo ── */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.7 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
-        className="mb-8 flex flex-col items-center gap-3"
-      >
-        {/* Animated icon ring */}
+      <div className="mb-8 flex flex-col items-center gap-3 animate-[fadeIn_0.3s_ease-out]">
         <div className="relative">
-          {/* Outer pulse ring */}
-          <motion.div
-            animate={{ scale: [1, 1.18, 1], opacity: [0.25, 0.08, 0.25] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute inset-0 rounded-full bg-primary-500"
-            style={{ margin: '-12px' }}
-          />
-          {/* Spinning arc */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
-            className="absolute rounded-full border-2 border-transparent border-t-primary-500"
-            style={{ inset: '-8px' }}
+          {/* Spinning arc — pure CSS */}
+          <div
+            className="absolute rounded-full border-2 border-transparent border-t-primary-500 animate-spin"
+            style={{ inset: '-8px', animationDuration: '1.4s' }}
           />
           {/* Icon container */}
           <div className="relative z-10 w-16 h-16 rounded-2xl bg-primary-500 flex items-center justify-center shadow-lg shadow-primary-500/30">
@@ -95,43 +59,20 @@ export default function AppLoader({ label, fullScreen = false }: AppLoaderProps)
             by NAM Studios
           </p>
         </div>
-      </motion.div>
+      </div>
 
-      {/* ── Progress bar ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25, duration: 0.4 }}
-        className="w-full max-w-xs mb-3"
-      >
-        <div className="h-1 w-full rounded-full bg-foreground-muted/15 overflow-hidden">
-          <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-primary-400 to-primary-600"
-            style={{ width: `${progress}%` }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-          />
-        </div>
-      </motion.div>
+      {/* ── Spinner ── */}
+      <div className="mb-3">
+        <div className="w-6 h-6 border-2 border-primary-500 border-solid rounded-full animate-spin border-t-transparent" />
+      </div>
 
       {/* ── Status label ── */}
-      <motion.p
-        key={label}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="text-sm font-medium text-foreground-muted mb-8 text-center"
-      >
+      <p className="text-sm font-medium text-foreground-muted mb-8 text-center">
         {label ?? 'Initializing…'}
-      </motion.p>
+      </p>
 
       {/* ── Tip card ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        className="w-full max-w-sm"
-      >
+      <div className="w-full max-w-sm animate-[fadeIn_0.3s_ease-out_0.15s_both]">
         <div className="rounded-2xl border border-primary-500/20 bg-primary-500/5 px-5 py-4">
           {/* Header */}
           <div className="flex items-center gap-2 mb-2">
@@ -143,36 +84,26 @@ export default function AppLoader({ label, fullScreen = false }: AppLoaderProps)
             </span>
           </div>
 
-          {/* Tip text — animates on change */}
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={tipIndex}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.35 }}
-              className="text-sm leading-relaxed text-foreground-muted"
-            >
-              {TIPS[tipIndex]}
-            </motion.p>
-          </AnimatePresence>
+          {/* Tip text */}
+          <p className="text-sm leading-relaxed text-foreground-muted">
+            {TIPS[tipIndex]}
+          </p>
 
-          {/* Dot indicators */}
+          {/* Dot indicators — pure CSS */}
           <div className="flex items-center gap-1.5 mt-3 justify-center">
             {TIPS.map((_, i) => (
-              <motion.div
+              <div
                 key={i}
-                animate={{
+                className="h-1 rounded-full bg-primary-500 transition-all duration-300"
+                style={{
                   width: i === tipIndex ? 16 : 4,
                   opacity: i === tipIndex ? 1 : 0.3,
                 }}
-                transition={{ duration: 0.3 }}
-                className="h-1 rounded-full bg-primary-500"
               />
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 

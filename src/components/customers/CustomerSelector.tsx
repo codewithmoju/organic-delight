@@ -246,6 +246,8 @@ export default function CustomerSelector({
                                                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-xs">Rs</span>
                                                 <input
                                                     type="number"
+                                                    min="0"
+                                                    step="0.01"
                                                     value={newCustomer.openingBalance}
                                                     onChange={(e) => setNewCustomer(prev => ({ ...prev, openingBalance: e.target.value }))}
                                                     placeholder="0.00"

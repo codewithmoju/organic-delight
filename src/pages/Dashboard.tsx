@@ -57,7 +57,7 @@ export default function Dashboard() {
       const data = await getDashboardWidgetData(selectedPeriod);
       setWidgetData(data);
     } catch (err) {
-      console.error('Error loading widget data:', err);
+      console.error('[Dashboard] widgets FAILED:', err);
     } finally {
       setIsWidgetsLoading(false);
     }
@@ -66,12 +66,20 @@ export default function Dashboard() {
   async function loadInitialData(showLoading = true) {
     if (showLoading) setIsLoading(true);
     try {
-      // Two parallel fetches instead of three — items gives us summary,
-      // POS transactions gives us the recent orders list.
-      const [itemsResult, recentSales] = await Promise.all([
-        getItems(),
-        getPOSTransactions(5),
-      ]);
+      let itemsResult: any = { items: [] };
+      let recentSales: any[] = [];
+
+      try {
+        itemsResult = await getItems();
+      } catch (e) {
+        console.error('[Dashboard] getItems FAILED:', e);
+      }
+
+      try {
+        recentSales = await getPOSTransactions(5);
+      } catch (e) {
+        console.error('[Dashboard] getPOSTransactions FAILED:', e);
+      }
 
       const items = itemsResult.items || [];
 
@@ -111,12 +119,11 @@ export default function Dashboard() {
   async function loadMetricsData() {
     setIsMetricsLoading(true);
     try {
-      // Single Firestore query — derives both metrics and chart data
       const { metrics: m, trends } = await getDashboardMetricsAndTrends(selectedPeriod);
       setMetrics(m);
       setChartData(trends);
     } catch (err) {
-      console.error('Error loading metrics:', err);
+      console.error('[Dashboard] metrics FAILED:', err);
       toast.error(t('dashboard.errors.metricsFailed'));
     } finally {
       setIsMetricsLoading(false);
@@ -146,22 +153,38 @@ export default function Dashboard() {
 
       {/* Main Content (only show when not loading) */}
       {!isLoading && (
-        <div className="relative">
+        <div className="relative min-h-screen">
+          {/* Subtle gradient mesh background */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+            <div className="absolute top-1/2 -left-32 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
+            <div className="absolute -bottom-16 right-1/3 w-72 h-72 rounded-full bg-primary/3 blur-3xl" />
+          </div>
 
           {/* Main Layout Grid */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="relative z-10 space-y-5 sm:space-y-7">
 
-            {/* Period filter row */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                {t('dashboard.title', 'Dashboard')}
-              </h1>
+            {/* Hero header row */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-center justify-between gap-3 flex-wrap"
+            >
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                  {t('dashboard.title', 'Dashboard')}
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                  Business overview & analytics
+                </p>
+              </div>
               <TimePeriodFilter
                 selectedPeriod={selectedPeriod}
                 onPeriodChange={setSelectedPeriod}
                 isLoading={isMetricsLoading}
               />
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
@@ -178,6 +201,7 @@ export default function Dashboard() {
                     variant="primary"
                     isLoading={isMetricsLoading}
                     onClick={() => setSelectedPeriod('this-month')}
+                    delay={0}
                   />
 
                   {/* Secondary Metrics */}
@@ -187,31 +211,40 @@ export default function Dashboard() {
                       value={metrics?.totalStockIn || 0}
                       icon={ArrowUp}
                       isLoading={isMetricsLoading}
+                      delay={0.05}
                     />
                     <StatCard
                       label={t('dashboard.metrics.totalStockOut')}
                       value={metrics?.totalStockOut || 0}
                       icon={ArrowDown}
                       isLoading={isMetricsLoading}
+                      delay={0.1}
                     />
                   </div>
                 </div>
 
                 {/* Additional Metrics Row */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                  className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4"
+                >
                   <StatCard
                     label={t('dashboard.metrics.revenueSpent')}
                     value={formatCurrency(metrics?.revenueSpentOnStockIn || 0)}
                     icon={DollarSign}
                     isLoading={isMetricsLoading}
+                    delay={0.2}
                   />
                   <StatCard
                     label={t('dashboard.metrics.totalItems')}
                     value={summary?.totalItems || 0}
                     icon={Package}
                     isLoading={isLoading}
+                    delay={0.25}
                   />
-                </div>
+                </motion.div>
 
                 {/* Recent Orders Table */}
                 <div>

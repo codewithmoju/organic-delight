@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils/notifications';
 
 interface ProfitLossWidgetProps {
@@ -32,11 +32,20 @@ export default function ProfitLossWidget({ revenue, expenses, purchases, isLoadi
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-card rounded-2xl border border-border/60 p-5 shadow-sm"
+      whileHover={{ y: -2 }}
+      className="bg-card rounded-2xl border border-border/60 p-5 shadow-sm hover:shadow-md transition-shadow duration-300 relative overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-4">
+      {/* Subtle gradient accent */}
+      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-success-500/40 via-primary/20 to-error-500/40" />
+
+      {/* Decorative glow */}
+      <div className={`absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-3xl pointer-events-none ${
+        isPositive ? 'bg-success-500/6' : 'bg-error-500/6'
+      }`} />
+
+      <div className="relative z-10 flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-foreground">Profit & Loss</h3>
-        <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg ${
+        <span className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg ${
           isPositive ? 'bg-success-500/10 text-success-500' : 'bg-error-500/10 text-error-500'
         }`}>
           {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -45,13 +54,13 @@ export default function ProfitLossWidget({ revenue, expenses, purchases, isLoadi
       </div>
 
       {/* Net profit hero */}
-      <div className={`text-2xl font-bold tabular-nums mb-4 ${isPositive ? 'text-success-500' : 'text-error-500'}`}>
+      <div className={`relative z-10 text-2xl font-bold tabular-nums mb-4 ${isPositive ? 'text-success-500' : 'text-error-500'}`}>
         {isPositive ? '+' : ''}{formatCurrency(netProfit)}
         <span className="text-xs font-medium text-muted-foreground ml-1">net profit</span>
       </div>
 
       {/* Breakdown rows */}
-      <div className="space-y-2.5">
+      <div className="relative z-10 space-y-2.5">
         {[
           { label: 'Revenue', value: revenue, color: 'text-success-500', sign: '+' },
           { label: 'Purchases (COGS)', value: purchases, color: 'text-error-500', sign: '-' },
@@ -65,7 +74,7 @@ export default function ProfitLossWidget({ revenue, expenses, purchases, isLoadi
             </span>
           </div>
         ))}
-        <div className="pt-2 border-t border-border/40 flex justify-between items-center text-sm font-bold">
+        <div className="pt-2.5 border-t border-border/40 flex justify-between items-center text-sm font-bold">
           <span className="text-foreground">Net Profit</span>
           <span className={`tabular-nums ${isPositive ? 'text-success-500' : 'text-error-500'}`}>
             {isPositive ? '+' : ''}{formatCurrency(netProfit)}
