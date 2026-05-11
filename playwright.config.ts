@@ -1,22 +1,44 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests/e2e',
-  timeout: 120000,
-  expect: { timeout: 10000 },
+  testDir: './src/tests/e2e',
+  fullyParallel: false,
+  retries: 0,
+  workers: 1,
+
+  // ── Run once before the entire suite to create the saved session ──
+  globalSetup: './src/tests/e2e/global-setup.ts',
+
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+  ],
+
   use: {
-    baseURL: 'http://127.0.0.1:4173',
-    channel: 'msedge',
-    headless: true,
+    baseURL: 'http://localhost:5173',
+
+    // Visible browser so you can watch
+    headless: false,
+
+    // Slow things down just enough to see what's happening
+    launchOptions: { slowMo: 500 },
+
+    viewport: { width: 1280, height: 800 },
+
+    // Record a video of every run
+    video: 'on',
+
+    // Screenshot only on failure
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    trace: 'retain-on-failure'
+
+    actionTimeout:     15_000,
+    navigationTimeout: 20_000,
   },
-  webServer: {
-    command: 'npm run dev -- --host 127.0.0.1 --port 4173',
-    url: 'http://127.0.0.1:4173',
-    reuseExistingServer: true,
-    timeout: 120000
-  },
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]]
+
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 });
