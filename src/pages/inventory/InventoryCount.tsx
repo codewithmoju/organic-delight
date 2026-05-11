@@ -233,7 +233,7 @@ export default function InventoryCount() {
                             min="0"
                             placeholder="Enter count"
                             value={row.physicalCount}
-                            onChange={e => updatePhysical(row.item.id, e.target.value)}
+                            onChange={e => { const v = parseInt(e.target.value); updatePhysical(row.item.id, isNaN(v) ? '' : Math.max(0, v).toString()); }}
                             className="w-28 px-3 py-1.5 bg-secondary border border-border/60 rounded-lg text-sm text-right text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                           />
                         </td>

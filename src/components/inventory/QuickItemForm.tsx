@@ -299,7 +299,7 @@ export default function QuickItemForm({ categories, onSubmit, onCancel, onCatego
                             <input
                                 type="number"
                                 value={formData.base_price}
-                                onChange={(e) => updateFormData('base_price', e.target.value)}
+                                onChange={(e) => { const v = parseFloat(e.target.value); updateFormData('base_price', isNaN(v) ? '' : Math.max(0, v)); }}
                                 className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.base_price ? 'border-error-500' : ''}`}
                                 placeholder="0.00"
                                 min="0"
@@ -317,7 +317,7 @@ export default function QuickItemForm({ categories, onSubmit, onCancel, onCatego
                             <input
                                 type="number"
                                 value={formData.selling_price}
-                                onChange={(e) => updateFormData('selling_price', e.target.value)}
+                                onChange={(e) => { const v = parseFloat(e.target.value); updateFormData('selling_price', isNaN(v) ? '' : Math.max(0, v)); }}
                                 className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.selling_price ? 'border-error-500' : ''}`}
                                 placeholder="0.00"
                                 min="0"
@@ -340,7 +340,7 @@ export default function QuickItemForm({ categories, onSubmit, onCancel, onCatego
                             <input
                                 type="number"
                                 value={formData.total_stock}
-                                onChange={(e) => updateFormData('total_stock', e.target.value)}
+                                onChange={(e) => { const v = parseInt(e.target.value); updateFormData('total_stock', isNaN(v) ? '' : Math.max(0, v)); }}
                                 className={`w-full h-12 pl-10 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.total_stock ? 'border-error-500' : ''}`}
                                 placeholder="0"
                                 min="0"

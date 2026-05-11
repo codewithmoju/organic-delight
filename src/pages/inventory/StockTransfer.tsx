@@ -260,7 +260,7 @@ export default function StockTransfer() {
                 min="1"
                 placeholder="e.g. 50"
                 value={form.quantity}
-                onChange={e => setForm(prev => ({ ...prev, quantity: e.target.value }))}
+                onChange={e => { const v = parseInt(e.target.value); setForm(prev => ({ ...prev, quantity: isNaN(v) ? '' : Math.max(1, v).toString() })); }}
                 className="w-full px-3 py-2 bg-secondary border border-border/60 rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
