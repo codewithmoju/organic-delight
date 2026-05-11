@@ -401,7 +401,7 @@ export default function MultiStepItemForm({ categories, onSubmit }: MultiStepIte
                     step="0.01"
                     min="0.01"
                     value={formData.unit_price || ''}
-                    onChange={(e) => updateFormData('unit_price', parseFloat(e.target.value) || 0)}
+                    onChange={(e) => updateFormData('unit_price', Math.max(0, parseFloat(e.target.value) || 0))}
                     className={`w-full input-dark input-large pl-12 text-center text-2xl font-bold ${errors.unit_price ? 'ring-error-500 border-error-500' : ''
                       }`}
                     placeholder="0.00"
@@ -515,7 +515,7 @@ export default function MultiStepItemForm({ categories, onSubmit }: MultiStepIte
                       min="0"
                       step="1"
                       value={formData.total_stock || ''}
-                      onChange={(e) => updateFormData('total_stock', parseInt(e.target.value) || 0)}
+                      onChange={(e) => updateFormData('total_stock', Math.max(0, parseInt(e.target.value) || 0))}
                       className={`w-full input-dark input-large pr-16 ${errors.total_stock ? 'ring-error-500 border-error-500' : ''
                         }`}
                       placeholder={t('items.wizard.stock.initialStockPlaceholder', 'Enter initial stock quantity')}
@@ -541,7 +541,7 @@ export default function MultiStepItemForm({ categories, onSubmit }: MultiStepIte
                     min="0"
                     step="1"
                     value={formData.reorder_point || ''}
-                    onChange={(e) => updateFormData('reorder_point', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateFormData('reorder_point', Math.max(0, parseInt(e.target.value) || 0))}
                     className={`w-full input-dark input-large ${errors.reorder_point ? 'ring-error-500 border-error-500' : ''
                       }`}
                     placeholder={t('items.wizard.stock.reorderPointPlaceholder', 'Minimum stock level')}

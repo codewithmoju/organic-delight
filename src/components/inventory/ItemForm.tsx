@@ -258,7 +258,7 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
             name="base_price"
             id="base_price"
             value={basePriceInput}
-            onChange={(e) => setBasePriceInput(parseFloat(e.target.value) || 0)}
+            onChange={(e) => setBasePriceInput(Math.max(0, parseFloat(e.target.value) || 0))}
             min="0"
             className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.base_price ? 'border-error-500' : ''
               }`}
@@ -280,7 +280,7 @@ export default function ItemForm({ initialData, categories, onSubmit, onCancel }
             name="selling_price"
             id="selling_price"
             value={sellingPriceInput}
-            onChange={(e) => setSellingPriceInput(parseFloat(e.target.value) || 0)}
+            onChange={(e) => setSellingPriceInput(Math.max(0, parseFloat(e.target.value) || 0))}
             min="0"
             className={`w-full h-12 pl-14 pr-4 rounded-xl bg-background border-2 border-border/60 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${errors.selling_price ? 'border-error-500' : ''}`}
             placeholder="0.00"

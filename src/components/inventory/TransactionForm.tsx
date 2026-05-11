@@ -243,7 +243,7 @@ export default function TransactionForm({ items, onComplete, onCancel, onSubmit 
             min="0.01"
             step="0.01"
             value={quantity || ''}
-            onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+            onChange={(e) => setQuantity(Math.max(0, parseFloat(e.target.value) || 0))}
             required
             className={`w-full input-dark input-large ${
               errors.quantity ? 'ring-error-500 border-error-500' : ''
@@ -278,7 +278,7 @@ export default function TransactionForm({ items, onComplete, onCancel, onSubmit 
             min="0.01"
             step="0.01"
             value={unitPrice || ''}
-            onChange={(e) => setUnitPrice(parseFloat(e.target.value) || 0)}
+            onChange={(e) => setUnitPrice(Math.max(0, parseFloat(e.target.value) || 0))}
             required
             className={`w-full input-dark input-large ${
               errors.unit_price ? 'ring-error-500 border-error-500' : ''
