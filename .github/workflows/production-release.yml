@@ -55,17 +55,26 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
+      - name: Package APK into ZIP
+        run: |
+          cd android/app/build/outputs/apk/debug
+          zip StockSuite-Android.zip app-debug.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug.apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: StockSuite-Android
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/StockSuite-Android.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: release-${{ github.run_number }}
           name: Release ${{ github.run_number }}
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          files: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/StockSuite-Android.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
