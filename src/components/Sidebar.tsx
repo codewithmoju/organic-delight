@@ -45,46 +45,49 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const orgResolved = useAuthStore((state) => state.orgResolved);
   const orgActive = !!activeOrganization;
 
+  const profile = useAuthStore((state) => state.profile);
+  const enabledModules = React.useMemo(() => new Set(profile?.enabled_modules || ['pos', 'inventory', 'procurement', 'crm', 'expenses', 'reports']), [profile?.enabled_modules]);
+
   const navGroups = React.useMemo(() => [
     {
       title: t('navigation.groups.foundation'),
       items: [
         { to: '/', icon: LayoutDashboard, label: t('navigation.dashboard'), permission: 'dashboard.view' as Permission },
-        { to: '/pos', icon: ShoppingCart, label: t('navigation.pointOfSale'), permission: 'pos.access' as Permission },
+        { to: '/pos', icon: ShoppingCart, label: t('navigation.pointOfSale'), permission: 'pos.access' as Permission, module: 'pos' },
       ]
     },
     {
       title: t('navigation.groups.inventoryHub'),
       items: [
-        { to: '/inventory/items', icon: Package, label: t('navigation.inventoryManager'), permission: 'inventory.view' as Permission },
-        { to: '/inventory/categories', icon: FolderOpen, label: t('navigation.categories'), permission: 'categories.view' as Permission },
-        { to: '/inventory/valuation', icon: Wallet, label: t('navigation.warehouseValue'), permission: 'inventory.view' as Permission },
-        { to: '/inventory/adjustments', icon: SlidersHorizontal, label: 'Adjustments', permission: 'inventory.adjust_stock' as Permission },
-        { to: '/inventory/count', icon: ClipboardList, label: 'Count', permission: 'inventory.view' as Permission },
-        { to: '/inventory/expiry', icon: CalendarClock, label: 'Expiry', permission: 'inventory.view' as Permission },
-        { to: '/inventory/barcodes', icon: Barcode, label: 'Barcodes', permission: 'inventory.view' as Permission },
+        { to: '/inventory/items', icon: Package, label: t('navigation.inventoryManager'), permission: 'inventory.view' as Permission, module: 'inventory' },
+        { to: '/inventory/categories', icon: FolderOpen, label: t('navigation.categories'), permission: 'categories.view' as Permission, module: 'inventory' },
+        { to: '/inventory/valuation', icon: Wallet, label: t('navigation.warehouseValue'), permission: 'inventory.view' as Permission, module: 'inventory' },
+        { to: '/inventory/adjustments', icon: SlidersHorizontal, label: 'Adjustments', permission: 'inventory.adjust_stock' as Permission, module: 'inventory' },
+        { to: '/inventory/count', icon: ClipboardList, label: 'Count', permission: 'inventory.view' as Permission, module: 'inventory' },
+        { to: '/inventory/expiry', icon: CalendarClock, label: 'Expiry', permission: 'inventory.view' as Permission, module: 'inventory' },
+        { to: '/inventory/barcodes', icon: Barcode, label: 'Barcodes', permission: 'inventory.view' as Permission, module: 'inventory' },
       ]
     },
     {
       title: t('navigation.groups.procurement'),
       items: [
-        { to: '/vendors', icon: Building2, label: t('navigation.vendors'), permission: 'vendors.view' as Permission },
-        { to: '/purchases', icon: ShoppingBag, label: t('navigation.purchases', 'Purchases'), permission: 'procurement.view' as Permission },
+        { to: '/vendors', icon: Building2, label: t('navigation.vendors'), permission: 'vendors.view' as Permission, module: 'procurement' },
+        { to: '/purchases', icon: ShoppingBag, label: t('navigation.purchases', 'Purchases'), permission: 'procurement.view' as Permission, module: 'procurement' },
       ]
     },
     {
       title: t('navigation.groups.salesCrm'),
       items: [
-        { to: '/customers', icon: Users, label: t('navigation.customers'), permission: 'customers.view' as Permission },
-        { to: '/transactions', icon: ArrowUpDown, label: t('navigation.activityLog'), permission: 'inventory.view' as Permission },
+        { to: '/customers', icon: Users, label: t('navigation.customers'), permission: 'customers.view' as Permission, module: 'crm' },
+        { to: '/transactions', icon: ArrowUpDown, label: t('navigation.activityLog'), permission: 'inventory.view' as Permission, module: 'inventory' },
       ]
     },
     {
       title: t('navigation.groups.insights'),
       items: [
-        { to: '/expenses', icon: Wallet, label: t('navigation.expenses'), permission: 'expenses.view' as Permission },
-        { to: '/reports/performance', icon: BarChart3, label: t('navigation.performance'), permission: 'reports.performance' as Permission },
-        { to: '/reports', icon: FileText, label: t('navigation.reports', 'Reports'), permission: 'reports.view' as Permission },
+        { to: '/expenses', icon: Wallet, label: t('navigation.expenses'), permission: 'expenses.view' as Permission, module: 'expenses' },
+        { to: '/reports/performance', icon: BarChart3, label: t('navigation.performance'), permission: 'reports.performance' as Permission, module: 'reports' },
+        { to: '/reports', icon: FileText, label: t('navigation.reports', 'Reports'), permission: 'reports.view' as Permission, module: 'reports' },
         { to: '/settings/audit', icon: Shield, label: 'Audit Log', permission: 'audit.view' as Permission },
         { to: '/settings/locations', icon: MapPin, label: 'Locations', permission: 'settings.view' as Permission },
         { to: '/settings/team', icon: UserCog, label: 'Team', permission: 'settings.team' as Permission },
@@ -93,8 +96,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     }
   ].map(group => ({
     ...group,
-    items: orgActive && orgResolved ? group.items.filter(item => can(item.permission)) : group.items,
-  })).filter(group => group.items.length > 0), [t, orgActive, orgResolved]);
+    items: group.items.filter(item => {
+      // 1. Module check
+      if (item.module && !enabledModules.has(item.module)) return false;
+      // 2. Permission check
+      return orgActive && orgResolved ? can(item.permission) : true;
+    }),
+  })).filter(group => group.items.length > 0), [t, orgActive, orgResolved, enabledModules]);
 
   // Handle escape key to close sidebar on mobile
   React.useEffect(() => {

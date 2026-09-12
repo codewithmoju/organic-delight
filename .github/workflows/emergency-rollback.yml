@@ -1,0 +1,41 @@
+name: Emergency Rollback (OTA + Web)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_hash:
+        description: 'The Git Commit Hash of the bug-free version you want to rollback to (e.g. 5a1b2c3)'
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Bug-Free Commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_hash }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Rollback OTA Payload
+        run: |
+          # Even though the code is old, the release-ota script uses Date.now() 
+          # so the mobile apps will see this as a NEWER version string and download it!
+          npm run release:ota
+
+      - name: Force Deploy Rollback to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          channelId: live
+          projectId: stocksuit

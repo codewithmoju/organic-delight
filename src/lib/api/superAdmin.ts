@@ -14,7 +14,9 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { db, firebaseConfig } from '../firebase';
 import type { Organization, OrganizationMember, OrgRole, OrgSummary, AdminUserProfile, PlatformStats, Permission } from '../types/org';
 import type { AuditEntry } from './auditLog';
 
@@ -64,6 +66,10 @@ function mapProfile(docSnap: any) {
     avatar_url: d.avatar_url,
     created_at: d.created_at?.toDate?.() || new Date(d.created_at || Date.now()),
     created_by_admin: d.created_by_admin,
+    status: d.status || 'active',
+    ban_reason: d.ban_reason,
+    ban_until: d.ban_until?.toDate?.() || null,
+    enabled_modules: d.enabled_modules,
   };
 }
 
@@ -311,6 +317,76 @@ export async function getUserDetail(userId: string): Promise<AdminUserProfile> {
     ...profile,
     memberships: enrichedMemberships,
   } as AdminUserProfile;
+}
+
+export async function createUserGlobal(data: { email: string; name: string; password?: string }): Promise<string> {
+  const secondaryApp = getApps().find(app => app.name === 'SecondaryAdminApp') || initializeApp(firebaseConfig, 'SecondaryAdminApp');
+  const secondaryAuth = getAuth(secondaryApp);
+  
+  try {
+    const defaultPassword = data.password || Math.random().toString(36).slice(-8) + 'A1!';
+    const userCred = await createUserWithEmailAndPassword(secondaryAuth, data.email, defaultPassword);
+    const user = userCred.user;
+    
+    await setDoc(doc(db, PROFILES, user.uid), {
+      id: user.uid,
+      email: data.email,
+      full_name: data.name,
+      created_at: Timestamp.now(),
+      updated_at: Timestamp.now(),
+      created_by_admin: true,
+      status: 'active'
+    });
+    
+    await signOut(secondaryAuth);
+    return user.uid;
+  } catch (error: any) {
+    console.error('Error creating global user:', error);
+    throw new Error(error.message || 'Failed to create user');
+  }
+}
+
+export async function updateUserModules(userId: string, modules: string[] | null): Promise<void> {
+  await updateDoc(doc(db, PROFILES, userId), {
+    enabled_modules: modules,
+    updated_at: Timestamp.now()
+  });
+}
+
+export async function updateUserStatus(userId: string, data: { status: 'active' | 'banned_temporary' | 'banned_permanent', ban_reason?: string, ban_until?: Date | null }): Promise<void> {
+  const updateData: any = {
+    status: data.status,
+    updated_at: Timestamp.now()
+  };
+  
+  if (data.status === 'banned_temporary' && data.ban_until) {
+    updateData.ban_until = Timestamp.fromDate(data.ban_until);
+    updateData.ban_reason = data.ban_reason || null;
+  } else if (data.status === 'banned_permanent') {
+    updateData.ban_reason = data.ban_reason || null;
+    updateData.ban_until = null;
+  } else {
+    updateData.ban_reason = null;
+    updateData.ban_until = null;
+  }
+  
+  await updateDoc(doc(db, PROFILES, userId), updateData);
+}
+
+export async function deleteUserGlobal(userId: string): Promise<void> {
+  const batch = writeBatch(db);
+  
+  // 1. Delete all organization memberships for this user
+  const membersQuery = query(collection(db, MEMBERS), where('user_id', '==', userId));
+  const membersSnap = await getDocs(membersQuery);
+  membersSnap.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+  
+  // 2. Delete the user profile
+  batch.delete(doc(db, PROFILES, userId));
+  
+  await batch.commit();
 }
 
 // ── Platform Stats ───────────────────────────────────────────────────────────

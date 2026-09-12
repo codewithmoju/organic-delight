@@ -118,7 +118,6 @@ export interface OrgSummary {
   settings?: OrganizationSettings;
 }
 
-/** A user profile enriched with their org memberships */
 export interface AdminUserProfile {
   id: string;
   full_name: string;
@@ -126,6 +125,10 @@ export interface AdminUserProfile {
   avatar_url?: string;
   created_at: Date;
   created_by_admin?: boolean;
+  status?: 'active' | 'banned_temporary' | 'banned_permanent';
+  ban_reason?: string;
+  ban_until?: Date;
+  enabled_modules?: string[];
   memberships: {
     organization_id: string;
     organization_name: string;

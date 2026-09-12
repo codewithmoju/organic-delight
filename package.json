@@ -14,6 +14,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:browser": "playwright test --headed src/tests/e2e/browser-test.spec.ts",
+    "mobile:sync": "npm run build && npx cap sync",
+    "mobile:open-android": "npx cap open android",
+    "mobile:open-ios": "npx cap open ios",
+    "release:ota": "node scripts/release-ota.mjs",
     "tenant:strict:status": "node scripts/tenant-strict-rollout.mjs status",
     "tenant:strict:enable": "node scripts/tenant-strict-rollout.mjs enable",
     "tenant:strict:disable": "node scripts/tenant-strict-rollout.mjs disable",
@@ -23,8 +27,11 @@
     "backfill:org-id:verify": "node scripts/backfill-org-id.mjs --verify"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.2",
+    "@capgo/capacitor-updater": "^8.51.15",
     "@headlessui/react": "^2.2.7",
     "@types/w3c-web-usb": "^1.0.12",
+    "adm-zip": "^0.6.1",
     "date-fns": "^3.3.1",
     "firebase": "^10.8.0",
     "framer-motion": "^12.23.12",
@@ -45,11 +52,15 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
     "@eslint/js": "^9.9.1",
     "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/adm-zip": "^0.5.8",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

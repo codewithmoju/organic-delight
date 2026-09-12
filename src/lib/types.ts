@@ -115,6 +115,9 @@ export interface Profile {
   // Organization context (synced by orgResolver for Firestore security rules)
   active_organization_id?: string;
   active_organization_role?: string;
+
+  // Feature Modules
+  enabled_modules?: string[];
 }
 
 export interface DashboardMetrics {

@@ -14,7 +14,7 @@ function getEnv(name: keyof ImportMetaEnv): string {
   return value;
 }
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: getEnv('VITE_FIREBASE_API_KEY'),
   authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN'),
   projectId: getEnv('VITE_FIREBASE_PROJECT_ID'),

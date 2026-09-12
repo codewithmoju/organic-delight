@@ -6,6 +6,7 @@ import TourProvider from './components/tour/TourProvider';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getProfile } from './lib/api/auth';
+import { initOTAUpdater } from './lib/updater';
 import { useAuthStore, clearSessionCaches } from './lib/store';
 import { resolveActiveOrganization } from './lib/auth/orgResolver';
 import Layout from './components/Layout';
@@ -14,6 +15,7 @@ import AppLoader from './components/ui/AppLoader';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import type { Permission } from './lib/types/org';
 import OfflineIndicator from './components/ui/OfflineIndicator';
+import SuperAdminGuard from './components/admin/SuperAdminGuard';
 
 // Lazy load components for better performance
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -55,7 +57,6 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Super Admin pages
 const SuperAdminLayout = lazy(() => import('./components/admin/SuperAdminLayout'));
-import SuperAdminGuard from './components/admin/SuperAdminGuard';
 const SuperAdminDashboard = lazy(() => import('./pages/super-admin/SuperAdminDashboard'));
 const SAStoresPage = lazy(() => import('./pages/super-admin/StoresPage'));
 const SAStoreDetailPage = lazy(() => import('./pages/super-admin/StoreDetailPage'));
@@ -75,10 +76,16 @@ const LoadingFallback = ({ text }: { text: string }) => (
 );
 
 // Wraps a lazy-loaded page with Suspense + optional permission guard
-function Page({ component: Component, text, permission }: {
-  component: React.LazyExoticComponent<React.ComponentType>;
+function Page({
+  component: Component,
+  text,
+  permission,
+  requiredModule,
+}: {
+  component: React.ComponentType;
   text: string;
   permission?: Permission;
+  requiredModule?: string;
 }) {
   const content = (
     <ErrorBoundary>
@@ -87,8 +94,12 @@ function Page({ component: Component, text, permission }: {
       </Suspense>
     </ErrorBoundary>
   );
-  if (permission) {
-    return <ProtectedRoute requiredPermission={permission}>{content}</ProtectedRoute>;
+  if (permission || requiredModule) {
+    return (
+      <ProtectedRoute requiredPermission={permission} requiredModule={requiredModule}>
+        {content}
+      </ProtectedRoute>
+    );
   }
   return content;
 }
@@ -98,6 +109,8 @@ function App() {
   const lastUserRef = useRef<string | null>(null);
 
   useEffect(() => {
+    initOTAUpdater();
+
     // Listen for authentication state changes
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       const nextUserId = user?.uid || null;
@@ -111,15 +124,18 @@ function App() {
       lastUserRef.current = nextUserId;
 
       setUser(user);
-      // Mark auth as initialized immediately — auth state is known
-      setInitialized(true);
 
       if (user) {
-        // Read custom claims to detect super admin (non-blocking — don't await)
-        user.getIdTokenResult().then(
-          (tokenResult) => setIsSuperAdmin(!!tokenResult.claims.superAdmin),
-          () => setIsSuperAdmin(false)
-        );
+        // Read custom claims to detect super admin (await it before initializing)
+        try {
+          const tokenResult = await user.getIdTokenResult();
+          setIsSuperAdmin(!!tokenResult.claims.superAdmin);
+        } catch {
+          setIsSuperAdmin(false);
+        }
+
+        // Mark auth as initialized immediately AFTER auth state and super admin status are known
+        setInitialized(true);
 
         // Fire-and-forget: profile + org resolution run in background.
         // ProtectedRoute already waits on orgResolved before gating permissions.
@@ -156,6 +172,7 @@ function App() {
       } else {
         setProfile(null);
         setIsSuperAdmin(false);
+        setInitialized(true);
       }
 
       // Check low stock and push notifications (fire-and-forget)
@@ -241,28 +258,28 @@ function App() {
             {/* User Panel Routes */}
             <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route path="/" element={<Page component={Dashboard} text="Loading dashboard" permission="dashboard.view" />} />
-              <Route path="/pos" element={<Page component={POS} text="Loading POS system" permission="pos.access" />} />
-              <Route path="/inventory/categories" element={<Page component={Categories} text="Loading categories" permission="categories.view" />} />
-              <Route path="/inventory/items" element={<Page component={Items} text="Loading items" permission="inventory.view" />} />
-              <Route path="/inventory/alerts" element={<Page component={Alerts} text="Loading alerts" permission="inventory.view" />} />
-              <Route path="/vendors" element={<Page component={Vendors} text="Loading vendors" permission="vendors.view" />} />
-              <Route path="/vendors/:id/ledger" element={<Page component={VendorLedgerPage} text="Loading ledger" permission="vendors.view" />} />
-              <Route path="/purchases/new" element={<Page component={NewPurchase} text="Loading new purchase" permission="procurement.create" />} />
-              <Route path="/purchases" element={<Page component={Purchases} text="Loading purchases" permission="procurement.view" />} />
-              <Route path="/purchases/:id" element={<Page component={Purchases} text="Loading purchase" permission="procurement.view" />} />
-              <Route path="/purchases/:id/return" element={<Page component={PurchaseReturnPage} text="Loading return" permission="procurement.view" />} />
-              <Route path="/customers" element={<Page component={Customers} text="Loading customers" permission="customers.view" />} />
-              <Route path="/customers/:id/ledger" element={<Page component={CustomerLedger} text="Loading customer ledger" permission="customers.view" />} />
-              <Route path="/expenses" element={<Page component={Expenses} text="Loading expenses" permission="expenses.view" />} />
-              <Route path="/transactions" element={<Page component={Transactions} text="Loading transactions" permission="inventory.view" />} />
-              <Route path="/reports/performance" element={<Page component={PerformancePage} text="Loading performance analytics" permission="reports.performance" />} />
-              <Route path="/inventory/valuation" element={<Page component={ValuationPage} text="Calculating valuation" permission="inventory.view" />} />
-              <Route path="/reports" element={<Page component={ReportsPage} text="Loading reports" permission="reports.view" />} />
-              <Route path="/inventory/adjustments" element={<Page component={StockAdjustments} text="Loading adjustments" permission="inventory.adjust_stock" />} />
-              <Route path="/inventory/count" element={<Page component={InventoryCount} text="Loading inventory count" permission="inventory.view" />} />
-              <Route path="/inventory/expiry" element={<Page component={ExpiryTracking} text="Loading expiry tracking" permission="inventory.view" />} />
-              <Route path="/inventory/transfer" element={<Page component={StockTransfer} text="Loading stock transfer" permission="inventory.transfer" />} />
-              <Route path="/inventory/barcodes" element={<Page component={BarcodeLabels} text="Loading barcode labels" permission="inventory.view" />} />
+              <Route path="/pos" element={<Page component={POS} text="Loading POS system" permission="pos.access" requiredModule="pos" />} />
+              <Route path="/inventory/categories" element={<Page component={Categories} text="Loading categories" permission="categories.view" requiredModule="inventory" />} />
+              <Route path="/inventory/items" element={<Page component={Items} text="Loading items" permission="inventory.view" requiredModule="inventory" />} />
+              <Route path="/inventory/alerts" element={<Page component={Alerts} text="Loading alerts" permission="inventory.view" requiredModule="inventory" />} />
+              <Route path="/vendors" element={<Page component={Vendors} text="Loading vendors" permission="vendors.view" requiredModule="procurement" />} />
+              <Route path="/vendors/:id/ledger" element={<Page component={VendorLedgerPage} text="Loading ledger" permission="vendors.view" requiredModule="procurement" />} />
+              <Route path="/purchases/new" element={<Page component={NewPurchase} text="Loading new purchase" permission="procurement.create" requiredModule="procurement" />} />
+              <Route path="/purchases" element={<Page component={Purchases} text="Loading purchases" permission="procurement.view" requiredModule="procurement" />} />
+              <Route path="/purchases/:id" element={<Page component={Purchases} text="Loading purchase" permission="procurement.view" requiredModule="procurement" />} />
+              <Route path="/purchases/:id/return" element={<Page component={PurchaseReturnPage} text="Loading return" permission="procurement.view" requiredModule="procurement" />} />
+              <Route path="/customers" element={<Page component={Customers} text="Loading customers" permission="customers.view" requiredModule="crm" />} />
+              <Route path="/customers/:id/ledger" element={<Page component={CustomerLedger} text="Loading customer ledger" permission="customers.view" requiredModule="crm" />} />
+              <Route path="/expenses" element={<Page component={Expenses} text="Loading expenses" permission="expenses.view" requiredModule="expenses" />} />
+              <Route path="/transactions" element={<Page component={Transactions} text="Loading transactions" permission="inventory.view" requiredModule="inventory" />} />
+              <Route path="/reports/performance" element={<Page component={PerformancePage} text="Loading performance analytics" permission="reports.performance" requiredModule="reports" />} />
+              <Route path="/inventory/valuation" element={<Page component={ValuationPage} text="Calculating valuation" permission="inventory.view" requiredModule="inventory" />} />
+              <Route path="/reports" element={<Page component={ReportsPage} text="Loading reports" permission="reports.view" requiredModule="reports" />} />
+              <Route path="/inventory/adjustments" element={<Page component={StockAdjustments} text="Loading adjustments" permission="inventory.adjust_stock" requiredModule="inventory" />} />
+              <Route path="/inventory/count" element={<Page component={InventoryCount} text="Loading inventory count" permission="inventory.view" requiredModule="inventory" />} />
+              <Route path="/inventory/expiry" element={<Page component={ExpiryTracking} text="Loading expiry tracking" permission="inventory.view" requiredModule="inventory" />} />
+              <Route path="/inventory/transfer" element={<Page component={StockTransfer} text="Loading stock transfer" permission="inventory.transfer" requiredModule="inventory" />} />
+              <Route path="/inventory/barcodes" element={<Page component={BarcodeLabels} text="Loading barcode labels" permission="inventory.view" requiredModule="inventory" />} />
               <Route path="/settings" element={<Page component={Settings} text="Loading settings" permission="settings.view" />} />
               <Route path="/settings/audit" element={<Page component={AuditLogPage} text="Loading audit log" permission="audit.view" />} />
               <Route path="/settings/locations" element={<Page component={LocationsPage} text="Loading locations" permission="settings.view" />} />

@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, Calendar, Shield, UserCheck, Trash2, Crown, Building2, Users } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, Shield, UserCheck, Trash2, Crown, Building2, Users, AlertTriangle, Ban, CheckCircle, Package, ShoppingCart, Wallet, FileText, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { getUserDetail, removeUserFromOrg, setUserRole } from '../../lib/api/superAdmin';
+import { format, addDays } from 'date-fns';
+import { getUserDetail, removeUserFromOrg, setUserRole, updateUserStatus, deleteUserGlobal, updateUserModules } from '../../lib/api/superAdmin';
 import { ROLE_LABELS, ROLE_STYLE, ROLE_DESCRIPTIONS } from '../../lib/constants/permissions';
 import type { AdminUserProfile, OrgRole } from '../../lib/types/org';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -27,12 +27,32 @@ const ROLE_ICONS: Record<OrgRole, typeof Crown> = {
   viewer: UserCheck,
 };
 
+const MODULE_OPTIONS = [
+  { id: 'pos', label: 'Point of Sale', icon: ShoppingCart, description: 'Access to POS terminal and billing' },
+  { id: 'inventory', label: 'Inventory', icon: Package, description: 'Manage items, categories, and stock' },
+  { id: 'procurement', label: 'Procurement', icon: Building2, description: 'Manage vendors and purchases' },
+  { id: 'crm', label: 'CRM (Customers)', icon: Users, description: 'Track customers and Udhaar/Credit' },
+  { id: 'expenses', label: 'Expenses', icon: Wallet, description: 'Track daily and monthly expenses' },
+  { id: 'reports', label: 'Reports', icon: FileText, description: 'View sales and performance reports' },
+];
+
 export default function UserDetailPage() {
   const { id: userId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [user, setUser] = useState<AdminUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [confirmRemove, setConfirmRemove] = useState<{ orgId: string; orgName: string } | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusForm, setStatusForm] = useState<{ status: 'active' | 'banned_temporary' | 'banned_permanent', reason: string, untilDays: string }>({
+    status: 'active',
+    reason: '',
+    untilDays: '7',
+  });
+  const [enabledModules, setEnabledModules] = useState<Set<string>>(new Set());
+  const [isUpdatingModules, setIsUpdatingModules] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -40,6 +60,13 @@ export default function UserDetailPage() {
     try {
       const data = await getUserDetail(userId);
       setUser(data);
+      setStatusForm(prev => ({ ...prev, status: data.status || 'active', reason: data.ban_reason || '' }));
+      if (data.enabled_modules) {
+        setEnabledModules(new Set(data.enabled_modules));
+      } else {
+        // If undefined, default to all modules enabled
+        setEnabledModules(new Set(['pos', 'inventory', 'procurement', 'crm', 'expenses', 'reports']));
+      }
     } catch {
       toast.error('Failed to load user');
     } finally {
@@ -83,6 +110,65 @@ export default function UserDetailPage() {
     }
   };
 
+  const handleDeleteUser = async () => {
+    if (!userId) return;
+    setIsDeleting(true);
+    try {
+      await deleteUserGlobal(userId);
+      toast.success('User profile deleted completely.');
+      navigate('/super-admin/users');
+    } catch (err: any) {
+      toast.error('Failed to delete user: ' + err.message);
+      setIsDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
+
+  const handleUpdateModules = async () => {
+    if (!userId) return;
+    setIsUpdatingModules(true);
+    try {
+      const modulesArray = Array.from(enabledModules);
+      await updateUserModules(userId, modulesArray);
+      setUser(prev => prev ? { ...prev, enabled_modules: modulesArray } : null);
+      toast.success('User modules updated successfully');
+    } catch {
+      toast.error('Failed to update modules');
+    } finally {
+      setIsUpdatingModules(false);
+    }
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!userId) return;
+    setIsUpdatingStatus(true);
+    try {
+      let banUntil = null;
+      if (statusForm.status === 'banned_temporary') {
+        banUntil = addDays(new Date(), parseInt(statusForm.untilDays, 10));
+      }
+      
+      await updateUserStatus(userId, {
+        status: statusForm.status,
+        ban_reason: statusForm.reason,
+        ban_until: banUntil
+      });
+      
+      setUser(prev => prev ? {
+        ...prev,
+        status: statusForm.status,
+        ban_reason: statusForm.status === 'active' ? undefined : statusForm.reason,
+        ban_until: banUntil || undefined
+      } : null);
+      
+      toast.success('User status updated');
+    } catch (err: any) {
+      toast.error('Failed to update status');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center py-12"><LoadingSpinner size="lg" text="Loading user..." /></div>;
   }
@@ -98,17 +184,37 @@ export default function UserDetailPage() {
       </Link>
 
       {/* Profile Card */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-orange-500/40 via-orange-400/25 to-teal-600/20 p-6 sm:p-8">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/15 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4" />
-        <div className="relative z-10 flex items-center gap-4">
-          <img
-            src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=f97316&color=fff`}
-            alt="" className="w-16 h-16 rounded-xl ring-4 ring-background object-cover"
-          />
-          <div>
-            <div className="flex items-center gap-2">
+      <div className={`relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br ${
+        user.status === 'active' || !user.status
+          ? 'from-orange-500/40 via-orange-400/25 to-teal-600/20'
+          : 'from-error/30 via-error/20 to-error/10 border border-error/50'
+      } p-6 sm:p-8`}>
+        {(!user.status || user.status === 'active') && (
+          <>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/15 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4" />
+          </>
+        )}
+        <div className="relative z-10 flex items-start sm:items-center gap-4">
+          <div className="relative">
+            <img
+              src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=f97316&color=fff`}
+              alt="" className="w-16 h-16 rounded-xl ring-4 ring-background object-cover"
+            />
+            {user.status && user.status !== 'active' && (
+              <div className="absolute -bottom-1.5 -right-1.5 bg-error text-error-foreground rounded-full p-1 border-2 border-background">
+                <Ban className="w-4 h-4" />
+              </div>
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{user.full_name || 'Unknown'}</h1>
+              {user.status && user.status !== 'active' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-error/10 text-error border border-error/20">
+                  {user.status === 'banned_permanent' ? 'Permanently Banned' : 'Temporarily Banned'}
+                </span>
+              )}
               {user.created_by_admin ? (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30">
                   <Shield className="w-2.5 h-2.5" /> Admin
@@ -119,98 +225,284 @@ export default function UserDetailPage() {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-4 mt-1.5 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 mt-1.5 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> {user.email}</span>
               <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Joined {format(user.created_at, 'MMM d, yyyy')}</span>
             </div>
+            {user.status && user.status !== 'active' && user.ban_reason && (
+              <div className="mt-3 inline-flex items-start gap-2 text-sm bg-error/10 text-error px-3 py-2 rounded-xl border border-error/20">
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">Ban Reason</p>
+                  <p className="text-error/80">{user.ban_reason}</p>
+                  {user.status === 'banned_temporary' && user.ban_until && (
+                    <p className="text-error/80 mt-1 font-medium">Until: {format(user.ban_until, 'MMM d, yyyy h:mm a')}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {[
-          { label: 'User ID', value: user.id.substring(0, 16) + '...', mono: true },
-          { label: 'Account Type', value: user.created_by_admin ? 'Admin-created' : 'Self-registered', icon: user.created_by_admin ? Shield : UserCheck },
-          { label: 'Organizations', value: `${user.memberships.length} membership${user.memberships.length !== 1 ? 's' : ''}`, icon: Building2 },
-        ].map((info, i) => (
-          <motion.div
-            key={info.label}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="card-theme rounded-2xl p-4 border border-orange-500/20"
-          >
-            <p className="text-xs font-medium text-muted-foreground mb-1">{info.label}</p>
-            <p className={`text-sm font-semibold text-foreground flex items-center gap-1.5 ${info.mono ? 'font-mono' : ''}`}>
-              {info.icon && <info.icon className="w-4 h-4 text-primary" />}
-              {info.value}
-            </p>
-          </motion.div>
-        ))}
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Memberships */}
+          <div className="card-theme rounded-[2.5rem] overflow-hidden border border-orange-500/20">
+            <div className="h-1.5 bg-gradient-to-r from-orange-400 via-orange-500 to-teal-500" />
+            <div className="px-6 py-4 border-b border-border/50">
+              <h2 className="text-lg font-bold text-foreground">Organization Memberships</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Manage roles and access across organizations</p>
+            </div>
+            {user.memberships.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground text-sm">Not a member of any organization.</div>
+            ) : (
+              <div className="divide-y divide-border/30">
+                {user.memberships.map(m => {
+                  const style = ROLE_STYLE[m.role] ?? ROLE_STYLE.viewer;
+                  const RoleIcon = ROLE_ICONS[m.role] ?? Users;
+                  return (
+                    <div key={m.organization_id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5 hover:bg-secondary/20 transition-colors">
+                      {/* Org Icon */}
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
 
-      {/* Memberships */}
-      <div className="card-theme rounded-[2.5rem] overflow-hidden border border-orange-500/20">
-        <div className="h-1.5 bg-gradient-to-r from-orange-400 via-orange-500 to-teal-500" />
-        <div className="px-6 py-4 border-b border-border/50">
-          <h2 className="text-lg font-bold text-foreground">Organization Memberships</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Manage roles and access across organizations</p>
-        </div>
-        {user.memberships.length === 0 ? (
-          <div className="p-6 text-center text-muted-foreground text-sm">Not a member of any organization.</div>
-        ) : (
-          <div className="divide-y divide-border/30">
-            {user.memberships.map(m => {
-              const style = ROLE_STYLE[m.role] ?? ROLE_STYLE.viewer;
-              const RoleIcon = ROLE_ICONS[m.role] ?? Users;
-              return (
-                <div key={m.organization_id} className="flex items-center gap-4 p-4 sm:p-5 hover:bg-secondary/20 transition-colors">
-                  {/* Org Icon */}
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-5 h-5 text-primary" />
-                  </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/super-admin/stores/${m.organization_id}`} className="font-semibold text-foreground hover:text-primary transition-colors">
+                          {m.organization_name}
+                        </Link>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border ${style.bgColor} ${style.color} ${style.borderColor}`}>
+                            <RoleIcon className="w-3 h-3" /> {ROLE_LABELS[m.role]}
+                          </span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${
+                            m.status === 'active' ? 'bg-success-500/10 text-success-600 dark:text-success-400 border border-success-500/20' : 'bg-secondary text-muted-foreground border border-border/50'
+                          }`}>
+                            {m.status}
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <Link to={`/super-admin/stores/${m.organization_id}`} className="font-semibold text-foreground hover:text-primary transition-colors">
-                      {m.organization_name}
-                    </Link>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border ${style.bgColor} ${style.color} ${style.borderColor}`}>
-                        <RoleIcon className="w-3 h-3" /> {ROLE_LABELS[m.role]}
-                      </span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${
-                        m.status === 'active' ? 'bg-success-500/10 text-success-600 dark:text-success-400 border border-success-500/20' : 'bg-secondary text-muted-foreground border border-border/50'
-                      }`}>
-                        {m.status}
-                      </span>
+                      {/* Role Selector & Remove */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-40">
+                          <CustomSelect
+                            options={ROLE_OPTIONS}
+                            value={m.role}
+                            onChange={(val) => handleRoleChange(m.organization_id, val as OrgRole)}
+                            placeholder="Role"
+                          />
+                        </div>
+                        <button
+                          onClick={() => setConfirmRemove({ orgId: m.organization_id, orgName: m.organization_name })}
+                          className="p-2 rounded-lg hover:bg-error/10 transition-colors flex-shrink-0"
+                          title="Remove from organization"
+                        >
+                          <Trash2 className="w-4 h-4 text-error" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
 
-                  {/* Role Selector */}
-                  <div className="w-40 hidden sm:block">
-                    <CustomSelect
-                      options={ROLE_OPTIONS}
-                      value={m.role}
-                      onChange={(val) => handleRoleChange(m.organization_id, val as OrgRole)}
-                      placeholder="Role"
+        <div className="space-y-6">
+          {/* Info Cards */}
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              { label: 'User ID', value: user.id, mono: true },
+              { label: 'Account Type', value: user.created_by_admin ? 'Admin-created' : 'Self-registered', icon: user.created_by_admin ? Shield : UserCheck },
+              { label: 'Organizations', value: `${user.memberships.length} membership${user.memberships.length !== 1 ? 's' : ''}`, icon: Building2 },
+            ].map((info, i) => (
+              <motion.div
+                key={info.label}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="card-theme rounded-2xl p-4 border border-border"
+              >
+                <p className="text-xs font-medium text-muted-foreground mb-1">{info.label}</p>
+                <p className={`text-sm font-semibold text-foreground flex items-center gap-1.5 ${info.mono ? 'font-mono break-all' : ''}`}>
+                  {info.icon && <info.icon className="w-4 h-4 text-primary flex-shrink-0" />}
+                  {info.value}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Account Status Manager */}
+          <div className="card-theme rounded-[2.5rem] overflow-hidden border border-border/50">
+            <div className="px-6 py-4 border-b border-border/50">
+              <h2 className="text-lg font-bold text-foreground">Account Status</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Status</label>
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-secondary/20 transition-colors has-[:checked]:border-success has-[:checked]:bg-success/5">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="active"
+                      checked={statusForm.status === 'active'}
+                      onChange={(e) => setStatusForm(prev => ({ ...prev, status: e.target.value as any }))}
+                      className="text-success focus:ring-success"
+                    />
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-success" />
+                      <span className="font-medium text-foreground text-sm">Active</span>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-secondary/20 transition-colors has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/5">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="banned_temporary"
+                      checked={statusForm.status === 'banned_temporary'}
+                      onChange={(e) => setStatusForm(prev => ({ ...prev, status: e.target.value as any }))}
+                      className="text-orange-500 focus:ring-orange-500"
+                    />
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-orange-500" />
+                      <span className="font-medium text-foreground text-sm">Temporarily Banned</span>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-secondary/20 transition-colors has-[:checked]:border-error has-[:checked]:bg-error/5">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="banned_permanent"
+                      checked={statusForm.status === 'banned_permanent'}
+                      onChange={(e) => setStatusForm(prev => ({ ...prev, status: e.target.value as any }))}
+                      className="text-error focus:ring-error"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Ban className="w-4 h-4 text-error" />
+                      <span className="font-medium text-foreground text-sm">Permanently Banned</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {statusForm.status !== 'active' && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 pt-2">
+                  {statusForm.status === 'banned_temporary' && (
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">Duration (Days)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="365"
+                        value={statusForm.untilDays}
+                        onChange={(e) => setStatusForm(prev => ({ ...prev, untilDays: e.target.value }))}
+                        className="w-full px-3 py-2 bg-secondary border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Reason (Required)</label>
+                    <textarea
+                      value={statusForm.reason}
+                      onChange={(e) => setStatusForm(prev => ({ ...prev, reason: e.target.value }))}
+                      placeholder="e.g. Violation of terms"
+                      required
+                      rows={2}
+                      className="w-full px-3 py-2 bg-secondary border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm resize-none"
                     />
                   </div>
+                </motion.div>
+              )}
 
-                  {/* Remove */}
-                  <button
-                    onClick={() => setConfirmRemove({ orgId: m.organization_id, orgName: m.organization_name })}
-                    className="p-2 rounded-lg hover:bg-error/10 transition-colors flex-shrink-0"
-                    title="Remove from organization"
-                  >
-                    <Trash2 className="w-4 h-4 text-error" />
-                  </button>
-                </div>
-              );
-            })}
+              <button
+                onClick={handleUpdateStatus}
+                disabled={isUpdatingStatus || (statusForm.status !== 'active' && !statusForm.reason.trim())}
+                className="w-full btn-primary py-2.5 text-sm font-medium rounded-xl disabled:opacity-50"
+              >
+                {isUpdatingStatus ? 'Updating...' : 'Update Status'}
+              </button>
+            </div>
           </div>
-        )}
+          
+          {/* Modules & Services */}
+          <div className="card-theme rounded-[2.5rem] overflow-hidden border border-border">
+            <div className="px-6 py-4 border-b border-border bg-secondary/50">
+              <h2 className="text-lg font-bold text-foreground">Modules & Services</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Enable or disable specific features for this user across all their organizations.
+              </p>
+              
+              <div className="space-y-2 mb-6">
+                {MODULE_OPTIONS.map((module) => {
+                  const isEnabled = enabledModules.has(module.id);
+                  return (
+                    <div
+                      key={module.id}
+                      onClick={() => {
+                        const newSet = new Set(enabledModules);
+                        if (isEnabled) newSet.delete(module.id);
+                        else newSet.add(module.id);
+                        setEnabledModules(newSet);
+                      }}
+                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${
+                        isEnabled ? 'bg-primary/5 border-primary/20' : 'bg-secondary/30 border-border hover:bg-secondary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isEnabled ? 'bg-primary text-white' : 'bg-secondary text-muted-foreground'}`}>
+                          <module.icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{module.label}</p>
+                          <p className="text-xs text-muted-foreground">{module.description}</p>
+                        </div>
+                      </div>
+                      {isEnabled ? (
+                        <ToggleRight className="w-6 h-6 text-primary" />
+                      ) : (
+                        <ToggleLeft className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={handleUpdateModules}
+                disabled={isUpdatingModules}
+                className="w-full btn-primary py-2.5 text-sm font-medium rounded-xl disabled:opacity-50"
+              >
+                {isUpdatingModules ? 'Saving...' : 'Save Modules'}
+              </button>
+            </div>
+          </div>
+          
+          {/* Danger Zone */}
+          <div className="card-theme rounded-[2.5rem] overflow-hidden border border-error/50">
+            <div className="px-6 py-4 border-b border-error/20 bg-error/5">
+              <h2 className="text-lg font-bold text-error">Danger Zone</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Permanently delete this user's profile and remove them from all organizations. 
+                Because you are on the Firebase Free Tier, their underlying Auth credentials (email/password) cannot be deleted automatically, 
+                but this completely revokes all access and wipes their data from your app.
+              </p>
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="w-full btn-secondary text-error hover:bg-error/10 hover:border-error/30 py-2.5 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" /> Delete User Data
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <ConfirmDialog
@@ -222,6 +514,17 @@ export default function UserDetailPage() {
         confirmText="Remove"
         variant="danger"
         isLoading={isRemoving}
+      />
+      
+      <ConfirmDialog
+        isOpen={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={handleDeleteUser}
+        title="Delete User Data"
+        message={`Are you sure you want to delete ${user.full_name}'s profile and remove them from all organizations? This action cannot be undone.`}
+        confirmText="Delete User"
+        variant="danger"
+        isLoading={isDeleting}
       />
     </motion.div>
   );
