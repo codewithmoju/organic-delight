@@ -9,8 +9,19 @@ import { addResourceHints, PerformanceTracker } from './lib/utils/performance'
 import ErrorBoundary from './components/ui/ErrorBoundary.tsx'
 import { SyncProvider } from './contexts/SyncContext'
 
-// Register PWA service worker
-registerSW({ immediate: true })
+import { Capacitor } from '@capacitor/core'
+
+// Register PWA service worker only on the web, NEVER in native Capacitor mobile apps
+if (!Capacitor.isNativePlatform()) {
+  registerSW({ immediate: true })
+} else if ('serviceWorker' in navigator) {
+  // If an old service worker was registered in the native webview, unregister it
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister();
+    }
+  }).catch(() => {});
+}
 
 // Start performance tracking
 PerformanceTracker.mark('app-start');
@@ -20,11 +31,11 @@ addResourceHints();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SyncProvider>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <SyncProvider>
         <App />
-      </ErrorBoundary>
-    </SyncProvider>
+      </SyncProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )
 

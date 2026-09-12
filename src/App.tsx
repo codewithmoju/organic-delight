@@ -216,6 +216,7 @@ function App() {
           />
           <OfflineIndicator />
           <Routes>
+            <Route path="/index.html" element={<Navigate to="/" replace />} />
             <Route path="/login" element={
               <Suspense fallback={<LoadingFallback text="Loading login" />}>
                 <Login />
